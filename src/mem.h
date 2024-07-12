@@ -94,4 +94,8 @@ typedef struct{
            unsigned short int homepid;
               } jiapage_t;
 
+/* Function Declaration */
+void   diffserver(jia_msg_t *);
+void getpserver(jia_msg_t *req);
+
 #endif /*JIAMEM_H*/

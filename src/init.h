@@ -53,12 +53,16 @@
 #define   ALPHA         20
 #define   BETA          20
 
+/**
+ * @brief struct host_t - info of host
+ * 
+ */
 typedef struct host_t {
-  char name[Wordsize];
-  char user[Wordsize];
+  char name[Wordsize];          /* host name */
+  char user[Wordsize];          /* user account */
   char dir[Wordsize];
-  char passwd[Wordsize];
-  char addr[Wordsize];             /*IP address*/
+  char passwd[Wordsize];        /* user password */
+  char addr[Wordsize];          /* IP address */
   int  addrlen;
   int  homesize;
   int  riofd;

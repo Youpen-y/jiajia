@@ -78,4 +78,9 @@ typedef struct cvtype {
         int         value;
                } jiacv_t;
 
+/* Function Declaration */
+void acqserver(jia_msg_t *req);
+void invserver(jia_msg_t *req);
+void relserver(jia_msg_t *req);
+void wtntserver(jia_msg_t *req);
 #endif /*JIASYN_H*/

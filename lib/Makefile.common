@@ -4,7 +4,8 @@
 
 CC  = gcc
 CCC = gcc
-FC = f77
+#FC = f77 #f77 is too old
+FC = gfortran	# gfortran is more common
 
 SRC	= ../../src
 CFLAGS	= -I./${SRC} $(ARCH_FLAGS)  -DDOSTAT 
