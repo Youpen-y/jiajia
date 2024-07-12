@@ -41,28 +41,29 @@
 #include "mem.h"
 #include "syn.h"
 #include "comm.h"
+#include "tools.h"
 
 extern void asendmsg(jia_msg_t *msg);
 
-void inittools();
-void assert0(int, char *);
-void assert(int, char *);
-void jiaexitserver(jia_msg_t *req);
-jia_msg_t *newmsg();
-void freemsg(jia_msg_t *msg);
-void appendmsg(jia_msg_t *msg, unsigned char *str, int len);
-void printmsg(jia_msg_t *msg,int right);
-void printstack(int ptr);
-unsigned long jia_current_time();
-float jia_clock();
-void  jiasleep(unsigned long);
-void  disable_sigio();         
-void  enable_sigio();       
-void freewtntspace(wtnt_t *ptr);
-wtnt_t *newwtnt();
-void newtwin(address_t *twin);
-void freetwin(address_t *twin);
-void emptyprintf();
+// void inittools();
+// void assert0(int, char *);
+// void assert(int, char *);
+// void jiaexitserver(jia_msg_t *req);
+// jia_msg_t *newmsg();
+// void freemsg(jia_msg_t *msg);
+// void appendmsg(jia_msg_t *msg, unsigned char *str, int len);
+// void printmsg(jia_msg_t *msg,int right);
+// void printstack(int ptr);
+// unsigned long jia_current_time();
+// float jia_clock();
+// void  jiasleep(unsigned long);
+// void  disable_sigio();         
+// void  enable_sigio();       
+// void freewtntspace(wtnt_t *ptr);
+// wtnt_t *newwtnt();
+// void newtwin(address_t *twin);
+// void freetwin(address_t *twin);
+// void emptyprintf();
 
 extern int jia_pid;
 extern int hostc;
@@ -76,7 +77,7 @@ extern unsigned long globaladdr;
 extern int firsttime;
 extern float caltime;
 
-char errstr[Linesize];
+char errstr[Linesize];      /* buffer for error info */
 jia_msg_t  msgarray[Maxmsgs];
 volatile int    msgbusy[Maxmsgs];
 int msgcnt;
@@ -91,43 +92,41 @@ void inittools()
   AD_WD=OFF;
   B_CAST=OFF;
   LOAD_BAL=OFF;
-  W_VEC=OFF;
+  W_VEC=OFF; 
 }
-
 
 
 /*-----------------------------------------------------------*/
 void assert0(int cond,char *amsg)
 { 
-
- if (!cond){
-   fprintf(stderr,"Assert0 error from host %d --- %s\n", jia_pid, amsg);
-   perror("Unix Error");
-   fflush(stderr); fflush(stdout);
-   exit(-1);
- }
+  if (!cond){
+    fprintf(stderr,"Assert0 error from host %d --- %s\n", jia_pid, amsg);
+    perror("Unix Error");
+    fflush(stderr); fflush(stdout);
+    exit(-1);
+  }
 }
 
 
 /*-----------------------------------------------------------*/
 void assert(int cond, char *amsg)
 {
- int hosti;
+  int hosti;
 
- if (!cond){
-   assertmsg.op=JIAEXIT;
-   assertmsg.frompid=jia_pid; 
-   memcpy(assertmsg.data,amsg,strlen(amsg));
-   assertmsg.data[strlen(amsg)]='\0';
-   assertmsg.size=strlen(amsg)+1;
-   for (hosti=0;hosti<hostc;hosti++)
-     if (hosti!=jia_pid){
-       assertmsg.topid=hosti;
-       asendmsg(&assertmsg);
-     }
-   assertmsg.topid=jia_pid;
-   asendmsg(&assertmsg);
- } 
+  if (!cond){
+    assertmsg.op=JIAEXIT;
+    assertmsg.frompid=jia_pid; 
+    memcpy(assertmsg.data,amsg,strlen(amsg));
+    assertmsg.data[strlen(amsg)]='\0';
+    assertmsg.size=strlen(amsg)+1;
+    for (hosti=0;hosti<hostc;hosti++)
+      if (hosti!=jia_pid){
+        assertmsg.topid=hosti;
+        asendmsg(&assertmsg);
+      }
+    assertmsg.topid=jia_pid;
+    asendmsg(&assertmsg);
+  } 
 }
 
 
@@ -143,9 +142,9 @@ void jiaexitserver(jia_msg_t *req)
 /*-----------------------------------------------------------*/
 void newtwin(address_t *twin)
 {
- if (*twin==((address_t)NULL))
-   *twin=(address_t)valloc(Pagesize);
- assert(((*twin)!=(address_t)NULL),"Cannot allocate twin space!");
+  if (*twin==((address_t)NULL))
+    *twin=(address_t)valloc(Pagesize);
+  assert(((*twin)!=(address_t)NULL),"Cannot allocate twin space!");
 }
 
 
@@ -161,27 +160,29 @@ void freetwin(address_t *twin)
 
 /*-----------------------------------------------------------*/
 jia_msg_t *newmsg()
-{int i,j;
+{
+  int i,j;
 
- msgcnt++;
- for (i=0;(i<Maxmsgs)&&(msgbusy[i]!=0);i++);
- assert0((i<Maxmsgs),"Cannot allocate message space!");
- msgbusy[i]=1;
+  msgcnt++;
+  for (i=0;(i<Maxmsgs)&&(msgbusy[i]!=0);i++);
+  assert0((i<Maxmsgs),"Cannot allocate message space!");
+  msgbusy[i]=1;
 
 #ifdef JIA_DEBUG
  for (j=0;j<Maxmsgs;j++) printf("%d ",msgbusy[j]);
  printf("  msgcnt=%d\n",msgcnt);
 #endif
 
- return(&(msgarray[i]));
+  return(&(msgarray[i]));
 }
 
 
 /*-----------------------------------------------------------*/
 void freemsg(jia_msg_t *msg)
-{int i;
- msgbusy[msg->index]=0;
- msgcnt--;
+{
+  int i;
+  msgbusy[msg->index]=0;
+  msgcnt--;
 }
 
 
@@ -194,39 +195,40 @@ void appendmsg(jia_msg_t *msg, unsigned char *str, int len)
 }
 
 wtnt_t *newwtnt()
-{wtnt_t *wnptr;
+{
+  wtnt_t *wnptr;
 
 #ifdef SOLARIS
  wnptr=memalign((size_t)Pagesize, (size_t)sizeof(wtnt_t));
 #else  /* SOLARIS */
- wnptr=valloc((size_t)sizeof(wtnt_t));
+  wnptr=valloc((size_t)sizeof(wtnt_t));
 #endif /* SOLARIS */
- assert((wnptr!=WNULL),"Can not allocate space for write notices!");
- wnptr->more=WNULL;
- wnptr->wtntc=0;
- return(wnptr);
+  assert((wnptr!=WNULL),"Can not allocate space for write notices!");
+  wnptr->more=WNULL;
+  wnptr->wtntc=0;
+  return(wnptr);
 }
 
 
 /*-----------------------------------------------------------*/
 void freewtntspace(wtnt_t *ptr)
-{wtnt_t *last,*wtntp;
+{
+  wtnt_t *last,*wtntp;
 
- wtntp=ptr->more;
- while(wtntp!=WNULL){
-   last=wtntp;
-   wtntp=wtntp->more;
-   free(last);
- }
- ptr->wtntc=0;
- ptr->more=WNULL;
+  wtntp=ptr->more;
+  while(wtntp!=WNULL){
+    last=wtntp;
+    wtntp=wtntp->more;
+    free(last);
+  }
+  ptr->wtntc=0;
+  ptr->more=WNULL;
 }
 
 
 /*-----------------------------------------------------------*/
 void printmsg(jia_msg_t *msg, int right)
 {
- 
    SPACE(right);printf("********Print message********\n");
    SPACE(right); switch (msg->op){
      case DIFF:      printf("msg.op      = DIFF     \n"); break;
@@ -269,24 +271,26 @@ unsigned long start_msec = 0;
 
 /*-----------------------------------------------------------*/
 unsigned long jia_current_time()
-{struct timeval tp;
+{
+  struct timeval tp;
 
-    /* Return the time, in milliseconds, elapsed after the first call
-     * to this routine.
-     */  
-    gettimeofday(&tp, NULL);
-    if (!start_sec)
-    {
-        start_sec = tp.tv_sec;
-        start_msec = (unsigned long) (tp.tv_usec/1000);
-    }
-    return (1000*(tp.tv_sec-start_sec) + (tp.tv_usec/1000 - start_msec));
+  /* Return the time, in milliseconds, elapsed after the first call
+   * to this routine.
+   */  
+  gettimeofday(&tp, NULL);
+  if (!start_sec)
+  {
+    start_sec = tp.tv_sec;
+    start_msec = (unsigned long) (tp.tv_usec/1000);
+  }
+  return (1000*(tp.tv_sec-start_sec) + (tp.tv_usec/1000 - start_msec));
 }
  
 
 /*-----------------------------------------------------------*/
 float jia_clock()
-{ float time;
+{
+  float time;
 
   struct timeval val;
   gettimeofday(&val,NULL);
@@ -302,22 +306,34 @@ float jia_clock()
 
 
 /*-----------------------------------------------------------*/
-void    disable_sigio()         {
-        sigset_t set,oldset;
+/**
+ * @brief disable_sigio - block SIGIO signal
+ * 
+ */
+void disable_sigio() {
+  sigset_t set,oldset;
 
 	sigemptyset(&set);
-        sigaddset(&set, SIGIO);
-        sigprocmask(SIG_BLOCK, &set, &oldset);
+  sigaddset(&set, SIGIO);
+  sigprocmask(SIG_BLOCK, &set, &oldset);
 }
 
  
 /*-----------------------------------------------------------*/
-void    enable_sigio()       {
-        sigset_t        set;
-			
-        sigemptyset(&set);
-	sigaddset(&set,SIGIO);
-        sigprocmask(SIG_UNBLOCK, &set, NULL);
+/**
+ * Macro: int SIGIO (The signal is sent when a file descriptor is ready to perform input or output) 
+ * */
+
+/**
+ * @brief enable_sigio - unblock SIGIO signal
+ * 
+ */
+void enable_sigio() {
+  sigset_t  set;
+  
+  sigemptyset(&set);
+  sigaddset(&set,SIGIO);
+  sigprocmask(SIG_UNBLOCK, &set, NULL);
 }
 
 

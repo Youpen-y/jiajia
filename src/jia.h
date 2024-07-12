@@ -41,39 +41,153 @@
 #define jiahosts  hostc
 #define jiapid    jia_pid
 
-extern int	jia_pid;
+extern int		jia_pid;
 extern int      hostc;
- 
+
+/**
+ * @brief jia_init -- initialize JIAJIA
+ * Start copies of the application on the hosts specified in .jiahosts.
+ * Also, initializes internal data structures of JIAJIA.
+ */
 void           jia_init(int, char **);
+
+/**
+ * @brief jia_exit -- shut JIAJIA down
+ */
 void           jia_exit();
 
-unsigned long  jia_alloc3(int,int,int);
+/**
+ * @brief jia_alloc3 -- allocated shared memory.
+ * @param size: indicates the number of bytes allocated
+ * @param others: allow the programmer to control data distribution across hosts to improve performance
+ * @return unsigned long 
+ */
+unsigned long  jia_alloc3(int size,int,int);
 unsigned long  jia_alloc2(int,int);
 unsigned long  jia_alloc2p(int, int);
 unsigned long  jia_alloc1(int);
 unsigned long  jia_alloc(int);
 
-void           jia_lock(int);
-void           jia_unlock(int);
-void           jia_barrier();
-void           jia_wait();
-void           jia_setcv(int);
-void           jia_resetcv(int);
-void           jia_waitcv(int);
+/**
+ * @brief jia_lock -- acquire a lock specified by lockid
+ * 
+ * @param lockid id of lock
+ */
+void           jia_lock(int lockid);
 
+/**
+ * @brief jia_unlock -- release a lock specified by lockid
+ * 
+ * @param lockid id of lock
+ */
+void           jia_unlock(int lockid);
+
+/**
+ * @brief jia_barrier -- perform a global barrier
+ * 
+ * @note jia_barrier() cannot be called inside a critical section enclosed by jia_lock() and jia_unlock()
+ */
+void           jia_barrier();
+
+/**
+ * @brief jia_wait -- simple synchronization mechanism that requires
+ *  all processors to wait altogether before going ahead.
+ * 
+ * @note does not enforce any coherence operations across processors
+ */
+void           jia_wait();
+
+/**
+ * @brief jia_setcv -- set conditional variable cv
+ * 
+ * @param cv conditional variable
+ */
+void           jia_setcv(int cv);
+
+/**
+ * @brief jia_resetcv -- reset conditional variable cv
+ * 
+ * @param cv conditional variable
+ */
+void           jia_resetcv(int cv);
+
+/**
+ * @brief jia_waitcv -- wait on conditional variable cv
+ * 
+ * @param cv conditional variable
+ */
+void           jia_waitcv(int cv);
+
+/**
+ * @brief jia_error -- print out the err string and shut down all processes started by jia_init()
+ * 
+ * @param ... 
+ */
 void           jia_error(char*, ...);
+
+/**
+ * @brief jia_startstat -- start statistics (available with Macro DOSTAT)
+ * 
+ * @return unsigned int 
+ */
 unsigned int   jia_startstat();
+
+/**
+ * @brief jia_stopstat -- stop statistics (available with Macro DOSTAT)
+ * 
+ * @return unsigned int 
+ */
 unsigned int   jia_stopstat();
+
+/**
+ * @brief jia_clock -- elapsed time since start of application in seconds
+ * 
+ * @return float 
+ */
 float          jia_clock();
 
-void           jia_send(char*, int, int, int);
-int            jia_recv(char*, int, int, int);
-void           jia_reduce(char*, char*, int, int, int);
-void           jia_bcast(char*, int, int);
+/**
+ * @brief jia_send -- an MPI-similar call, send len bytes of buf to host topid
+ * 
+ */
+void           jia_send(char* buf, int len, int topid, int tag);
 
-void           jia_config(int,int);
+/**
+ * @brief jia_recv -- an MPI-similar call, receive len bytes from host frompid to buf
+ * 
+ * @return int 
+ */
+int            jia_recv(char* buf, int len, int frompid, int tag);
 
-void           jia_divtask(int*,int*);
+/**
+ * @brief jia_reduce -- an MPI-like call, reduce cnt numbers from all hosts to host root with operation op
+ * 
+ */
+void           jia_reduce(char* snd, char* rcv, int cnt, int op, int root);
+
+/**
+ * @brief jia_bcast -- an MPI-similar call, send len bytes from buf of host root to buf of all hosts
+ * 
+ */
+void           jia_bcast(char* buf, int len, int root);
+
+/**
+ * @brief jia_config -- System configuration
+ * 
+ * @note turn on/off optimization methods, such as home migration, write vector, adaptive write detection
+ */
+void           jia_config(int, int);
+
+/**
+ * @brief jia_divtask -- divide task across processors
+ * 
+ */
+void           jia_divtask(int* begin, int* end);
+
+/**
+ * @brief jia_loadcheck -- check loads of all processors
+ * 
+ */
 void           jia_loadcheck();
 
 #ifndef ON

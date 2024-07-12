@@ -112,4 +112,26 @@ typedef struct CommManager{
 } CommManager;
 
 
+/* function declaration*/
+void initcomm();
+int req_fdcreate(int, int);
+int rep_fdcreate(int, int);
+
+#if defined SOLARIS || defined IRIX62
+void    sigio_handler(int sig, siginfo_t *sip, ucontext_t *uap);
+#endif /* SOLARIS */
+#ifdef LINUX
+void    sigio_handler();
+#endif
+#ifdef AIX41
+void    sigio_handler();
+#endif /* AIX41 */
+
+void sigint_handler();
+void asendmsg(jia_msg_t *msg);
+void msgserver();
+void outsend();
+void bsendmsg(jia_msg_t *msg);
+void bcastserver(jia_msg_t *msg);
+
 #endif	/* JIACOMM_H */

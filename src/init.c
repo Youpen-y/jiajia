@@ -68,10 +68,10 @@ extern long Startport;
 
 FILE  *config, *fopen();
 int   jia_pid; 
-host_t hosts[Maxhosts+1];
-int  hostc;                          /*host counter*/
-char   argv0[Wordsize];
-sigset_t startup_mask;               /* used by Shi.*/
+host_t hosts[Maxhosts+1];            /* host array */
+int  hostc;                          /* host counter */
+char   argv0[Wordsize];              /* program name */
+sigset_t startup_mask;               /* used by Shi. */
 int jia_lock_index;
 
 #ifdef DOSTAT
@@ -80,83 +80,85 @@ int statflag;
 #endif
 
 int getline(int *wordc, char wordv[Maxwords][Wordsize])
-{char line[Linesize];
- int ch;
- int linei,wordi1,wordi2;
- int note;
+{
+  char line[Linesize];
+  int ch;
+  int linei,wordi1,wordi2;
+  int note;
 
- linei=0;
- note=0;
- ch=getc(config);
- if (ch=='#') note=1;
- while ((ch!='\n')&&(ch!=EOF)){
-   if ((linei<Linesize-1)&&(note==0)){
-     line[linei]=ch;
-     linei++;
-   }
-   ch=getc(config);
-   if (ch=='#') note=1;
- }
- line[linei]='\0';
+  linei=0;
+  note=0;
+  ch=getc(config);
+  if (ch=='#') note=1;
+  while ((ch!='\n')&&(ch!=EOF)){
+    if ((linei<Linesize-1)&&(note==0)){
+      line[linei]=ch;
+      linei++;
+    }
+    ch=getc(config);
+    if (ch=='#') note=1;
+  }
+  line[linei]='\0';
 
- for (wordi1=0;wordi1<Maxwords;wordi1++)
-   wordv[wordi1][0]='\0';
- wordi1=0; linei=0;
- while ((line[linei]!='\0')&&(wordi1<Maxwords)){
-   while ((line[linei]==' ')||(line[linei]=='\t'))  
-     linei++;
-   wordi2=0;
-   while ((line[linei]!=' ')&&(line[linei]!='\t')&&(line[linei]!='\0')){
-     if (wordi2<Wordsize-1){
-       wordv[wordi1][wordi2]=line[linei];
-       wordi2++;
-     }
-     linei++;
-   }
-   if (wordi2>0){ 
-     wordv[wordi1][wordi2]='\0';  
-     wordi1++;
-   }
- }
+  for (wordi1=0;wordi1<Maxwords;wordi1++)
+    wordv[wordi1][0]='\0';
+  wordi1=0; linei=0;
+  while ((line[linei]!='\0')&&(wordi1<Maxwords)){
+    while ((line[linei]==' ')||(line[linei]=='\t'))  
+      linei++;
+    wordi2=0;
+    while ((line[linei]!=' ')&&(line[linei]!='\t')&&(line[linei]!='\0')){
+      if (wordi2<Wordsize-1){
+        wordv[wordi1][wordi2]=line[linei];
+        wordi2++;
+      }
+      linei++;
+    }
+    if (wordi2>0){ 
+      wordv[wordi1][wordi2]='\0';  
+      wordi1++;
+    }
+  }
 
- *wordc=wordi1;
- return(ch==EOF);
+  *wordc=wordi1;
+  return(ch==EOF);
 }
 
 
 void gethosts()
-{int endoffile;
- int  wordc,linec,uniquehost;
- char wordv[Maxwords][Wordsize];
- struct hostent *hostp;
- int i;
+{
+  int endoffile;
+  int  wordc, linec, uniquehost;
+  char wordv[Maxwords][Wordsize];
+  struct hostent *hostp;
+  int i;
 
- if ((config=fopen(".jiahosts","r")) == 0) {
-   printf("Cannot open .jiahosts file\n");
-   exit(1);
- }
+  if ((config=fopen(".jiahosts","r")) == 0) {
+    printf("Cannot open .jiahosts file\n");
+    exit(1);
+  }
 
- endoffile=0;
- hostc=0;
- linec=0;
- while(!endoffile){
-   endoffile=getline(&wordc,wordv);
-   linec++;
-   sprintf(errstr,"Line %4d: incorrect host specification!",linec);
-   assert0(((wordc==Wordnum)||(wordc==0)),errstr);
-   if (wordc!=0){
-     hostp=gethostbyname(wordv[0]);
-     printf("Host[%d]: %s [%s]\n", hostc, hostp->h_name, 
+  endoffile=0;
+  hostc=0;
+  linec=0;
+  while(!endoffile){
+    endoffile=getline(&wordc,wordv);
+    linec++;
+    sprintf(errstr,"Line %4d: incorrect host specification!",linec);
+    assert0(((wordc==Wordnum)||(wordc==0)),errstr);
+    if (wordc!=0){
+      hostp=gethostbyname(wordv[0]);
+      printf("Host[%d]: %s [%s]\n", hostc, hostp->h_name, 
              inet_ntoa(*(struct in_addr*)hostp->h_addr_list[0]));
-     sprintf(errstr,"Line %4d: incorrect host %s!",linec,wordv[0]);
-     assert0((hostp!=NULL),errstr);
-     strcpy(hosts[hostc].name,hostp->h_name); 
-     memcpy(hosts[hostc].addr,hostp->h_addr,hostp->h_length);
-     hosts[hostc].addrlen=hostp->h_length;
-     strcpy(hosts[hostc].user,wordv[1]); 
-     strcpy(hosts[hostc].passwd,wordv[2]);
+      sprintf(errstr,"Line %4d: incorrect host %s!",linec,wordv[0]);
+      assert0((hostp!=NULL),errstr);
+      strcpy(hosts[hostc].name,hostp->h_name); 
+      memcpy(hosts[hostc].addr,hostp->h_addr,hostp->h_length);
+      hosts[hostc].addrlen=hostp->h_length;
+      strcpy(hosts[hostc].user,wordv[1]); 
+      strcpy(hosts[hostc].passwd,wordv[2]);
 
-     for (i=0;i<hostc;i++){
+      for (i=0;i<hostc;i++){
 #ifdef NFS
        uniquehost=(strcmp(hosts[hostc].name,hosts[i].name)!=0);
 #else  /* NFS */
@@ -166,12 +168,12 @@ void gethosts()
        sprintf(errstr,"Line %4d: repeated specification of the same host!",linec);
        assert0(uniquehost,errstr);
      }
-     hostc++; 
+      hostc++; 
    } 
  }
 
- assert0((hostc<=Maxhosts),"Too many hosts!");
- fclose(config);
+  assert0((hostc<=Maxhosts),"Too many hosts!");
+  fclose(config);
 }
 
 
@@ -356,63 +358,66 @@ void jiacreat(int argc, char **argv)
 
 
 void barrier0()
-{int hosti;
- char buf[4];
+{
+  int hosti;
+  char buf[4];
 
- if (jia_pid==0){
-   for (hosti=1;hosti<hostc;hosti++){
-     printf("Poll host %d: stream %4d----", hosti, hosts[hosti].riofd);
-     read(hosts[hosti].riofd,buf,3);
-     buf[3]='\0';
-     printf("%s Host %4d arrives!\n",buf,hosti);
-#ifdef NFS
-     write(hosts[hosti].riofd,"ok!",3);
-#endif
-   }
-#ifndef NFS
-   for (hosti=1;hosti<hostc;hosti++)
-     write(hosts[hosti].riofd,"ok!",3);
-#endif
- }else{
-   write(1,"ok?",3);
-   read(0,buf,3);
- }
+  if (jia_pid==0){
+    for (hosti=1;hosti<hostc;hosti++){
+      printf("Poll host %d: stream %4d----", hosti, hosts[hosti].riofd);
+      read(hosts[hosti].riofd,buf,3);
+      buf[3]='\0';
+      printf("%s Host %4d arrives!\n",buf,hosti);
+      #ifdef NFS
+        write(hosts[hosti].riofd,"ok!",3);
+      #endif
+    }
+    #ifndef NFS
+      for (hosti=1;hosti<hostc;hosti++)
+      write(hosts[hosti].riofd,"ok!",3);
+    #endif
+  }else{
+    write(1,"ok?",3);
+    read(0,buf,3);
+  }
 }
 
 
 void redirstdio(int argc, char **argv)
-{char outfile[Wordsize];
- int  outfd;
+{
+  char outfile[Wordsize];
+  int  outfd;
  
- if (jia_pid!=0){
-#ifdef NFS
-     sprintf(outfile,"%s-%d.log\0",argv[0],jia_pid);
-#else
-     sprintf(outfile,"%s.log\0",argv[0]);
-#endif /* NFS */
-   freopen(outfile,"w",stdout);
-   setbuf(stdout,NULL);
-#ifdef NFS
-     sprintf(outfile,"%s-%d.err\0",argv[0],jia_pid);
-#else
-     sprintf(outfile,"%s.err\0",argv[0]);
-#endif /* NFS */
-   freopen(outfile,"w",stderr);
-   setbuf(stderr,NULL);
- }
+  if (jia_pid!=0){
+    #ifdef NFS
+      sprintf(outfile,"%s-%d.log\0",argv[0],jia_pid);
+    #else
+      sprintf(outfile,"%s.log\0",argv[0]);
+    #endif /* NFS */
+    freopen(outfile,"w",stdout);
+    setbuf(stdout,NULL);
+    #ifdef NFS
+      sprintf(outfile,"%s-%d.err\0",argv[0],jia_pid);
+    #else
+      sprintf(outfile,"%s.err\0",argv[0]);
+    #endif /* NFS */
+    freopen(outfile,"w",stderr);
+    setbuf(stderr,NULL);
+  }
 }
 
 
 void jia_init(int argc, char **argv)
-{unsigned long timel,time1;
- struct rlimit rl;
+{
+  unsigned long timel,time1;
+  struct rlimit rl;
 
   printf("\n***JIAJIA---Software DSM***\n");
   printf("***  Cachepages = %4d  Pagesize=%d***\n\n", Cachepages,Pagesize);
-  strcpy(argv0,argv[0]);
+  strcpy(argv0, argv[0]);
   disable_sigio();
   jia_lock_index=0;  
-  jiacreat(argc,argv);
+  jiacreat(argc, argv);
 #if defined SOLARIS || defined LINUX
   sleep(2);
   rl.rlim_cur=Maxfileno;
@@ -448,7 +453,6 @@ void jia_init(int argc, char **argv)
     printf ("End of Initialization\n");
 
   if (jia_pid!=0) sleep(1);
-
 }
 
 #ifdef DOSTAT

@@ -106,23 +106,23 @@ volatile int outhead, outtail,outcount;
 long   Startport;
 
 
-void    initcomm();
-int     req_fdcreate(int, int);
-int     rep_fdcreate(int, int);
-#if defined SOLARIS || defined IRIX62
-void    sigio_handler(int sig, siginfo_t *sip, ucontext_t *uap);
-#endif /* SOLARIS */
-#ifdef LINUX
-void    sigio_handler();
-#endif
-#ifdef AIX41
-void    sigio_handler();
-#endif /* AIX41 */
-void    sigint_handler();
-void    asendmsg(jia_msg_t *);
-void    msgserver();
-void    outsend();
-void bcastserver(jia_msg_t *msg);
+// void    initcomm();
+// int     req_fdcreate(int, int);
+// int     rep_fdcreate(int, int);
+// #if defined SOLARIS || defined IRIX62
+// void    sigio_handler(int sig, siginfo_t *sip, ucontext_t *uap);
+// #endif /* SOLARIS */
+// #ifdef LINUX
+// void    sigio_handler();
+// #endif
+// #ifdef AIX41
+// void    sigio_handler();
+// #endif /* AIX41 */
+// void    sigint_handler();
+// void    asendmsg(jia_msg_t *);
+// void    msgserver();
+// void    outsend();
+// void bcastserver(jia_msg_t *msg);
 
 extern void assert(int,char *);
 extern void assert0(int,char *);
@@ -504,7 +504,7 @@ if (statflag==1){
     }
   } 
 }
-#endif DOSTAT
+#endif  // DOSTAT
 }
 
 
@@ -512,7 +512,8 @@ if (statflag==1){
 /*----------------------------------------------------------*/
 
 void asendmsg(jia_msg_t *msg)
-{int outsendmsg;
+{
+  int outsendmsg;
 
 #ifdef DOSTAT
  register unsigned int begin = get_usecs();
