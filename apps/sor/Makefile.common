@@ -25,4 +25,4 @@ all:$(TARGET)
 clean:
 	rm -f *.[od] *.log *.err $(TARGET)
 
-include $(OBJS:.o=.d)
+# include $(OBJS:.o=.d)
