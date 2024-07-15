@@ -94,7 +94,7 @@ int	end;
 
 extern char *optarg;
 
-slave()
+void slave()
 {int begin,end;
 	
  begin = ((M+2)*jiapid)/jiahosts;
