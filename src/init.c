@@ -298,7 +298,8 @@ int startprocs(int argc, char **argv)
 
 
 int mypid()
-{ char hostname[Wordsize];
+{ 
+  char hostname[Wordsize];
   uid_t uid;
   struct passwd *userp;
   struct hostent *hostp;
