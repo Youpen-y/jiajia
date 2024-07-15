@@ -26,7 +26,7 @@ float **red_;
 float **black_;
 float t1,t2;
 
-print_board()
+void print_board()
 {int i,j;
 
  for (i=0;i<=N;i+=0x40){

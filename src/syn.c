@@ -82,7 +82,7 @@ wtnt_t *appendbarrwtnts(jia_msg_t *msg, wtnt_t *ptr);
 void sendwtnts(int operation);
 void popstack();
 void jia_unlock(int lock);
-void jia_barrier();
+extern void jia_barrier();
 void grantlock(long lock, int toproc, int acqscope);
 void grantbarr(long lock);
 void acqserver(jia_msg_t *req);
