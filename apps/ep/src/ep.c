@@ -2,7 +2,9 @@
 #include <math.h>
 #include <sys/time.h>
 #include <jia.h>
-
+#include <stdlib.h> // atoi
+#include <strings.h> // bzero
+#include <unistd.h> // getopt
 double aint(double x)
 {
   if (x > 0.0)

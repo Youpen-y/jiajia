@@ -86,6 +86,19 @@ extern void   loadserver(jia_msg_t *);
 extern void   loadgrantserver(jia_msg_t *);
 extern void   emptyprintf();
 
+extern void setcvserver(jia_msg_t *);
+extern void resetcvserver(jia_msg_t *);
+extern void waitcvserver(jia_msg_t *);
+extern void cvgrantserver(jia_msg_t *);
+
+/* external function from msg.c*/
+extern void msgrecvserver(jia_msg_t *);
+
+extern void statserver(jia_msg_t *);
+extern void statgrantserver(jia_msg_t *);
+
+extern unsigned int get_usecs();
+
 extern void   printmsg(jia_msg_t *, int);
 extern jia_msg_t  *newmsg();
 

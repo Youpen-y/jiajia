@@ -9,6 +9,7 @@
 #include <stdio.h>
 #include <sys/time.h>
 #include <jia.h>
+#include <stdlib.h>
 
 /*
  * To begin statistics collection after the first iteration

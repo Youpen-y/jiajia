@@ -4,7 +4,7 @@
 
 CC  = gcc
 CCC = gcc
-#FC = f77 #f77 is too old
+#FC = f77 # f77 is too old
 FC = gfortran	# gfortran is more common
 
 SRC	= ../../src
@@ -16,7 +16,7 @@ VPATH   = ./$(SRC)
 TARGET 	= libjia.a
 
 %.d: %.c
-	@echo "Creating $@..."
+	@echo "Creating $@..."	# @command, ignore 'command' in terminal presentation
 	@$(SHELL) -ec "$(CC) -MM $(CPPFLAGS) $< | sed ' s/$*\.o/& $@/g' > $@"
 
 %.d: %.f

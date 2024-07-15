@@ -41,6 +41,7 @@ extern void freemsg(jia_msg_t*);
 extern void asendmsg(jia_msg_t *msg);
 extern void broadcast(jia_msg_t *msg);
 extern float jia_clock();
+extern void appendmsg(jia_msg_t *, unsigned char *, int);
 
 extern int jia_pid;
 extern int hostc;

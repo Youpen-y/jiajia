@@ -1,4 +1,5 @@
-extern jia_pid, hostc;
+extern int jia_pid;
+extern int hostc;
 
 struct jia_ident {
 	int jiapid;

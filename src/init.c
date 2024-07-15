@@ -51,7 +51,10 @@ extern void enable_sigio();
 extern unsigned long jia_current_time();
 extern float jia_clock();
 
-int getline(int *wordc, char wordv[Maxwords][Wordsize]);
+extern void assert0(int, char *);
+extern unsigned int get_usecs();
+
+int my_getline(int *wordc, char wordv[Maxwords][Wordsize]);
 void gethosts();
 int  mypid();
 void copyfiles(int argc, char **argv);
@@ -79,7 +82,7 @@ jiastat_t jiastat;
 int statflag;
 #endif
 
-int getline(int *wordc, char wordv[Maxwords][Wordsize])
+int my_getline(int *wordc, char wordv[Maxwords][Wordsize])
 {
   char line[Linesize];
   int ch;

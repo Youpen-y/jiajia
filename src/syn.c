@@ -56,6 +56,17 @@ extern float jia_clock();
 extern void setwtvect(int homei,wtvect_t wv);
 extern void addwtvect(int homei,wtvect_t wv,int from);
 
+extern unsigned int get_usecs();
+extern void newtwin(address_t *twin);
+extern void appendmsg(jia_msg_t *msg, unsigned char *str, int len);
+
+extern void senddiffs();
+
+extern void bsendmsg(jia_msg_t *msg);
+
+extern void flushpage(int cachei);
+extern void memunmap(caddr_t addr, size_t len);
+
 void initsyn();
 void clearlocks();
 void savewtnt(wtnt_t *ptr, address_t addr, int frompid);
@@ -112,7 +123,7 @@ extern int H_MIG,AD_WD,B_CAST,LOAD_BAL,W_VEC;
 extern float caltime,starttime,endtime;
 
 #ifdef DOSTAT
-extern statflag;
+extern int statflag;
 extern jiastat_t jiastat;
 #endif
 

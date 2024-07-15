@@ -43,13 +43,18 @@
 #include "comm.h"
 #include "msg.h"
 
-extern void assert(int cond, char *errstr);
+extern void assert0(int cond, char *errstr);
 extern jia_msg_t *newmsg();
 extern void freemsg(jia_msg_t*);
 extern void printmsg(jia_msg_t *msg,int right);
 extern void asendmsg(jia_msg_t *msg);
 extern void broadcast(jia_msg_t *msg);
 extern float jia_clock();
+
+extern void appendmsg(jia_msg_t *, unsigned char *, int);
+extern void disable_sigio();
+extern void enable_sigio();
+extern void bsendmsg(jia_msg_t *);
 
 void jia_send(char *buf, int len, int toproc, int tag);
 void msgrecvserver(jia_msg_t *req);
@@ -97,7 +102,7 @@ void jia_send(char *buf, int len, int toproc, int tag)
  int msgsize;
  char *msgptr;
 
- assert(((toproc<hostc)&&(toproc>=0)),"Incorrect message destination");
+ assert0(((toproc<hostc)&&(toproc>=0)),"Incorrect message destination");
 
  msgsize=len;
  msgptr=buf;
@@ -300,7 +305,7 @@ void jia_reduce(char* sendbuf, char* recvbuf, int count, int op, int root)
  int mypid,fromproc,toproc;
  char *tempbuf;
 
- assert((root<hostc)&&(root>=0),"Incorrect root in reduce");
+ assert0((root<hostc)&&(root>=0),"Incorrect root in reduce");
 
  len=count*thesizeof(op);
 

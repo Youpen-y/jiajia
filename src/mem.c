@@ -58,6 +58,10 @@ extern void disable_sigio();
 extern void jia_barrier();
 extern float jia_clock();
 
+extern void assert0(int, char *);
+extern unsigned int get_usecs();
+extern void appendmsg(jia_msg_t *, unsigned char *, int);
+
 void initmem();
 void getpage(address_t addr,int flag);
 int xor(address_t addr);
@@ -73,7 +77,7 @@ void sigsegv_handler();
 #endif /* AIX41 || IRIX62 */
 
 #ifdef LINUX 
-void sigsegv_handler(int, struct sigcontext_struct);
+void sigsegv_handler(int, struct sigcontext);
 #endif
 
 void getpserver(jia_msg_t *req);
@@ -191,7 +195,7 @@ void memprotect(caddr_t addr,size_t len, int prot)
 
  protyes=mprotect(addr,len,prot);  
  if (protyes!=0) {                                        
-   sprintf(errstr,"mprotect failed! addr=0x%x, errno=%d",(unsigned long)addr,errno); 
+   sprintf(errstr,"mprotect failed! addr=0x%lx, errno=%d",(unsigned long)addr,errno); 
    assert(0,errstr);                          
  }                                                       
 }
@@ -208,7 +212,7 @@ void memmap(caddr_t addr,size_t len,int prot)
 #endif 
 
   if (mapad != addr){                                      
-    sprintf(errstr,"mmap failed! addr=0x%x, errno=%d",(unsigned long)(addr),errno);
+    sprintf(errstr,"mmap failed! addr=0x%lx, errno=%d",(unsigned long)(addr),errno);
     assert(0,errstr);                                                
   }                                                                  
 }
@@ -219,7 +223,7 @@ void memunmap(caddr_t addr,size_t len)
 
  unmapyes=munmap(addr,len);  
  if (unmapyes!=0) {                                        
-   sprintf(errstr,"munmap failed! addr=0x%x, errno=%d",(unsigned long)addr,errno); 
+   sprintf(errstr,"munmap failed! addr=0x%lx, errno=%d",(unsigned long)addr,errno); 
    assert(0,errstr);                          
  }                                                       
 }
@@ -234,7 +238,7 @@ unsigned long jia_alloc3(int size,int block, int starthost)
  int protect;
  
  sprintf(errstr, 
-         "Insufficient shared space! --> Max=0x%x Left=0x%x Need=0x%x\n",
+         "Insufficient shared space! --> Max=0x%x Left=0x%lx Need=0x%x\n",
          Maxmemsize, Maxmemsize-globaladdr,size);
 
  assert(((globaladdr+size)<=Maxmemsize), errstr);
@@ -266,7 +270,7 @@ unsigned long jia_alloc3(int size,int block, int starthost)
 
 #ifdef JIA_DEBUG
 #endif 
-   printf("Map 0x%x bytes in home %4d! globaladdr = 0x%x\n",mapsize,homepid,globaladdr);
+   printf("Map 0x%x bytes in home %4d! globaladdr = 0x%lx\n",mapsize,homepid,globaladdr);
 
    hosts[homepid].homesize+=mapsize;
    globaladdr+=mapsize;
@@ -288,7 +292,7 @@ unsigned long jia_alloc3b(int size,int *block, int starthost)
  int protect;
  
  sprintf(errstr, 
-         "Insufficient shared space! --> Max=0x%x Left=0x%x Need=0x%x\n",
+         "Insufficient shared space! --> Max=0x%x Left=0x%lx Need=0x%x\n",
          Maxmemsize, Maxmemsize-globaladdr,size);
  
  assert(((globaladdr+size)<=Maxmemsize), errstr);
@@ -321,7 +325,7 @@ unsigned long jia_alloc3b(int size,int *block, int starthost)
  
 #ifdef JIA_DEBUG
 #endif 
-   printf("Map 0x%x bytes in home %4d! globaladdr = 0x%x\n",mapsize,homepid,globaladdr);
+   printf("Map 0x%x bytes in home %4d! globaladdr = 0x%lx\n",mapsize,homepid,globaladdr);
       
    hosts[homepid].homesize+=mapsize;
    globaladdr+=mapsize;
@@ -442,7 +446,7 @@ void sigsegv_handler(int signo, int code, struct sigcontext *scp, char *addr)
 #endif 
 
 #ifdef LINUX
-void sigsegv_handler(int signo, struct sigcontext_struct sigctx)
+void sigsegv_handler(int signo, struct sigcontext sigctx)
 #endif 
 {address_t faultaddr;
  int writefault;
@@ -485,8 +489,7 @@ if (statflag==1){
  writefault = (int) sigctx.err &2;
 #endif 
 
- sprintf(errstr,"Access shared memory out of range from 0x%x to 0x%x!, 
-                 faultaddr=0x%x, writefault=0x%x", 
+ sprintf(errstr,"Access shared memory out of range from 0x%x to 0x%x!, faultaddr=0x%x, writefault=0x%x", 
                  Startaddr,Startaddr+globaladdr,faultaddr, writefault);
  assert((((unsigned long)faultaddr<(Startaddr+globaladdr))&& 
          ((unsigned long)faultaddr>=Startaddr)), errstr);

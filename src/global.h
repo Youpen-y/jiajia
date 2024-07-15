@@ -96,7 +96,7 @@
 
 #ifdef LINUX
 #include        <sys/fcntl.h>
-#include        <asm/sigcontext.h>
+// #include        <asm/sigcontext.h>
 #include        <asm/mman.h> 
 #endif         
 
