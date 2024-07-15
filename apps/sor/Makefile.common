@@ -8,9 +8,12 @@ OBJS 	= sor.o
 VPATH = ../src 
 JIALIB = ../../../lib/$(ARCH)
 
-%.d:%.c 
-	@echo "Creating $@..."
-	@$(SHELL) -ec "$(CC) $(CPPFLAGS) $< | sed ' s/$*\.o/& $@/g' > $@"
+#%.d:%.c 
+#	@echo "Creating $@..."
+#	@$(SHELL) -ec "$(CC) $(CPPFLAGS) $< | sed ' s/$*\.o/& $@/g' > $@"
+
+$(OBJS):sor.c
+	$(CC) $(CPPFLAGS) -o $@ -c $?
 
 TARGET 	= sor
 

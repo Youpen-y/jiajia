@@ -41,6 +41,7 @@
 #include "mem.h"
 #include "syn.h"
 #include "comm.h"
+#include "jia.h"
 
 extern void assert(int cond, char *errstr);
 extern jia_msg_t *newmsg();

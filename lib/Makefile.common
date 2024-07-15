@@ -9,7 +9,7 @@ FC = gfortran	# gfortran is more common
 
 SRC	= ../../src
 CFLAGS	= -I./${SRC} $(ARCH_FLAGS)  -DDOSTAT 
-OBJS 	= comm.o init.o mem.o syn.o tools.o exit.o  get.o finit.o msg.o load.o
+OBJS 	= comm.o init.o mem.o syn.o tools.o exit.o get.o finit.o msg.o load.o
 
 VPATH   = ./$(SRC)
 

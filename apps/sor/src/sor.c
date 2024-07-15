@@ -170,7 +170,7 @@ int main(int argc, char *argv[])
    }
  }
 
-        jia_barrier();
+ jia_barrier();
 
 /*
  jia_config(HMIG,ON);

@@ -70,7 +70,7 @@ extern char errstr[Linesize];
 extern long Startport;
 
 FILE  *config, *fopen();
-int   jia_pid; 
+int   jia_pid;                       /* node number */
 host_t hosts[Maxhosts+1];            /* host array */
 int  hostc;                          /* host counter */
 char   argv0[Wordsize];              /* program name */
