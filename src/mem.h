@@ -38,6 +38,8 @@
 #ifndef JIAMEM_H
 #define JIAMEM_H
 
+#include "comm.h" // jia_msg_t
+
 /*
 */
 #define   RESERVE_TWIN_SPACE

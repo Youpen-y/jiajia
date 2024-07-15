@@ -145,7 +145,7 @@ void gethosts()
   hostc=0;
   linec=0;
   while(!endoffile){
-    endoffile=getline(&wordc,wordv);
+    endoffile=my_getline(&wordc,wordv);
     linec++;
     sprintf(errstr,"Line %4d: incorrect host specification!",linec);
     assert0(((wordc==Wordnum)||(wordc==0)),errstr);
@@ -256,7 +256,7 @@ int startprocs(int argc, char **argv)
    }
 
    strcat(cmd, "-P");
-   sprintf(cmd,"%s%d ",cmd,Startport);
+   sprintf(cmd,"%s%ld ",cmd,Startport);
    strcat(cmd," &");
    printf("Starting CMD %s on host %s\n", cmd, hosts[hosti].name);
    system(cmd);
