@@ -61,7 +61,7 @@ extern float jia_clock();
 extern void assert0(int, char *);
 extern unsigned int get_usecs();
 extern void appendmsg(jia_msg_t *, unsigned char *, int);
-extern void assert(int cond, char *amsg)
+extern void assert(int cond, char *amsg);
 
 void initmem();
 void getpage(address_t addr,int flag);
