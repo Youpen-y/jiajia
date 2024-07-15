@@ -10,7 +10,7 @@
 #include <sys/time.h>
 #include <jia.h>
 #include <stdlib.h>
-
+#include <unistd.h> // getopt
 /*
  * To begin statistics collection after the first iteration
  * has completed use the following #define
@@ -115,9 +115,7 @@ slave()
 }
 
 
-main(argc, argv)
-int		argc;
-char	       *argv[];
+int main(int argc, char *argv[])
 {int c,i,j;
  float sum;
 
