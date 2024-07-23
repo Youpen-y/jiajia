@@ -48,7 +48,7 @@
 #define   SWvalve     1 /*must be less than 15*/
 #define   Diffunit    4
 #define   Dirtysize   (Pagesize/(Diffunit*8))
-#define   Homepages   16384
+#define   Homepages   16384        /* maximum number of home pages in a host */
 #define   Homesize    (Homepages*Pagesize)
 #define   Cachesize   (Pagesize*Cachepages) 
 #define   Setpages    Cachepages

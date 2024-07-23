@@ -220,66 +220,68 @@ void memmap(caddr_t addr,size_t len,int prot)
 
 
 void memunmap(caddr_t addr,size_t len)                               
-{int unmapyes;                                            
+{
+  int unmapyes;                                            
 
- unmapyes=munmap(addr,len);  
- if (unmapyes!=0) {                                        
-   sprintf(errstr,"munmap failed! addr=0x%lx, errno=%d",(unsigned long)addr,errno); 
-   assert(0,errstr);                          
- }                                                       
+  unmapyes=munmap(addr,len);  
+  if (unmapyes!=0) {                                        
+    sprintf(errstr,"munmap failed! addr=0x%lx, errno=%d",(unsigned long)addr,errno); 
+    assert(0,errstr);                          
+  }                                                       
 }
 
 
 unsigned long jia_alloc3(int size,int block, int starthost)
-{int homepid;
- int mapsize;
- int allocsize;
- int originaddr;
- int homei,pagei,i;
- int protect;
- 
- sprintf(errstr, 
-         "Insufficient shared space! --> Max=0x%x Left=0x%lx Need=0x%x\n",
-         Maxmemsize, Maxmemsize-globaladdr,size);
+{
+  int homepid;
+  int mapsize;
+  int allocsize;
+  int originaddr;
+  int homei,pagei,i;
+  int protect;
+  
+  sprintf(errstr, 
+          "Insufficient shared space! --> Max=0x%x Left=0x%lx Need=0x%x\n",
+          Maxmemsize, Maxmemsize-globaladdr,size);
 
- assert(((globaladdr+size)<=Maxmemsize), errstr);
+  assert(((globaladdr+size)<=Maxmemsize), errstr);
 
- originaddr=globaladdr;
- allocsize=((size%Pagesize)==0)?(size):((size/Pagesize+1)*Pagesize); 
- mapsize=((block%Pagesize)==0)?(block):((block/Pagesize+1)*Pagesize); 
- homepid=starthost;
+  originaddr=globaladdr;
+  allocsize=((size%Pagesize)==0)?(size):((size/Pagesize+1)*Pagesize); 
+  mapsize=((block%Pagesize)==0)?(block):((block/Pagesize+1)*Pagesize); 
+  homepid=starthost;
 
- while (allocsize>0){
-  if (jia_pid==homepid){
-     assert((hosts[homepid].homesize+mapsize)<(Homepages*Pagesize),"Too many home pages");
+  while (allocsize>0){
+    if (jia_pid==homepid){
+      assert((hosts[homepid].homesize+mapsize)<(Homepages*Pagesize),"Too many home pages");
 
-     protect=(hostc==1) ? PROT_READ|PROT_WRITE : PROT_READ;
-     memmap((caddr_t)(Startaddr+globaladdr),(size_t)mapsize,protect);
+      protect=(hostc==1) ? PROT_READ|PROT_WRITE : PROT_READ;
+      memmap((caddr_t)(Startaddr+globaladdr),(size_t)mapsize,protect);
 
-     for (i=0;i<mapsize;i+=Pagesize){
-       pagei=(globaladdr+i)/Pagesize;
-       homei=(hosts[homepid].homesize+i)/Pagesize;
-       home[homei].addr=(address_t)(Startaddr+globaladdr+i);
-       page[pagei].homei=homei;
-     }
-   }
+      for (i=0;i<mapsize;i+=Pagesize){
+        pagei=(globaladdr+i)/Pagesize;
+        homei=(hosts[homepid].homesize+i)/Pagesize;
+        home[homei].addr=(address_t)(Startaddr+globaladdr+i);
+        page[pagei].homei=homei;
+      }
+    }
 
-   for (i=0;i<mapsize;i+=Pagesize){
-     pagei=(globaladdr+i)/Pagesize;
-     page[pagei].homepid=homepid;
-   }
+    for (i=0;i<mapsize;i+=Pagesize){
+      pagei=(globaladdr+i)/Pagesize;
+      page[pagei].homepid=homepid;
+    }
 
-#ifdef JIA_DEBUG
-#endif 
-   printf("Map 0x%x bytes in home %4d! globaladdr = 0x%lx\n",mapsize,homepid,globaladdr);
+  #ifdef JIA_DEBUG
+  #endif 
+    printf("Map 0x%x bytes in home %4d! globaladdr = 0x%lx\n",mapsize,homepid,globaladdr);
 
-   hosts[homepid].homesize+=mapsize;
-   globaladdr+=mapsize;
-   allocsize-=mapsize;   
-   homepid=(homepid+1)%hostc;
- }
+    hosts[homepid].homesize+=mapsize;
+    globaladdr+=mapsize;
+    allocsize-=mapsize;   
+    homepid=(homepid+1)%hostc;
+  }
 
- return(Startaddr+originaddr);
+  return(Startaddr+originaddr);
 }
 
 

@@ -150,7 +150,7 @@ void gethosts()
     sprintf(errstr,"Line %4d: incorrect host specification!",linec);
     assert0(((wordc==Wordnum)||(wordc==0)),errstr);
     if (wordc!=0){
-      hostp=gethostbyname(wordv[0]);
+      hostp=gethostbyname(wordv[0]);  // TODO gethostbyname() has been obsolete, use getaddrinfo, get-nameinfo, gai_strerror instead
       printf("Host[%d]: %s [%s]\n", hostc, hostp->h_name, 
              inet_ntoa(*(struct in_addr*)hostp->h_addr_list[0]));
       sprintf(errstr,"Line %4d: incorrect host %s!",linec,wordv[0]);
@@ -298,7 +298,7 @@ int startprocs(int argc, char **argv)
 
 
 int mypid()
-{ 
+{
   char hostname[Wordsize];
   uid_t uid;
   struct passwd *userp;

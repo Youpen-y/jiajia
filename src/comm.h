@@ -47,7 +47,7 @@
 #define Maxmsgsize   (40960-Msgheadsize) 
 #define Msgheadsize  32
 #define Maxmsgs      8 
-#define Maxqueue     32
+#define Maxqueue     32			/* size of input and output queue for communication (>= 2*maxhosts)*/
 
 #define  DIFF      0
 #define  DIFFGRANT 1     

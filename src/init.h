@@ -42,7 +42,7 @@
 #define   Linesize    200
 #define   Wordnum     3
 #define   Maxwords    10
-#define   Maxfileno   1024
+#define   Maxfileno   1024      /* maximum number of file descriptors that can be concurrently opened in UNIX, (>= 4*Maxhosts*Maxhosts) */
 
 #define   SEGVoverhead  600
 #define   SIGIOoverhead 200

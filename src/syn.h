@@ -48,7 +48,7 @@
 #define cbit(s,n)    ((s[(n)/8])&=(~((unsigned char)(0x1<<((n)%8)))))
 #define tbit(s,n)    (((s[(n)/8])&((unsigned char)(0x1<<((n)%8))))!=0)   
 #define WNULL        ((wtnt_t*)NULL)
-#define Maxcvs         16
+#define Maxcvs         16       /* maximum number of conditional variables in JIAJIA */
 
 
 typedef struct wtnttype {

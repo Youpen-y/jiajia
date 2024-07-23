@@ -39,28 +39,30 @@
 #define	JIAGLOBAL_H
 
 #ifndef Maxhosts
-#define Maxhosts   16
+#define Maxhosts   16               /* maximum number of hosts of a parallel system */
 #endif 
-#define	Maxlocks   64 
-#define Intbytes   4
-#define Intbits    32
-#define Pagesize   4096
+#define	Maxlocks   64               /* maximum number of locks in JIAJIA */
+#define Intbytes   4                /* number of bytes of int type */
+#define Intbits    32               /* number of bits of int type */
+#define Pagesize   4096             /* page size of JIAJIA */
 #ifndef Cachepages
-#define Cachepages 1024
+#define Cachepages 1024             /* cache size in number of pages */
 #endif
-#define   Startaddr   0x60000000
-#define   Maxmemsize  0x8000000  
-#define   Maxmempages (Maxmemsize/Pagesize)
+#define   Startaddr   0x60000000    /* start virtual address from which the allocation of shared space starts */
+#define   Maxmemsize  0x8000000     /* max number of bytes of the shared memory 128MB, [Startaddr, Startaddr+Maxmemsize) */
+#define   Maxmempages (Maxmemsize/Pagesize) /* max number of pages of the shared memory */
 
 #include        <stdio.h>
 #include        <stdlib.h>
 #include        <memory.h>
 #include        <stdarg.h>
 #include        <math.h>
+
 #ifndef    LINUX
 #include        <stropts.h>
 #include        <sys/conf.h>
 #endif 
+
 #include        <sys/socket.h>
 #include        <sys/time.h>
 #include        <sys/types.h>
@@ -72,22 +74,17 @@
 #include        <sys/mman.h>
 #include        <sys/stat.h>
 #include        <string.h>
+#include        <unistd.h>
+#include        <pwd.h>
+#include 	      <signal.h>
+#include        <string.h>
+#include        <sys/resource.h>
 
 #ifdef SOLARIS
 #include        <ucontext.h>
 #include        <siginfo.h>
-#endif /* SOLARIS */
-
-#include        <unistd.h>
-#include        <pwd.h>
-#include 	<signal.h>
-
-#ifdef SOLARIS
 #include        <sys/file.h>
 #endif /* SOLARIS */
-
-#include        <string.h>
-#include        <sys/resource.h>
 
 #ifdef AIX41
 #include	<sys/select.h>
@@ -102,11 +99,13 @@
 
 typedef void (* void_func_handler)();
 
+/* Switch */
 #ifndef ON
 #define OFF    0
 #define ON     1
 #endif
 
+/* optimization techniques tag */
 #define HMIG       0
 #define ADWD       1
 #define BROADCAST  2

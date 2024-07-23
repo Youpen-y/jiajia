@@ -83,9 +83,14 @@ volatile int    msgbusy[Maxmsgs];
 int msgcnt;
 jia_msg_t assertmsg;
 
-int H_MIG=OFF,AD_WD=OFF,B_CAST=OFF,LOAD_BAL=OFF;
-int W_VEC=OFF;
+/* optimization techniques flag */
+int H_MIG=OFF;    // H_MIG: home migration flag(ON/OFF)
+int AD_WD=OFF;    // AD_WD: adaptive write detection flag(ON/OFF)
+int B_CAST=OFF;   // B_CAST: broadcast barrier messages method either one-by-one or tree structure broadcast
+int LOAD_BAL=OFF; // LOAD_BAL: load balancing flag(ON/OFF)
+int W_VEC=OFF;    // W_VEC: write vector flag(ON/OFF)
 
+/* initial setting that default optimization method is OFF */
 void inittools()
 {
   H_MIG=OFF;
@@ -97,7 +102,7 @@ void inittools()
 
 
 /*-----------------------------------------------------------*/
-void assert0(int cond,char *amsg)
+void assert0(int cond, char *amsg)
 { 
   if (!cond){
     fprintf(stderr,"Assert0 error from host %d --- %s\n", jia_pid, amsg);
@@ -288,13 +293,18 @@ unsigned long jia_current_time()
  
 
 /*-----------------------------------------------------------*/
+/**
+ * @brief jia_clock() - calculate the elapsed time since program started
+ * 
+ * @return float: time(us) since program started
+ */
 float jia_clock()
 {
   float time;
 
   struct timeval val;
-  gettimeofday(&val,NULL);
-  if (!start_time_sec) {
+  gettimeofday(&val,NULL);    // get current system time and store it into val
+  if (!start_time_sec) {      // if not set initial start time, set current time to be start time 
     start_time_sec= val.tv_sec;
     start_time_usec = val.tv_usec;
   }
@@ -354,12 +364,20 @@ void jia_error(char *str,  ... )
 
 extern void setwtvect(int homei,wtvect_t wv);
 
+
+/**
+ * @brief Turn optimizations such as (home migration, write vector, adaptive write detection) on
+ * 
+ * @param dest: optimization technique
+ * @param value ON, turn on the dest; OFF, turn off the dest
+ */
 void jia_config(int dest,int value)
-{int i;
+{
+  int i;
   switch (dest){
-    case HMIG     : H_MIG=value; 
+    case HMIG     : H_MIG=value;    /* change optimization 'home migration' to value(ON/OFF) */
                     break;
-    case ADWD     : AD_WD=value; 
+    case ADWD     : AD_WD=value;    /* change optimization 'adaptive write detetion' to value*/
                     break;
     case BROADCAST: B_CAST=value; 
                     break;
@@ -368,7 +386,7 @@ void jia_config(int dest,int value)
                       firsttime=1;
                       caltime=0.0;
                     break;
-    case WVEC     : if ((W_VEC==OFF)&&(value==ON)){
+    case WVEC     : if ((W_VEC==OFF)&&(value==ON)){   /*  change optimization 'write vector' to value */
                       for (i=0;i<=Homepages;i++){
                         home[i].wtvect=(wtvect_t*)malloc(hostc*sizeof(wtvect_t));
                         setwtvect(i,WVFULL);
