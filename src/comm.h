@@ -101,7 +101,7 @@ typedef  jia_msg_t* msgp_t;
 
 typedef struct CommManager{
     	int                 snd_fds[Maxhosts];
-   	fd_set              snd_set;
+   		fd_set              snd_set;
     	int                 snd_maxfd;
     	unsigned            snd_seq[Maxhosts];
 

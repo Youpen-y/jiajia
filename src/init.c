@@ -426,12 +426,12 @@ void jia_init(int argc, char **argv)
   sleep(2);
   rl.rlim_cur=Maxfileno;
   rl.rlim_max=Maxfileno;
-  setrlimit(RLIMIT_NOFILE,&rl);
+  setrlimit(RLIMIT_NOFILE,&rl);   /* set maximum number of files that can be opened by process limit */
 #endif /* SOLARIS */
 
   rl.rlim_cur=Maxmemsize;
   rl.rlim_max=Maxmemsize;
-  setrlimit(RLIMIT_DATA,&rl);
+  setrlimit(RLIMIT_DATA,&rl);   /* set maximum size of process's data segment */
 
   initmem();
   initsyn();

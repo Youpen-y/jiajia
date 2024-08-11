@@ -188,39 +188,40 @@ void clearlocks()
 
 
 void jia_lock(int lock)
-{int i;
+{
+  int i;
 #ifdef DOSTAT
- register unsigned int begin=get_usecs();
+  register unsigned int begin=get_usecs();
 
 if (statflag==1){
- jiastat.lockcnt++;
- jiastat.kernelflag=1;
+  jiastat.lockcnt++;
+  jiastat.kernelflag=1;
 }
 #endif
 
- if (hostc==1) return;
+  if (hostc==1) return;
 
- if (LOAD_BAL==ON){
-    endtime=jia_clock();
-    caltime+=(endtime-starttime);
- }
+  if (LOAD_BAL==ON){
+      endtime=jia_clock();
+      caltime+=(endtime-starttime);
+  }
 
- sprintf(errstr,"lock %d should range from 0 to %d",lock,Maxlocks-1);
- assert(((lock>=0)&&(lock<Maxlocks)),errstr);
- for (i=0;i<=stackptr;i++)
-   assert((lockstack[i].lockid!=lock),"Embeding of the same lock is not allowed!");
+  sprintf(errstr,"lock %d should range from 0 to %d",lock,Maxlocks-1);
+  assert(((lock>=0)&&(lock<Maxlocks)),errstr);
+  for (i=0; i<=stackptr; i++)
+    assert((lockstack[i].lockid!=lock),"Embeding of the same lock is not allowed!");
 
- endinterval(ACQ);
+  endinterval(ACQ);
 
- acqwait=1;
- acquire(lock);
+  acqwait=1;
+  acquire(lock);
 
- startinterval(ACQ);
+  startinterval(ACQ);
 
- pushstack(lock);
+  pushstack(lock);
 
- if (LOAD_BAL==ON) 
-   starttime=jia_clock();  
+  if (LOAD_BAL==ON) 
+    starttime=jia_clock();  
 
 #ifdef DOSTAT
 if (statflag==1){

@@ -50,7 +50,7 @@
 #endif
 #define   Startaddr   0x60000000    /* start virtual address from which the allocation of shared space starts */
 #define   Maxmemsize  0x8000000     /* max number of bytes of the shared memory 128MB, [Startaddr, Startaddr+Maxmemsize) */
-#define   Maxmempages (Maxmemsize/Pagesize) /* max number of pages of the shared memory */
+#define   Maxmempages (Maxmemsize/Pagesize) /* max number of pages of the shared memory£¬ 32K */
 
 #include        <stdio.h>
 #include        <stdlib.h>
@@ -111,6 +111,7 @@ typedef void (* void_func_handler)();
 #define BROADCAST  2
 #define LOADBAL    3
 #define WVEC       4
+#define RDMA       5
 
 #ifndef	TRUE
 #	define	TRUE		1

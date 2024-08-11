@@ -98,35 +98,36 @@ void initmsg()
 /******************** Message Passing Part*****************/
 
 void jia_send(char *buf, int len, int toproc, int tag)
-{jia_msg_t *req;
- int msgsize;
- char *msgptr;
+{
+  jia_msg_t *req;
+  int msgsize;
+  char *msgptr;
 
- assert0(((toproc<hostc)&&(toproc>=0)),"Incorrect message destination");
+  assert0(((toproc<hostc)&&(toproc>=0)),"Incorrect message destination");
 
- msgsize=len;
- msgptr=buf;
+  msgsize=len;
+  msgptr=buf;
 
- req=newmsg();
- req->frompid=jia_pid;
- req->topid=toproc;
- req->scope=tag; 
+  req=newmsg();
+  req->frompid=jia_pid;
+  req->topid=toproc;
+  req->scope=tag; 
 
- while (msgsize > Maxmsgsize){
-   req->op=MSGBODY;
-   req->size=0;
-   appendmsg(req,msgptr,Maxmsgsize);
-   asendmsg(req);
-   msgptr+=Maxmsgsize;
-   msgsize-=Maxmsgsize;
- }
+  while (msgsize > Maxmsgsize){
+    req->op=MSGBODY;
+    req->size=0;
+    appendmsg(req,msgptr,Maxmsgsize);
+    asendmsg(req);
+    msgptr+=Maxmsgsize;
+    msgsize-=Maxmsgsize;
+  }
 
- req->op=MSGTAIL;
- req->size=0;
- appendmsg(req,msgptr,msgsize);
- asendmsg(req);
+  req->op=MSGTAIL;
+  req->size=0;
+  appendmsg(req,msgptr,msgsize);
+  asendmsg(req);
 
- freemsg(req);
+  freemsg(req);
 }
 
 

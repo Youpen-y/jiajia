@@ -119,75 +119,77 @@ jia_msg_t *diffmsg[Maxhosts];
 
 
 void initmem()
-{int i,j;
+{
+  int i, j;
 
- for (i=0;i<Maxhosts;i++){
-   diffmsg[i]=DIFFNULL;
- }
- diffwait=0;
- getpwait=0;
-
- for (i=0;i<=hostc;i++){
-   hosts[i].homesize=0;
- }
-
- for (i=0;i<=Homepages;i++){
-   home[i].wtnt=0;
-   home[i].rdnt=0;
-   home[i].addr=(address_t)0;
-   home[i].twin=NULL;
- }
-
- for (i=0;i<Maxmempages;i++){
-   page[i].cachei=(unsigned short)Cachepages;
-   page[i].homei=(unsigned short)Homepages;
-   page[i].homepid=(unsigned short)Maxhosts;
- }
-
- for (i=0;i<=Cachepages;i++){
-   cache[i].state=UNMAP;
-   cache[i].addr=0;
-   cache[i].twin=NULL;
-   cache[i].wtnt=0;
- }
-
- globaladdr=0;
-
-#if defined SOLARIS || defined IRIX62
- jiamapfd=open("/dev/zero", O_RDWR,0);
-
- { struct sigaction act;
-
-   act.sa_handler = (void_func_handler)sigsegv_handler;
-   sigemptyset(&act.sa_mask);
-   act.sa_flags = SA_SIGINFO;
-   if (sigaction(SIGSEGV, &act, NULL))
-     assert0(0,"segv sigaction problem");
- }
-#endif 
-
-#ifdef LINUX
- jiamapfd=open("/dev/zero", O_RDWR,0);
- { struct sigaction act;
-   act.sa_handler = (void_func_handler)sigsegv_handler;
-   sigemptyset(&act.sa_mask);
-   act.sa_flags = SA_NOMASK;
-   if (sigaction(SIGSEGV, &act, NULL))
-     assert0(0,"segv sigaction problem");
- }
-#endif 
-
-#ifdef AIX41
-  { struct sigvec vec;
-
-    vec.sv_handler = (void_func_handler)sigsegv_handler;
-    vec.sv_flags = SV_INTERRUPT;
-    sigvec(SIGSEGV, &vec, NULL);
+  for (i = 0; i < Maxhosts; i++) {
+    diffmsg[i] = DIFFNULL;
   }
-#endif /* SOLARIS */
- 
- for (i=0;i<Setnum;i++) repcnt[i]=0;
- srand(1);
+  diffwait = 0;
+  getpwait = 0;
+
+  for (i = 0; i <= hostc; i++) {
+    hosts[i].homesize=0;
+  }
+
+  for (i = 0; i <= Homepages; i++) {
+    home[i].wtnt=0;
+    home[i].rdnt=0;
+    home[i].addr=(address_t)0;
+    home[i].twin=NULL;
+  }
+
+  for (i = 0; i < Maxmempages; i++) {
+    page[i].cachei=(unsigned short)Cachepages;
+    page[i].homei=(unsigned short)Homepages;
+    page[i].homepid=(unsigned short)Maxhosts;
+  }
+
+  for (i = 0; i <= Cachepages; i++) {
+    cache[i].state=UNMAP;
+    cache[i].addr=0;
+    cache[i].twin=NULL;
+    cache[i].wtnt=0;
+  }
+
+  globaladdr=0;
+
+  #if defined SOLARIS || defined IRIX62
+  jiamapfd=open("/dev/zero", O_RDWR,0);
+
+  { struct sigaction act;
+
+    act.sa_handler = (void_func_handler)sigsegv_handler;
+    sigemptyset(&act.sa_mask);
+    act.sa_flags = SA_SIGINFO;
+    if (sigaction(SIGSEGV, &act, NULL))
+      assert0(0,"segv sigaction problem");
+  }
+  #endif 
+
+  #ifdef LINUX
+  jiamapfd=open("/dev/zero", O_RDWR,0);
+  { struct sigaction act;
+    act.sa_handler = (void_func_handler)sigsegv_handler;
+    sigemptyset(&act.sa_mask);
+    // act.sa_flags = SA_NOMASK; 
+    act.sa_flags = SA_NODEFER;  /* SA_NOMASK is obsolete */
+    if (sigaction(SIGSEGV, &act, NULL))
+      assert0(0,"segv sigaction problem");
+  }
+  #endif 
+
+  #ifdef AIX41
+    { struct sigvec vec;
+
+      vec.sv_handler = (void_func_handler)sigsegv_handler;
+      vec.sv_flags = SV_INTERRUPT;
+      sigvec(SIGSEGV, &vec, NULL);
+    }
+  #endif /* SOLARIS */
+  
+  for (i=0;i<Setnum;i++) repcnt[i]=0;
+  srand(1);
 }
 
 

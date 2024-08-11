@@ -55,8 +55,8 @@
 #define   Setnum      (Cachepages/Setpages) 
 
 #define   DIFFNULL    ((jia_msg_t*) NULL)
-  
-#define   homehost(addr) page[((unsigned long)(addr)-Startaddr)/Pagesize].homepid
+
+#define   homehost(addr) page[((unsigned long)(addr)-Startaddr)/Pagesize].homepid   /* get home host according to addr */
 #define   homepage(addr) page[((unsigned long)(addr)-Startaddr)/Pagesize].homei
 
 typedef unsigned char* address_t; 
@@ -68,13 +68,16 @@ typedef unsigned long  wtvect_t;
 #define   Blocksize    (Pagesize/Wvbits)
 
 typedef struct{
+              /* wtnt:
+              bit0:written by home host in an interval
+              bit1:written by home host in a barrier interval
+              bit2:written by other host in an barrier interval
+              bit7~4:single write counter
+              */ 
            char               wtnt; 
-                  /*bit0:written by home host in an interval*/
-                  /*bit1:written by home host in a barrier interval*/
-                  /*bit2:written by other host in an barrier interval*/ 
-                  /*bit7~4:single write counter*/ 
+              /*bit0:somebody has a valid copy*/
            char               rdnt;   
-                  /*bit0:somebody has a valid copy*/
+           
            address_t          addr;
            wtvect_t           *wtvect;  /*used only for write vector*/
            address_t          twin;     /*used only for write vector*/
@@ -98,6 +101,6 @@ typedef struct{
 
 /* Function Declaration */
 void   diffserver(jia_msg_t *);
-void getpserver(jia_msg_t *req);
+void   getpserver(jia_msg_t *req);
 
 #endif /*JIAMEM_H*/

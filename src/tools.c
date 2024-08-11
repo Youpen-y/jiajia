@@ -89,6 +89,7 @@ int AD_WD=OFF;    // AD_WD: adaptive write detection flag(ON/OFF)
 int B_CAST=OFF;   // B_CAST: broadcast barrier messages method either one-by-one or tree structure broadcast
 int LOAD_BAL=OFF; // LOAD_BAL: load balancing flag(ON/OFF)
 int W_VEC=OFF;    // W_VEC: write vector flag(ON/OFF)
+int RDMA_SUPPORT=OFF;     
 
 /* initial setting that default optimization method is OFF */
 void inittools()
@@ -98,6 +99,7 @@ void inittools()
   B_CAST=OFF;
   LOAD_BAL=OFF;
   W_VEC=OFF; 
+  RDMA_SUPPORT=OFF;
 }
 
 
@@ -397,6 +399,8 @@ void jia_config(int dest,int value)
                       }
                     }
                     W_VEC=value; 
+                    break;
+    case RDMA     : printf("TODO! RDMA support")
                     break;
     default       : printf("Null configuration!\n"); 
                     break;
