@@ -116,11 +116,17 @@ void assert0(int cond, char *amsg)
 
 
 /*-----------------------------------------------------------*/
+/**
+ * @brief assert -- judge the cond condition and send assert message
+ * 
+ * @param cond conditons
+ * @param amsg assert error message
+ */
 void assert(int cond, char *amsg)
 {
   int hosti;
 
-  if (!cond){
+  if (!cond){ // if condition is false then ...
     assertmsg.op=JIAEXIT;
     assertmsg.frompid=jia_pid; 
     memcpy(assertmsg.data,amsg,strlen(amsg));

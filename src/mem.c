@@ -111,13 +111,17 @@ jiacache_t      cache[Cachepages+1];
 jiapage_t       page[Maxmempages];
 
 unsigned long   globaladdr;
-long            jiamapfd;
+long            jiamapfd;   /* file descriptor of the file that mapped to process's virtual address space */
 volatile int getpwait;
 volatile int diffwait;
 int repcnt[Setnum];
 jia_msg_t *diffmsg[Maxhosts];
 
 
+/**
+ * @brief initmem - initialize memory setting (wait for SIGSEGV signal)
+ * 
+ */
 void initmem()
 {
   int i, j;
@@ -146,7 +150,7 @@ void initmem()
   }
 
   for (i = 0; i <= Cachepages; i++) {
-    cache[i].state=UNMAP;
+    cache[i].state=UNMAP;   /* initial cached page state is UNMAP */
     cache[i].addr=0;
     cache[i].twin=NULL;
     cache[i].wtnt=0;
@@ -168,8 +172,10 @@ void initmem()
   #endif 
 
   #ifdef LINUX
-  jiamapfd=open("/dev/zero", O_RDWR,0);
-  { struct sigaction act;
+  jiamapfd=open("/dev/zero", O_RDWR,0); /* file descriptor refer to the open file */
+  { /* reference to a non-home page causes the delivery of a SIGSEGV signal,
+    the SIGSEGV handler then maps the fault page to the global address of the page in local address space */
+    struct sigaction act;
     act.sa_handler = (void_func_handler)sigsegv_handler;
     sigemptyset(&act.sa_mask);
     // act.sa_flags = SA_NOMASK; 
@@ -192,26 +198,41 @@ void initmem()
   srand(1);
 }
 
+/**
+ * @brief set [addr, addr+len-1] memory's protection to prot
+ * 
+ * @param addr start address of memory
+ * @param len memory length
+ * @param prot protection flag
+ */
+void memprotect(void* addr, size_t len, int prot)                               
+{
+  int protyes;                                            
 
-void memprotect(caddr_t addr,size_t len, int prot)                               
-{int protyes;                                            
-
- protyes=mprotect(addr,len,prot);  
- if (protyes!=0) {                                        
-   sprintf(errstr,"mprotect failed! addr=0x%lx, errno=%d",(unsigned long)addr,errno); 
-   assert(0,errstr);                          
- }                                                       
+  protyes = mprotect(addr,len,prot);  
+  if (protyes != 0) {                                        
+    sprintf(errstr,"mprotect failed! addr=0x%lx, errno=%d",(unsigned long)addr, errno); 
+    assert(0, errstr);                          
+  }                                                       
 }
 
-
-void memmap(caddr_t addr,size_t len,int prot)                               
-{caddr_t mapad;                                                     
+/**
+ * @brief memmap - map jiamapfd file to process's address space [addr, addr+len-1]
+ * 
+ * @param addr start address of the mapped memory
+ * @param len length of mapped memory
+ * @param prot mapped memory's protection level (PROT_READ/PROT_WRITE/PROT_EXEC/PROT_NONE)
+ */
+void memmap(void* addr, size_t len, int prot)                               
+{
+  void* mapad;                                                  
 
 #if defined SOLARIS || defined IRIX62 || defined LINUX
-  mapad=mmap(addr,len,prot,MAP_PRIVATE|MAP_FIXED,jiamapfd,0);
+  // map file descriptor jiamapfd refered file to process virtual memory [addr, addr+length-1] with protection level prot
+  mapad=mmap(addr, len, prot, MAP_PRIVATE|MAP_FIXED, jiamapfd, 0);
 #endif 
 #ifdef AIX41
-  mapad=mmap(addr,len,prot,MAP_PRIVATE|MAP_FIXED|MAP_ANONYMOUS,-1,0);
+  mapad=mmap(addr, len, prot, MAP_PRIVATE|MAP_FIXED|MAP_ANONYMOUS, -1, 0);
 #endif 
 
   if (mapad != addr){                                      
@@ -221,44 +242,56 @@ void memmap(caddr_t addr,size_t len,int prot)
 }
 
 
-void memunmap(caddr_t addr,size_t len)                               
+/**
+ * @brief memunmap - unmap memory, remove the mapped memory from process virtual address space 
+ * 
+ * @param addr start address of virtual mapped memory that should be cancelled ()
+ * @param len length of mapped memory that need to removed
+ */
+void memunmap(void* addr,size_t len)                               
 {
   int unmapyes;                                            
 
   unmapyes=munmap(addr,len);  
-  if (unmapyes!=0) {                                        
+  if (unmapyes != 0) {                                        
     sprintf(errstr,"munmap failed! addr=0x%lx, errno=%d",(unsigned long)addr,errno); 
-    assert(0,errstr);                          
+    assert(0,errstr);  // TODO assert or assert0 (need to distinguish)                    
   }                                                       
 }
 
-
+/**
+ * @brief jia_alloc3 -- allocates size bytes cyclically across all hosts, each time block bytes
+ * 
+ * @param size
+ * @param block 
+ * @param starthost specifies the host from which the allocation starts
+ * @return unsigned long 
+ */
 unsigned long jia_alloc3(int size,int block, int starthost)
 {
   int homepid;
   int mapsize;
   int allocsize;
   int originaddr;
-  int homei,pagei,i;
+  int homei, pagei, i;
   int protect;
   
   sprintf(errstr, 
           "Insufficient shared space! --> Max=0x%x Left=0x%lx Need=0x%x\n",
           Maxmemsize, Maxmemsize-globaladdr,size);
-
   assert(((globaladdr+size)<=Maxmemsize), errstr);
 
-  originaddr=globaladdr;
-  allocsize=((size%Pagesize)==0)?(size):((size/Pagesize+1)*Pagesize); 
-  mapsize=((block%Pagesize)==0)?(block):((block/Pagesize+1)*Pagesize); 
-  homepid=starthost;
+  originaddr = globaladdr;
+  allocsize = ((size%Pagesize)==0)?(size):((size/Pagesize+1)*Pagesize);   // ensure the alloc size is multiple of pagesize 
+  mapsize = ((block%Pagesize)==0)?(block):((block/Pagesize+1)*Pagesize); 
+  homepid = starthost;
 
-  while (allocsize>0){
-    if (jia_pid==homepid){
+  while (allocsize > 0) {
+    if (jia_pid == homepid) {
       assert((hosts[homepid].homesize+mapsize)<(Homepages*Pagesize),"Too many home pages");
 
       protect=(hostc==1) ? PROT_READ|PROT_WRITE : PROT_READ;
-      memmap((caddr_t)(Startaddr+globaladdr),(size_t)mapsize,protect);
+      memmap((void *)(Startaddr+globaladdr),(size_t)mapsize,protect);
 
       for (i=0;i<mapsize;i+=Pagesize){
         pagei=(globaladdr+i)/Pagesize;
@@ -288,63 +321,65 @@ unsigned long jia_alloc3(int size,int block, int starthost)
 
 
 unsigned long jia_alloc3b(int size,int *block, int starthost)
-{int homepid;
- int mapsize;
- int allocsize;
- int originaddr;
- int homei,pagei,i;
- int blocki;
- int protect;
- 
- sprintf(errstr, 
-         "Insufficient shared space! --> Max=0x%x Left=0x%lx Need=0x%x\n",
-         Maxmemsize, Maxmemsize-globaladdr,size);
- 
- assert(((globaladdr+size)<=Maxmemsize), errstr);
+{
+  int homepid;
+  int mapsize;
+  int allocsize;
+  int originaddr;
+  int homei,pagei,i;
+  int blocki;
+  int protect;
+  
+  sprintf(errstr, 
+          "Insufficient shared space! --> Max=0x%x Left=0x%lx Need=0x%x\n",
+          Maxmemsize, Maxmemsize-globaladdr,size);
+  
+  assert(((globaladdr+size)<=Maxmemsize), errstr);
 
- blocki=0; 
- originaddr=globaladdr;
- allocsize=((size%Pagesize)==0)?(size):((size/Pagesize+1)*Pagesize);
- homepid=starthost;
- 
- while (allocsize>0){
-   mapsize=((block[blocki]%Pagesize)==0)?(block[blocki]):((block[blocki]/Pagesize+1)*Pagesize);
-   if (jia_pid==homepid){
-     assert((hosts[homepid].homesize+mapsize)<(Homepages*Pagesize),"Too many home pages");
+  blocki=0; 
+  originaddr=globaladdr;
+  allocsize=((size%Pagesize)==0)?(size):((size/Pagesize+1)*Pagesize);
+  homepid=starthost;
+  
+  while (allocsize>0){
+    mapsize=((block[blocki]%Pagesize)==0)?(block[blocki]):((block[blocki]/Pagesize+1)*Pagesize);
+    if (jia_pid==homepid){
+      assert((hosts[homepid].homesize+mapsize)<(Homepages*Pagesize),"Too many home pages");
 
-     protect=(hostc==1) ? PROT_READ|PROT_WRITE : PROT_READ;
-     memmap((caddr_t)(Startaddr+globaladdr),(size_t)mapsize,protect);
+      protect=(hostc==1) ? PROT_READ|PROT_WRITE : PROT_READ;
+      memmap((void *)(Startaddr+globaladdr),(size_t)mapsize,protect);
 
-     for (i=0;i<mapsize;i+=Pagesize){
-       pagei=(globaladdr+i)/Pagesize;
-       homei=(hosts[homepid].homesize+i)/Pagesize;
-       home[homei].addr=(address_t)(Startaddr+globaladdr+i);
-       page[pagei].homei=homei;
-     }
-   }
-     
-   for (i=0;i<mapsize;i+=Pagesize){
-     pagei=(globaladdr+i)/Pagesize;
-     page[pagei].homepid=homepid;
-   }
- 
-#ifdef JIA_DEBUG
-#endif 
-   printf("Map 0x%x bytes in home %4d! globaladdr = 0x%lx\n",mapsize,homepid,globaladdr);
+      for (i=0;i<mapsize;i+=Pagesize){
+        pagei=(globaladdr+i)/Pagesize;
+        homei=(hosts[homepid].homesize+i)/Pagesize;
+        home[homei].addr=(address_t)(Startaddr+globaladdr+i);
+        page[pagei].homei=homei;
+      }
+    }
       
-   hosts[homepid].homesize+=mapsize;
-   globaladdr+=mapsize;
-   allocsize-=mapsize;
-   homepid=(homepid+1)%hostc;
-   if (homepid==0) blocki++;
- }
- 
- return(Startaddr+originaddr);
+    for (i=0;i<mapsize;i+=Pagesize){
+      pagei=(globaladdr+i)/Pagesize;
+      page[pagei].homepid=homepid;
+    }
+  
+  #ifdef JIA_DEBUG
+  #endif 
+    printf("Map 0x%x bytes in home %4d! globaladdr = 0x%lx\n",mapsize,homepid,globaladdr);
+        
+    hosts[homepid].homesize+=mapsize;
+    globaladdr+=mapsize;
+    allocsize-=mapsize;
+    homepid=(homepid+1)%hostc;
+    if (homepid==0) blocki++;
+  }
+  
+  return(Startaddr+originaddr);
 }
 
 
 unsigned long jia_alloc(int size)
-{static int starthost=-1;
+{
+  static int starthost=-1;
 
   starthost=(starthost+1)%hostc;
   return(jia_alloc3(size,size,starthost));
@@ -368,10 +403,15 @@ unsigned long jia_alloc2p(int size, int proc)
 
 int xor(address_t addr)
 {
- return((((unsigned long)(addr-Startaddr)/Pagesize)%Setnum)*Setpages);
+  return((((unsigned long)(addr-Startaddr)/Pagesize)%Setnum)*Setpages);
 }
 
-
+/**
+ * @brief replacei - 
+ * 
+ * @param cachei: index of cache
+ * @return int 
+ */
 int replacei(int cachei)
 {int seti;
 
@@ -453,105 +493,106 @@ void sigsegv_handler(int signo, int code, struct sigcontext *scp, char *addr)
 #ifdef LINUX
 void sigsegv_handler(int signo, struct sigcontext sigctx)
 #endif 
-{address_t faultaddr;
- int writefault;
- int cachei,homei;
+{
+  address_t faultaddr;
+  int writefault;
+  int cachei,homei;
 
- sigset_t set;
-	
-#ifdef DOSTAT
- register unsigned int begin = get_usecs();
-if (statflag==1){
- jiastat.kernelflag=2;
-}
-#endif
+  sigset_t set;
+    
+  #ifdef DOSTAT
+  register unsigned int begin = get_usecs();
+  if (statflag==1){
+  jiastat.kernelflag=2;
+  }
+  #endif
 
- sigemptyset(&set);
- sigaddset(&set,SIGIO);
- sigprocmask(SIG_UNBLOCK, &set, NULL);
+  sigemptyset(&set);
+  sigaddset(&set,SIGIO);
+  sigprocmask(SIG_UNBLOCK, &set, NULL);
 
-#ifdef SOLARIS
- faultaddr=(address_t)sip->si_addr;
- faultaddr=(address_t)((unsigned long)faultaddr/Pagesize*Pagesize);
- writefault=(int)(*(unsigned *)uap->uc_mcontext.gregs[REG_PC] & (1<<21));
-#endif 
+  #ifdef SOLARIS
+  faultaddr=(address_t)sip->si_addr;
+  faultaddr=(address_t)((unsigned long)faultaddr/Pagesize*Pagesize);
+  writefault=(int)(*(unsigned *)uap->uc_mcontext.gregs[REG_PC] & (1<<21));
+  #endif 
 
-#ifdef AIX41 
- faultaddr = (char *)scp->sc_jmpbuf.jmp_context.o_vaddr;
- faultaddr = (address_t)((unsigned long)faultaddr/Pagesize*Pagesize);
- writefault = (scp->sc_jmpbuf.jmp_context.except[1] & DSISR_ST) >> 25;
-#endif 
+  #ifdef AIX41 
+  faultaddr = (char *)scp->sc_jmpbuf.jmp_context.o_vaddr;
+  faultaddr = (address_t)((unsigned long)faultaddr/Pagesize*Pagesize);
+  writefault = (scp->sc_jmpbuf.jmp_context.except[1] & DSISR_ST) >> 25;
+  #endif 
 
-#ifdef IRIX62
- faultaddr=(address_t)scp->sc_badvaddr;
- faultaddr=(address_t)((unsigned long)faultaddr/Pagesize*Pagesize);
- writefault=(int)(scp->sc_cause & EXC_CODE(1));
-#endif 
+  #ifdef IRIX62
+  faultaddr=(address_t)scp->sc_badvaddr;
+  faultaddr=(address_t)((unsigned long)faultaddr/Pagesize*Pagesize);
+  writefault=(int)(scp->sc_cause & EXC_CODE(1));
+  #endif 
 
-#ifdef LINUX 
- faultaddr = (address_t) sigctx.cr2;
- faultaddr = (address_t) ((unsigned long) faultaddr/Pagesize*Pagesize);
- writefault = (int) sigctx.err &2;
-#endif 
+  #ifdef LINUX 
+  faultaddr = (address_t) sigctx.cr2;
+  faultaddr = (address_t) ((unsigned long)faultaddr/Pagesize*Pagesize);
+  writefault = (int) sigctx.err &2;
+  #endif 
 
- sprintf(errstr,"Access shared memory out of range from 0x%x to 0x%x!, faultaddr=0x%x, writefault=0x%x", 
-                 Startaddr,Startaddr+globaladdr,faultaddr, writefault);
- assert((((unsigned long)faultaddr<(Startaddr+globaladdr))&& 
-         ((unsigned long)faultaddr>=Startaddr)), errstr);
+  sprintf(errstr,"Access shared memory out of range from 0x%x to 0x%x!, faultaddr=0x%x, writefault=0x%x", 
+                  Startaddr,Startaddr+globaladdr,faultaddr, writefault);
+  assert((((unsigned long)faultaddr<(Startaddr+globaladdr))&& 
+          ((unsigned long)faultaddr>=Startaddr)), errstr);
 
 
- if (homehost(faultaddr)==jia_pid){
-   memprotect((caddr_t)faultaddr,Pagesize,PROT_READ|PROT_WRITE);
-   homei=homepage(faultaddr);
-   home[homei].wtnt|=3;
-   if ((W_VEC==ON)&&(home[homei].wvfull==0)){
-     newtwin(&(home[homei].twin));
-     memcpy(home[homei].twin,home[homei].addr,Pagesize);
-   }
-#ifdef DOSTAT
-if (statflag==1){
- jiastat.segvLtime += get_usecs() - begin;
- jiastat.kernelflag=0;
- jiastat.segvLcnt++;
-}
-#endif
+  if (homehost(faultaddr)==jia_pid){
+    memprotect((caddr_t)faultaddr,Pagesize,PROT_READ|PROT_WRITE);
+    homei=homepage(faultaddr);
+    home[homei].wtnt|=3;
+    if ((W_VEC==ON)&&(home[homei].wvfull==0)){
+      newtwin(&(home[homei].twin));
+      memcpy(home[homei].twin,home[homei].addr,Pagesize);
+    }
+  #ifdef DOSTAT
+  if (statflag==1){
+  jiastat.segvLtime += get_usecs() - begin;
+  jiastat.kernelflag=0;
+  jiastat.segvLcnt++;
+  }
+  #endif
 
- }else{
-   writefault=(writefault==0) ? 0 : 1;
-   cachei=(int)page[((unsigned long)faultaddr-Startaddr)/Pagesize].cachei;
-   if (cachei<Cachepages){
-     memprotect((caddr_t)faultaddr,Pagesize,PROT_READ|PROT_WRITE);
-     if (!((writefault)&&(cache[cachei].state==RO))){
-       getpage(faultaddr,1);
-     }
-   }else{
-     cachei=findposition(faultaddr);
-     memmap((caddr_t)faultaddr,Pagesize,PROT_READ|PROT_WRITE);
-     getpage(faultaddr,0);
-   }
+  }else{
+    writefault=(writefault==0) ? 0 : 1;
+    cachei=(int)page[((unsigned long)faultaddr-Startaddr)/Pagesize].cachei;
+    if (cachei<Cachepages){
+      memprotect((caddr_t)faultaddr,Pagesize,PROT_READ|PROT_WRITE);
+      if (!((writefault)&&(cache[cachei].state==RO))){
+        getpage(faultaddr,1);
+      }
+    }else{
+      cachei=findposition(faultaddr);
+      memmap((caddr_t)faultaddr,Pagesize,PROT_READ|PROT_WRITE);
+      getpage(faultaddr,0);
+    }
 
-   if (writefault){
-     cache[cachei].addr=faultaddr;
-     cache[cachei].state=RW;
-     cache[cachei].wtnt=1;
-     newtwin(&(cache[cachei].twin));
-     while(getpwait) ;
-     memcpy(cache[cachei].twin,faultaddr,Pagesize);
-   }else{
-     cache[cachei].addr=faultaddr;
-     cache[cachei].state=RO;
-     while(getpwait) ;
-     memprotect((caddr_t)faultaddr,(size_t)Pagesize,PROT_READ);
-   }
+    if (writefault){
+      cache[cachei].addr=faultaddr;
+      cache[cachei].state=RW;
+      cache[cachei].wtnt=1;
+      newtwin(&(cache[cachei].twin));
+      while(getpwait) ;
+      memcpy(cache[cachei].twin,faultaddr,Pagesize);
+    }else{
+      cache[cachei].addr=faultaddr;
+      cache[cachei].state=RO;
+      while(getpwait) ;
+      memprotect((caddr_t)faultaddr,(size_t)Pagesize,PROT_READ);
+    }
 
-#ifdef DOSTAT
-if (statflag==1){
- jiastat.segvRcnt++;
- jiastat.segvRtime += get_usecs() - begin;
- jiastat.kernelflag=0;
-}
-#endif
- }
+  #ifdef DOSTAT
+  if (statflag==1){
+  jiastat.segvRcnt++;
+  jiastat.segvRtime += get_usecs() - begin;
+  jiastat.kernelflag=0;
+  }
+  #endif
+  }
 }
 
 

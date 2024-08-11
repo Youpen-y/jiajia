@@ -38,8 +38,8 @@
 #ifndef JIA_PUBLIC
 #define	JIA_PUBLIC
 
-#define jiahosts  hostc
-#define jiapid    jia_pid
+#define jiahosts  hostc			/* total number of hosts of a parallel program */
+#define jiapid    jia_pid		/* host identification number */
 
 extern int		jia_pid;
 extern int      hostc;
@@ -57,16 +57,18 @@ void           jia_init(int, char **);
 void           jia_exit();
 
 /**
- * @brief jia_alloc3 -- allocated shared memory.
- * @param size: indicates the number of bytes allocated
- * @param others: allow the programmer to control data distribution across hosts to improve performance
+ * @brief jia_alloc3 -- allocates size bytes cyclically across all hosts, each time block bytes
+ * 
+ * @param size 
+ * @param block 
+ * @param starthost specifies the host from which the allocation starts
  * @return unsigned long 
  */
-unsigned long  jia_alloc3(int size,int,int);
+unsigned long jia_alloc3(int size,int block, int starthost);
 unsigned long  jia_alloc2(int,int);
 unsigned long  jia_alloc2p(int, int);
 unsigned long  jia_alloc1(int);
-unsigned long  jia_alloc(int);
+unsigned long  jia_alloc(int size);		// equals jia_alloc3(size, Pagesize, 0)
 
 /**
  * @brief jia_lock -- acquire a lock specified by lockid

@@ -51,8 +51,8 @@
 #define   Homepages   16384        /* maximum number of home pages in a host */
 #define   Homesize    (Homepages*Pagesize)
 #define   Cachesize   (Pagesize*Cachepages) 
-#define   Setpages    Cachepages
-#define   Setnum      (Cachepages/Setpages) 
+#define   Setpages    Cachepages   /* change Setpages so that have multiple sets */
+#define   Setnum      (Cachepages/Setpages)      
 
 #define   DIFFNULL    ((jia_msg_t*) NULL)
 
@@ -77,7 +77,7 @@ typedef struct{
            char               wtnt; 
               /*bit0:somebody has a valid copy*/
            char               rdnt;   
-           
+
            address_t          addr;
            wtvect_t           *wtvect;  /*used only for write vector*/
            address_t          twin;     /*used only for write vector*/
@@ -94,9 +94,9 @@ typedef struct{
               } jiacache_t;
 
 typedef struct{
-           unsigned short int cachei;
-           unsigned short int homei;
-           unsigned short int homepid;
+           unsigned short int cachei;     /* cache page index */
+           unsigned short int homei;      /* home page index */
+           unsigned short int homepid;    /* home host id */
               } jiapage_t;
 
 /* Function Declaration */
