@@ -142,7 +142,7 @@ void gethosts()
   }
 
   endoffile=0;
-  hostc=0;
+  hostc=0;    // initial host number is 0
   linec=0;
   while(!endoffile){
     endoffile=my_getline(&wordc,wordv);
@@ -318,6 +318,7 @@ int mypid()
   // test1
   printf("hostc = %d\n", hostc);
   strtok(hostname,".");
+  printf("hostname = %s\n", hostname);
   while ((i<hostc) &&
 #ifdef NFS
          (!(strncmp(hosts[i].name,hostname,strlen(hostname))==0)))
