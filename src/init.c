@@ -314,16 +314,19 @@ int mypid()
   assert0((userp!=NULL),"Cannot get user name!");
 
   i=0;
+
+  // test1
+  printf("hostc = %d\n", hostc);
   strtok(hostname,".");
-  while ((i<hostc)&&
+  while ((i<hostc) &&
 #ifdef NFS
          (!(strncmp(hosts[i].name,hostname,strlen(hostname))==0)))
 #else  /* NFS */
          (!((strncmp(hosts[i].name,hostname,strlen(hostname))==0)&&
             (strcmp(hosts[i].user,userp->pw_name)==0)))) 
 #endif /* NFS */
-    i++;
- 
+    i++; 
+
   assert0((i<hostc),"Get Process id incorrect");
   return(i);
 }
