@@ -406,7 +406,7 @@ void jia_config(int dest,int value)
                     }
                     W_VEC=value; 
                     break;
-    case RDMA     : printf("TODO! RDMA support")
+    case RDMA     : printf("TODO! RDMA support");
                     break;
     default       : printf("Null configuration!\n"); 
                     break;
