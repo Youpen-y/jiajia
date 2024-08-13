@@ -366,6 +366,7 @@ void jiacreat(int argc, char **argv)
       switch (c) {
         case 'P':{
           Startport = atol(optarg);
+          printf("Startport = %ld\n", Startport);
           break;
         }
       }
