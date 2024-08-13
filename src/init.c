@@ -448,34 +448,13 @@ void jia_init(int argc, char **argv)
   rl.rlim_max=Maxmemsize;
   setrlimit(RLIMIT_DATA,&rl);   /* set maximum size of process's data segment */
   
-  // test program
-  if(jia_pid!=0){
-    printf("I am %d, running here1\n", jia_pid);
-  }
-
   initmem();
-
-  if(jia_pid!=0){
-    printf("I am %d, running here2\n", jia_pid);
-  }
-
   initsyn();
   initcomm();
-
-  if(jia_pid!=0){
-    printf("I am %d, running here3\n", jia_pid);
-  }
   initmsg();
-
-  if(jia_pid!=0){
-    printf("I am %d, running here4\n", jia_pid);
-  }
   inittools();
   initload();
 
-  if(jia_pid!=0){
-    printf("I am %d, running here5\n", jia_pid);
-  }
 #ifdef DOSTAT
   clearstat();
   statflag=1;
@@ -486,6 +465,10 @@ void jia_init(int argc, char **argv)
   sleep(2);
 #endif
   redirstdio(argc,argv);
+
+  if(jia_pid!=0){
+    printf("I am %d\n, running here\n", jia_pid);
+  }
   enable_sigio();
 
   timel=jia_current_time();
