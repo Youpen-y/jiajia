@@ -104,6 +104,12 @@ void inittools()
 
 
 /*-----------------------------------------------------------*/
+/**
+ * @brief assert0 -- assert the condition, if cond is false, print the amsg and exit
+ * 
+ * @param cond condition
+ * @param amsg assert message
+ */
 void assert0(int cond, char *amsg)
 { 
   if (!cond){

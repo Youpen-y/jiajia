@@ -92,8 +92,10 @@ typedef struct Jia_Msg {
         unsigned int temp;      /*Useless*/
 	unsigned int seqno;
         unsigned int index; 
-        unsigned int scope;     /*Incar. no.  used as tag in msg. passing*/
+        unsigned int scope;     /*Inca. no.  used as tag in msg. passing*/
 	unsigned int size;
+	/* header is 32 bytes */
+
 	unsigned char data[Maxmsgsize];
 } jia_msg_t;
 

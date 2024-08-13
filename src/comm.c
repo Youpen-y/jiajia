@@ -113,7 +113,7 @@ unsigned long reqports[Maxhosts][Maxhosts],repports[Maxhosts][Maxhosts];
 CommManager commreq,commrep;
 unsigned long timeout_time;
 static struct timeval   polltime = { 0, 0 };
-jia_msg_t inqueue[Maxqueue],outqueue[Maxqueue];
+jia_msg_t inqueue[Maxqueue], outqueue[Maxqueue];
 volatile int inhead, intail,incount;
 volatile int outhead, outtail,outcount;
 long   Startport;
@@ -570,13 +570,13 @@ if (statflag==1){
 void outsend()
 {
   int res, toproc, fromproc;
-  struct sockaddr_in  to,from;
-  int  rep;
+  struct sockaddr_in to, from;
+  int rep;
   int retries_num;
   unsigned long start, end;
   int msgsize;
   int s;
-  int sendsuccess,arrived;
+  int sendsuccess, arrived;
   fd_set readfds;
   int servemsg;
 #ifdef DOSTAT

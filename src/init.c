@@ -189,7 +189,7 @@ void copyfiles(int argc, char **argv)
   printf("******Start to copy system files to slaves!******\n");
 
   for (hosti=1;hosti<hostc;hosti++){
-    printf("Copy files to %s@%s.\n",hosts[hosti].user,hosts[hosti].addr);
+    printf("Copy files to %s@%s.\n",hosts[hosti].user,hosts[hosti].name);
 
     cmd[0]='\0';
     // strcat(cmd,"rcp .jiahosts ");
@@ -224,84 +224,86 @@ void copyfiles(int argc, char **argv)
 
 
 int startprocs(int argc, char **argv)
-{struct servent *sp;
+{
+  struct servent *sp;
   
 #ifdef NFS
- char *pwd;
+  char *pwd;
 #endif /* NFS*/
- int hosti;
- char cmd[Linesize],*hostname;
- int i;
- 
- printf("******Start to create processes on slaves!******\n\n");
+  int hosti;
+  char cmd[Linesize], *hostname;
+  int i;
+  
+  printf("******Start to create processes on slaves!******\n\n");
 
 #ifdef NFS
- sprintf(errstr,"Failed to get current working directory");
- pwd = getenv("PWD"); 
- assert0((pwd != NULL),errstr);
+  sprintf(errstr,"Failed to get current working directory");
+  pwd = getenv("PWD"); 
+  assert0((pwd != NULL),errstr); 
 #endif /* NFS */
 
- Startport = getpid();
- assert0( (Startport!= -1), "getpid() error");
- Startport = 10000+(Startport*Maxhosts*Maxhosts*4)%20000;
+  /* produce a random Startport from [10000, 29999]*/
+  Startport = getpid();
+  assert0((Startport != -1), "getpid() error");
+  Startport = 10000+(Startport*Maxhosts*Maxhosts*4)%20000;
 
 #ifdef LINUX 
- for (hosti=1;hosti<hostc;hosti++){
+  for (hosti=1; hosti<hostc; hosti++) {
 #ifdef NFS
-   sprintf(cmd,"cd %s; %s", pwd, pwd);
+    sprintf(cmd,"cd %s; %s", pwd, pwd);
 #else  
-   cmd[0]='\0';
-   strcat(cmd,"rsh -l ");
-   strcat(cmd, hosts[hosti].user);
-#endif 
-   hostname=hosts[hosti].name;
-   strcat(cmd," ");
-   strcat(cmd, hostname); 
-   strcat(cmd," ");
-   for (i=0;i<argc;i++){
-     strcat(cmd,argv[i]);
-     strcat(cmd," ");
-   }
+    cmd[0]='\0';
+    strcat(cmd,"ssh -l ");
+    strcat(cmd, hosts[hosti].user);
+#endif /* NFS */
+    hostname = hosts[hosti].name;
+    strcat(cmd, " ");
+    strcat(cmd, hostname); 
+    strcat(cmd, " ");
+    for (i = 0; i < argc; i++){
+      strcat(cmd, argv[i]);
+      strcat(cmd, " ");
+    }
 
-   strcat(cmd, "-P");
-   sprintf(cmd,"%s%ld ",cmd,Startport);
-   strcat(cmd," &");
-   printf("Starting CMD %s on host %s\n", cmd, hosts[hosti].name);
-   system(cmd);
+    strcat(cmd, "-P");
+    sprintf(cmd,"%s %ld", cmd, Startport);
+    strcat(cmd, " &");
+    printf("Starting CMD %s on host %s\n", cmd, hosts[hosti].name);
+    system(cmd);
 #else /*LINUX*/
- for (hosti=1;hosti<hostc;hosti++){
+  for (hosti=1;hosti<hostc;hosti++){
 #ifdef NFS
-   sprintf(cmd,"cd %s; %s", pwd, pwd);
+    sprintf(cmd,"cd %s; %s", pwd, pwd);
 #else  /* NFS */
-   cmd[0]='\0';
-   strcat(cmd,"~");
-   strcat(cmd,hosts[hosti].user);
+    cmd[0]='\0';
+    strcat(cmd,"~");
+    strcat(cmd,hosts[hosti].user);
 #endif /* NFS */
-   strcat(cmd,"/");
-   for (i=0;i<argc;i++){
-     strcat(cmd,argv[i]);
-     strcat(cmd," ");
-   }
-   strcat(cmd, "-P");
-   sprintf(cmd,"%s%d ",cmd,Startport);
+    strcat(cmd,"/");
+    for (i=0;i<argc;i++){
+      strcat(cmd,argv[i]);
+      strcat(cmd," ");
+    }
+    strcat(cmd, "-P");
+    sprintf(cmd,"%s%d ",cmd,Startport);
 
-   printf("Starting CMD %s on host %s\n", cmd, hosts[hosti].name);
-   sp=getservbyname("exec","tcp");
-   assert0((sp!=NULL),"exec/tcp: unknown service!");
-   hostname=hosts[hosti].name;
+    printf("Starting CMD %s on host %s\n", cmd, hosts[hosti].name);
+    sp=getservbyname("exec","tcp");
+    assert0((sp!=NULL),"exec/tcp: unknown service!");
+    hostname=hosts[hosti].name;
 
 #ifdef NFS
-   hosts[hosti].riofd=rexec(&hostname,sp->s_port, NULL, NULL,
-                             cmd,&(hosts[hosti].rerrfd));
+    hosts[hosti].riofd=rexec(&hostname,sp->s_port, NULL, NULL,
+                              cmd,&(hosts[hosti].rerrfd));
 #else  /* NFS */
-   hosts[hosti].riofd=rexec(&hostname,sp->s_port,hosts[hosti].user,
-                             hosts[hosti].passwd,cmd,&(hosts[hosti].rerrfd));
+    hosts[hosti].riofd=rexec(&hostname,sp->s_port,hosts[hosti].user,
+                              hosts[hosti].passwd,cmd,&(hosts[hosti].rerrfd));  // TODO rexec is obsoleted by rcmd
 #endif /* NFS */
-#endif
-   sprintf(errstr,"Fail to start process on %s!",hosts[hosti].name);
-   assert0((hosts[hosti].riofd!=-1),errstr);
+#endif /* LINUX */
+    sprintf(errstr,"Fail to start process on %s!",hosts[hosti].name);
+    assert0((hosts[hosti].riofd!=-1),errstr);
 
- }
+  }
 }
 
 
