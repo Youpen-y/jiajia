@@ -150,11 +150,12 @@ int main(int argc, char *argv[])
     black_[i] = (float *) jia_alloc((N+1)*sizeof(float));
   */
   }
-
+  print_board();
   printf("test1 from sor.c\n");
   
   jia_barrier();	
 
+  printf("test2 from sor.c\n");
   if (jiapid==0) {
     for (i = 0; i <= M + 1; i++) {
   /* 
