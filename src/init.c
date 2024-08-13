@@ -189,14 +189,14 @@ void copyfiles(int argc, char **argv)
   printf("******Start to copy system files to slaves!******\n");
 
   for (hosti=1;hosti<hostc;hosti++){
-    printf("Copy files to %s@%s.\n",hosts[hosti].user,hosts[hosti].name);
+    printf("Copy files to %s@%s.\n",hosts[hosti].user,hosts[hosti].addr);
 
     cmd[0]='\0';
     // strcat(cmd,"rcp .jiahosts ");
     strcat(cmd,"scp .jiahosts ");
     strcat(cmd,hosts[hosti].user);
     strcat(cmd,"@");
-    strcat(cmd,hosts[hosti].name);
+    strcat(cmd,hosts[hosti].addr);
     strcat(cmd,":");
 
     printf("test0\n");
