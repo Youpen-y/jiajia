@@ -196,7 +196,7 @@ void copyfiles(int argc, char **argv)
     strcat(cmd,"scp .jiahosts ");
     strcat(cmd,hosts[hosti].user);
     strcat(cmd,"@");
-    strcat(cmd,hosts[hosti].addr);
+    strcat(cmd,hosts[hosti].name);
     strcat(cmd,":");
 
     printf("test0\n");
@@ -204,8 +204,9 @@ void copyfiles(int argc, char **argv)
 
     rcpyes=system(cmd);
     sprintf(errstr,"Cannot scp .jiahosts to %s!\n",hosts[hosti].name);
-    assert0((rcpyes==0),errstr);
+    assert0((rcpyes==0), errstr);
 
+    /* copy program to slaves */
     cmd[0]='\0';
     strcat(cmd,"scp ");
     strcat(cmd,argv[0]);
