@@ -450,24 +450,32 @@ void jia_init(int argc, char **argv)
   
   // test program
   if(jia_pid!=0){
-    printf("I am %d\n, running here1", jia_pid);
+    printf("I am %d, running here1\n", jia_pid);
   }
 
   initmem();
 
   if(jia_pid!=0){
-    printf("I am %d\n, running here2", jia_pid);
+    printf("I am %d, running here2\n", jia_pid);
   }
 
   initsyn();
   initcomm();
 
   if(jia_pid!=0){
-    printf("I am %d\n, running here3", jia_pid);
+    printf("I am %d, running here3\n", jia_pid);
   }
   initmsg();
+
+  if(jia_pid!=0){
+    printf("I am %d, running here4\n", jia_pid);
+  }
   inittools();
   initload();
+
+  if(jia_pid!=0){
+    printf("I am %d, running here5\n", jia_pid);
+  }
 #ifdef DOSTAT
   clearstat();
   statflag=1;
