@@ -137,6 +137,8 @@ int main(int argc, char *argv[])
 
   jia_init(argc, argv);
 
+  printf("test0 from sor.c\n");
+
   red_ = (float **) malloc((M + 2)*sizeof(float *));
   black_ = (float **) malloc((M + 2)*sizeof(float *));
     
@@ -149,6 +151,8 @@ int main(int argc, char *argv[])
   */
   }
 
+  printf("test1 from sor.c\n");
+  
   jia_barrier();	
 
   if (jiapid==0) {
