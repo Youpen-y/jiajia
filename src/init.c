@@ -181,37 +181,44 @@ void gethosts()
 
 
 void copyfiles(int argc, char **argv)
-{int hosti,rcpyes;
- char cmd[Linesize];
+{
+  // replace rcp with scp
+  int hosti,rcpyes;
+  char cmd[Linesize];
 
- printf("******Start to copy system files to slaves!******\n");
+  printf("******Start to copy system files to slaves!******\n");
 
- for (hosti=1;hosti<hostc;hosti++){
-   printf("Copy files to %s@%s.\n",hosts[hosti].user,hosts[hosti].name);
+  for (hosti=1;hosti<hostc;hosti++){
+    printf("Copy files to %s@%s.\n",hosts[hosti].user,hosts[hosti].name);
 
-   cmd[0]='\0';
-   strcat(cmd,"rcp .jiahosts ");
-   strcat(cmd,hosts[hosti].user);
-   strcat(cmd,"@");
-   strcat(cmd,hosts[hosti].name);
-   strcat(cmd,":");
-   rcpyes=system(cmd);
-   sprintf(errstr,"Cannot rcp .jiahosts to %s!\n",hosts[hosti].name);
-   assert0((rcpyes==0),errstr);
+    cmd[0]='\0';
+    // strcat(cmd,"rcp .jiahosts ");
+    strcat(cmd,"scp .jiahosts ");
+    strcat(cmd,hosts[hosti].user);
+    strcat(cmd,"@");
+    strcat(cmd,hosts[hosti].name);
+    strcat(cmd,":");
 
-   cmd[0]='\0';
-   strcat(cmd,"rcp ");
-   strcat(cmd,argv[0]);
-   strcat(cmd," ");
-   strcat(cmd,hosts[hosti].user);
-   strcat(cmd,"@");
-   strcat(cmd,hosts[hosti].name);
-   strcat(cmd,":");
-   rcpyes=system(cmd);
-   sprintf(errstr,"Cannot rcp %s to %s!\n",argv[0],hosts[hosti].name);
-   assert0((rcpyes==0),errstr);
- } 
- printf("Remote copy succeed!\n\n");
+    printf("test0\n");
+    printf("cmd = %s\n", cmd);
+
+    rcpyes=system(cmd);
+    sprintf(errstr,"Cannot scp .jiahosts to %s!\n",hosts[hosti].name);
+    assert0((rcpyes==0),errstr);
+
+    cmd[0]='\0';
+    strcat(cmd,"scp ");
+    strcat(cmd,argv[0]);
+    strcat(cmd," ");
+    strcat(cmd,hosts[hosti].user);
+    strcat(cmd,"@");
+    strcat(cmd,hosts[hosti].name);
+    strcat(cmd,":");
+    rcpyes=system(cmd);
+    sprintf(errstr,"Cannot scp %s to %s!\n",argv[0],hosts[hosti].name);
+    assert0((rcpyes==0),errstr);
+  } 
+  printf("Remote copy succeed!\n\n");
 }
 
 
