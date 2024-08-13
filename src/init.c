@@ -447,10 +447,24 @@ void jia_init(int argc, char **argv)
   rl.rlim_cur=Maxmemsize;
   rl.rlim_max=Maxmemsize;
   setrlimit(RLIMIT_DATA,&rl);   /* set maximum size of process's data segment */
+  
+  // test program
+  if(jia_pid!=0){
+    printf("I am %s\n, running here1", jia_pid);
+  }
 
   initmem();
+
+  if(jia_pid!=0){
+    printf("I am %s\n, running here2", jia_pid);
+  }
+
   initsyn();
   initcomm();
+
+  if(jia_pid!=0){
+    printf("I am %s\n, running here3", jia_pid);
+  }
   initmsg();
   inittools();
   initload();
