@@ -450,20 +450,20 @@ void jia_init(int argc, char **argv)
   
   // test program
   if(jia_pid!=0){
-    printf("I am %s\n, running here1", jia_pid);
+    printf("I am %d\n, running here1", jia_pid);
   }
 
   initmem();
 
   if(jia_pid!=0){
-    printf("I am %s\n, running here2", jia_pid);
+    printf("I am %d\n, running here2", jia_pid);
   }
 
   initsyn();
   initcomm();
 
   if(jia_pid!=0){
-    printf("I am %s\n, running here3", jia_pid);
+    printf("I am %d\n, running here3", jia_pid);
   }
   initmsg();
   inittools();
