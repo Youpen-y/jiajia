@@ -407,7 +407,7 @@ void redirstdio(int argc, char **argv)
   char outfile[Wordsize];
   int  outfd;
  
-  if (jia_pid!=0){
+  if (jia_pid!=0){  // slaves
     #ifdef NFS
       sprintf(outfile,"%s-%d.log\0",argv[0],jia_pid);
     #else
@@ -464,13 +464,16 @@ void jia_init(int argc, char **argv)
 #else
   sleep(2);
 #endif
-  redirstdio(argc,argv);
+  redirstdio(argc,argv);    // WARNNING: bug point
 
   if(jia_pid!=0){
     printf("I am %d\n, running here\n", jia_pid);
   }
   enable_sigio();
 
+  if(jia_pid!=0){
+    printf("I am %d\n, running here111\n", jia_pid);
+  }
   timel=jia_current_time();
   time1=jia_clock();
   if (jia_pid==0)
