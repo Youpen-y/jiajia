@@ -276,53 +276,55 @@ if (statflag==1){
 void jia_barrier()
 {
 #ifdef DOSTAT
- register unsigned int begin = get_usecs();
-if (statflag==1){
- jiastat.barrcnt++;
- jiastat.kernelflag=1;
-}
+  register unsigned int begin = get_usecs();
+  if (statflag==1){
+    jiastat.barrcnt++;
+    jiastat.kernelflag=1;
+  }
 #endif
 
- if (hostc==1) return;
+  if (hostc==1) return;
 
- if (LOAD_BAL==ON){
-    endtime=jia_clock();
-    caltime+=(endtime-starttime);
- }
+  if (LOAD_BAL==ON){
+      endtime=jia_clock();
+      caltime+=(endtime-starttime);
+  }
 
 
- assert((stackptr==0),"barrier can not be used in CS!"); 
+  assert((stackptr==0),"barrier can not be used in CS!"); 
 
- endinterval(BARR);
+  printf("111111111111111\n");
+  endinterval(BARR);
+  printf("222222222222222\n");
 
- if (H_MIG==ON){
-   migcheckcache(); 
- }
+  if (H_MIG==ON){
+    migcheckcache(); 
+  }
 
- barrwait=1;
- sendwtnts(BARR);
+  barrwait=1;
+  sendwtnts(BARR);
+  printf("333333333333333\n");
+  freewtntspace(top.wtntp);
+  printf("444444444444444\n");
 
- freewtntspace(top.wtntp);
+  while(barrwait);
 
- while(barrwait);
+  if ((H_MIG==ON)&&(W_VEC==ON)){
+    jia_wait();
+  }
 
- if ((H_MIG==ON)&&(W_VEC==ON)){
-   jia_wait();
- }
+  startinterval(BARR);
 
- startinterval(BARR);
-
- if (LOAD_BAL==ON) 
-   starttime=jia_clock();  
+  if (LOAD_BAL==ON) 
+    starttime=jia_clock();  
 
 
 #ifdef DOSTAT
-if (statflag==1){
- jiastat.barrtime += get_usecs() - begin;
- jiastat.kernelflag=0;
-}
+  if (statflag==1){
+    jiastat.barrtime += get_usecs() - begin;
+    jiastat.kernelflag=0;
+  }
 #endif
-
 }
 
 
