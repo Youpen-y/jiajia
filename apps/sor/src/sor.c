@@ -160,7 +160,7 @@ int main(int argc, char *argv[])
 
       if ((i==0)||(i==M+1)){
         for (j = 0; j <= N; j++)
-    red_[i][j] = black_[i][j] = 1.0;
+          red_[i][j] = black_[i][j] = 1.0;
       }else if (i&1) {
         red_[i][0] = 1.0;
         black_[i][N] = 1.0;

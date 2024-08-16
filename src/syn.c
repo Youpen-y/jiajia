@@ -516,18 +516,18 @@ void sendwtnts(int operation)
   appendmsg(req,ltos(top.lockid),Intbytes);
   wnptr=top.wtntp; 
 
-  wnptr=appendstackwtnts(req,wnptr);  // may be bug point
-  printf("222222222222222.111111111111111111\n");
+  wnptr=appendstackwtnts(req,wnptr);
+
   while (wnptr!=WNULL){
     req->op=WTNT; 
     asendmsg(req);
     req->size=Intbytes;
     wnptr=appendstackwtnts(req,wnptr);
   }
-  printf("222222222222222.222222222222222222\n");
   req->op=operation; 
-  asendmsg(req);
-
+  printf("222222222222222.111111111111111111\n");
+  asendmsg(req);  // like to be bug
+  printf("222222222222222.222222222222222222\n");
   freemsg(req);
 }
 
