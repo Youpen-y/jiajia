@@ -352,14 +352,14 @@ void jiacreat(int argc, char **argv)
   }
   jia_pid=mypid();
 
-  if (jia_pid==0){ 
+  if (jia_pid==0){ // master does, slave doesn't
     printf("*********Total of %d hosts found!**********\n\n",hostc);
 #ifndef NFS
       copyfiles(argc,argv); 
 #endif /* NFS */
     sleep(1);
     startprocs(argc,argv);
-  } else {
+  } else {  // slave does
     int c;
     optind=1;
     while ((c = getopt(argc, argv, "P:")) != -1){
@@ -402,26 +402,33 @@ void barrier0()
 }
 
 
+/**
+ * @brief redirstdio -- redirect standard I/O to file (stdout -- argv[0].log stderr -- argv[0].err)
+ * 
+ * @param argc program argument count
+ * @param argv program arguments array
+ */
+
 void redirstdio(int argc, char **argv)
 {
   char outfile[Wordsize];
-  int  outfd;
  
-  if (jia_pid!=0){  // slaves
+  if (jia_pid!=0){  // slaves does
     #ifdef NFS
       sprintf(outfile,"%s-%d.log\0",argv[0],jia_pid);
     #else
       sprintf(outfile,"%s.log\0",argv[0]);
     #endif /* NFS */
-    freopen(outfile,"w",stdout);
+    freopen(outfile,"w",stdout);  // redirect stdout to file outfile
     setbuf(stdout,NULL);
+
     #ifdef NFS
       sprintf(outfile,"%s-%d.err\0",argv[0],jia_pid);
     #else
       sprintf(outfile,"%s.err\0",argv[0]);
     #endif /* NFS */
-    freopen(outfile,"w",stderr);
-    setbuf(stderr,NULL);
+    freopen(outfile,"w",stderr);  // redirect stderr to file outfile
+    setbuf(stderr,NULL);  //
   }
 }
 
@@ -464,15 +471,20 @@ void jia_init(int argc, char **argv)
 #else
   sleep(2);
 #endif
-  redirstdio(argc,argv);    // WARNNING: bug point
+  redirstdio(argc,argv);
 
-  if(jia_pid!=0){
-    printf("I am %d\n, running here\n", jia_pid);
+  if(jia_pid!=0){ // slave does
+    printf("I am %d, running here\n", jia_pid);
   }
   enable_sigio();
 
   timel=jia_current_time();
   time1=jia_clock();
+
+  if(jia_pid != 0){
+    printf("where am i\n");
+  }
+
   if (jia_pid==0)
     printf ("End of Initialization\n");
 

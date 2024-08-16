@@ -135,9 +135,9 @@ int main(int argc, char *argv[])
     }
   }
 
-  jia_init(argc, argv);
+  jia_init(argc, argv);   
 
-  printf("test0 from sor.c\n");
+  printf("My name is %d test0 from sor.c\n");
 
   red_ = (float **) malloc((M + 2)*sizeof(float *));
   black_ = (float **) malloc((M + 2)*sizeof(float *));
