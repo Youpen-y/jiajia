@@ -523,11 +523,15 @@ if (statflag==1){
 
 
 /*----------------------------------------------------------*/
-
+/**
+ * @brief asendmsg() -- 
+ * 
+ * @param msg 
+ */
 void asendmsg(jia_msg_t *msg)
 {
   int outsendmsg;
-
+  printf("222222222222222.111111111111111111.11111111111111111\n");
 #ifdef DOSTAT
  register unsigned int begin = get_usecs();
 if (statflag==1){
@@ -535,9 +539,9 @@ if (statflag==1){
  if (msg->size<128)  jiastat.smallcnt++;
 }
 #endif
-
+  printf("222222222222222.111111111111111111.22222222222222222\n");
   printf("Enter asendmsg! outc=%d, outh=%d, outt=%d\n",
-               outcount,outhead, outtail);
+               outcount, outhead, outtail);
   
   BEGINCS;
   assert0((outcount<Maxqueue), "asendmsg(): Outqueue exceeded!");
