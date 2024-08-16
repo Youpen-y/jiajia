@@ -471,9 +471,6 @@ void jia_init(int argc, char **argv)
   }
   enable_sigio();
 
-  if(jia_pid!=0){
-    printf("I am %d\n, running here111\n", jia_pid);
-  }
   timel=jia_current_time();
   time1=jia_clock();
   if (jia_pid==0)

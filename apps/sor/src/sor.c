@@ -24,7 +24,7 @@ int	N = 1023;	/* N.B. There are 2N columns. */
 
 float **red_;
 float **black_;
-float t1,t2;
+float t1,t2;  // cal
 
 void print_board()
 {
@@ -96,7 +96,7 @@ extern char *optarg;
 
 void slave()
 {
-  int begin,end;
+  int begin, end;
 	
   begin = ((M+2)*jiapid)/jiahosts;
   end   = ((M+2)*(jiapid+1))/jiahosts-1;

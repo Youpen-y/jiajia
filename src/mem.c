@@ -46,7 +46,6 @@
 #include <sys/sbd.h>
 #endif /* IRIX62 */
 
-extern void assert(int cond, char *errstr);
 extern jia_msg_t *newmsg();
 extern void freemsg();
 extern void asendmsg(jia_msg_t *req);
@@ -267,7 +266,7 @@ void memunmap(void* addr,size_t len)
  * @param starthost specifies the host from which the allocation starts
  * @return unsigned long 
  */
-unsigned long jia_alloc3(int size,int block, int starthost)
+unsigned long jia_alloc3(int size, int block, int starthost)
 {
   int homepid;
   int mapsize;
@@ -596,7 +595,8 @@ void sigsegv_handler(int signo, struct sigcontext sigctx)
 }
 
 
-void getpage(address_t addr,int flag)
+void 
+getpage(address_t addr,int flag)
 {int homeid;
  jia_msg_t *req;
 

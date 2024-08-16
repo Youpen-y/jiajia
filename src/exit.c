@@ -43,8 +43,6 @@
 
 extern jia_msg_t *newmsg();
 
-extern void assert0(int, char *);
-
 extern void asendmsg(jia_msg_t *msg);  // from tools.c
 extern void freemsg(jia_msg_t *msg);
 extern void jia_wait();
@@ -71,7 +69,7 @@ void statserver(jia_msg_t *rep)
  unsigned int temp;
 
 
- assert0((rep->op==STAT)&&(rep->topid==0),"Incorrect STAT Message!");
+ assert((rep->op==STAT)&&(rep->topid==0),"Incorrect STAT Message!");
 
  stat = (jiastat_t*)rep->data;
  allstats[rep->frompid].msgsndbytes  = stat->msgsndbytes;
@@ -146,7 +144,7 @@ printf("Stats received from %d[%d]\n", rep->frompid, statcnt);
 
 void statgrantserver(jia_msg_t *req)
 {
- assert0((req->op==STATGRANT)&&(req->topid==jia_pid),"Incorrect STATGRANT Message!");
+ assert((req->op==STATGRANT)&&(req->topid==jia_pid),"Incorrect STATGRANT Message!");
 
  waitstat = 0;
 }
