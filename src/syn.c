@@ -505,7 +505,7 @@ void sendwtnts(int operation)
 {
   int   wtnti;
   jia_msg_t *req;
-  wtnt_t *wnptr; 
+  wtnt_t *wnptr;  // write notice pointer
   
   req=newmsg();
 
@@ -515,9 +515,10 @@ void sendwtnts(int operation)
   req->scope=(operation==REL) ? locks[hidelock].myscope : locks[top.lockid].myscope;
   appendmsg(req,ltos(top.lockid),Intbytes);
   wnptr=top.wtntp; 
+  wnptr=appendstackwtnts(req, wnptr);
 
-  wnptr=appendstackwtnts(req,wnptr);
-
+  printf("req message frompid = %d, topid = %d\n", jia_pid, req->topid);
+  printf("wnptr == WNULL is %d", wnptr == WNULL ? 1 : 0);
   while (wnptr!=WNULL){
     req->op=WTNT; 
     asendmsg(req);
@@ -526,7 +527,7 @@ void sendwtnts(int operation)
   }
   req->op=operation; 
   printf("222222222222222.111111111111111111\n");
-  asendmsg(req);  // like to be bug
+  asendmsg(req);  // TODO bug point
   printf("222222222222222.222222222222222222\n");
   freemsg(req);
 }
