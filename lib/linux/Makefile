@@ -3,7 +3,7 @@
 #*********************************************************
 
 ARCH = linux
-ARCH_FLAGS = -DLINUX
+ARCH_FLAGS = -DLINUX -DOSTAT
 CPPFLAGS = -O2 
 
 
