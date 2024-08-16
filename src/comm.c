@@ -114,8 +114,8 @@ CommManager commreq,commrep;
 unsigned long timeout_time;
 static struct timeval   polltime = { 0, 0 };
 jia_msg_t inqueue[Maxqueue], outqueue[Maxqueue];
-volatile int inhead, intail,incount;
-volatile int outhead, outtail,outcount;
+volatile int inhead, intail, incount;
+volatile int outhead, outtail, outcount;
 long   Startport;
 
 
@@ -628,6 +628,8 @@ if (statflag==1){
 
     retries_num=0;
     sendsuccess =0;
+
+    printf("I am host %d, hostname = , I am running outsend() function", hostc, hosts[hostc].name);
 
     while ((retries_num<MAX_RETRIES)&&(sendsuccess!=1)) {
       BEGINCS;

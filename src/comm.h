@@ -78,10 +78,10 @@
 
 #define  BCAST     100
 
-#define  inqh    inqueue[inhead]
-#define  inqt    inqueue[intail]
-#define  outqh   outqueue[outhead]
-#define  outqt   outqueue[outtail]
+#define  inqh    inqueue[inhead]	// inqueue head
+#define  inqt    inqueue[intail]	// inqueue tail
+#define  outqh   outqueue[outhead]	// outqueue head
+#define  outqt   outqueue[outtail]	// outqueue tail
 
 
  
