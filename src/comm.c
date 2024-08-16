@@ -531,7 +531,6 @@ if (statflag==1){
 void asendmsg(jia_msg_t *msg)
 {
   int outsendmsg;
-  printf("222222222222222.111111111111111111.11111111111111111\n");
 #ifdef DOSTAT
  register unsigned int begin = get_usecs();
 if (statflag==1){
@@ -633,8 +632,6 @@ if (statflag==1){
     retries_num=0;
     sendsuccess =0;
 
-    printf("I am host %d, hostname = , I am running outsend() function", hostc, hosts[hostc].name);
-
     while ((retries_num<MAX_RETRIES)&&(sendsuccess!=1)) {
       BEGINCS;
       res=sendto(commreq.snd_fds[toproc], (char *)&(outqh),msgsize, 0,
@@ -669,6 +666,7 @@ recv_again:
     }
 
     if (sendsuccess!=1){
+      printf("I am host %d, hostname = %s, I am running outsend() function\n", hostc, hosts[hostc].name);
       sprintf(errstr,"Can't asend message(%d,%d) to host %d!",outqh.op, outqh.seqno, toproc); 
       printf("BUFFER SIZE %d(%d)\n", outqh.size, msgsize);
       assert0((sendsuccess==1),errstr);

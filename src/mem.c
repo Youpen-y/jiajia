@@ -425,7 +425,7 @@ int replacei(int cachei)
 
 void flushpage(int cachei)
 {
- memunmap((caddr_t)cache[cachei].addr,Pagesize);
+ memunmap((void*)cache[cachei].addr,Pagesize);
 
  page[((unsigned long)cache[cachei].addr-Startaddr)/Pagesize].cachei=Cachepages;
 
@@ -594,32 +594,32 @@ void sigsegv_handler(int signo, struct sigcontext sigctx)
 }
 
 
-void 
-getpage(address_t addr,int flag)
-{int homeid;
+void getpage(address_t addr,int flag)
+{
+  int homeid;
  jia_msg_t *req;
 
- homeid=homehost(addr); 
- assert((homeid!=jia_pid),"This should not have happened 2!");
- req=newmsg();
+  homeid=homehost(addr); 
+  assert((homeid!=jia_pid),"This should not have happened 2!");
+  req=newmsg();
 
- req->op=GETP;
- req->frompid=jia_pid;
- req->topid=homeid;
- req->temp=flag;       /*0:read request,1:write request*/
- req->size=0;
- appendmsg(req,ltos(addr),Intbytes);
+  req->op=GETP;
+  req->frompid=jia_pid;
+  req->topid=homeid;
+  req->temp=flag;       /*0:read request,1:write request*/
+  req->size=0;
+  appendmsg(req,ltos(addr),Intbytes);
 
- getpwait=1;
- asendmsg(req);
+  getpwait=1;
+  asendmsg(req);
 
- freemsg(req);
+  freemsg(req);
 /*
  while(getpwait) ;
 */
 #ifdef DOSTAT
 if (statflag==1){
- jiastat.getpcnt++;
+  jiastat.getpcnt++;
 }
 #endif
 }
@@ -862,52 +862,58 @@ int encodediff(int cachei, unsigned char* diff)
 
 #ifdef DOSTAT
 if (statflag==1){
- jiastat.endifftime += get_usecs() - begin;
+  jiastat.endifftime += get_usecs() - begin;
 }
 #endif
 
  return(size);
 }
 
-
+/**
+ * @brief savediff() -- 
+ * 
+ * @param cachei 
+ */
 void savediff(int cachei)
-{unsigned char  diff[Maxmsgsize];
- int   diffsize;
- int hosti;
-  
- hosti=homehost(cache[cachei].addr);
- if (diffmsg[hosti]==DIFFNULL){
-   diffmsg[hosti]=newmsg();
-   diffmsg[hosti]->op=DIFF; 
-   diffmsg[hosti]->frompid=jia_pid; 
-   diffmsg[hosti]->topid=hosti; 
-   diffmsg[hosti]->size=0; 
- }
- diffsize=encodediff(cachei,diff);
- if ((diffmsg[hosti]->size+diffsize)>Maxmsgsize){
-   diffwait++;
-   asendmsg(diffmsg[hosti]);
-   diffmsg[hosti]->size=0;
-   appendmsg(diffmsg[hosti],diff,diffsize);
-   while(diffwait);
- }else{
-   appendmsg(diffmsg[hosti],diff,diffsize);
- }
+{
+  unsigned char  diff[Maxmsgsize];
+  int   diffsize;
+  int hosti;
+    
+  hosti=homehost(cache[cachei].addr);
+  if (diffmsg[hosti]==DIFFNULL){
+    diffmsg[hosti]=newmsg();
+    diffmsg[hosti]->op=DIFF; 
+    diffmsg[hosti]->frompid=jia_pid; 
+    diffmsg[hosti]->topid=hosti; 
+    diffmsg[hosti]->size=0; 
+  }
+  diffsize=encodediff(cachei,diff);
+  if ((diffmsg[hosti]->size+diffsize)>Maxmsgsize){
+    diffwait++;
+    asendmsg(diffmsg[hosti]);
+    diffmsg[hosti]->size=0;
+    appendmsg(diffmsg[hosti],diff,diffsize);
+    while(diffwait);
+  }else{
+    appendmsg(diffmsg[hosti],diff,diffsize);
+  }
 }
 
 
 void senddiffs()
-{int hosti;
+{
+  int hosti;
  
- for (hosti=0;hosti<hostc;hosti++){
-   if (diffmsg[hosti]!=DIFFNULL){
-     if (diffmsg[hosti]->size>0){
-       diffwait++;
-       asendmsg(diffmsg[hosti]);
-     }
-     freemsg(diffmsg[hosti]);
-     diffmsg[hosti]=DIFFNULL;
-   }
+  for (hosti=0;hosti<hostc;hosti++){
+    if (diffmsg[hosti]!=DIFFNULL){
+      if (diffmsg[hosti]->size>0){
+        diffwait++;
+        asendmsg(diffmsg[hosti]);
+      }
+      freemsg(diffmsg[hosti]);
+      diffmsg[hosti]=DIFFNULL;
+    }
  }
 /*
  while(diffwait);
@@ -917,9 +923,9 @@ void senddiffs()
 
 void diffgrantserver(jia_msg_t *rep)
 {
- assert((rep->op==DIFFGRANT)&&(rep->size==0),"Incorrect returned message!");
+  assert((rep->op==DIFFGRANT)&&(rep->size==0),"Incorrect returned message!");
 
- diffwait--;
+  diffwait--;
 }
 
 

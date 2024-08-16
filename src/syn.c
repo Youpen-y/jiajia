@@ -52,7 +52,7 @@ extern void savediff(int cachei);
 extern wtnt_t *newwtnt();
 extern void freewtntspace(wtnt_t *ptr);
 extern void freetwin(address_t *twin);
-extern void memprotect(caddr_t, size_t, int);
+extern void memprotect(void* , size_t, int);
 extern float jia_clock();
 extern void setwtvect(int homei,wtvect_t wv);
 extern void addwtvect(int homei,wtvect_t wv,int from);
@@ -66,7 +66,7 @@ extern void senddiffs();
 extern void bsendmsg(jia_msg_t *msg);
 
 extern void flushpage(int cachei);
-extern void memunmap(caddr_t addr, size_t len);
+extern void memunmap(void* addr, size_t len);
 
 void initsyn();
 void clearlocks();
@@ -517,8 +517,9 @@ void sendwtnts(int operation)
   wnptr=top.wtntp; 
   wnptr=appendstackwtnts(req, wnptr);
 
-  printf("req message frompid = %d, topid = %d\n", jia_pid, req->topid);
-  printf("wnptr == WNULL is %d", wnptr == WNULL ? 1 : 0);
+  printf("req message frompid = %d, topid = %d, req size is %d\n", jia_pid, req->topid);
+  printf("req size is %d, req data is %s\n", req->size, req->data);
+  printf("wnptr == WNULL is %d\n", wnptr == WNULL ? 1 : 0);
   while (wnptr!=WNULL){
     req->op=WTNT; 
     asendmsg(req);
@@ -532,11 +533,15 @@ void sendwtnts(int operation)
   freemsg(req);
 }
 
-
+/**
+ * @brief savepage() -- 
+ * 
+ * @param cachei 
+ */
 void savepage(int cachei)
 {
- savediff(cachei);
- savewtnt(top.wtntp,cache[cachei].addr,Maxhosts);
+  savediff(cachei);
+  savewtnt(top.wtntp,cache[cachei].addr,Maxhosts);
 }
 
 
