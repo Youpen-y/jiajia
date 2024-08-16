@@ -137,8 +137,6 @@ int main(int argc, char *argv[])
 
   jia_init(argc, argv);   
 
-  printf("My jia id name is %d test0 from sor.c\n", jia_pid);
-
   red_ = (float **) malloc((M + 2)*sizeof(float *));
   black_ = (float **) malloc((M + 2)*sizeof(float *));
     

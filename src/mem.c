@@ -314,6 +314,8 @@ unsigned long jia_alloc3(int size, int block, int starthost)
     allocsize-=mapsize;   
     homepid=(homepid+1)%hostc;
   }
+  // test
+  printf("My id is %d, I am running here", jia_pid);
 
   return(Startaddr+originaddr);
 }
