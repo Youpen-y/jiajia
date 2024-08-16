@@ -43,10 +43,10 @@
 #define hidelock     Maxlocks
 #define top          lockstack[stackptr]
 #define stol(x)      (*((unsigned long *) (x)))
-#define ltos(x)      ((unsigned char *) (&(x)))
-#define sbit(s,n)    ((s[(n)/8])|=((unsigned char)(0x1<<((n)%8))))
-#define cbit(s,n)    ((s[(n)/8])&=(~((unsigned char)(0x1<<((n)%8)))))
-#define tbit(s,n)    (((s[(n)/8])&((unsigned char)(0x1<<((n)%8))))!=0)   
+#define ltos(x)      ((unsigned char *) (&(x))) // 
+#define sbit(s,n)    ((s[(n)/8])|=((unsigned char)(0x1<<((n)%8))))      // set the n-th bit to 1
+#define cbit(s,n)    ((s[(n)/8])&=(~((unsigned char)(0x1<<((n)%8)))))   // clear the n-th bit (to 0)
+#define tbit(s,n)    (((s[(n)/8])&((unsigned char)(0x1<<((n)%8))))!=0)  // test the n-th bit whether equals 1(true) or not(false)
 #define WNULL        ((wtnt_t*)NULL)
 #define Maxcvs         16       /* maximum number of conditional variables in JIAJIA */
 
@@ -64,7 +64,7 @@ typedef struct locktype {
         int         acqc;
         int         scope;
         int         myscope;
-        wtnt_t      *wtntp;
+        wtnt_t      *wtntp;             /* write notice pointer */
                } jialock_t;
 
 typedef struct stacktype {

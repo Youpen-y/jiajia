@@ -136,54 +136,58 @@ volatile int  acqwait;
 volatile int  barrwait,noclearlocks;
 
 volatile int  waitwait,waitcounter;
-volatile int cvwait;
+volatile int  cvwait;
 jiacv_t condvars[Maxcvs];
 
 
 void initsyn()
-{int i,j,k;
+{
+  int i,j,k;
 
- for (i=0;i<=Maxlocks;i++){
-   locks[i].acqc=0;
-   locks[i].scope=0;
-   locks[i].myscope=-1;
-   for (j=0;j<Maxhosts;j++){
-     locks[i].acqs[j]=-1;
-     locks[i].acqscope[j]=-1;
-   }
-   if ((i%hostc)==jia_pid)
-     locks[i].wtntp=newwtnt();
-   else 
-     locks[i].wtntp=WNULL;
- }
+  for (i=0;i<=Maxlocks;i++){
+    locks[i].acqc=0;
+    locks[i].scope=0;
+    locks[i].myscope=-1;
+    for (j=0;j<Maxhosts;j++){
+      locks[i].acqs[j]=-1;
+      locks[i].acqscope[j]=-1;
+    }
+    if ((i%hostc)==jia_pid)
+      locks[i].wtntp=newwtnt();
+    else 
+      locks[i].wtntp=WNULL;
+  }
 
- for (i=0;i<Maxstacksize;i++){
-   lockstack[i].lockid=0;
-   lockstack[i].wtntp=newwtnt();
- }
+  for (i=0;i<Maxstacksize;i++){
+    lockstack[i].lockid=0;
+    lockstack[i].wtntp=newwtnt();
+  }
 
- stackptr=0;
- top.lockid=hidelock;
- noclearlocks=0;
+  stackptr=0;
+  top.lockid=hidelock;
+  noclearlocks=0;
 
- for (i=0;i<Maxcvs;i++){
-   condvars[i].waitc=0;
-   for (j=0;j<Maxhosts;j++){
-     condvars[i].waits[j]=-1;
-   }
- }
- cvwait=0;
- waitcounter=0;
-
+  for (i=0;i<Maxcvs;i++){
+    condvars[i].waitc=0;
+    for (j=0;j<Maxhosts;j++){
+      condvars[i].waits[j]=-1;
+    }
+  }
+  cvwait=0;
+  waitcounter=0;
 }
 
-
+/**
+ * @brief clearlocks() -- free the write notice space that used by lock
+ * 
+ */
 void clearlocks()
-{int i;
+{
+  int i;
   
- for (i=jia_pid;i<Maxlocks;i+=hostc){
-   freewtntspace(locks[i].wtntp);
- }
+  for (i = jia_pid; i < Maxlocks; i += hostc){
+    freewtntspace(locks[i].wtntp);
+  }
 }
 
 
@@ -199,7 +203,7 @@ if (statflag==1){
 }
 #endif
 
-  if (hostc==1) return;
+  if (hostc==1) return; // single host no need to use lock
 
   if (LOAD_BAL==ON){
       endtime=jia_clock();
@@ -224,10 +228,10 @@ if (statflag==1){
     starttime=jia_clock();  
 
 #ifdef DOSTAT
-if (statflag==1){
- jiastat.locktime += get_usecs() - begin;
- jiastat.kernelflag=0;
-}
+  if (statflag==1){
+  jiastat.locktime += get_usecs() - begin;
+  jiastat.kernelflag=0;
+  }
 #endif
 }
 
@@ -302,12 +306,12 @@ void jia_barrier()
   }
 
   barrwait=1;
-  sendwtnts(BARR);
+  sendwtnts(BARR);  // TODO slave stop in this function, slave 
   printf("333333333333333\n");
   freewtntspace(top.wtntp);
   printf("444444444444444\n");
 
-  while(barrwait);
+  while(barrwait);    // TODO This is the bug point, master stuck here
   printf("555555555555555\n");
   if ((H_MIG==ON)&&(W_VEC==ON)){
     jia_wait();
@@ -329,39 +333,40 @@ void jia_barrier()
 
 
 void endinterval(int synop)
-{register int cachei;
- register int pagei;
- register int hpages;
+{
+  register int cachei;
+  register int pagei;
+  register int hpages;
 
- for (cachei=0;cachei<Cachepages;cachei++){
-   if (cache[cachei].wtnt==1){
-     savepage(cachei);
-   }
- }
+  for (cachei=0;cachei<Cachepages;cachei++){
+    if (cache[cachei].wtnt==1){
+      savepage(cachei);
+    }
+  }
 
- senddiffs();
+  senddiffs();
 
- hpages=hosts[jia_pid].homesize/Pagesize;
- for (pagei=0;pagei<hpages;pagei++){
-   if ((home[pagei].wtnt&1)!=0){
-     if (home[pagei].rdnt!=0){
-       savewtnt(top.wtntp,home[pagei].addr,Maxhosts);
-       if (synop==BARR) home[pagei].rdnt=0;
-     }
+  hpages=hosts[jia_pid].homesize/Pagesize;
+  for (pagei=0;pagei<hpages;pagei++){
+    if ((home[pagei].wtnt&1)!=0){
+      if (home[pagei].rdnt!=0){
+        savewtnt(top.wtntp,home[pagei].addr,Maxhosts);
+        if (synop==BARR) home[pagei].rdnt=0;
+      }
 
-     if ((W_VEC==ON)&&(home[pagei].wvfull==0)){int i;
-       wtvect_t wv=WVNULL;
-       for (i=0;i<Pagesize;i+=Blocksize){
-         if (memcmp(home[pagei].addr+i,home[pagei].twin+i,Blocksize)!=0){
-           wv |= ((wtvect_t)1)<<(i/Blocksize);
-         }
-       }
-       addwtvect(pagei,wv,jia_pid);
-     }
+      if ((W_VEC==ON)&&(home[pagei].wvfull==0)){int i;
+        wtvect_t wv=WVNULL;
+        for (i=0;i<Pagesize;i+=Blocksize){
+          if (memcmp(home[pagei].addr+i,home[pagei].twin+i,Blocksize)!=0){
+            wv |= ((wtvect_t)1)<<(i/Blocksize);
+          }
+        }
+        addwtvect(pagei,wv,jia_pid);
+      }
 
-   }/*if*/
- }/*for*/
- while (diffwait);
+    }/*if*/
+  }/*for*/
+  while (diffwait);
 }
 
 
@@ -466,51 +471,65 @@ void popstack()
 }
 
 
+/**
+ * @brief acquire() -- 
+ * 
+ * @param lock 
+ */
 void acquire(int lock)
-{jia_msg_t *req;
+{
+  jia_msg_t *req;
 
- req=newmsg();
+  req=newmsg();
 
- req->op=ACQ;
- req->frompid=jia_pid;
- req->topid=lock%hostc;
- req->scope=locks[lock].myscope;
- req->size=0;
- appendmsg(req,ltos(lock),Intbytes);
+  req->op=ACQ;
+  req->frompid=jia_pid;
+  req->topid=lock%hostc;
+  req->scope=locks[lock].myscope;
+  req->size=0;
+  appendmsg(req,ltos(lock),Intbytes);
 
- asendmsg(req);
+  asendmsg(req);
 
- freemsg(req);
- while(acqwait) ;
+  freemsg(req);
+  while(acqwait) ;
 }
 
 
+/**
+ * @brief sendwtnts() -- 
+ * 
+ * @param operation 
+ */
 void sendwtnts(int operation)
-{int   wtnti;
- jia_msg_t *req;
- wtnt_t *wnptr; 
- 
- req=newmsg();
+{
+  int   wtnti;
+  jia_msg_t *req;
+  wtnt_t *wnptr; 
+  
+  req=newmsg();
 
- req->frompid=jia_pid;
- req->topid=top.lockid%hostc;
- req->size=0;
- req->scope=(operation==REL)?locks[hidelock].myscope:locks[top.lockid].myscope;
- appendmsg(req,ltos(top.lockid),Intbytes);
+  req->frompid=jia_pid;
+  req->topid=top.lockid%hostc;
+  req->size=0;
+  req->scope=(operation==REL) ? locks[hidelock].myscope : locks[top.lockid].myscope;
+  printf("222222222222222.111111111111111111\n");
+  appendmsg(req,ltos(top.lockid),Intbytes);
+  printf("222222222222222.222222222222222222\n");
 
- wnptr=top.wtntp; 
- wnptr=appendstackwtnts(req,wnptr);
- while (wnptr!=WNULL){
-   req->op=WTNT; 
-   asendmsg(req);
-   req->size=Intbytes;
-   wnptr=appendstackwtnts(req,wnptr);
- }
+  wnptr=top.wtntp; 
+  wnptr=appendstackwtnts(req,wnptr);
+  while (wnptr!=WNULL){
+    req->op=WTNT; 
+    asendmsg(req);
+    req->size=Intbytes;
+    wnptr=appendstackwtnts(req,wnptr);
+  }
 
- req->op=operation; 
- asendmsg(req);
+  req->op=operation; 
+  asendmsg(req);
 
- freemsg(req);
+  freemsg(req);
 }
 
 
@@ -973,22 +992,23 @@ void invserver(jia_msg_t *req)
 
 
 void barrgrantserver(jia_msg_t *req)
-{int lock;
+{
+  int lock;
 
- assert((req->op==BARRGRANT)&&(req->topid==jia_pid),"Incorrect BARRGRANT Message!"); 
+  assert((req->op==BARRGRANT)&&(req->topid==jia_pid),"Incorrect BARRGRANT Message!"); 
 
- if (noclearlocks==0)
-   clearlocks();
- invalidate(req);
+  if (noclearlocks==0)
+    clearlocks();
+  invalidate(req);
 
- if (H_MIG==ON){
-   migarrangehome(); 
- }
+  if (H_MIG==ON){
+    migarrangehome(); 
+  }
 
- lock=(int) stol(req->data);
- locks[lock].myscope=req->scope;
- barrwait=0;
- noclearlocks=0;
+  lock=(int) stol(req->data);
+  locks[lock].myscope=req->scope;
+  barrwait=0;
+  noclearlocks=0;
 }
 
 

@@ -78,8 +78,8 @@ extern int firsttime;
 extern float caltime;
 
 char errstr[Linesize];      /* buffer for error info */
-jia_msg_t  msgarray[Maxmsgs];
-volatile int    msgbusy[Maxmsgs];
+jia_msg_t  msgarray[Maxmsgs];   /* message array */
+volatile int    msgbusy[Maxmsgs];   /* msgbusy[i] == 0 means msgarray[i] is abailable */
 int msgcnt;
 jia_msg_t assertmsg;
 
@@ -158,16 +158,24 @@ void jiaexitserver(jia_msg_t *req)
 }
 
 
-/*-----------------------------------------------------------*/
+/**
+ * @brief newtwin() -- alloc a Pagesize space for a page's copy
+ * 
+ * @param twin address of the new allocated space
+ */
 void newtwin(address_t *twin)
 {
-  if (*twin==((address_t)NULL))
+  if(*twin==((address_t)NULL))
     *twin=(address_t)valloc(Pagesize);
   assert(((*twin)!=(address_t)NULL),"Cannot allocate twin space!");
 }
 
 
-/*-----------------------------------------------------------*/
+/**
+ * @brief freetwin() -- free the space pointed by twin
+ * 
+ * @param twin address of memory that will be free 
+ */
 void freetwin(address_t *twin)
 {
 #ifndef RESERVE_TWIN_SPACE
@@ -176,27 +184,32 @@ void freetwin(address_t *twin)
 #endif
 }
 
-
-/*-----------------------------------------------------------*/
+/**
+ * @brief newmsg() -- Find an available msg space in msgarray
+ * 
+ * @return jia_msg_t* The first free space address in msgarray that available
+ */
 jia_msg_t *newmsg()
 {
   int i,j;
 
   msgcnt++;
-  for (i=0;(i<Maxmsgs)&&(msgbusy[i]!=0);i++);
-  assert0((i<Maxmsgs),"Cannot allocate message space!");
+  for (i=0; (i<Maxmsgs)&&(msgbusy[i]!=0); i++) ;
+  assert0((i<Maxmsgs), "Cannot allocate message space!");
   msgbusy[i]=1;
 
 #ifdef JIA_DEBUG
  for (j=0;j<Maxmsgs;j++) printf("%d ",msgbusy[j]);
  printf("  msgcnt=%d\n",msgcnt);
 #endif
-
   return(&(msgarray[i]));
 }
 
-
-/*-----------------------------------------------------------*/
+/**
+ * @brief freemsg() -- free the space that msg occupied, (only change its busy status and message count, the space can be used by overwritting)
+ * 
+ * @param msg message to be deleted
+ */
 void freemsg(jia_msg_t *msg)
 {
   int i;
@@ -205,7 +218,14 @@ void freemsg(jia_msg_t *msg)
 }
 
 
-/*-----------------------------------------------------------*/
+/**
+ * @brief apppendmsg() -- append message with len bytes from str
+ * 
+ * @param msg original message
+ * @param str appended source
+ * @param len number of bytes
+ * 
+ */
 void appendmsg(jia_msg_t *msg, unsigned char *str, int len)
 {
   assert(((msg->size+len)<=Maxmsgsize),"Message too large");
@@ -213,6 +233,11 @@ void appendmsg(jia_msg_t *msg, unsigned char *str, int len)
   msg->size+=len;
 }
 
+/**
+ * @brief newwtnt() -- allocate a space for a new wtnt_t object
+ * 
+ * @return wtnt_t* return a pointer to the allocated memory on success, NULL is returned on error and set errno
+ */
 wtnt_t *newwtnt()
 {
   wtnt_t *wnptr;
@@ -229,7 +254,11 @@ wtnt_t *newwtnt()
 }
 
 
-/*-----------------------------------------------------------*/
+/**
+ * @brief freewtntspace() -- free the wtnt list exclude the node pointed by ptr (list head)
+ * 
+ * @param ptr list head
+ */
 void freewtntspace(wtnt_t *ptr)
 {
   wtnt_t *last,*wtntp;
@@ -245,7 +274,11 @@ void freewtntspace(wtnt_t *ptr)
 }
 
 
-/*-----------------------------------------------------------*/
+/**
+ * @brief printmsg() -- print message pointed by msg
+ * @param msg msg that will be printed
+ * @param right if right=1, print with special format
+ */
 void printmsg(jia_msg_t *msg, int right)
 {
    SPACE(right);printf("********Print message********\n");
