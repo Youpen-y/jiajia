@@ -513,19 +513,18 @@ void sendwtnts(int operation)
   req->topid=top.lockid%hostc;
   req->size=0;
   req->scope=(operation==REL) ? locks[hidelock].myscope : locks[top.lockid].myscope;
-  printf("222222222222222.111111111111111111\n");
   appendmsg(req,ltos(top.lockid),Intbytes);
-  printf("222222222222222.222222222222222222\n");
-
   wnptr=top.wtntp; 
-  wnptr=appendstackwtnts(req,wnptr);
+
+  wnptr=appendstackwtnts(req,wnptr);  // may be bug point
+  printf("222222222222222.111111111111111111\n");
   while (wnptr!=WNULL){
     req->op=WTNT; 
     asendmsg(req);
     req->size=Intbytes;
     wnptr=appendstackwtnts(req,wnptr);
   }
-
+  printf("222222222222222.222222222222222222\n");
   req->op=operation; 
   asendmsg(req);
 
