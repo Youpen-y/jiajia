@@ -310,7 +310,6 @@ void jia_barrier()
   printf("333333333333333\n");
   freewtntspace(top.wtntp);
   printf("444444444444444\n");
-  sleep(10);
   while(barrwait);    // TODO This is the bug point, master stuck here
   printf("555555555555555\n");
   if ((H_MIG==ON)&&(W_VEC==ON)){
