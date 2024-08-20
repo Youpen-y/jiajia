@@ -530,6 +530,7 @@ if (statflag==1){
  */
 void asendmsg(jia_msg_t *msg)
 {
+  printf("222222222222222.111111111111111111.22222222222222222\n");
   int outsendmsg;
 #ifdef DOSTAT
  register unsigned int begin = get_usecs();
@@ -538,7 +539,7 @@ if (statflag==1){
  if (msg->size<128)  jiastat.smallcnt++;
 }
 #endif
-  printf("222222222222222.111111111111111111.22222222222222222\n");
+  
   printf("Enter asendmsg! outc=%d, outh=%d, outt=%d\n",
                outcount, outhead, outtail);
   

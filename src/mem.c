@@ -47,7 +47,7 @@
 #endif /* IRIX62 */
 
 extern jia_msg_t *newmsg();
-extern void freemsg();
+extern void freemsg(jia_msg_t*);
 extern void asendmsg(jia_msg_t *req);
 extern void savepage(int cachei);
 extern void newtwin(address_t *twin);
@@ -114,7 +114,7 @@ long            jiamapfd;   /* file descriptor of the file that mapped to proces
 volatile int getpwait;
 volatile int diffwait;
 int repcnt[Setnum];
-jia_msg_t *diffmsg[Maxhosts];
+jia_msg_t *diffmsg[Maxhosts]; /* store every host's diff msgs */
 
 
 /**
@@ -494,7 +494,7 @@ void sigsegv_handler(int signo, struct sigcontext sigctx)
 {
   address_t faultaddr;
   int writefault;
-  int cachei,homei;
+  int cachei, homei;
 
   sigset_t set;
     
@@ -824,41 +824,48 @@ if (statflag==1){
  freemsg(rep);
 }
 
-
+/**
+ * @brief encodediff() -- 
+ * 
+ * @param cachei 
+ * @param diff 
+ * @return int 
+ */
 int encodediff(int cachei, unsigned char* diff)
-{int size;
- int bytei;
- unsigned long cnt;
- unsigned long start;
- unsigned long header;
+{
+  int size;
+  int bytei;
+  unsigned long cnt;
+  unsigned long start;
+  unsigned long header;
 
 #ifdef DOSTAT
- register unsigned int begin = get_usecs();
+  register unsigned int begin = get_usecs();
 #endif
 
-   size=0;
-   memcpy(diff+size,ltos(cache[cachei].addr),Intbytes);
-   size+=Intbytes;
-   size+=Intbytes;                       /*leave space for size*/
+  size=0;
+  memcpy(diff+size,ltos(cache[cachei].addr),Intbytes);
+  size+=Intbytes;
+  size+=Intbytes;                       /*leave space for size*/
 
-   bytei=0;
-   while (bytei<Pagesize){
-     for (; (bytei<Pagesize)&&(memcmp(cache[cachei].addr+bytei,
-           cache[cachei].twin+bytei,Diffunit)==0); bytei+=Diffunit);
-     if (bytei<Pagesize){
-       cnt=(unsigned long) 0;
-       start=(unsigned long) bytei;
-       for (; (bytei<Pagesize)&&(memcmp(cache[cachei].addr+bytei,
-             cache[cachei].twin+bytei,Diffunit)!=0); bytei+=Diffunit) 
-         cnt+=Diffunit;
-       header=((start & 0xffff)<<16)|(cnt & 0xffff);
-       memcpy(diff+size,ltos(header),Intbytes);
-       size+=Intbytes;
-       memcpy(diff+size,cache[cachei].addr+start,cnt);
-       size+=cnt;   
-     }
-   }
-   memcpy(diff+Intbytes,ltos(size),Intbytes);    /*fill size*/
+  bytei=0;
+  while (bytei<Pagesize){
+    for (; (bytei<Pagesize)&&(memcmp(cache[cachei].addr+bytei,
+          cache[cachei].twin+bytei,Diffunit)==0); bytei+=Diffunit);
+    if (bytei<Pagesize){
+      cnt=(unsigned long) 0;
+      start=(unsigned long) bytei;
+      for (; (bytei<Pagesize)&&(memcmp(cache[cachei].addr+bytei,
+            cache[cachei].twin+bytei,Diffunit)!=0); bytei+=Diffunit) 
+        cnt+=Diffunit;
+      header=((start & 0xffff)<<16)|(cnt & 0xffff);
+      memcpy(diff+size,ltos(header),Intbytes);
+      size+=Intbytes;
+      memcpy(diff+size,cache[cachei].addr+start,cnt);
+      size+=cnt;   
+    }
+  }
+  memcpy(diff+Intbytes,ltos(size),Intbytes);    /*fill size*/
 
 #ifdef DOSTAT
 if (statflag==1){
@@ -866,7 +873,7 @@ if (statflag==1){
 }
 #endif
 
- return(size);
+  return(size);
 }
 
 /**
@@ -880,13 +887,13 @@ void savediff(int cachei)
   int   diffsize;
   int hosti;
     
-  hosti=homehost(cache[cachei].addr);
-  if (diffmsg[hosti]==DIFFNULL){
-    diffmsg[hosti]=newmsg();
-    diffmsg[hosti]->op=DIFF; 
-    diffmsg[hosti]->frompid=jia_pid; 
-    diffmsg[hosti]->topid=hosti; 
-    diffmsg[hosti]->size=0; 
+  hosti = homehost(cache[cachei].addr);
+  if (diffmsg[hosti] == DIFFNULL) {
+    diffmsg[hosti] = newmsg();
+    diffmsg[hosti]->op = DIFF; 
+    diffmsg[hosti]->frompid = jia_pid; 
+    diffmsg[hosti]->topid = hosti; 
+    diffmsg[hosti]->size = 0; 
   }
   diffsize=encodediff(cachei,diff);
   if ((diffmsg[hosti]->size+diffsize)>Maxmsgsize){
@@ -900,7 +907,10 @@ void savediff(int cachei)
   }
 }
 
-
+/**
+ * @brief senddiffs() -- 
+ * 
+ */
 void senddiffs()
 {
   int hosti;

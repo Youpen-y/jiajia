@@ -331,14 +331,19 @@ void jia_barrier()
 #endif
 }
 
-
+/**
+ * @brief endinterval -- 
+ * 
+ * @param synop 
+ */
 void endinterval(int synop)
 {
+  // register advise compiler store these variables into registers
   register int cachei;
   register int pagei;
   register int hpages;
 
-  for (cachei=0;cachei<Cachepages;cachei++){
+  for (cachei=0; cachei<Cachepages; cachei++){
     if (cache[cachei].wtnt==1){
       savepage(cachei);
     }
@@ -514,10 +519,10 @@ void sendwtnts(int operation)
   req->size=0;
   req->scope=(operation==REL) ? locks[hidelock].myscope : locks[top.lockid].myscope;
   appendmsg(req,ltos(top.lockid),Intbytes);
+
   wnptr=top.wtntp; 
   wnptr=appendstackwtnts(req, wnptr);
-
-  printf("req message frompid = %d, topid = %d, req size is %d\n", jia_pid, req->topid);
+  printf("req message frompid = %d, topid = %d", jia_pid, req->topid);
   printf("req size is %d, req data is %s\n", req->size, req->data);
   printf("wnptr == WNULL is %d\n", wnptr == WNULL ? 1 : 0);
   while (wnptr!=WNULL){

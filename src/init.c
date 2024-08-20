@@ -407,6 +407,7 @@ void barrier0()
  * 
  * @param argc program argument count
  * @param argv program arguments array
+ * @note redirstdio makes effects on slaves only
  */
 
 void redirstdio(int argc, char **argv)

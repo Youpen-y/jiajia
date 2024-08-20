@@ -42,8 +42,8 @@
 #define Maxstacksize 8
 #define hidelock     Maxlocks
 #define top          lockstack[stackptr]
-#define stol(x)      (*((unsigned long *) (x)))
-#define ltos(x)      ((unsigned char *) (&(x))) // 
+#define stol(x)      (*((unsigned long *) (x))) // reinterpret a pointer into (unsigned long *) and dereference it
+#define ltos(x)      ((unsigned char *) (&(x))) // transfer x's address into (unsigned char *)
 #define sbit(s,n)    ((s[(n)/8])|=((unsigned char)(0x1<<((n)%8))))      // set the n-th bit to 1
 #define cbit(s,n)    ((s[(n)/8])&=(~((unsigned char)(0x1<<((n)%8)))))   // clear the n-th bit (to 0)
 #define tbit(s,n)    (((s[(n)/8])&((unsigned char)(0x1<<((n)%8))))!=0)  // test the n-th bit whether equals 1(true) or not(false)
