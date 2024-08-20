@@ -52,7 +52,7 @@
 
 #ifndef JIA_DEBUG 
 #define  msgprint  0 
-#define  printf   emptyprintf
+//#define  printf   emptyprintf
 #else  /* JIA_DEBUG */
 #define msgprint  1
 #endif  /* JIA_DEBUG */
