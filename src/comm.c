@@ -216,7 +216,7 @@ void initcomm()
 { 
   int i,j,fd;
 
-  if (jia_pid==0){
+  if (jia_pid == 0) {
     printf("************Initialize Communication!*******\n");
   }
   printf("current jia_pid = %d\n", jia_pid);

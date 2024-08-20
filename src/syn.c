@@ -287,14 +287,14 @@ void jia_barrier()
   }
 #endif
 
-  if (hostc==1) return;
+  if (hostc==1) return;   // single machine
 
   if (LOAD_BAL==ON){
       endtime=jia_clock();
       caltime+=(endtime-starttime);
   }
 
-
+  printf("stackptr = %d\n", stackptr);
   assert((stackptr==0),"barrier can not be used in CS!"); 
 
   printf("111111111111111\n");
@@ -522,7 +522,7 @@ void sendwtnts(int operation)
 
   wnptr=top.wtntp; 
   wnptr=appendstackwtnts(req, wnptr);
-  printf("req message frompid = %d, topid = %d", jia_pid, req->topid);
+  printf("req message frompid = %d, topid = %d\n", jia_pid, req->topid);
   printf("req size is %d, req data is %s\n", req->size, req->data);
   printf("wnptr == WNULL is %d\n", wnptr == WNULL ? 1 : 0);
   while (wnptr!=WNULL){
@@ -533,7 +533,9 @@ void sendwtnts(int operation)
   }
   req->op=operation; 
   printf("222222222222222.111111111111111111\n");
+  printf("my pid is %d\n", jiapid);
   asendmsg(req);  // TODO bug point
+  sleep(2); // test point
   printf("222222222222222.222222222222222222\n");
   freemsg(req);
 }

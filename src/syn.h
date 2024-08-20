@@ -54,7 +54,7 @@
 typedef struct wtnttype {
         unsigned char*  wtnts[Maxwtnts];
         int             from[Maxwtnts];   /*from pid or from scope*/
-        int             wtntc;
+        int             wtntc;  // write notice count
         struct wtnttype *more;
                } wtnt_t;
 
@@ -68,8 +68,8 @@ typedef struct locktype {
                } jialock_t;
 
 typedef struct stacktype {
-        int         lockid;
-        wtnt_t      *wtntp;
+        int         lockid;     // lock id
+        wtnt_t      *wtntp;     // write notice pointer
                } jiastack_t;
 
 typedef struct cvtype {

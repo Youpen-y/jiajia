@@ -82,6 +82,13 @@ jiastat_t jiastat;
 int statflag;
 #endif
 
+/**
+ * @brief my_getline -- 
+ * 
+ * @param wordc 
+ * @param wordv 
+ * @return int 
+ */
 int my_getline(int *wordc, char wordv[Maxwords][Wordsize])
 {
   char line[Linesize];
@@ -127,7 +134,10 @@ int my_getline(int *wordc, char wordv[Maxwords][Wordsize])
   return(ch==EOF);
 }
 
-
+/**
+ * @brief gethosts -- open .jiahosts and according its contents fill the hosts array
+ * 
+ */
 void gethosts()
 {
   int endoffile;
@@ -179,7 +189,12 @@ void gethosts()
   fclose(config);
 }
 
-
+/**
+ * @brief copyfiles -- copy .jiahosts and program(i.e. argv[0]) to slaves
+ * 
+ * @param argc same as main's argc
+ * @param argv same as main's argv
+ */
 void copyfiles(int argc, char **argv)
 {
   // replace rcp with scp
@@ -198,9 +213,6 @@ void copyfiles(int argc, char **argv)
     strcat(cmd,"@");
     strcat(cmd,hosts[hosti].name);
     strcat(cmd,":");
-
-    printf("test0\n");
-    printf("cmd = %s\n", cmd);
 
     rcpyes=system(cmd);
     sprintf(errstr,"Cannot scp .jiahosts to %s!\n",hosts[hosti].name);
@@ -222,7 +234,13 @@ void copyfiles(int argc, char **argv)
   printf("Remote copy succeed!\n\n");
 }
 
-
+/**
+ * @brief startprocs -- start process on slaves
+ * 
+ * @param argc 
+ * @param argv 
+ * @return int 
+ */
 int startprocs(int argc, char **argv)
 {
   struct servent *sp;
@@ -306,7 +324,11 @@ int startprocs(int argc, char **argv)
   }
 }
 
-
+/**
+ * @brief mypid -- get host id [0, hostc)
+ * 
+ * @return int id number
+ */
 int mypid()
 {
   char hostname[Wordsize];
@@ -342,7 +364,12 @@ int mypid()
   return(i);
 }
 
-
+/**
+ * @brief jiacreat -- 
+ * 
+ * @param argc 
+ * @param argv 
+ */
 void jiacreat(int argc, char **argv)
 {
   gethosts();
@@ -366,7 +393,6 @@ void jiacreat(int argc, char **argv)
       switch (c) {
         case 'P':{
           Startport = atol(optarg);
-          printf("Startport = %ld\n", Startport);
           break;
         }
       }
@@ -474,17 +500,13 @@ void jia_init(int argc, char **argv)
 #endif
   redirstdio(argc,argv);
 
-  if(jia_pid!=0){ // slave does
+  if(jia_pid != 0){ // slave does
     printf("I am %d, running here\n", jia_pid);
   }
   enable_sigio();
 
   timel=jia_current_time();
   time1=jia_clock();
-
-  if(jia_pid != 0){
-    printf("where am i\n");
-  }
 
   if (jia_pid==0)
     printf ("End of Initialization\n");
