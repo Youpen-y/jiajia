@@ -537,7 +537,9 @@ if (statflag==1){
  */
 void asendmsg(jia_msg_t *msg)
 {
-  assert0(0, "down here!!!!!!!!!!");
+  if(jia_pid == 1){
+    assert0(0, "down here!!!!!!!!!!");
+  }
   printf("222222222222222.111111111111111111.22222222222222222\n");
   fflush(stdout); // Force output
 
