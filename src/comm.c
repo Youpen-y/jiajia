@@ -668,7 +668,7 @@ recv_again:
 
     if (sendsuccess!=1){
       printf("I am host %d, hostname = %s, I am running outsend() function\n", hostc, hosts[hostc].name);
-      sprintf(errstr,"Can't asend message(%d,%d) to host %d!",outqh.op, outqh.seqno, toproc); 
+      sprintf(errstr,"I Can't asend message(%d,%d) to host %d!",outqh.op, outqh.seqno, toproc); 
       printf("BUFFER SIZE %d(%d)\n", outqh.size, msgsize);
       assert0((sendsuccess==1),errstr);
     }
