@@ -109,7 +109,8 @@ unsigned int interruptflag=0;
 #endif
 
 /* following definitions are defined by Shi */
-unsigned long reqports[Maxhosts][Maxhosts],repports[Maxhosts][Maxhosts];
+unsigned long reqports[Maxhosts][Maxhosts]; // every host has Maxhosts request ports
+unsigned long repports[Maxhosts][Maxhosts]; // every host has Maxhosts reply ports
 CommManager commreq,commrep;
 unsigned long timeout_time;
 static struct timeval   polltime = { 0, 0 };
@@ -117,7 +118,6 @@ jia_msg_t inqueue[Maxqueue], outqueue[Maxqueue];
 volatile int inhead, intail, incount;
 volatile int outhead, outtail, outcount;
 long   Startport;
-
 
 // void    initcomm();
 // int     req_fdcreate(int, int);
@@ -147,10 +147,16 @@ extern sigset_t oldset;
 int oldsigiomask;
 
 /*---------------------------------------------------------*/
+/**
+ * @brief req_fdcreate -- request socket file descriptor create and bind it to an address (ip/port combination)
+ * 
+ * @param i the index of i port of host
+ * @param flag 0 means sin_port = 0, random; others means specified sin_port = reqports[jia_pid][i]
+ * @return int socket file descriptor
+ */
 int req_fdcreate(int i, int flag)
 {   
-  int         fd,res;
-  int         size;
+  int         fd, res;
   struct      sockaddr_in addr;
 
   fd = socket(AF_INET, SOCK_DGRAM, 0);
@@ -165,7 +171,6 @@ int req_fdcreate(int i, int flag)
   res=setsockopt(fd, SOL_SOCKET, SO_SNDBUF, (char *)&size, sizeof(size));
   assert0((res==0),"req_fdcreate()-->setsockopt():SO_SNDBUF");
 #endif
-
   addr.sin_family      = AF_INET;
   addr.sin_addr.s_addr = htonl(INADDR_ANY);
   addr.sin_port        = (flag)? htons(0) : htons(reqports[jia_pid][i]);
@@ -208,11 +213,13 @@ int rep_fdcreate(int i, int flag)
 
 /*------------------------------------------------------------*/
 void initcomm()
-{ int i,j,fd;
+{ 
+  int i,j,fd;
 
   if (jia_pid==0){
     printf("************Initialize Communication!*******\n");
   }
+  printf("current jia_pid = %d\n", jia_pid);
   printf(" Startport = %d \n", Startport);
 
 
@@ -680,48 +687,50 @@ recv_again:
 
 
 void bsendmsg(jia_msg_t *msg)
-{unsigned long root,level;
+{
+  unsigned long root,level;
 
- msg->op+=BCAST;
+  msg->op+=BCAST;
 
- root=jia_pid;
+  root=jia_pid;
 
- if (hostc==1){
-   level=1;
- }else{
-   for (level=0;(1<<level)<hostc;level++);
- }
+  if (hostc==1){
+    level=1;
+  }else{
+    for (level=0;(1<<level)<hostc;level++);
+  }
 
- msg->temp=((root & 0xffff) <<16) | (level & 0xffff);
+  msg->temp=((root & 0xffff) <<16) | (level & 0xffff);
 
- bcastserver(msg); 
+  bcastserver(msg); 
 }
 
 
 void bcastserver(jia_msg_t *msg)
-{int mypid,child1,child2;
- int rootlevel, root, level;
+{
+  int mypid,child1,child2;
+  int rootlevel, root, level;
 
- rootlevel=msg->temp;
- root= (rootlevel >> 16) & 0xffff;
- level=rootlevel & 0xffff; 
- level--;
+  rootlevel=msg->temp;
+  root= (rootlevel >> 16) & 0xffff;
+  level=rootlevel & 0xffff; 
+  level--;
 
- mypid=((jia_pid-root)>=0) ? (jia_pid-root) : (jia_pid-root+hostc);
- child1=mypid;
- child2=mypid+(1<<level);
+  mypid=((jia_pid-root)>=0) ? (jia_pid-root) : (jia_pid-root+hostc);
+  child1=mypid;
+  child2=mypid+(1<<level);
 
- if (level==0) msg->op-=BCAST;
- msg->temp=((root & 0xffff) <<16) | (level & 0xffff);
- msg->frompid=jia_pid;
+  if (level==0) msg->op-=BCAST;
+  msg->temp=((root & 0xffff) <<16) | (level & 0xffff);
+  msg->frompid=jia_pid;
 
- if (child2<hostc){
-   msg->topid=(child2+root)%hostc;
-   asendmsg(msg); 
- }
+  if (child2<hostc){
+    msg->topid=(child2+root)%hostc;
+    asendmsg(msg); 
+  }
 
- msg->topid=(child1+root)%hostc;
- asendmsg(msg);
+  msg->topid=(child1+root)%hostc;
+  asendmsg(msg);
 }
 
 #else  /* NULL_LIB */
