@@ -535,7 +535,6 @@ void sendwtnts(int operation)
   printf("222222222222222.111111111111111111\n");
   printf("my pid is %d\n", jiapid);
   asendmsg(req);  // TODO bug point
-  sleep(2); // test point
   printf("222222222222222.222222222222222222\n");
   freemsg(req);
 }
