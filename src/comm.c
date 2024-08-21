@@ -44,7 +44,7 @@
                    sigaddset(&newmask, SIGIO);\
                    sigprocmask(SIG_BLOCK, &newmask, &oldmask);\
                    oldsigiomask=sigismember(&oldmask,SIGIO);\
-                   printf("Enter CS");\
+                   printf("Enter CS\t");\
                   }
 #define  ENDCS    {if (oldsigiomask==0) enable_sigio();\
                    printf("Exit CS\n");\
@@ -110,9 +110,9 @@ unsigned int interruptflag=0;
 #endif
 
 /* following definitions are defined by Shi */
-unsigned long reqports[Maxhosts][Maxhosts]; // every host has Maxhosts request ports
-unsigned long repports[Maxhosts][Maxhosts]; // every host has Maxhosts reply ports
-CommManager commreq,commrep;
+unsigned long reqports[Maxhosts][Maxhosts];   // every host has Maxhosts request ports
+unsigned long repports[Maxhosts][Maxhosts];   // every host has Maxhosts reply ports
+CommManager commreq, commrep;
 unsigned long timeout_time;
 static struct timeval   polltime = { 0, 0 };
 jia_msg_t inqueue[Maxqueue], outqueue[Maxqueue];
@@ -359,9 +359,13 @@ void initcomm()
 
 
 /*----------------------------------------------------------*/
+/**
+ * @brief msgserver -- according to inqueue head msg.op choose different server
+ * 
+ */
 void msgserver()
 {
-     SPACE(1);printf("Enterservermsg[%d],inc=%d,inh=%d,int=%d!\n",inqh.op, incount,inhead,intail);
+     SPACE(1);printf("Enterserver msg[%d], incount=%d, inhead=%d, intail=%d!\n", inqh.op, incount, inhead, intail);
      switch (inqh.op) {
              case REL:      relserver(&inqh);      break;
              case JIAEXIT:  jiaexitserver(&inqh);  break;
@@ -417,11 +421,11 @@ void sigio_handler()
 void sigio_handler()
 #endif
 {
-  int res, len,oldindex;
+  int res, len, oldindex;
   int i, s;
   fd_set  readfds;
-  struct sockaddr_in  from,to; 
-  sigset_t set,oldset;
+  struct sockaddr_in  from, to; 
+  sigset_t set, oldset;
   int servemsg;
   int testresult;
 
@@ -529,10 +533,8 @@ if (statflag==1){
 }
 
 
-
-/*----------------------------------------------------------*/
 /**
- * @brief asendmsg() -- 
+ * @brief asendmsg() -- asynchronous send msg to outqueue[outtail]
  * 
  * @param msg 
  */
@@ -542,19 +544,21 @@ void asendmsg(jia_msg_t *msg)
   
   int outsendmsg;
 #ifdef DOSTAT
- register unsigned int begin = get_usecs();
-if (statflag==1){
- if (msg->size>4096) jiastat.largecnt++;
- if (msg->size<128)  jiastat.smallcnt++;
-}
+  register unsigned int begin = get_usecs();
+  if (statflag==1){
+    if (msg->size>4096) jiastat.largecnt++;
+    if (msg->size<128)  jiastat.smallcnt++;
+  }
 #endif
   
   printf("Enter asendmsg! outc=%d, outh=%d, outt=%d\n",
                outcount, outhead, outtail);
-  
+
+  printmsg(msg, 1);
+
   BEGINCS;
   assert0((outcount<Maxqueue), "asendmsg(): Outqueue exceeded!");
-  memcpy(&(outqt),msg,Msgheadsize+msg->size);
+  memcpy(&(outqt), msg, Msgheadsize+msg->size);
   commreq.snd_seq[msg->topid]++;
   outqt.seqno= commreq.snd_seq[msg->topid];
   outcount++;
@@ -579,7 +583,10 @@ if (statflag==1){
 #endif 
 }
 
-
+/**
+ * @brief outsend -- 
+ * 
+ */
 void outsend()
 {
   int res, toproc, fromproc;
@@ -598,10 +605,12 @@ void outsend()
   
   printf("Enter outsend!\n");
 
-  if (msgprint==1) printmsg(&outqh,0);
+  printmsg(&outqh, 1);
+  if (msgprint==1) printmsg(&outqh, 0);
 
   toproc = outqh.topid;
   fromproc = outqh.frompid;
+  printf("outqueue[outhead].topid = %d, outqueue[outhead].frompid = %d\n", toproc, fromproc);
   
   if (toproc == fromproc) {
     BEGINCS;
@@ -627,16 +636,14 @@ void outsend()
     }
   }else{
     msgsize=outqh.size+Msgheadsize;
-
 #ifdef DOSTAT
 if (statflag==1){
     jiastat.msgsndcnt++;
     jiastat.msgsndbytes+=msgsize;
 }
 #endif
-
     to.sin_family = AF_INET;
-    memcpy(&to.sin_addr,hosts[toproc].addr,hosts[toproc].addrlen);
+    memcpy(&to.sin_addr, hosts[toproc].addr, hosts[toproc].addrlen);
     to.sin_port = htons(reqports[toproc][fromproc]);
 
     retries_num=0;
@@ -649,9 +656,9 @@ if (statflag==1){
       assert0((res!=-1),"outsend()-->sendto()");
       ENDCS;
 
-      arrived=0;
-      start= jia_current_time();
-      end  = start+TIMEOUT;
+      arrived = 0;
+      start = jia_current_time();
+      end  = start + TIMEOUT;
 
       while ((jia_current_time()<end)&&(arrived!=1)){
         FD_ZERO(&readfds);
@@ -659,26 +666,25 @@ if (statflag==1){
         polltime.tv_sec=0;
         polltime.tv_usec=0;
         res = select(commrep.rcv_maxfd, &readfds,NULL,NULL,&polltime);
-        if (FD_ISSET(commrep.rcv_fds[toproc],&readfds)!=0)
+        if (FD_ISSET(commrep.rcv_fds[toproc],&readfds)!=0) {
           arrived=1;
+        }
       }
-
-      if (arrived==1) {
+      if (arrived == 1) {
 recv_again:
         s= sizeof(from);
-        res = recvfrom(commrep.rcv_fds[toproc], (char *)&rep, Intbytes,0,
+        res = recvfrom(commrep.rcv_fds[toproc], (char *)&rep, Intbytes, 0,
                         (struct sockaddr *)&from, &s);
         if ((res < 0) && (errno == EINTR)) goto recv_again;
         if ((res!=-1)&&(rep==outqh.seqno)) sendsuccess=1;
       }
-         
       retries_num++;
     }
 
-    if (sendsuccess!=1){
+    if (sendsuccess!=1) {
       printf("I am host %d, hostname = %s, I am running outsend() function\n", hostc, hosts[hostc].name);
       sprintf(errstr,"I Can't asend message(%d,%d) to host %d!",outqh.op, outqh.seqno, toproc); 
-      printf("BUFFER SIZE %d(%d)\n", outqh.size, msgsize);
+      printf("BUFFER SIZE %d (%d)\n", outqh.size, msgsize);
       assert0((sendsuccess==1),errstr);
     }
   }

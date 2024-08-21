@@ -53,8 +53,8 @@
 
 typedef struct wtnttype {
         unsigned char*  wtnts[Maxwtnts];
-        int             from[Maxwtnts];   /*from pid or from scope*/
-        int             wtntc;  // write notice count
+        int             from[Maxwtnts];   // from pid or from scope
+        int             wtntc;            // write notice count
         struct wtnttype *more;
                } wtnt_t;
 
@@ -73,8 +73,8 @@ typedef struct stacktype {
                } jiastack_t;
 
 typedef struct cvtype {
-        int         waits[Maxhosts];  /*hosts waiting on cv*/
-        int         waitc;
+        int         waits[Maxhosts];  /* hosts waiting on cv */
+        int         waitc;            /* number of hosts waiting on cv*/
         int         value;
                } jiacv_t;
 

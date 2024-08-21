@@ -150,6 +150,11 @@ void assert(int cond, char *amsg)
 
 
 /*-----------------------------------------------------------*/
+/**
+ * @brief jiaexitserver -- output error message and exit
+ * 
+ * @param req msg that will be printed
+ */
 void jiaexitserver(jia_msg_t *req)
 {
   printf("Assert error from host %d --- %s\n",req->frompid, (char*)req->data);
@@ -261,10 +266,10 @@ wtnt_t *newwtnt()
  */
 void freewtntspace(wtnt_t *ptr)
 {
-  wtnt_t *last,*wtntp;
+  wtnt_t *last, *wtntp;
 
   wtntp=ptr->more;
-  while(wtntp!=WNULL){
+  while (wtntp!=WNULL) {
     last=wtntp;
     wtntp=wtntp->more;
     free(last);
@@ -321,7 +326,12 @@ unsigned long start_time_sec  = 0;
 unsigned long start_time_usec  = 0; 
 unsigned long start_msec = 0;  
 
-/*-----------------------------------------------------------*/
+/**
+ * @brief jia_current_time -- Return the time, in milliseconds, elapsed after the first call
+ * to this routine.
+ * 
+ * @return unsigned long milliseconds value
+ */
 unsigned long jia_current_time()
 {
   struct timeval tp;
@@ -329,7 +339,7 @@ unsigned long jia_current_time()
   /* Return the time, in milliseconds, elapsed after the first call
    * to this routine.
    */  
-  gettimeofday(&tp, NULL);
+  gettimeofday(&tp, NULL);  // TODO clock_gettime() instead of gettimeofday
   if (!start_sec)
   {
     start_sec = tp.tv_sec;
@@ -343,7 +353,7 @@ unsigned long jia_current_time()
 /**
  * @brief jia_clock() - calculate the elapsed time since program started
  * 
- * @return float: time(us) since program started
+ * @return float: time(us) elapsed since program started
  */
 float jia_clock()
 {
@@ -393,13 +403,20 @@ void enable_sigio() {
   sigprocmask(SIG_UNBLOCK, &set, NULL);
 }
 
-
-/*-----------------------------------------------------------*/
+/**
+ * @brief emptyprintf -- do nothing
+ * 
+ */
 void emptyprintf()
 {
 }
 
-/*-----------------------------------------------------------*/
+/**
+ * @brief jia_error -- output str with possible format
+ * 
+ * @param str string to output
+ * @param ... variable arguments
+ */
 void jia_error(char *str,  ... )
 {
   va_list  ap;
@@ -479,7 +496,11 @@ void jia_error(char *errstr)
 }
 #endif /* NULL_LIB */
 
-/*-----------------------------------------------------------*/
+/**
+ * @brief get_usecs -- Get the usecs object
+ * 
+ * @return unsigned int 
+ */
 unsigned int get_usecs()
 {
 #ifdef AIX41

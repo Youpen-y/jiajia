@@ -114,7 +114,7 @@ long            jiamapfd;   /* file descriptor of the file that mapped to proces
 volatile int getpwait;
 volatile int diffwait;
 int repcnt[Setnum];
-jia_msg_t *diffmsg[Maxhosts]; /* store every host's diff msgs */
+jia_msg_t *diffmsg[Maxhosts];   /* store every host's diff msgs */
 
 
 /**
@@ -713,59 +713,63 @@ void getpgrantserver(jia_msg_t *rep)
 
 
 void addwtvect(int homei,wtvect_t wv,int from)
-{int i;
+{
+  int i;
 
- home[homei].wvfull=1;
- for (i=0;i<hostc;i++){
-   if (i!=from) home[homei].wtvect[i] |= wv;
+  home[homei].wvfull=1;
+  for (i=0;i<hostc;i++){
+    if (i!=from) home[homei].wtvect[i] |= wv;
 
-   if (home[homei].wtvect[i]!=WVFULL) home[homei].wvfull=0;
- }
+    if (home[homei].wtvect[i]!=WVFULL) home[homei].wvfull=0;
+  }
 }
 
 
 void setwtvect(int homei,wtvect_t wv)
-{int i;
+{
+  int i;
 
- home[homei].wvfull=1;
- for (i=0;i<hostc;i++){
-   home[homei].wtvect[i] = wv;
-   if (home[homei].wtvect[i]!=WVFULL) home[homei].wvfull=0;
- }
+  home[homei].wvfull=1;
+  for (i=0;i<hostc;i++){
+    home[homei].wtvect[i] = wv;
+    if (home[homei].wtvect[i]!=WVFULL) home[homei].wvfull=0;
+  }
 }
 
 
 unsigned long s2l(unsigned char *str)
-{union {
-   unsigned long l;
-   unsigned char c[Intbytes];
+{
+  union {
+    unsigned long l;
+    unsigned char c[Intbytes];
        } notype;
  
- notype.c[0]=str[0];
- notype.c[1]=str[1];
- notype.c[2]=str[2];
- notype.c[3]=str[3];
+  notype.c[0]=str[0];
+  notype.c[1]=str[1];
+  notype.c[2]=str[2];
+  notype.c[3]=str[3];
 
- return(notype.l);
+  return(notype.l);
 }
 
 
 void diffserver(jia_msg_t *req)
-{int datai;
- int homei;
- unsigned long pstop,doffset,dsize;
- unsigned long paddr;
- jia_msg_t *rep;
- wtvect_t wv;
+{
+  int datai;
+  int homei;
+  unsigned long pstop,doffset,dsize;
+  unsigned long paddr;
+  jia_msg_t *rep;
+  wtvect_t wv;
 
 #ifdef DOSTAT
- register unsigned int begin = get_usecs();
+  register unsigned int begin = get_usecs();
 #endif
 
- assert((req->op==DIFF)&&(req->topid==jia_pid),"Incorrect DIFF Message!");
+  assert((req->op==DIFF)&&(req->topid==jia_pid),"Incorrect DIFF Message!");
 
- datai=0;
- while(datai<req->size){
+  datai=0;
+  while(datai<req->size){
    paddr=s2l(req->data+datai);
    datai+=Intbytes;
    wv=WVNULL;
@@ -828,7 +832,8 @@ if (statflag==1){
  * 
  * @param cachei cache page index
  * @param diff address that used to save difference 
- * @return int the total size of bytes encoded in diff
+ * @return the total size of bytes encoded in diff
+ * 
  * diff[]:
  * | cache page addr (4bytes) |   size of all elements in diff[] (4bytes) |  (start,size) 4bytes | 
  */
@@ -884,12 +889,12 @@ if (statflag==1){
  */
 void savediff(int cachei)
 {
-  unsigned char  diff[Maxmsgsize];
+  unsigned char  diff[Maxmsgsize];  // msg data array to store diff
   int   diffsize;
   int hosti;
     
   hosti = homehost(cache[cachei].addr);
-  if (diffmsg[hosti] == DIFFNULL) {
+  if (diffmsg[hosti] == DIFFNULL) { 
     diffmsg[hosti] = newmsg();
     diffmsg[hosti]->op = DIFF; 
     diffmsg[hosti]->frompid = jia_pid; 
@@ -916,11 +921,11 @@ void senddiffs()
 {
   int hosti;
  
-  for (hosti=0;hosti<hostc;hosti++){
-    if (diffmsg[hosti]!=DIFFNULL){
-      if (diffmsg[hosti]->size>0){
+  for (hosti=0; hosti<hostc; hosti++){
+    if (diffmsg[hosti]!=DIFFNULL) {  // hosti's diff msgs is non-NULL
+      if (diffmsg[hosti]->size>0) {  // diff data size > 0
         diffwait++;
-        asendmsg(diffmsg[hosti]);
+        asendmsg(diffmsg[hosti]);    // asynchronous send diff msg
       }
       freemsg(diffmsg[hosti]);
       diffmsg[hosti]=DIFFNULL;

@@ -28,11 +28,11 @@ float t1,t2;  // cal
 
 void print_board()
 {
-  int i,j;
+  int i, j;
 
-  for (i=0;i<=N;i+=0x40){
-    printf("red[%4d][%4d]= %10.3f): ", i,i,red_[i][i]);
-    printf("----- black[%4d][%4d]= %10.3f): ", i,i,black_[i][i]);
+  for (i = 0; i <= N; i += 0x40) {
+    printf("red[%4d][%4d]= %10.3f): ", i, i, red_[i][i]);
+    printf("----- black[%4d][%4d]= %10.3f): ", i, i, black_[i][i]);
     printf("\n");
   }
 }
@@ -40,11 +40,11 @@ void print_board()
 
 void sor(int begin, int end)
 {
-  int i,j,k;
+  int i, j, k;
    
-  for (i=0;i<iterations;i++){
+  for (i = 0; i < iterations; i++){
     printf("iteration %d\n",i);
-    if (i==1) t1=jia_clock();
+    if (i==1) t1 = jia_clock();
                   
     if (begin&1) { /*begin is odd*/
       for (j = begin; j <= end; j++) {

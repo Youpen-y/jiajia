@@ -78,22 +78,22 @@
 
 #define  BCAST     100
 
-#define  inqh    inqueue[inhead]	// inqueue head
-#define  inqt    inqueue[intail]	// inqueue tail
-#define  outqh   outqueue[outhead]	// outqueue head
-#define  outqt   outqueue[outtail]	// outqueue tail
+#define  inqh    inqueue[inhead]	// inqueue msg head
+#define  inqt    inqueue[intail]	// inqueue msg tail
+#define  outqh   outqueue[outhead]	// outqueue msg head
+#define  outqt   outqueue[outtail]	// outqueue msg tail
 
 
  
 typedef struct Jia_Msg {
-	unsigned int op;
-	unsigned int frompid;
-	unsigned int topid;
-        unsigned int temp;      /*Useless*/
+	unsigned int op;			/* operation type */
+	unsigned int frompid;		/* from pid */
+	unsigned int topid;			/* to pid */
+        unsigned int temp;      /* Useless */
 	unsigned int seqno;
-        unsigned int index; 
-        unsigned int scope;     /*Inca. no.  used as tag in msg. passing*/
-	unsigned int size;
+        unsigned int index;
+        unsigned int scope;     /* Inca. no.  used as tag in msg. passing */
+	unsigned int size;			/* data size */
 	/* header is 32 bytes */
 
 	unsigned char data[Maxmsgsize];
@@ -102,14 +102,14 @@ typedef struct Jia_Msg {
 typedef  jia_msg_t* msgp_t;
 
 typedef struct CommManager{
-    	int                 snd_fds[Maxhosts];
-   		fd_set              snd_set;
-    	int                 snd_maxfd;
-    	unsigned            snd_seq[Maxhosts];
+    	int                 snd_fds[Maxhosts];		// send file descriptor
+   		fd_set              snd_set;				// send fd_set, use with `select`
+    	int                 snd_maxfd;				// max_fd, use with `select`
+    	unsigned            snd_seq[Maxhosts];		// 
 
-    	int                 rcv_fds[Maxhosts];
-    	fd_set              rcv_set;
-    	int                 rcv_maxfd;
+    	int                 rcv_fds[Maxhosts];		// read file descriptor
+    	fd_set              rcv_set;				// read fd_set
+    	int                 rcv_maxfd;				// max_fd, use with `select`
     	unsigned            rcv_seq[Maxhosts];
 } CommManager;
 
