@@ -644,11 +644,11 @@ if (statflag==1){
 #endif
     to.sin_family = AF_INET;
 
-    printf("toproc IP address is %s, addrlen is %d\n", hosts[toproc].addr, hosts[toproc].addrlen);
+    printf("toproc IP address is %s, addrlen is %d\n", inet_ntoa(*(struct in_addr*)hosts[toproc].addr), hosts[toproc].addrlen);
     memcpy(&to.sin_addr, hosts[toproc].addr, hosts[toproc].addrlen);
     to.sin_port = htons(reqports[toproc][fromproc]);
 
-    printf("reqports[toproc][fromproc] = %ul\n", reqports[toproc][fromproc]);
+    printf("reqports[toproc][fromproc] = %u\n", reqports[toproc][fromproc]);
 
 
 
