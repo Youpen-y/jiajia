@@ -306,7 +306,9 @@ unsigned long jia_alloc3(int size, int block, int starthost)
       page[pagei].homepid=homepid;
     }
 
-    printf("Map 0x%x bytes in home %4d! globaladdr = 0x%lx\n",mapsize,homepid,globaladdr);
+    if(jia_pid == homepid){
+      printf("Map 0x%x bytes in home %4d! globaladdr = 0x%lx\n",mapsize,homepid,globaladdr);
+    }
 
     hosts[homepid].homesize+=mapsize;
     globaladdr+=mapsize;
