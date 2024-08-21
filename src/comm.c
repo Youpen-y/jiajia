@@ -635,7 +635,7 @@ void outsend()
       ENDCS;
     }
   }else{
-    msgsize=outqh.size+Msgheadsize;
+    msgsize=outqh.size+Msgheadsize;   
 #ifdef DOSTAT
 if (statflag==1){
     jiastat.msgsndcnt++;
@@ -643,16 +643,29 @@ if (statflag==1){
 }
 #endif
     to.sin_family = AF_INET;
+
+    printf("toproc IP address is %s, addrlen is %d\n", hosts[toproc].addr, hosts[toproc].addrlen);
     memcpy(&to.sin_addr, hosts[toproc].addr, hosts[toproc].addrlen);
     to.sin_port = htons(reqports[toproc][fromproc]);
+
+    printf("reqports[toproc][fromproc] = %ul\n", reqports[toproc][fromproc]);
+
+
 
     retries_num=0;
     sendsuccess =0;
 
+    printf("commreq.snd_fds[toproc] = %d\n", commreq.snd_fds[toproc]);
+    printf("commreq.rcv_fds[toproc] = %d\n", commreq.rcv_fds[toproc]);
     while ((retries_num<MAX_RETRIES)&&(sendsuccess!=1)) {
       BEGINCS;
       res=sendto(commreq.snd_fds[toproc], (char *)&(outqh),msgsize, 0,
                     (struct sockaddr *)&to, sizeof(to));
+      
+      if(res != -1){
+        printf("send outqueue[head] msg successfully!\n");
+      }
+
       assert0((res!=-1),"outsend()-->sendto()");
       ENDCS;
 
@@ -665,22 +678,25 @@ if (statflag==1){
         FD_SET(commrep.rcv_fds[toproc],&readfds);
         polltime.tv_sec=0;
         polltime.tv_usec=0;
-        res = select(commrep.rcv_maxfd, &readfds,NULL,NULL,&polltime);
+        res = select(commrep.rcv_maxfd, &readfds, NULL, NULL, &polltime);
         if (FD_ISSET(commrep.rcv_fds[toproc],&readfds)!=0) {
           arrived=1;
         }
       }
+      printf("arrived = %d\n", arrived);
       if (arrived == 1) {
 recv_again:
         s= sizeof(from);
         res = recvfrom(commrep.rcv_fds[toproc], (char *)&rep, Intbytes, 0,
                         (struct sockaddr *)&from, &s);
-        if ((res < 0) && (errno == EINTR)) goto recv_again;
+        if ((res < 0) && (errno == EINTR)) {
+          printf("A signal interrupted recvfrom() before any data was available\n");
+          goto recv_again;
+        }
         if ((res!=-1)&&(rep==outqh.seqno)) sendsuccess=1;
       }
       retries_num++;
     }
-
     if (sendsuccess!=1) {
       printf("I am host %d, hostname = %s, I am running outsend() function\n", hostc, hosts[hostc].name);
       sprintf(errstr,"I Can't asend message(%d,%d) to host %d!",outqh.op, outqh.seqno, toproc); 
