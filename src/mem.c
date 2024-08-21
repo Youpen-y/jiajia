@@ -286,12 +286,11 @@ unsigned long jia_alloc3(int size, int block, int starthost)
   homepid = starthost;
 
   while (allocsize > 0) {
-    printf("allocsize is left = %d\n", allocsize);
     if (jia_pid == homepid) { // current host is starthost
       assert((hosts[homepid].homesize+mapsize)<(Homepages*Pagesize),"Too many home pages");
 
       protect = (hostc==1) ? PROT_READ|PROT_WRITE : PROT_READ;
-      memmap((void *)(Startaddr+globaladdr),(size_t)mapsize,protect);
+      memmap((void *)(Startaddr+globaladdr), (size_t)mapsize, protect);
 
       for (i=0; i<mapsize; i+=Pagesize){
         pagei=(globaladdr+i)/Pagesize;
@@ -307,7 +306,7 @@ unsigned long jia_alloc3(int size, int block, int starthost)
     }
 
     if(jia_pid == homepid){
-      printf("Map 0x%x bytes in home %4d! globaladdr = 0x%lx\n",mapsize,homepid,globaladdr);
+      printf("Map 0x%x bytes in home %4d! globaladdr = 0x%lx\n",mapsize, homepid, globaladdr);
     }
 
     hosts[homepid].homesize+=mapsize;
