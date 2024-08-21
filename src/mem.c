@@ -282,17 +282,18 @@ unsigned long jia_alloc3(int size, int block, int starthost)
 
   originaddr = globaladdr;
   allocsize = ((size%Pagesize)==0)?(size):((size/Pagesize+1)*Pagesize);   // ensure the alloc size is multiple of pagesize 
-  mapsize = ((block%Pagesize)==0)?(block):((block/Pagesize+1)*Pagesize); 
+  mapsize = ((block%Pagesize)==0)?(block):((block/Pagesize+1)*Pagesize);  // ensure the block size is multiple of pagesize
   homepid = starthost;
 
   while (allocsize > 0) {
-    if (jia_pid == homepid) {
+    printf("allocsize is left = %d\n", allocsize);
+    if (jia_pid == homepid) { // current host is starthost
       assert((hosts[homepid].homesize+mapsize)<(Homepages*Pagesize),"Too many home pages");
 
-      protect=(hostc==1) ? PROT_READ|PROT_WRITE : PROT_READ;
+      protect = (hostc==1) ? PROT_READ|PROT_WRITE : PROT_READ;
       memmap((void *)(Startaddr+globaladdr),(size_t)mapsize,protect);
 
-      for (i=0;i<mapsize;i+=Pagesize){
+      for (i=0; i<mapsize; i+=Pagesize){
         pagei=(globaladdr+i)/Pagesize;
         homei=(hosts[homepid].homesize+i)/Pagesize;
         home[homei].addr=(address_t)(Startaddr+globaladdr+i);
@@ -300,13 +301,11 @@ unsigned long jia_alloc3(int size, int block, int starthost)
       }
     }
 
-    for (i=0;i<mapsize;i+=Pagesize){
+    for (i = 0; i < mapsize; i += Pagesize){
       pagei=(globaladdr+i)/Pagesize;
       page[pagei].homepid=homepid;
     }
 
-  #ifdef JIA_DEBUG
-  #endif 
     printf("Map 0x%x bytes in home %4d! globaladdr = 0x%lx\n",mapsize,homepid,globaladdr);
 
     hosts[homepid].homesize+=mapsize;
@@ -825,11 +824,13 @@ if (statflag==1){
 }
 
 /**
- * @brief encodediff() -- 
+ * @brief encodediff() -- encode the diff of cache page and its twin to the paramater diff
  * 
- * @param cachei 
- * @param diff 
- * @return int 
+ * @param cachei cache page index
+ * @param diff address that used to save difference 
+ * @return int the total size of bytes encoded in diff
+ * diff[]:
+ * | cache page addr (4bytes) |   size of all elements in diff[] (4bytes) |  (start,size) 4bytes | 
  */
 int encodediff(int cachei, unsigned char* diff)
 {
@@ -844,28 +845,28 @@ int encodediff(int cachei, unsigned char* diff)
 #endif
 
   size=0;
-  memcpy(diff+size,ltos(cache[cachei].addr),Intbytes);
+  memcpy(diff+size,ltos(cache[cachei].addr),Intbytes);  // step 1: encode the cache page addr first (4 bytes)
   size+=Intbytes;
-  size+=Intbytes;                       /*leave space for size*/
+  size+=Intbytes;                       /* leave space for size */
 
   bytei=0;
   while (bytei<Pagesize){
     for (; (bytei<Pagesize)&&(memcmp(cache[cachei].addr+bytei,
-          cache[cachei].twin+bytei,Diffunit)==0); bytei+=Diffunit);
-    if (bytei<Pagesize){
+          cache[cachei].twin+bytei,Diffunit)==0); bytei+=Diffunit); // find the diff
+    if (bytei<Pagesize){  // here we got the difference between cache page and its twin
       cnt=(unsigned long) 0;
-      start=(unsigned long) bytei;
+      start=(unsigned long) bytei; // record the start byte index of the diff
       for (; (bytei<Pagesize)&&(memcmp(cache[cachei].addr+bytei,
-            cache[cachei].twin+bytei,Diffunit)!=0); bytei+=Diffunit) 
+            cache[cachei].twin+bytei,Diffunit)!=0); bytei+=Diffunit) // how much diffunit is different
         cnt+=Diffunit;
-      header=((start & 0xffff)<<16)|(cnt & 0xffff);
-      memcpy(diff+size,ltos(header),Intbytes);
+      header=((start & 0xffff)<<16)|(cnt & 0xffff); // header is composed of start and cnt(diff size)
+      memcpy(diff+size,ltos(header),Intbytes); // step 2: encode the header
       size+=Intbytes;
-      memcpy(diff+size,cache[cachei].addr+start,cnt);
+      memcpy(diff+size,cache[cachei].addr+start,cnt); // step 3: encode cnt different bytes
       size+=cnt;   
     }
   }
-  memcpy(diff+Intbytes,ltos(size),Intbytes);    /*fill size*/
+  memcpy(diff+Intbytes,ltos(size),Intbytes);    // step 4: fill the size
 
 #ifdef DOSTAT
 if (statflag==1){

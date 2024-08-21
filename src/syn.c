@@ -539,7 +539,7 @@ void sendwtnts(int operation)
 }
 
 /**
- * @brief savepage() -- 
+ * @brief savepage() -- save diff and wtnt
  * 
  * @param cachei 
  */
@@ -765,44 +765,46 @@ void grantbarr(long lock)
 }
 
 void barrserver(jia_msg_t *req)
-{long lock;
- 
- assert((req->op==BARR)&&(req->topid==jia_pid),"Incorrect BARR Message!"); 
+{
+  long lock;
+  
+  assert((req->op==BARR)&&(req->topid==jia_pid),"Incorrect BARR Message!"); 
 
- lock=(int) stol(req->data);
- assert((lock%hostc==jia_pid),"Incorrect home of lock!");
- assert((lock==hidelock),"This should not have happened! 8");
+  lock=(int) stol(req->data);
+  assert((lock%hostc==jia_pid),"Incorrect home of lock!");
+  assert((lock==hidelock),"This should not have happened! 8");
 
- recordwtnts(req); 
+  recordwtnts(req); 
 
- locks[lock].acqc++;
+  locks[lock].acqc++;
 
 #ifdef DEBUG
  printf("barrier count=%d, from host %d\n", locks[lock].acqc,req->frompid); 
 #endif
 
- if (locks[lock].acqc==hostc){
-   locks[lock].scope++;
-   grantbarr(lock);
-   locks[lock].acqc=0;
-   freewtntspace(locks[lock].wtntp);
- }
+  if (locks[lock].acqc==hostc){
+    locks[lock].scope++;
+    grantbarr(lock);
+    locks[lock].acqc=0;
+    freewtntspace(locks[lock].wtntp);
+  }
 }
 
 
 void recordwtnts(jia_msg_t *req)
-{int lock;
- int datai;
- 
- lock=(int) stol(req->data);
- if (lock!=hidelock){       /*lock*/
-   for (datai=Intbytes;datai<req->size;datai+=Intbytes)
-     savewtnt(locks[lock].wtntp,(address_t)stol(req->data+datai),locks[lock].scope);
- }else{                    /*barrier*/
-   for (datai=Intbytes;datai<req->size;datai+=Intbytes)
-     savewtnt(locks[lock].wtntp,(address_t)stol(req->data+datai),req->frompid);
- }
-} 
+{
+  int lock;
+  int datai;
+  
+  lock=(int) stol(req->data);
+  if (lock!=hidelock){       /*lock*/
+    for (datai=Intbytes;datai<req->size;datai+=Intbytes)
+      savewtnt(locks[lock].wtntp,(address_t)stol(req->data+datai),locks[lock].scope);
+  }else{                    /*barrier*/
+    for (datai=Intbytes;datai<req->size;datai+=Intbytes)
+      savewtnt(locks[lock].wtntp,(address_t)stol(req->data+datai),req->frompid);
+  }
+}
 
 
 void wtntserver(jia_msg_t *req)

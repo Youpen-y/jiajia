@@ -64,7 +64,7 @@ typedef struct host_t {
   char passwd[Wordsize];        /* user password */
   char addr[Wordsize];          /* IP address */
   int  addrlen;
-  int  homesize;
+  int  homesize;                /* home usge size */
   int  riofd;
   int  rerrfd;
 } host_t;

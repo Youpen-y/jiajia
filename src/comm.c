@@ -50,12 +50,13 @@
                    printf("Exit CS\n");\
                   }
 
-#ifndef JIA_DEBUG 
-#define  msgprint  0 
-//#define  printf   emptyprintf
-#else  /* JIA_DEBUG */
-#define msgprint  1
-#endif  /* JIA_DEBUG */
+// #ifndef JIA_DEBUG 
+// #define  msgprint  0 
+// #define  printf   emptyprintf
+// #else  /* JIA_DEBUG */
+// #define msgprint  1
+// #endif  /* JIA_DEBUG */
+#define msgprint 1
 
 /*----------------------------------------------------------*/
 /* following definitions are defined by Hu */ 
@@ -538,9 +539,7 @@ if (statflag==1){
 void asendmsg(jia_msg_t *msg)
 {
   printf("222222222222222.111111111111111111.22222222222222222\n");
-  fflush(stdout); // Force output
-  fflush(stderr);
-
+  
   int outsendmsg;
 #ifdef DOSTAT
  register unsigned int begin = get_usecs();
@@ -614,7 +613,7 @@ void outsend()
     intail=(intail+1)%Maxqueue;
     servemsg=(incount==1)? 1 : 0;
     ENDCS;   
-    SPACE(1);printf("Finishcopymsg,inc=%d,inh=%d,int=%d!\n",incount,inhead,intail);
+    SPACE(1);printf("Finishcopymsg,incount=%d,inhead=%d,intail=%d!\n",incount,inhead,intail);
 
 
     while (servemsg==1){
