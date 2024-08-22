@@ -365,18 +365,6 @@ printf("reqports\t repports\n");
     FD_SET(fd, &commrep.snd_set);
     commrep.snd_maxfd = MAX(fd+1, commrep.snd_maxfd);
   }
-
-  printf("my commreq\n");
-  printf("snd_fds\t rcv_fds\n");
-  for (int i = 0; i < Maxhosts; i++) {
-    printf("commreq.snd_fds[%d] = %d \t commreq.rcv_fds[%d] = %d\n", i, commreq.snd_fds[i], i, commreq.rcv_fds[i]);
-  }
-
-  printf("my commrep\n");
-  printf("snd_fds\t rcv_fds\n");
-  for (int i = 0; i < Maxhosts; i++) {
-    printf("commrep.snd_fds[%d] = %d \t commrep.rcv_fds[%d] = %d\n", i, commrep.snd_fds[i], i, commrep.rcv_fds[i]);
-  }
 }
 
 
@@ -446,7 +434,7 @@ void sigio_handler()
   int res, len, oldindex;
   int i, s;
   fd_set  readfds;
-  struct sockaddr_in  from, to; 
+  struct sockaddr_in from, to; 
   sigset_t set, oldset;
   int servemsg;
   int testresult;
@@ -473,12 +461,14 @@ if (statflag==1){
   SPACE(1); printf("Enter sigio_handler!\n");
 
   servemsg = 0;
-  readfds = commreq.rcv_set;	
-  polltime.tv_sec = 0;
+  readfds  = commreq.rcv_set;	
+  polltime.tv_sec  = 0;
   polltime.tv_usec = 0;
   res = select(commreq.rcv_maxfd, &readfds, NULL, NULL, &polltime);
-  while (res>0) {
-    for (i=0;i<hostc;i++) if (i!=jia_pid) if (FD_ISSET(commreq.rcv_fds[i], &readfds)){
+  while (res > 0) {
+    for (i=0; i<hostc; i++) 
+      if (i!=jia_pid) 
+        if (FD_ISSET(commreq.rcv_fds[i], &readfds)) {
       assert0((incount<Maxqueue), "sigio_handler(): Inqueue exceeded!");
 
       s=sizeof(from);
@@ -495,7 +485,6 @@ if (statflag==1){
       assert0((res!=-1),"sigio_handler()-->sendto() ACK");
 
       if (inqt.seqno>commreq.rcv_seq[i]) {
-
 #ifdef DOSTAT
 if (statflag==1){
         if (inqt.frompid != inqt.topid) {
@@ -504,7 +493,6 @@ if (statflag==1){
         }
 }
 #endif
-
         commreq.rcv_seq[i] = inqt.seqno;
         if (msgprint==1) printmsg(&inqt,1);
         BEGINCS;
@@ -582,18 +570,18 @@ void asendmsg(jia_msg_t *msg)
   assert0((outcount<Maxqueue), "asendmsg(): Outqueue exceeded!");
   memcpy(&(outqt), msg, Msgheadsize+msg->size);
   commreq.snd_seq[msg->topid]++;
-  outqt.seqno= commreq.snd_seq[msg->topid];
+  outqt.seqno = commreq.snd_seq[msg->topid];
   outcount++;
-  outtail=(outtail+1)%Maxqueue;
-  outsendmsg=(outcount==1)? 1 : 0;
+  outtail     = (outtail+1)%Maxqueue;
+  outsendmsg  = (outcount==1)? 1 : 0;
   ENDCS;
   
   while(outsendmsg==1){
     outsend();
     BEGINCS;
-    outhead=(outhead+1)%Maxqueue;
+    outhead   = (outhead+1)%Maxqueue;
     outcount--;
-    outsendmsg=(outcount>0)? 1 : 0;
+    outsendmsg= (outcount>0)? 1 : 0;
     ENDCS;
   }
   printf("Out asendmsg! outc=%d, outh=%d, outt=%d\n",outcount,outhead,outtail);
@@ -630,7 +618,7 @@ void outsend()
   printmsg(&outqh, 1);
   if (msgprint==1) printmsg(&outqh, 0);
 
-  toproc = outqh.topid;
+  toproc   = outqh.topid;
   fromproc = outqh.frompid;
   printf("outqueue[outhead].topid = %d, outqueue[outhead].frompid = %d\n", toproc, fromproc);
   
@@ -677,7 +665,7 @@ if (statflag==1){
 
     printf("commreq.snd_fds[toproc] = %d\n", commreq.snd_fds[toproc]);
     printf("commreq.rcv_fds[toproc] = %d\n", commreq.rcv_fds[toproc]);
-    while ((retries_num<MAX_RETRIES)&&(sendsuccess!=1)) {
+    while ((retries_num<MAX_RETRIES) && (sendsuccess!=1)) {
       BEGINCS;
       res=sendto(commreq.snd_fds[toproc], (char *)&(outqh), msgsize, 0,
                     (struct sockaddr *)&to, sizeof(to));
@@ -689,20 +677,21 @@ if (statflag==1){
       start = jia_current_time();
       end  = start + TIMEOUT;
 
-      while ((jia_current_time()<end)&&(arrived!=1)){
+      while ((jia_current_time()<end) && (arrived!=1)){
         FD_ZERO(&readfds);
         FD_SET(commrep.rcv_fds[toproc], &readfds);
         polltime.tv_sec=0;
         polltime.tv_usec=0;
         res = select(commrep.rcv_maxfd, &readfds, NULL, NULL, &polltime);
-        if (FD_ISSET(commrep.rcv_fds[toproc], &readfds)!=0) {
+        if (FD_ISSET(commrep.rcv_fds[toproc], &readfds) != 0) {
           arrived=1;
         }
       }
       printf("arrived = %d\n", arrived);
+      arrived = 1;
       if (arrived == 1) {
 recv_again:
-        // seems that from doesn't assignment value correctly
+        // seems that from doesn't assignment value correctly(or no need)
         s= sizeof(from);
         res = recvfrom(commrep.rcv_fds[toproc], (char *)&rep, Intbytes, 0,
                         (struct sockaddr *)&from, &s);
@@ -724,14 +713,17 @@ recv_again:
 
   printf("Out outsend!\n");
 } 
-/*-------------------------------------------*/
 
-
+/**
+ * @brief bsendmsg -- 
+ * 
+ * @param msg 
+ */
 void bsendmsg(jia_msg_t *msg)
 {
-  unsigned long root,level;
+  unsigned long root, level;
 
-  msg->op+=BCAST;
+  msg->op += BCAST;
 
   root=jia_pid;
 

@@ -6,6 +6,6 @@ CC = cc
 #CFLAGS = -dn
 
 ARCH = linux
-LDFLAGS = -lnsl -lsocket -lcurses -lucb -lm
+LDFLAGS = -lnsl -lcurses -lbsd -lm
 
 include ../Makefile.common

@@ -312,7 +312,6 @@ void jia_barrier()
 
   barrwait=1;
   sendwtnts(BARR);  // TODO slave stop in this function, slave 
-  printf("333333333333333\n");
   freewtntspace(top.wtntp);
   printf("444444444444444\n");
   while(barrwait);    // TODO This is the bug point, master stuck here
@@ -346,7 +345,7 @@ void endinterval(int synop)
   register int pagei;
   register int hpages;
 
-  for (cachei=0; cachei<Cachepages; cachei++){
+  for (cachei = 0; cachei < Cachepages; cachei++) {
     if (cache[cachei].wtnt==1) {  // when cached page wtnt == 1, save it
       savepage(cachei);
     }
@@ -354,15 +353,15 @@ void endinterval(int synop)
 
   senddiffs();  // 
 
-  hpages=hosts[jia_pid].homesize/Pagesize;
-  for (pagei=0;pagei<hpages;pagei++){
-    if ((home[pagei].wtnt&1)!=0){
-      if (home[pagei].rdnt!=0){
+  hpages = hosts[jia_pid].homesize / Pagesize;
+  for (pagei = 0; pagei < hpages; pagei++) {
+    if ((home[pagei].wtnt&1) != 0) {
+      if (home[pagei].rdnt != 0) {
         savewtnt(top.wtntp, home[pagei].addr, Maxhosts);
         if (synop==BARR) home[pagei].rdnt=0;
       }
 
-      if ((W_VEC==ON)&&(home[pagei].wvfull==0)){
+      if ((W_VEC==ON)&&(home[pagei].wvfull==0)) {
         int i;
         wtvect_t wv=WVNULL;
         for (i=0; i<Pagesize; i+=Blocksize){

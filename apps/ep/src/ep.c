@@ -25,9 +25,7 @@ unsigned int NK; /*#define NK (1 << MK) */   /* 2 ** MK */
 extern char           *optarg;
 int *shared;
 
-main(argc, argv)
-     int    argc;
-     char **argv;
+int main(int argc, char **argv)
 {
   double half23 = 1.0, half46 = 1.0, two23 = 1.0, two46 = 1.0;
   double a_to_n;
@@ -35,7 +33,7 @@ main(argc, argv)
   double t1, t2, t3, t4, t5;
   double seed, temp;
   double x1, x2;
-  int extra, len;
+  int    extra, len;
   int    count[NQ+1] = {0};
   int    i, j, k, c;
   int    begin, end;
@@ -102,92 +100,90 @@ main(argc, argv)
   }
       
   for (j = begin; j < end; j++)
-    {
+  {
       k = j;
       seed = S;
       temp = a_to_n;
       
       for (i = 100; i > 0; i--)
-	{
-	  if (k & 1) 
 	    {
-	      a1 = aint(half23 * temp);
-	      a2 = temp - two23 * a1;
-	      b1 = aint(half23 * seed);
-	      b2 = seed - two23 * b1;
-	      t1 = a1 * b2 + a2 * b1;
-	      t2 = aint(half23 * t1); 
-	      t3 = t1 - two23 * t2;
-	      t4 = two23 * t3 + a2 * b2;
-	      t5 = aint(half46 * t4);
-	      seed = t4 - two46 * t5;
+        if (k & 1) 
+        {
+          a1 = aint(half23 * temp);
+          a2 = temp - two23 * a1;
+          b1 = aint(half23 * seed);
+          b2 = seed - two23 * b1;
+          t1 = a1 * b2 + a2 * b1;
+          t2 = aint(half23 * t1); 
+          t3 = t1 - two23 * t2;
+          t4 = two23 * t3 + a2 * b2;
+          t5 = aint(half46 * t4);
+          seed = t4 - two46 * t5;
+        }
+	      if ((k >>= 1) == 0) 
+	          break;
+        {
+          a1 = aint(half23 * temp);
+          a2 = temp - two23 * a1;
+          b1 = aint(half23 * temp);
+          b2 = temp - two23 * b1;
+          t1 = a1 * b2 + a2 * b1;
+          t2 = aint(half23 * t1); 
+          t3 = t1 - two23 * t2;
+          t4 = two23 * t3 + a2 * b2;
+          t5 = aint(half46 * t4);
+          temp = t4 - two46 * t5;
+        }
 	    }
-	  if ((k >>= 1) == 0) 
-	    break;
-	  {
-	    a1 = aint(half23 * temp);
-	    a2 = temp - two23 * a1;
-	    b1 = aint(half23 * temp);
-	    b2 = temp - two23 * b1;
-	    t1 = a1 * b2 + a2 * b1;
-	    t2 = aint(half23 * t1); 
-	    t3 = t1 - two23 * t2;
-	    t4 = two23 * t3 + a2 * b2;
-	    t5 = aint(half46 * t4);
-	    temp = t4 - two46 * t5;
-	  }
-	}
 
       a1 = aint(half23 * A);
       a2 = A - two23 * a1;
 
       for (i = 0; i < NK; i++)
-	{
-	  b1 = aint(half23 * seed);
-	  b2 = seed - two23 * b1;
-	  t1 = a1 * b2 + a2 * b1;
-	  t2 = aint(half23 * t1); 
-	  t3 = t1 - two23 * t2;
-	  t4 = two23 * t3 + a2 * b2;
-	  t5 = aint(half46 * t4);
-	  seed = t4 - two46 * t5;
-	  x1 = 2.0 * half46 * seed - 1.0;
-
-	  b1 = aint(half23 * seed);
-	  b2 = seed - two23 * b1;
-	  t1 = a1 * b2 + a2 * b1;
-	  t2 = aint(half23 * t1); 
-	  t3 = t1 - two23 * t2;
-	  t4 = two23 * t3 + a2 * b2;
-	  t5 = aint(half46 * t4);
-	  seed = t4 - two46 * t5;
-	  x2 = 2.0 * half46 * seed - 1.0;
-
-	  t1 = x1*x1 + x2*x2;
-	  if (t1 <= 1.0)
 	    {
-	      t2 = sqrt(-2.0 * log(t1)/t1);
-	      t3 = fabs(x1 * t2);
-	      t4 = fabs(x2 * t2);
-	      count[(int)floor(t3 > t4 ? t3 : t4)]++;
-	      count[NQ]++;
+        b1 = aint(half23 * seed);
+        b2 = seed - two23 * b1;
+        t1 = a1 * b2 + a2 * b1;
+        t2 = aint(half23 * t1); 
+        t3 = t1 - two23 * t2;
+        t4 = two23 * t3 + a2 * b2;
+        t5 = aint(half46 * t4);
+        seed = t4 - two46 * t5;
+        x1 = 2.0 * half46 * seed - 1.0;
+
+        b1 = aint(half23 * seed);
+        b2 = seed - two23 * b1;
+        t1 = a1 * b2 + a2 * b1;
+        t2 = aint(half23 * t1); 
+        t3 = t1 - two23 * t2;
+        t4 = two23 * t3 + a2 * b2;
+        t5 = aint(half46 * t4);
+        seed = t4 - two46 * t5;
+        x2 = 2.0 * half46 * seed - 1.0;
+
+        t1 = x1*x1 + x2*x2;
+	      if (t1 <= 1.0)
+        {
+          t2 = sqrt(-2.0 * log(t1)/t1);
+          t3 = fabs(x1 * t2);
+          t4 = fabs(x2 * t2);
+          count[(int)floor(t3 > t4 ? t3 : t4)]++;
+          count[NQ]++;
+        }
 	    }
-	}
-    }
+  }
 
   if (jiahosts > 1)
-    {
+  {
       jia_lock(0);
 
       for (i = 0; i <= NQ; i++)
-	shared[i] += count[i];
+	      shared[i] += count[i];
 
       jia_unlock(0);
 
       jia_barrier();
-    }
-
-  else
+  }else
     shared = count;
 
   gettimeofday(&stop, 0);

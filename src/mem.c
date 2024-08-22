@@ -915,16 +915,16 @@ void savediff(int cachei)
 }
 
 /**
- * @brief senddiffs() -- 
+ * @brief senddiffs() -- send 
  * 
  */
 void senddiffs()
 {
   int hosti;
  
-  for (hosti=0; hosti<hostc; hosti++){
-    if (diffmsg[hosti]!=DIFFNULL) {  // hosti's diff msgs is non-NULL
-      if (diffmsg[hosti]->size>0) {  // diff data size > 0
+  for (hosti = 0; hosti < hostc; hosti++) {
+    if (diffmsg[hosti] != DIFFNULL) {  // hosti's diff msgs is non-NULL
+      if (diffmsg[hosti]->size > 0) {  // diff data size > 0
         diffwait++;
         asendmsg(diffmsg[hosti]);    // asynchronous send diff msg
       }
