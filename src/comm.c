@@ -692,7 +692,7 @@ if (statflag==1){
       while ((jia_current_time()<end)&&(arrived!=1)){
         FD_ZERO(&readfds);
         FD_SET(commrep.rcv_fds[toproc], &readfds);
-   z     polltime.tv_sec=0;
+        polltime.tv_sec=0;
         polltime.tv_usec=0;
         res = select(commrep.rcv_maxfd, &readfds, NULL, NULL, &polltime);
         if (FD_ISSET(commrep.rcv_fds[toproc], &readfds)!=0) {
