@@ -152,7 +152,7 @@ int oldsigiomask;
  * @brief req_fdcreate -- request socket file descriptor create and bind it to an address (ip/port combination)
  * 
  * @param i the index of i port of host
- * @param flag 0 means sin_port = 0, random; others means specified sin_port = reqports[jia_pid][i]
+ * @param flag 1 means sin_port = 0, random; others means specified sin_port = reqports[jia_pid][i]
  * @return int socket file descriptor
  */
 int req_fdcreate(int i, int flag)
@@ -161,7 +161,7 @@ int req_fdcreate(int i, int flag)
   struct      sockaddr_in addr;
 
   fd = socket(AF_INET, SOCK_DGRAM, 0);
-  assert0((fd!=-1),"req_fdcreate()-->socket()");
+  assert0((fd!=-1), "req_fdcreate()-->socket()");
 
 #ifdef SOLARIS 
   size=Maxmsgsize+Msgheadsize+128;
@@ -174,10 +174,10 @@ int req_fdcreate(int i, int flag)
 #endif
   addr.sin_family      = AF_INET;
   addr.sin_addr.s_addr = htonl(INADDR_ANY);
-  addr.sin_port        = (flag)? htons(0) : htons(reqports[jia_pid][i]);
+  addr.sin_port        = (flag) ? htons(0) : htons(reqports[jia_pid][i]);
 
-  res=bind(fd, (struct sockaddr*)&addr, sizeof(addr));
-  assert0((res==0),"req_fdcreate()-->bind()");
+  res = bind(fd, (struct sockaddr*)&addr, sizeof(addr));
+  assert0((res==0), "req_fdcreate()-->bind()");
   return fd;
 }
 
@@ -225,17 +225,17 @@ void initcomm()
 
 
   msgcnt=0;	
-  for (i=0;i<Maxmsgs;i++) {
+  for (i=0; i<Maxmsgs; i++) {
 		msgbusy[i]=0;
 		msgarray[i].index = i;
   }
 
-  inhead   =0;
-  intail   =0;
-  incount  =0;
-  outhead   =0;
-  outtail   =0;
-  outcount  =0;
+  inhead    = 0;
+  intail    = 0;
+  incount   = 0;
+  outhead   = 0;
+  outtail   = 0;
+  outcount  = 0;
 
 #if defined SOLARIS || defined IRIX62
   { struct sigaction act;
@@ -285,14 +285,24 @@ void initcomm()
   }
 #endif 
 
- /***********Initialize comm ports********************/
+/***********Initialize comm ports********************/
 
-  for (i =0; i<Maxhosts; i++ )
-    for (j=0 ; j<Maxhosts; j++) {
-      reqports[i][j]=Startport+i*Maxhosts+j;
-      repports[i][j]= Startport+Maxhosts*Maxhosts+i*Maxhosts+j;
+  for (i = 0; i<Maxhosts; i++) {
+    for (j = 0; j<Maxhosts; j++) {
+      reqports[i][j] = Startport+i*Maxhosts+j;
+      repports[i][j] = Startport+Maxhosts*Maxhosts+i*Maxhosts+j;
     }
- 
+  }
+
+/* output comm ports */
+printf("reqports\t repports\n");
+  for(i = 0; i < Maxhosts; i++){
+    for(j = 0; j < Maxhosts; j++){
+      printf("reqports[%d][%d] = %d\t", i, j, reqports[i][j]);
+      printf("repports[%d][%d] = %d\n", i, j, repports[i][j]);
+    }
+  }
+
 #ifdef JIA_DEBUG
   for(i=0; i<Maxhosts; i++) 
      for (j=0; j<Maxhosts; j++) {
@@ -311,20 +321,20 @@ void initcomm()
  
  /***********Initialize commreq ********************/
 
-  commreq.rcv_maxfd =0;
-  commreq.snd_maxfd =0; 
+  commreq.rcv_maxfd = 0;
+  commreq.snd_maxfd = 0; 
   FD_ZERO(&(commreq.snd_set));
   FD_ZERO(&(commreq.rcv_set));
-  for(i=0; i<Maxhosts; i++) { 
-    fd= req_fdcreate(i,0);
-    commreq.rcv_fds[i]= fd;
+  for (i = 0; i < Maxhosts; i++) { 
+    fd = req_fdcreate(i,0);
+    commreq.rcv_fds[i] = fd;
     FD_SET(fd, &commreq.rcv_set);
     commreq.rcv_maxfd = MAX(fd+1, commreq.rcv_maxfd);
 
-    if (0>fcntl(commreq.rcv_fds[i], F_SETOWN, getpid()))
+    if (0 > fcntl(commreq.rcv_fds[i], F_SETOWN, getpid()))
        assert0(0,"initcomm()-->fcntl(..F_SETOWN..)");
 
-    if (0>fcntl(commreq.rcv_fds[i], F_SETFL, FASYNC|FNDELAY))
+    if (0 > fcntl(commreq.rcv_fds[i], F_SETFL, FASYNC|FNDELAY))
        assert0(0,"initcomm()-->fcntl(..F_SETFL..)");
 
     fd= req_fdcreate(i,1);
@@ -333,14 +343,14 @@ void initcomm()
     commreq.snd_maxfd = MAX(fd+1, commreq.snd_maxfd);
   }
   for (i=0; i<Maxhosts; i++ ) {
-    commreq.snd_seq[i]=0;
-    commreq.rcv_seq[i]=0;
+    commreq.snd_seq[i] = 0;
+    commreq.rcv_seq[i] = 0;
   }
 
  /***********Initialize commrep ********************/
 
-  commrep.rcv_maxfd =0;
-  commrep.snd_maxfd =0; 
+  commrep.rcv_maxfd = 0;
+  commrep.snd_maxfd = 0; 
   FD_ZERO(&(commrep.snd_set));
   FD_ZERO(&(commrep.rcv_set));
 
@@ -354,6 +364,18 @@ void initcomm()
     commrep.snd_fds[i] = fd;
     FD_SET(fd, &commrep.snd_set);
     commrep.snd_maxfd = MAX(fd+1, commrep.snd_maxfd);
+  }
+
+  printf("my commreq\n");
+  printf("snd_fds\t rcv_fds\n");
+  for (int i = 0; i < Maxhosts; i++) {
+    printf("commreq.snd_fds[%d] = %d \t commreq.rcv_fds[%d] = %d\n", i, commreq.snd_fds[i], i, commreq.rcv_fds[i]);
+  }
+
+  printf("my commrep\n");
+  printf("snd_fds\t rcv_fds\n");
+  for (int i = 0; i < Maxhosts; i++) {
+    printf("commrep.snd_fds[%d] = %d \t commrep.rcv_fds[%d] = %d\n", i, commrep.snd_fds[i], i, commrep.rcv_fds[i]);
   }
 }
 
@@ -450,10 +472,10 @@ if (statflag==1){
 
   SPACE(1); printf("Enter sigio_handler!\n");
 
-  servemsg=0;
+  servemsg = 0;
   readfds = commreq.rcv_set;	
-  polltime.tv_sec=0;
-  polltime.tv_usec=0;
+  polltime.tv_sec = 0;
+  polltime.tv_usec = 0;
   res = select(commreq.rcv_maxfd, &readfds, NULL, NULL, &polltime);
   while (res>0) {
     for (i=0;i<hostc;i++) if (i!=jia_pid) if (FD_ISSET(commreq.rcv_fds[i], &readfds)){
@@ -643,13 +665,11 @@ if (statflag==1){
 }
 #endif
     to.sin_family = AF_INET;
-
     printf("toproc IP address is %s, addrlen is %d\n", inet_ntoa(*(struct in_addr*)hosts[toproc].addr), hosts[toproc].addrlen);
     memcpy(&to.sin_addr, hosts[toproc].addr, hosts[toproc].addrlen);
     to.sin_port = htons(reqports[toproc][fromproc]);
 
     printf("reqports[toproc][fromproc] = %u\n", reqports[toproc][fromproc]);
-
 
 
     retries_num=0;
@@ -659,12 +679,8 @@ if (statflag==1){
     printf("commreq.rcv_fds[toproc] = %d\n", commreq.rcv_fds[toproc]);
     while ((retries_num<MAX_RETRIES)&&(sendsuccess!=1)) {
       BEGINCS;
-      res=sendto(commreq.snd_fds[toproc], (char *)&(outqh),msgsize, 0,
+      res=sendto(commreq.snd_fds[toproc], (char *)&(outqh), msgsize, 0,
                     (struct sockaddr *)&to, sizeof(to));
-      
-      if(res != -1){
-        printf("send outqueue[head] msg successfully!\n");
-      }
 
       assert0((res!=-1),"outsend()-->sendto()");
       ENDCS;
@@ -675,17 +691,18 @@ if (statflag==1){
 
       while ((jia_current_time()<end)&&(arrived!=1)){
         FD_ZERO(&readfds);
-        FD_SET(commrep.rcv_fds[toproc],&readfds);
-        polltime.tv_sec=0;
+        FD_SET(commrep.rcv_fds[toproc], &readfds);
+   z     polltime.tv_sec=0;
         polltime.tv_usec=0;
         res = select(commrep.rcv_maxfd, &readfds, NULL, NULL, &polltime);
-        if (FD_ISSET(commrep.rcv_fds[toproc],&readfds)!=0) {
+        if (FD_ISSET(commrep.rcv_fds[toproc], &readfds)!=0) {
           arrived=1;
         }
       }
       printf("arrived = %d\n", arrived);
       if (arrived == 1) {
 recv_again:
+        // seems that from doesn't assignment value correctly
         s= sizeof(from);
         res = recvfrom(commrep.rcv_fds[toproc], (char *)&rep, Intbytes, 0,
                         (struct sockaddr *)&from, &s);

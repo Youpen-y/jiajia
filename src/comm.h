@@ -41,7 +41,7 @@
 #include "global.h"
 #include "init.h"
 
-#define TIMEOUT      1000
+#define TIMEOUT      10000
 #define MAX_RETRIES  64
 
 #define Maxmsgsize   (40960-Msgheadsize) 
@@ -91,7 +91,7 @@ typedef struct Jia_Msg {
 	unsigned int topid;			/* to pid */
         unsigned int temp;      /* Useless */
 	unsigned int seqno;
-        unsigned int index;
+        unsigned int index;		/* msg index in msg array */
         unsigned int scope;     /* Inca. no.  used as tag in msg. passing */
 	unsigned int size;			/* data size */
 	/* header is 32 bytes */
