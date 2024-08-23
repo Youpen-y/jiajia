@@ -162,7 +162,7 @@ void initsyn()
       locks[i].wtntp=WNULL;
   }
 
-  for (i=0; i<Maxstacksize; i++){
+  for (i=0; i<Maxstacksize; i++) {
     lockstack[i].lockid=0;
     lockstack[i].wtntp=newwtnt();
   }
@@ -212,7 +212,7 @@ void jia_lock(int lock)
 
   if (hostc==1) return; // single host no need to use lock
 
-  if (LOAD_BAL==ON){
+  if (LOAD_BAL==ON) {
       endtime=jia_clock();
       caltime+=(endtime-starttime);
   }
@@ -306,7 +306,7 @@ void jia_barrier()
   endinterval(BARR);
   printf("222222222222222\n");
 
-  if (H_MIG==ON){
+  if (H_MIG==ON) {
     migcheckcache(); 
   }
 
@@ -353,7 +353,7 @@ void endinterval(int synop)
 
   senddiffs();  // 
 
-  hpages = hosts[jia_pid].homesize / Pagesize;
+  hpages = hosts[jia_pid].homesize / Pagesize;  // page number of jia_pid host
   for (pagei = 0; pagei < hpages; pagei++) {
     if ((home[pagei].wtnt&1) != 0) {
       if (home[pagei].rdnt != 0) {
@@ -450,33 +450,35 @@ void startinterval(int synop)
 
 
 void pushstack(int lock)
-{int j,k;
+{
+  int j,k;
 
- stackptr++;
- assert((stackptr<Maxstacksize),"Too many continuous ACQUIRES!");
+  stackptr++;
+  assert((stackptr<Maxstacksize),"Too many continuous ACQUIRES!");
 
- top.lockid=lock;
+  top.lockid=lock;
 }
 
 
 void popstack()
-{int wtnti;
- wtnt_t *wnptr;
+{
+  int wtnti;
+  wtnt_t *wnptr;
 
 
- stackptr--;
- assert((stackptr>=-1),"More unlocks than locks!");
+  stackptr--;
+  assert((stackptr>=-1),"More unlocks than locks!");
 
- if (stackptr>=0){
-   wnptr=lockstack[stackptr+1].wtntp;
-   while(wnptr!=WNULL){
-     for (wtnti=0;wtnti<wnptr->wtntc;wtnti++)
-       savewtnt(top.wtntp, wnptr->wtnts[wtnti],wnptr->from[wtnti]);
-     wnptr=wnptr->more; 
-   }
- }
+  if (stackptr>=0){
+    wnptr=lockstack[stackptr+1].wtntp;
+    while(wnptr!=WNULL){
+      for (wtnti=0;wtnti<wnptr->wtntc;wtnti++)
+        savewtnt(top.wtntp, wnptr->wtnts[wtnti],wnptr->from[wtnti]);
+      wnptr=wnptr->more; 
+    }
+  }
 
- freewtntspace(lockstack[stackptr+1].wtntp);
+  freewtntspace(lockstack[stackptr+1].wtntp);
 }
 
 
@@ -546,7 +548,7 @@ void sendwtnts(int operation)
 /**
  * @brief savepage() -- save diff and wtnt
  * 
- * @param cachei 
+ * @param cachei cached page index
  */
 void savepage(int cachei)
 {

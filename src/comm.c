@@ -117,7 +117,7 @@ unsigned long timeout_time;
 static struct timeval   polltime = { 0, 0 };
 jia_msg_t inqueue[Maxqueue], outqueue[Maxqueue];
 volatile int inhead, intail, incount;
-volatile int outhead, outtail, outcount;
+volatile int outhead, outtail, outcount;  /*head msg, tail msg, msg count in out queue*/
 long   Startport;
 
 // void    initcomm();
@@ -151,7 +151,7 @@ int oldsigiomask;
 /**
  * @brief req_fdcreate -- request socket file descriptor create and bind it to an address (ip/port combination)
  * 
- * @param i the index of i port of host
+ * @param i the index of host
  * @param flag 1 means sin_port = 0, random; others means specified sin_port = reqports[jia_pid][i]
  * @return int socket file descriptor
  */
@@ -178,6 +178,7 @@ int req_fdcreate(int i, int flag)
 
   res = bind(fd, (struct sockaddr*)&addr, sizeof(addr));
   assert0((res==0), "req_fdcreate()-->bind()");
+
   return fd;
 }
 
@@ -326,7 +327,7 @@ printf("reqports\t repports\n");
   FD_ZERO(&(commreq.snd_set));
   FD_ZERO(&(commreq.rcv_set));
   for (i = 0; i < Maxhosts; i++) { 
-    fd = req_fdcreate(i,0);
+    fd = req_fdcreate(i,0); // create socket and bind it to [INADDR_ANY, reqports[jia_pid][i]]
     commreq.rcv_fds[i] = fd;
     FD_SET(fd, &commreq.rcv_set);
     commreq.rcv_maxfd = MAX(fd+1, commreq.rcv_maxfd);
@@ -334,7 +335,8 @@ printf("reqports\t repports\n");
     if (0 > fcntl(commreq.rcv_fds[i], F_SETOWN, getpid()))
        assert0(0,"initcomm()-->fcntl(..F_SETOWN..)");
 
-    if (0 > fcntl(commreq.rcv_fds[i], F_SETFL, FASYNC|FNDELAY))
+    // if (0 > fcntl(commreq.rcv_fds[i], F_SETFL, FASYNC|FNDELAY))
+    if (0 > fcntl(commreq.rcv_fds[i], F_SETFL, O_ASYNC|O_NONBLOCK|O_APPEND))
        assert0(0,"initcomm()-->fcntl(..F_SETFL..)");
 
     fd= req_fdcreate(i,1);
@@ -420,6 +422,7 @@ void sigint_handler()
 {
   	assert(0,"Exit by user!!\n");
 }
+
 /*----------------------------------------------------------*/
 #if defined SOLARIS || defined IRIX62
 void  sigio_handler(int sig, siginfo_t *sip, ucontext_t *uap)
@@ -544,7 +547,7 @@ if (statflag==1){
 
 
 /**
- * @brief asendmsg() -- asynchronous send msg to outqueue[outtail]
+ * @brief asendmsg() -- send msg to outqueue[outtail], and call outsend()
  * 
  * @param msg 
  */
@@ -568,15 +571,15 @@ void asendmsg(jia_msg_t *msg)
 
   BEGINCS;
   assert0((outcount<Maxqueue), "asendmsg(): Outqueue exceeded!");
-  memcpy(&(outqt), msg, Msgheadsize+msg->size);
+  memcpy(&(outqt), msg, Msgheadsize+msg->size); // copy msg to outqueue[tail]
   commreq.snd_seq[msg->topid]++;
   outqt.seqno = commreq.snd_seq[msg->topid];
   outcount++;
   outtail     = (outtail+1)%Maxqueue;
   outsendmsg  = (outcount==1)? 1 : 0;
   ENDCS;
-  
-  while(outsendmsg==1){
+  printf("Before outsend(), Out asendmsg! outc=%d, outh=%d, outt=%d\n",outcount,outhead,outtail);
+  while (outsendmsg==1) {
     outsend();
     BEGINCS;
     outhead   = (outhead+1)%Maxqueue;
@@ -615,27 +618,26 @@ void outsend()
   
   printf("Enter outsend!\n");
 
-  printmsg(&outqh, 1);
   if (msgprint==1) printmsg(&outqh, 0);
 
   toproc   = outqh.topid;
   fromproc = outqh.frompid;
+  printf("outc=%d, outh=%d, outt=%d\n",outcount,outhead,outtail);
   printf("outqueue[outhead].topid = %d, outqueue[outhead].frompid = %d\n", toproc, fromproc);
   
-  if (toproc == fromproc) {
+  if (toproc == fromproc) { // single machine
     BEGINCS;
     assert0((incount<=Maxqueue), "outsend(): Inqueue exceeded!");
     commreq.rcv_seq[toproc] = outqh.seqno;
-    memcpy(&(inqt),&(outqh), Msgheadsize+outqh.size);
+    memcpy(&(inqt),&(outqh), Msgheadsize+outqh.size);   // copy outqueue[head] to inqueue[tail]
     if (msgprint==1) printmsg(&(inqt),1);
     incount++;
     intail=(intail+1)%Maxqueue;
     servemsg=(incount==1)? 1 : 0;
     ENDCS;   
     SPACE(1);printf("Finishcopymsg,incount=%d,inhead=%d,intail=%d!\n",incount,inhead,intail);
-
-
-    while (servemsg==1){
+    
+    while (servemsg==1){  // there are some msg need be served
       msgserver();
       BEGINCS;
       inqh.op=ERRMSG;
@@ -659,7 +661,6 @@ if (statflag==1){
 
     printf("reqports[toproc][fromproc] = %u\n", reqports[toproc][fromproc]);
 
-
     retries_num=0;
     sendsuccess =0;
 
@@ -669,7 +670,6 @@ if (statflag==1){
       BEGINCS;
       res=sendto(commreq.snd_fds[toproc], (char *)&(outqh), msgsize, 0,
                     (struct sockaddr *)&to, sizeof(to));
-
       assert0((res!=-1),"outsend()-->sendto()");
       ENDCS;
 
@@ -688,13 +688,14 @@ if (statflag==1){
         }
       }
       printf("arrived = %d\n", arrived);
-      arrived = 1;
       if (arrived == 1) {
 recv_again:
         // seems that from doesn't assignment value correctly(or no need)
         s= sizeof(from);
+        BEGINCS;
         res = recvfrom(commrep.rcv_fds[toproc], (char *)&rep, Intbytes, 0,
                         (struct sockaddr *)&from, &s);
+        ENDCS;
         if ((res < 0) && (errno == EINTR)) {
           printf("A signal interrupted recvfrom() before any data was available\n");
           goto recv_again;

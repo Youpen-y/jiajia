@@ -105,9 +105,9 @@ extern jiastat_t jiastat;
 extern int statflag;
 #endif
 
-jiahome_t       home[Homepages+1];
-jiacache_t      cache[Cachepages+1];
-jiapage_t       page[Maxmempages];
+jiahome_t       home[Homepages+1];    /* host owned page */
+jiacache_t      cache[Cachepages+1];  /* host cached page */
+jiapage_t       page[Maxmempages];    /* global page space */
 
 unsigned long   globaladdr;
 long            jiamapfd;   /* file descriptor of the file that mapped to process's virtual address space */
@@ -212,7 +212,7 @@ void memprotect(void* addr, size_t len, int prot)
   if (protyes != 0) {                                        
     sprintf(errstr,"mprotect failed! addr=0x%lx, errno=%d",(unsigned long)addr, errno); 
     assert(0, errstr);                          
-  }                                                       
+  }                                      
 }
 
 /**
@@ -261,10 +261,12 @@ void memunmap(void* addr,size_t len)
 /**
  * @brief jia_alloc3 -- allocates size bytes cyclically across all hosts, each time block bytes
  * 
- * @param size
- * @param block 
+ * @param size the sum of space that allocated across all hosts (page aligned)
+ * @param block the size(page aligned) that allocated by every host every time
  * @param starthost specifies the host from which the allocation starts
  * @return unsigned long 
+ * 
+ * jia_alloc3 will allocate block(page aligned) every time from starthost to other hosts until the sum equal size(page aligned)
  */
 unsigned long jia_alloc3(int size, int block, int starthost)
 {
@@ -281,18 +283,20 @@ unsigned long jia_alloc3(int size, int block, int starthost)
   assert(((globaladdr+size)<=Maxmemsize), errstr);
 
   originaddr = globaladdr;
+  /* allocsize is the sum of size that will be allocated*/
   allocsize = ((size%Pagesize)==0)?(size):((size/Pagesize+1)*Pagesize);   // ensure the alloc size is multiple of pagesize 
+  /* mapsize is the size that will be allocated on every host evry time */
   mapsize = ((block%Pagesize)==0)?(block):((block/Pagesize+1)*Pagesize);  // ensure the block size is multiple of pagesize
   homepid = starthost;
 
   while (allocsize > 0) {
-    if (jia_pid == homepid) { // current host is starthost
+    if (jia_pid == homepid) {
       assert((hosts[homepid].homesize+mapsize)<(Homepages*Pagesize),"Too many home pages");
 
       protect = (hostc==1) ? PROT_READ|PROT_WRITE : PROT_READ;
       memmap((void *)(Startaddr+globaladdr), (size_t)mapsize, protect);
 
-      for (i=0; i<mapsize; i+=Pagesize){
+      for (i=0; i<mapsize; i+=Pagesize) {
         pagei=(globaladdr+i)/Pagesize;
         homei=(hosts[homepid].homesize+i)/Pagesize;
         home[homei].addr=(address_t)(Startaddr+globaladdr+i);
@@ -300,24 +304,31 @@ unsigned long jia_alloc3(int size, int block, int starthost)
       }
     }
 
-    for (i = 0; i < mapsize; i += Pagesize){
+    for (i = 0; i < mapsize; i += Pagesize) { // set page's homepid
       pagei=(globaladdr+i)/Pagesize;
       page[pagei].homepid=homepid;
     }
 
-    if(jia_pid == homepid){
-      printf("Map 0x%x bytes in home %4d! globaladdr = 0x%lx\n",mapsize, homepid, globaladdr);
+    if (jia_pid == homepid) {
+      printf("Map 0x%x bytes in home %4d! globaladdr = 0x%lx\n", mapsize, homepid, globaladdr);
     }
 
     hosts[homepid].homesize+=mapsize;
     globaladdr+=mapsize;
     allocsize-=mapsize;   
-    homepid=(homepid+1)%hostc;
+    homepid=(homepid+1)%hostc;  // next host
   }
   return (Startaddr+originaddr);
 }
 
-
+/**
+ * @brief jia_alloc3b -- 
+ * 
+ * @param size 
+ * @param block 
+ * @param starthost 
+ * @return unsigned long 
+ */
 unsigned long jia_alloc3b(int size,int *block, int starthost)
 {
   int homepid;
@@ -327,7 +338,7 @@ unsigned long jia_alloc3b(int size,int *block, int starthost)
   int homei,pagei,i;
   int blocki;
   int protect;
-  
+
   sprintf(errstr, 
           "Insufficient shared space! --> Max=0x%x Left=0x%lx Need=0x%x\n",
           Maxmemsize, Maxmemsize-globaladdr,size);
@@ -393,6 +404,13 @@ unsigned long jia_alloc2(int size, int block)
   return(jia_alloc3(size,block,0));
 }
 
+/**
+ * @brief jia_alloc2p -- two parameters alloc, alloc size(page aligned) on host(proc is jiapid) 
+ * 
+ * @param size memory size that will be allocated(page aligned)
+ * @param proc host(jia_pid == proc)
+ * @return unsigned long 
+ */
 unsigned long jia_alloc2p(int size, int proc)
 {
   return(jia_alloc3(size,size,proc));
@@ -411,28 +429,29 @@ int xor(address_t addr)
  * @return int 
  */
 int replacei(int cachei)
-{int seti;
+{
+  int seti;
 
- if (REPSCHEME==0)
-   return((random()>>8)%Setpages);
- else{
-   seti=cachei/Setpages;
-   repcnt[seti]=(repcnt[seti]+1)%Setpages;
-   return(repcnt[seti]);
- } 
+  if (REPSCHEME==0)
+    return((random()>>8)%Setpages);
+  else{
+    seti=cachei/Setpages;
+    repcnt[seti]=(repcnt[seti]+1)%Setpages;
+    return(repcnt[seti]);
+  } 
 }
 
 
 void flushpage(int cachei)
 {
- memunmap((void*)cache[cachei].addr,Pagesize);
+  memunmap((void*)cache[cachei].addr,Pagesize);
 
- page[((unsigned long)cache[cachei].addr-Startaddr)/Pagesize].cachei=Cachepages;
+  page[((unsigned long)cache[cachei].addr-Startaddr)/Pagesize].cachei=Cachepages;
 
- if (cache[cachei].state==RW) freetwin(&(cache[cachei].twin));
- cache[cachei].state=UNMAP;
- cache[cachei].wtnt=0;
- cache[cachei].addr=0;
+  if (cache[cachei].state==RW) freetwin(&(cache[cachei].twin));
+  cache[cachei].state=UNMAP;
+  cache[cachei].wtnt=0;
+  cache[cachei].addr=0;
 }
 
 
@@ -829,14 +848,14 @@ if (statflag==1){
 }
 
 /**
- * @brief encodediff() -- encode the diff of cache page and its twin to the paramater diff
+ * @brief encodediff() -- encode the diff of cache page(cachei) and its twin to the paramater diff
  * 
  * @param cachei cache page index
  * @param diff address that used to save difference 
  * @return the total size of bytes encoded in diff
  * 
  * diff[]:
- * | cache page addr (4bytes) |   size of all elements in diff[] (4bytes) |  (start,size) 4bytes | 
+ * | cache page addr (4bytes) | size of all elements in diff[] (4bytes) |  (start,size) 4bytes | cnt bytes different data |
  */
 int encodediff(int cachei, unsigned char* diff)
 {
@@ -856,10 +875,10 @@ int encodediff(int cachei, unsigned char* diff)
   size+=Intbytes;                       /* leave space for size */
 
   bytei=0;
-  while (bytei<Pagesize){
+  while (bytei<Pagesize) {
     for (; (bytei<Pagesize)&&(memcmp(cache[cachei].addr+bytei,
           cache[cachei].twin+bytei,Diffunit)==0); bytei+=Diffunit); // find the diff
-    if (bytei<Pagesize){  // here we got the difference between cache page and its twin
+    if (bytei<Pagesize) {  // here we got the difference between cache page and its twin
       cnt=(unsigned long) 0;
       start=(unsigned long) bytei; // record the start byte index of the diff
       for (; (bytei<Pagesize)&&(memcmp(cache[cachei].addr+bytei,
@@ -879,31 +898,33 @@ if (statflag==1){
   jiastat.endifftime += get_usecs() - begin;
 }
 #endif
-
   return(size);
 }
 
 /**
- * @brief savediff() -- 
+ * @brief savediff() -- save the difference between cached page(cachei) and its twin
  * 
- * @param cachei 
+ * @param cachei cache page index
+ * 
+ * If the diffsize + diffmsg[hosti] > Maxmsgsize, asendmsg; other, append the diff to the diffmsg[hosti]
+ * hosti is the cached page's home host
  */
 void savediff(int cachei)
 {
   unsigned char  diff[Maxmsgsize];  // msg data array to store diff
   int   diffsize;
-  int hosti;
+  int   hosti;
     
-  hosti = homehost(cache[cachei].addr);
-  if (diffmsg[hosti] == DIFFNULL) { 
+  hosti = homehost(cache[cachei].addr);   // according to cachei addr get the page's home host index 
+  if (diffmsg[hosti] == DIFFNULL) { // hosti host's diffmsg is NULL 
     diffmsg[hosti] = newmsg();
-    diffmsg[hosti]->op = DIFF; 
+    diffmsg[hosti]->op = DIFF;
     diffmsg[hosti]->frompid = jia_pid; 
     diffmsg[hosti]->topid = hosti; 
     diffmsg[hosti]->size = 0; 
   }
-  diffsize=encodediff(cachei,diff);
-  if ((diffmsg[hosti]->size+diffsize)>Maxmsgsize){
+  diffsize=encodediff(cachei, diff);  // encoded the difference data between cachei page and its twin into diff [] and return size
+  if ((diffmsg[hosti]->size+diffsize) > Maxmsgsize) {
     diffwait++;
     asendmsg(diffmsg[hosti]);
     diffmsg[hosti]->size=0;
@@ -915,7 +936,7 @@ void savediff(int cachei)
 }
 
 /**
- * @brief senddiffs() -- send 
+ * @brief senddiffs() -- send msg in diffmsg[] to 
  * 
  */
 void senddiffs()

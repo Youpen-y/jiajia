@@ -57,7 +57,7 @@
 #define   DIFFNULL    ((jia_msg_t*) NULL)
 
 #define   homehost(addr) page[((unsigned long)(addr)-Startaddr)/Pagesize].homepid   /* get home host according to addr */
-#define   homepage(addr) page[((unsigned long)(addr)-Startaddr)/Pagesize].homei
+#define   homepage(addr) page[((unsigned long)(addr)-Startaddr)/Pagesize].homei     /* get home page index according to addr */
 
 typedef unsigned char* address_t; 
 
@@ -87,10 +87,10 @@ typedef struct{
 typedef enum {UNMAP,INV,RO,RW} pagestate_t;
 
 typedef struct{
-           pagestate_t        state;
-           address_t          addr;
-           address_t          twin;
-           char               wtnt; 
+           pagestate_t        state;      /*cache state: UNMAP, INV, RO, RW*/
+           address_t          addr;       /*cached page address */
+           address_t          twin;       /*cached page's twin's address */
+           char               wtnt;       /* */
               } jiacache_t;
 
 typedef struct{

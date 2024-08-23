@@ -41,7 +41,7 @@
 #include "global.h"
 #include "init.h"
 
-#define TIMEOUT      10000
+#define TIMEOUT      1000
 #define MAX_RETRIES  64
 
 #define Maxmsgsize   (40960-Msgheadsize) 
