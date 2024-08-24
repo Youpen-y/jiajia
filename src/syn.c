@@ -556,38 +556,45 @@ void savepage(int cachei)
   savewtnt(top.wtntp, cache[cachei].addr, Maxhosts);
 }
 
-
+/**
+ * @brief savewtnt -- 
+ * 
+ * @param ptr 
+ * @param addr 
+ * @param frompid 
+ */
 void savewtnt(wtnt_t *ptr, address_t addr, int frompid)
-{int wtnti;
- int exist;
- wtnt_t *wnptr;
+{
+  int wtnti;
+  int exist;
+  wtnt_t *wnptr;
 
- exist=0;
- wnptr=ptr;
- while((exist==0)&&(wnptr!=WNULL)){
-   for (wtnti=0;(wtnti<wnptr->wtntc)&&
-       (((unsigned long)addr/Pagesize)!=((unsigned long)wnptr->wtnts[wtnti]/Pagesize));wtnti++);
-   if (wtnti>=wnptr->wtntc)
-     wnptr=wnptr->more;
-   else exist=1;
- }
+  exist=0;
+  wnptr=ptr;
+  while((exist==0)&&(wnptr!=WNULL)){
+    for (wtnti=0;(wtnti<wnptr->wtntc)&&
+        (((unsigned long)addr/Pagesize)!=((unsigned long)wnptr->wtnts[wtnti]/Pagesize));wtnti++);
+    if (wtnti>=wnptr->wtntc)
+      wnptr=wnptr->more;
+    else exist=1;
+  }
 
- if (exist==0){
-   wnptr=ptr;
-   while (wnptr->wtntc>=Maxwtnts){
-     if (wnptr->more==WNULL) wnptr->more=newwtnt(); 
-     wnptr=wnptr->more;
-   }
-   wnptr->wtnts[wnptr->wtntc]=addr;
-   wnptr->from[wnptr->wtntc]=frompid;
-   wnptr->wtntc++;
- }else{
-   if (ptr==locks[hidelock].wtntp){     /*barrier*/
-     wnptr->from[wtnti]=Maxhosts;
-   }else{
-     wnptr->from[wtnti]=frompid;       /*lock or stack*/     
-   }
- } 
+  if (exist==0) {
+    wnptr=ptr;
+    while (wnptr->wtntc>=Maxwtnts){
+      if (wnptr->more==WNULL) wnptr->more=newwtnt(); 
+      wnptr=wnptr->more;
+    }
+    wnptr->wtnts[wnptr->wtntc]=addr;
+    wnptr->from[wnptr->wtntc]=frompid;
+    wnptr->wtntc++;
+  }else{
+    if (ptr==locks[hidelock].wtntp){     /*barrier*/
+      wnptr->from[wtnti]=Maxhosts;
+    }else{
+      wnptr->from[wtnti]=frompid;       /*lock or stack*/     
+    }
+  } 
 }
 
 /**
@@ -604,7 +611,7 @@ wtnt_t *appendstackwtnts(jia_msg_t *msg, wtnt_t *ptr)
   
   full=0;
   wnptr=ptr;
-  while ((wnptr!=WNULL) && (full==0)){
+  while ((wnptr!=WNULL) && (full==0)) {
     if ((msg->size+(wnptr->wtntc*Intbytes)) < Maxmsgsize) {
       appendmsg(msg, wnptr->wtnts, (wnptr->wtntc*Intbytes));
       wnptr=wnptr->more;   
@@ -787,6 +794,7 @@ void grantbarr(long lock)
  */
 void barrserver(jia_msg_t *req)
 {
+  printf("host %d is running in barrserver\n", jiapid);
   long lock;
   
   assert((req->op==BARR)&&(req->topid==jia_pid),"Incorrect BARR Message!"); 
@@ -802,13 +810,14 @@ void barrserver(jia_msg_t *req)
 #ifdef DEBUG
  printf("barrier count=%d, from host %d\n", locks[lock].acqc,req->frompid); 
 #endif
-
+  printf("locks[%d].acqc = %d\n", lock, locks[lock].acqc);
   if (locks[lock].acqc==hostc){
     locks[lock].scope++;
     grantbarr(lock);
     locks[lock].acqc=0;
     freewtntspace(locks[lock].wtntp);
   }
+  printf("host %d is out of barrserver\n", jiapid);
 }
 
 /**

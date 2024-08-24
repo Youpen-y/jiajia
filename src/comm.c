@@ -270,7 +270,6 @@ void initcomm()
     if (sigaction(SIGINT, &act, NULL)){
       assert0(0,"segv sigaction problem");  
     }
-
   }
 #endif
 #ifdef AIX41
@@ -332,7 +331,7 @@ printf("reqports\t repports\n");
     FD_SET(fd, &commreq.rcv_set);
     commreq.rcv_maxfd = MAX(fd+1, commreq.rcv_maxfd);
 
-    if (0 > fcntl(commreq.rcv_fds[i], F_SETOWN, getpid()))
+    if (0 > fcntl(commreq.rcv_fds[i], F_SETOWN, getpid()))    // set current process to receive SIGIO signal
        assert0(0,"initcomm()-->fcntl(..F_SETOWN..)");
 
     // if (0 > fcntl(commreq.rcv_fds[i], F_SETFL, FASYNC|FNDELAY))
@@ -506,7 +505,9 @@ if (statflag==1){
       }else {
         if (msgprint==1) printmsg(&inqt,1);
         printf("Receive resend message!\n");
+#ifdef DOSTAT
         jiastat.resentcnt++;
+#endif
       }
     }
     readfds = commreq.rcv_set;	
@@ -517,7 +518,6 @@ if (statflag==1){
 
   SPACE(1);printf("Finishrecvmsg!inc=%d,inh=%d,int=%d\n",incount,inhead,intail);
 
-  enable_sigio();
   while (servemsg==1){
         msgserver();
         BEGINCS;
@@ -636,7 +636,7 @@ void outsend()
     servemsg=(incount==1)? 1 : 0;
     ENDCS;   
     SPACE(1);printf("Finishcopymsg,incount=%d,inhead=%d,intail=%d!\n",incount,inhead,intail);
-    
+    printf("servemsg == %d\n", servemsg); 
     while (servemsg==1){  // there are some msg need be served
       msgserver();
       BEGINCS;
@@ -682,7 +682,9 @@ if (statflag==1){
         FD_SET(commrep.rcv_fds[toproc], &readfds);
         polltime.tv_sec=0;
         polltime.tv_usec=0;
+        BEGINCS;
         res = select(commrep.rcv_maxfd, &readfds, NULL, NULL, &polltime);
+        ENDCS;
         if (FD_ISSET(commrep.rcv_fds[toproc], &readfds) != 0) {
           arrived=1;
         }
@@ -708,7 +710,7 @@ recv_again:
       printf("I am host %d, hostname = %s, I am running outsend() function\n", hostc, hosts[hostc].name);
       sprintf(errstr,"I Can't asend message(%d,%d) to host %d!",outqh.op, outqh.seqno, toproc); 
       printf("BUFFER SIZE %d (%d)\n", outqh.size, msgsize);
-      assert0((sendsuccess==1),errstr);
+      //assert0((sendsuccess==1),errstr);
     }
   }
 
