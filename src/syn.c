@@ -331,6 +331,7 @@ void jia_barrier()
     jiastat.kernelflag=0;
   }
 #endif
+  printf("jia_barrier completed\n");
 }
 
 /**
@@ -351,7 +352,7 @@ void endinterval(int synop)
     }
   }
 
-  senddiffs();  // 
+  senddiffs();
 
   hpages = hosts[jia_pid].homesize / Pagesize;  // page number of jia_pid host
   for (pagei = 0; pagei < hpages; pagei++) {
@@ -361,7 +362,7 @@ void endinterval(int synop)
         if (synop==BARR) home[pagei].rdnt=0;
       }
 
-      if ((W_VEC==ON)&&(home[pagei].wvfull==0)) {
+      if ((W_VEC==ON)&&(home[pagei].wvfull==0)) { // write vector handle
         int i;
         wtvect_t wv=WVNULL;
         for (i=0; i<Pagesize; i+=Blocksize){
@@ -374,7 +375,7 @@ void endinterval(int synop)
 
     }/*if*/
   }/*for*/
-  while (diffwait);
+  while (diffwait); // wait all diffs were handled
 }
 
 
@@ -448,23 +449,27 @@ void startinterval(int synop)
   } /*else*/
 }
 
-
+/**
+ * @brief pushstack -- push lock into lockstack
+ * 
+ * @param lock lock id
+ */
 void pushstack(int lock)
 {
-  int j,k;
-
   stackptr++;
   assert((stackptr<Maxstacksize),"Too many continuous ACQUIRES!");
 
   top.lockid=lock;
 }
 
-
+/**
+ * @brief popstack -- 
+ * 
+ */
 void popstack()
 {
   int wtnti;
   wtnt_t *wnptr;
-
 
   stackptr--;
   assert((stackptr>=-1),"More unlocks than locks!");
@@ -598,7 +603,7 @@ void savewtnt(wtnt_t *ptr, address_t addr, int frompid)
 }
 
 /**
- * @brief 
+ * @brief appendstackwtnts -- append wtnt data to msg as many as possible
  * 
  * @param msg 
  * @param ptr 

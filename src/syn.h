@@ -64,7 +64,7 @@ typedef struct locktype {
         int         acqc;
         int         scope;
         int         myscope;
-        wtnt_t      *wtntp;             /* write notice pointer */
+        wtnt_t      *wtntp;             /* write notice list pointer */
                } jialock_t;
 
 typedef struct stacktype {

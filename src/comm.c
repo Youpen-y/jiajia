@@ -466,14 +466,17 @@ if (statflag==1){
   readfds  = commreq.rcv_set;	
   polltime.tv_sec  = 0;
   polltime.tv_usec = 0;
+  // polltime equals 0, select will return immediately
   res = select(commreq.rcv_maxfd, &readfds, NULL, NULL, &polltime);
   while (res > 0) {
+    // handle ready fd(from other hosts)
     for (i=0; i<hostc; i++) 
       if (i!=jia_pid) 
         if (FD_ISSET(commreq.rcv_fds[i], &readfds)) {
       assert0((incount<Maxqueue), "sigio_handler(): Inqueue exceeded!");
 
       s=sizeof(from);
+      // receive data from host i
       res=recvfrom(commreq.rcv_fds[i],(char *)&(inqt),Maxmsgsize+Msgheadsize,0,
                                  (struct sockaddr *)&from, &s);
       assert0((res>=0), "sigio_handler()-->recvfrom()");
@@ -482,10 +485,12 @@ if (statflag==1){
       memcpy(&to.sin_addr,hosts[inqt.frompid].addr,hosts[inqt.frompid].addrlen);
       to.sin_port = htons(repports[inqt.frompid][inqt.topid]);
       
+      // send ack(actually seqno) to host i
       res = sendto(commrep.snd_fds[i],(char *)&(inqt.seqno),sizeof(inqt.seqno),0,
                          (struct sockaddr *)&to, sizeof(to));
       assert0((res!=-1),"sigio_handler()-->sendto() ACK");
 
+      // new msg's seqno is greater than the former's from the same host
       if (inqt.seqno>commreq.rcv_seq[i]) {
 #ifdef DOSTAT
 if (statflag==1){
@@ -510,6 +515,8 @@ if (statflag==1){
 #endif
       }
     }
+
+    // check whether there are more data or not
     readfds = commreq.rcv_set;	
     polltime.tv_sec=0;
     polltime.tv_usec=0;
@@ -517,7 +524,7 @@ if (statflag==1){
   }
 
   SPACE(1);printf("Finishrecvmsg!inc=%d,inh=%d,int=%d\n",incount,inhead,intail);
-
+  // handle msg
   while (servemsg==1){
         msgserver();
         BEGINCS;
