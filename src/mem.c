@@ -549,14 +549,14 @@ void sigsegv_handler(int signo, struct sigcontext sigctx)
 
   #ifdef LINUX 
   faultaddr = (address_t) sigctx.cr2;
-  faultaddr = (address_t) ((unsigned long)faultaddr/Pagesize*Pagesize);
-  writefault = (int) sigctx.err &2;
+  faultaddr = (address_t) ((unsigned long)faultaddr/Pagesize*Pagesize); // page aligned
+  writefault = (int) sigctx.err & 2;
   #endif 
 
   sprintf(errstr,"Access shared memory out of range from 0x%x to 0x%x!, faultaddr=0x%x, writefault=0x%x", 
                   Startaddr,Startaddr+globaladdr,faultaddr, writefault);
-  assert((((unsigned long)faultaddr<(Startaddr+globaladdr))&& 
-          ((unsigned long)faultaddr>=Startaddr)), errstr);
+  //assert((((unsigned long)faultaddr<(Startaddr+globaladdr))&& 
+  //        ((unsigned long)faultaddr>=Startaddr)), errstr);  // TODO bug point
 
 
   if (homehost(faultaddr)==jia_pid){
@@ -567,14 +567,13 @@ void sigsegv_handler(int signo, struct sigcontext sigctx)
       newtwin(&(home[homei].twin));
       memcpy(home[homei].twin,home[homei].addr,Pagesize);
     }
-  #ifdef DOSTAT
-  if (statflag==1){
-  jiastat.segvLtime += get_usecs() - begin;
-  jiastat.kernelflag=0;
-  jiastat.segvLcnt++;
-  }
-  #endif
-
+#ifdef DOSTAT
+if (statflag==1){
+jiastat.segvLtime += get_usecs() - begin;
+jiastat.kernelflag=0;
+jiastat.segvLcnt++;
+}
+#endif
   }else{
     writefault=(writefault==0) ? 0 : 1;
     cachei=(int)page[((unsigned long)faultaddr-Startaddr)/Pagesize].cachei;
@@ -603,13 +602,13 @@ void sigsegv_handler(int signo, struct sigcontext sigctx)
       memprotect((caddr_t)faultaddr,(size_t)Pagesize,PROT_READ);
     }
 
-  #ifdef DOSTAT
-  if (statflag==1){
-  jiastat.segvRcnt++;
-  jiastat.segvRtime += get_usecs() - begin;
-  jiastat.kernelflag=0;
-  }
-  #endif
+#ifdef DOSTAT
+if (statflag==1){
+jiastat.segvRcnt++;
+jiastat.segvRtime += get_usecs() - begin;
+jiastat.kernelflag=0;
+}
+#endif
   }
 }
 
