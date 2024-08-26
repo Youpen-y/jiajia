@@ -690,9 +690,7 @@ if (statflag==1){
         FD_SET(commrep.rcv_fds[toproc], &readfds);
         polltime.tv_sec=0;
         polltime.tv_usec=0;
-        BEGINCS;
         res = select(commrep.rcv_maxfd, &readfds, NULL, NULL, &polltime);
-        ENDCS;
         if (FD_ISSET(commrep.rcv_fds[toproc], &readfds) != 0) {
           arrived=1;
         }
@@ -718,7 +716,7 @@ recv_again:
       printf("I am host %d, hostname = %s, I am running outsend() function\n", hostc, hosts[hostc].name);
       sprintf(errstr,"I Can't asend message(%d,%d) to host %d!",outqh.op, outqh.seqno, toproc); 
       printf("BUFFER SIZE %d (%d)\n", outqh.size, msgsize);
-      //assert0((sendsuccess==1),errstr);
+      assert0((sendsuccess==1),errstr);
     }
   }
 
