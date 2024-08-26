@@ -293,7 +293,7 @@ unsigned long jia_alloc3(int size, int block, int starthost)
     if (jia_pid == homepid) {
       assert((hosts[homepid].homesize+mapsize)<(Homepages*Pagesize),"Too many home pages");
 
-      protect = (hostc==1) ? PROT_READ|PROT_WRITE : PROT_READ;
+      protect = (hostc==1) ? PROT_READ|PROT_WRITE : PROT_READ|PROT_WRITE;
       memmap((void *)(Startaddr+globaladdr), (size_t)mapsize, protect);
 
       for (i=0; i<mapsize; i+=Pagesize) {
