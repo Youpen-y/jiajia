@@ -295,13 +295,13 @@ void initcomm()
   }
 
 /* output comm ports */
-printf("reqports\t repports\n");
-  for(i = 0; i < Maxhosts; i++){
-    for(j = 0; j < Maxhosts; j++){
-      printf("reqports[%d][%d] = %d\t", i, j, reqports[i][j]);
-      printf("repports[%d][%d] = %d\n", i, j, repports[i][j]);
-    }
-  }
+// printf("reqports\t repports\n");
+//   for(i = 0; i < Maxhosts; i++){
+//     for(j = 0; j < Maxhosts; j++){
+//       printf("reqports[%d][%d] = %d\t", i, j, reqports[i][j]);
+//       printf("repports[%d][%d] = %d\n", i, j, repports[i][j]);
+//     }
+//   }
 
 #ifdef JIA_DEBUG
   for(i=0; i<Maxhosts; i++) 
@@ -528,6 +528,7 @@ if (statflag==1){
   while (servemsg==1){
         msgserver();
         BEGINCS;
+        printf("I am stuck here in sigio_handler()\n");
         inqh.op=ERRMSG;
         inhead=(inhead+1)%Maxqueue;
         incount--;
