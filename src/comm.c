@@ -528,7 +528,6 @@ if (statflag==1){
   while (servemsg==1){
         msgserver();
         BEGINCS;
-        printf("I am stuck here in sigio_handler()\n");
         inqh.op=ERRMSG;
         inhead=(inhead+1)%Maxqueue;
         incount--;
@@ -713,8 +712,8 @@ recv_again:
       retries_num++;
     }
     if (sendsuccess!=1) {
-      printf("I am host %d, hostname = %s, I am running outsend() function\n", hostc, hosts[hostc].name);
-      sprintf(errstr,"I Can't asend message(%d,%d) to host %d!",outqh.op, outqh.seqno, toproc); 
+      printf("I am host %d, hostname = %s, I am running outsend() function\n", jia_pid, hosts[jia_pid].name);
+      sprintf(errstr,"I Can't asend message(%d,%d) to host %d!", outqh.op, outqh.seqno, toproc); 
       printf("BUFFER SIZE %d (%d)\n", outqh.size, msgsize);
       assert0((sendsuccess==1),errstr);
     }
