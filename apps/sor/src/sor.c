@@ -148,7 +148,7 @@ int main(int argc, char *argv[])
     black_[i] = (float *) jia_alloc((N+1)*sizeof(float));
   */
   }
-  jia_barrier();	  // TODO bug point
+  jia_barrier();
   if (jiapid==0) {
     for (i = 0; i <= M + 1; i++) {
   /* 
@@ -170,6 +170,7 @@ int main(int argc, char *argv[])
       }
     }
   }
+  printf("is there are executed?\n");
   print_board();
   jia_barrier();
 

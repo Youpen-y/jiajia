@@ -311,10 +311,10 @@ void jia_barrier()
   }
 
   barrwait=1;
-  sendwtnts(BARR);  // TODO slave stop in this function, slave 
+  sendwtnts(BARR);
   freewtntspace(top.wtntp);
   printf("444444444444444\n");
-  while(barrwait);    // TODO This is the bug point, master stuck here
+  while(barrwait);
   printf("555555555555555\n");
   if ((H_MIG==ON)&&(W_VEC==ON)){
     jia_wait();
