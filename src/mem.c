@@ -171,7 +171,7 @@ void initmem()
   #endif 
 
   #ifdef LINUX
-  jiamapfd=open("/dev/zero", O_RDWR,0); /* file descriptor refer to the open file */
+  jiamapfd=open("/dev/zero", O_RDWR, 0); /* file descriptor refer to the open file */
   { /* reference to a non-home page causes the delivery of a SIGSEGV signal,
     the SIGSEGV handler then maps the fault page to the global address of the page in local address space */
     struct sigaction act;
@@ -456,46 +456,47 @@ void flushpage(int cachei)
 
 
 int findposition(address_t addr)
-{int cachei;             /*index of cache*/
- int seti;               /*index in a set*/
- int invi;
- int i;
- 
-   cachei=xor(addr);
-   seti=replacei(cachei);
-   invi=-1;
-   for (i=0;(cache[cachei+seti].state!=UNMAP)&&(i<Setpages);i++){
+{
+  int cachei;             /*index of cache*/
+  int seti;               /*index in a set*/
+  int invi;
+  int i;
+  
+    cachei=xor(addr);
+    seti=replacei(cachei);
+    invi=-1;
+    for (i=0;(cache[cachei+seti].state!=UNMAP)&&(i<Setpages);i++){
 
-     if ((invi==(-1))&&(cache[cachei+seti].state==INV))
-       invi=seti;
+      if ((invi==(-1))&&(cache[cachei+seti].state==INV))
+        invi=seti;
 
-     seti=(seti+1)%Setpages;
-   }
+      seti=(seti+1)%Setpages;
+    }
 
-   if ((cache[cachei+seti].state!=UNMAP)&&(invi!=(-1))){
-     seti=invi;
-   }   
+    if ((cache[cachei+seti].state!=UNMAP)&&(invi!=(-1))){
+      seti=invi;
+    }   
 
-   if ((cache[cachei+seti].state==INV)||(cache[cachei+seti].state==RO)){
-     flushpage(cachei+seti);
+    if ((cache[cachei+seti].state==INV)||(cache[cachei+seti].state==RO)){
+      flushpage(cachei+seti);
 #ifdef DOSTAT
 if (statflag==1){
      if (cache[cachei+seti].state==RO) jiastat.repROcnt++;
 }
 #endif
-   }else if (cache[cachei+seti].state==RW){
-     savepage(cachei+seti);
-     senddiffs();
-     while(diffwait);
-     flushpage(cachei+seti);
+    }else if (cache[cachei+seti].state==RW){
+      savepage(cachei+seti);
+      senddiffs();
+      while(diffwait);
+      flushpage(cachei+seti);
 #ifdef DOSTAT
 if (statflag==1){
      jiastat.repRWcnt++;
 }
 #endif
-   }
-   page[((unsigned long)addr-Startaddr)/Pagesize].cachei=(unsigned short)(cachei+seti);
-   return(cachei+seti);
+    }
+    page[((unsigned long)addr-Startaddr)/Pagesize].cachei=(unsigned short)(cachei+seti);
+    return(cachei+seti);
 }
 
 

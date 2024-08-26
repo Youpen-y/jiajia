@@ -378,28 +378,29 @@ void msgserver()
 {
      SPACE(1);printf("Enterserver msg[%d], incount=%d, inhead=%d, intail=%d!\n", inqh.op, incount, inhead, intail);
      switch (inqh.op) {
-             case REL:      relserver(&inqh);      break;
-             case JIAEXIT:  jiaexitserver(&inqh);  break;
-             case BARR:     barrserver(&inqh);     break;
-             case WTNT:     wtntserver(&inqh);     break;
-             case BARRGRANT:barrgrantserver(&inqh);break;
-             case ACQGRANT: acqgrantserver(&inqh); break;
-             case ACQ :     acqserver(&inqh);      break;
-             case INVLD:    invserver(&inqh);      break;
-             case WAIT:     waitserver(&inqh);     break;
-             case WAITGRANT:waitgrantserver(&inqh);break;
-             case GETP:     getpserver(&inqh);     break;
-             case GETPGRANT:getpgrantserver(&inqh);break;  
-             case DIFF:     diffserver(&inqh);     break;
-             case DIFFGRANT:diffgrantserver(&inqh);break;
-             case SETCV:    setcvserver(&inqh);    break;
-             case RESETCV:  resetcvserver(&inqh);  break;
-             case WAITCV:   waitcvserver(&inqh);   break;
-             case CVGRANT:  cvgrantserver(&inqh);  break;
-             case MSGBODY:  
-             case MSGTAIL:  msgrecvserver(&inqh);  break;
-             case LOADREQ:  loadserver(&inqh);     break;
-             case LOADGRANT:loadgrantserver(&inqh);break;
+            case DIFF:     diffserver(&inqh);     break;
+            case DIFFGRANT:diffgrantserver(&inqh);break;
+            case GETP:     getpserver(&inqh);     break;
+            case GETPGRANT:getpgrantserver(&inqh);break;
+            case ACQ :     acqserver(&inqh);      break;
+            case ACQGRANT: acqgrantserver(&inqh); break;
+            case INVLD:    invserver(&inqh);      break;
+            case BARR:     barrserver(&inqh);     break;
+            case BARRGRANT:barrgrantserver(&inqh);break;
+            case REL:      relserver(&inqh);      break;
+            case WTNT:     wtntserver(&inqh);     break;
+            case JIAEXIT:  jiaexitserver(&inqh);  break;
+            case WAIT:     waitserver(&inqh);     break;
+            case WAITGRANT:waitgrantserver(&inqh);break;
+             
+            case SETCV:    setcvserver(&inqh);    break;
+            case RESETCV:  resetcvserver(&inqh);  break;
+            case WAITCV:   waitcvserver(&inqh);   break;
+            case CVGRANT:  cvgrantserver(&inqh);  break;
+            case MSGBODY:  
+            case MSGTAIL:  msgrecvserver(&inqh);  break;
+            case LOADREQ:  loadserver(&inqh);     break;
+            case LOADGRANT:loadgrantserver(&inqh);break;
 #ifdef DOSTAT
              case STAT:     statserver(&inqh);     break;
              case STATGRANT:statgrantserver(&inqh);break;
