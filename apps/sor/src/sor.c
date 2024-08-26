@@ -139,10 +139,12 @@ int main(int argc, char *argv[])
 
   red_ = (float **) malloc((M + 2)*sizeof(float *));
   black_ = (float **) malloc((M + 2)*sizeof(float *));
-    
+
   for (i = 0; i <= M + 1; i++) {
     red_[i]=(float*)jia_alloc2p((N+1)*sizeof(float),i/((M+2)/jiahosts)); 
     black_[i]=(float*)jia_alloc2p((N+1)*sizeof(float),i/((M+2)/jiahosts));
+    printf("red_[%d] value is %p\n", i, (unsigned char *)red_[i]);
+    printf("black_[%d] value is %p\n", i, (unsigned char *)black_[i]);
   /*
     red_[i] = (float *) jia_alloc((N+1)*sizeof(float));
     black_[i] = (float *) jia_alloc((N+1)*sizeof(float));
