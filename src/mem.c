@@ -77,7 +77,8 @@ void sigsegv_handler();
 #endif /* AIX41 || IRIX62 */
 
 #ifdef LINUX 
-void sigsegv_handler(int, struct sigcontext);
+// void sigsegv_handler(int, struct sigcontext);
+void sigsegv_handler(int, siginfo_t *);
 #endif
 
 void getpserver(jia_msg_t *req);
@@ -552,7 +553,7 @@ void sigsegv_handler(int signo, siginfo_t *sip)
   // faultaddr = (address_t) sigctx.cr2;
   // faultaddr = (address_t) ((unsigned long)faultaddr/Pagesize*Pagesize); // page aligned
   // writefault = (int) sigctx.err & 2;
-  faultaddr = (address_t) sip->__SIGINFO->__sifields->_sigfault->_addr;
+  faultaddr = (address_t) sip->si_addr;
   faultaddr = (address_t) ((unsigned long)faultaddr/Pagesize*Pagesize);
   #endif 
 
