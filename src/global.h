@@ -93,7 +93,8 @@
 
 #ifdef LINUX
 #include        <sys/fcntl.h>
-// #include        <asm/sigcontext.h>
+//#include        <asm/sigcontext.h>
+#include        <asm-generic/siginfo.h>
 #include        <asm/mman.h> 
 #endif         
 

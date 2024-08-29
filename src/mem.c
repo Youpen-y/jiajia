@@ -509,7 +509,8 @@ void sigsegv_handler(int signo, int code, struct sigcontext *scp, char *addr)
 #endif 
 
 #ifdef LINUX
-void sigsegv_handler(int signo, struct sigcontext sigctx)
+// void sigsegv_handler(int signo, struct sigcontext sigctx)
+void sigsegv_handler(int signo, siginfo_t *sip)
 #endif 
 {
   address_t faultaddr;
@@ -548,15 +549,17 @@ void sigsegv_handler(int signo, struct sigcontext sigctx)
   #endif 
 
   #ifdef LINUX 
-  faultaddr = (address_t) sigctx.cr2;
-  faultaddr = (address_t) ((unsigned long)faultaddr/Pagesize*Pagesize); // page aligned
-  writefault = (int) sigctx.err & 2;
+  // faultaddr = (address_t) sigctx.cr2;
+  // faultaddr = (address_t) ((unsigned long)faultaddr/Pagesize*Pagesize); // page aligned
+  // writefault = (int) sigctx.err & 2;
+  faultaddr = (address_t) sip->__SIGINFO->__sifields->_sigfault->_addr;
+  faultaddr = (address_t) ((unsigned long)faultaddr/Pagesize*Pagesize);
   #endif 
 
   printf("Access shared memory out of range from 0x%x to 0x%x!, faultaddr=0x%x, writefault=0x%x",
-          Startaddr,Startaddr+globaladdr,faultaddr, writefault);
+          Startaddr, Startaddr+globaladdr, faultaddr, writefault);
   sprintf(errstr,"Access shared memory out of range from 0x%x to 0x%x!, faultaddr=0x%x, writefault=0x%x", 
-                  Startaddr,Startaddr+globaladdr,faultaddr, writefault);
+                  Startaddr, Startaddr+globaladdr, faultaddr, writefault);
   assert((((unsigned long)faultaddr<(Startaddr+globaladdr))&& 
          ((unsigned long)faultaddr>=Startaddr)), errstr);  // TODO bug point
 
