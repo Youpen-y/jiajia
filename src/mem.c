@@ -559,13 +559,14 @@ void sigsegv_handler(int signo, siginfo_t *sip, void *context)
 
   #endif 
 
-  printf("Access shared memory out of range from 0x%x to 0x%x!, faultaddr=0x%x, writefault=0x%x\n",
+  printf("Shared memory out of range from 0x%x to 0x%x!, faultaddr=0x%x, writefault=0x%x\n",
           Startaddr, Startaddr+globaladdr, faultaddr, writefault);
 
   printf("sig info structure siginfo_t\n");
   printf("\terrno value: %d \n"
          "\tsignal code: %d \n"
          "\t    si_addr: %#x\n", sip->si_errno, sip->si_code, sip->si_addr);
+
   sprintf(errstr,"Access shared memory out of range from 0x%x to 0x%x!, faultaddr=0x%x, writefault=0x%x", 
                   Startaddr, Startaddr+globaladdr, faultaddr, writefault);
   assert((((unsigned long)faultaddr<(Startaddr+globaladdr))&& 
