@@ -553,10 +553,12 @@ void sigsegv_handler(int signo, struct sigcontext sigctx)
   writefault = (int) sigctx.err & 2;
   #endif 
 
+  printf("Access shared memory out of range from 0x%x to 0x%x!, faultaddr=0x%x, writefault=0x%x",
+          Startaddr,Startaddr+globaladdr,faultaddr, writefault);
   sprintf(errstr,"Access shared memory out of range from 0x%x to 0x%x!, faultaddr=0x%x, writefault=0x%x", 
                   Startaddr,Startaddr+globaladdr,faultaddr, writefault);
-  //assert((((unsigned long)faultaddr<(Startaddr+globaladdr))&& 
-  //        ((unsigned long)faultaddr>=Startaddr)), errstr);  // TODO bug point
+  assert((((unsigned long)faultaddr<(Startaddr+globaladdr))&& 
+         ((unsigned long)faultaddr>=Startaddr)), errstr);  // TODO bug point
 
 
   if (homehost(faultaddr)==jia_pid){
