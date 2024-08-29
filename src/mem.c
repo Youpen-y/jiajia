@@ -556,7 +556,8 @@ void sigsegv_handler(int signo, siginfo_t *sip, void *context)
   // writefault = (int) sigctx.err & 2;
   faultaddr = (address_t) sip->si_addr;
   faultaddr = (address_t) ((unsigned long)faultaddr/Pagesize*Pagesize);
-
+  writefault = sip->si_code & 2;  /* si_code: 1 means that address not mapped to object => writefault=0
+                                     si_code: 2 means that invalid permissions for mapped object => writefault=1 */
   #endif 
 
   printf("Shared memory out of range from 0x%x to 0x%x!, faultaddr=0x%x, writefault=0x%x\n",
@@ -573,7 +574,7 @@ void sigsegv_handler(int signo, siginfo_t *sip, void *context)
          ((unsigned long)faultaddr>=Startaddr)), errstr);  // TODO bug point
 
 
-  if (homehost(faultaddr)==jia_pid){  // page's home is current host
+  if (homehost(faultaddr)==jia_pid){  // page's home is current host (writefault == 0)
     memprotect((caddr_t)faultaddr,Pagesize,PROT_READ|PROT_WRITE); // grant write right
     homei=homepage(faultaddr);
     home[homei].wtnt|=3;
@@ -588,7 +589,7 @@ jiastat.kernelflag=0;
 jiastat.segvLcnt++;
 }
 #endif
-  }else{ // page's home is not current host
+  }else{ // page's home is not current host (writefault == 1)
     writefault=(writefault==0) ? 0 : 1;
     cachei=(int)page[((unsigned long)faultaddr-Startaddr)/Pagesize].cachei;
     if (cachei<Cachepages){

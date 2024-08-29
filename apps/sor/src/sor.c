@@ -158,8 +158,8 @@ int main(int argc, char *argv[])
   */
       for (j = 0, sum = 0.0; j <= N; j++) {
         printf("red_[%d][%d] address = %p\n", i, j, (unsigned char *)&red_[i][j]);
+        printf("black_[%d][%d] address = %p\n", i, j, (unsigned char *)&black_[i][j]);
         red_[i][j] = black_[i][j] = sum += (float)j;  // TODO Bug point
-
       }
 
       if ((i==0)||(i==M+1)){
