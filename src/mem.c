@@ -78,7 +78,7 @@ void sigsegv_handler();
 
 #ifdef LINUX 
 // void sigsegv_handler(int, struct sigcontext);
-void sigsegv_handler(int, siginfo_t *);
+void sigsegv_handler(int, siginfo_t *, void *);
 #endif
 
 void getpserver(jia_msg_t *req);
@@ -179,7 +179,8 @@ void initmem()
     act.sa_handler = (void_func_handler)sigsegv_handler;
     sigemptyset(&act.sa_mask);
     // act.sa_flags = SA_NOMASK; 
-    act.sa_flags = SA_NODEFER;  /* SA_NOMASK is obsolete */
+    // act.sa_flags = SA_NODEFER;  /* SA_NOMASK is obsolete */
+    act.sa_flags = SA_NODEFER | SA_SIGINFO;
     if (sigaction(SIGSEGV, &act, NULL))
       assert0(0,"segv sigaction problem");
   }
@@ -511,7 +512,7 @@ void sigsegv_handler(int signo, int code, struct sigcontext *scp, char *addr)
 
 #ifdef LINUX
 // void sigsegv_handler(int signo, struct sigcontext sigctx)
-void sigsegv_handler(int signo, siginfo_t *sip)
+void sigsegv_handler(int signo, siginfo_t *sip, void *context)
 #endif 
 {
   address_t faultaddr;
@@ -555,18 +556,24 @@ void sigsegv_handler(int signo, siginfo_t *sip)
   // writefault = (int) sigctx.err & 2;
   faultaddr = (address_t) sip->si_addr;
   faultaddr = (address_t) ((unsigned long)faultaddr/Pagesize*Pagesize);
+
   #endif 
 
-  printf("Access shared memory out of range from 0x%x to 0x%x!, faultaddr=0x%x, writefault=0x%x",
+  printf("Access shared memory out of range from 0x%x to 0x%x!, faultaddr=0x%x, writefault=0x%x\n",
           Startaddr, Startaddr+globaladdr, faultaddr, writefault);
+
+  printf("sig info structure siginfo_t\n");
+  printf("\terrno value: %d \n"
+         "\tsignal code: %d \n"
+         "\t    si_addr: %#x\n", sip->si_errno, sip->si_code, sip->si_addr);
   sprintf(errstr,"Access shared memory out of range from 0x%x to 0x%x!, faultaddr=0x%x, writefault=0x%x", 
                   Startaddr, Startaddr+globaladdr, faultaddr, writefault);
   assert((((unsigned long)faultaddr<(Startaddr+globaladdr))&& 
          ((unsigned long)faultaddr>=Startaddr)), errstr);  // TODO bug point
 
 
-  if (homehost(faultaddr)==jia_pid){
-    memprotect((caddr_t)faultaddr,Pagesize,PROT_READ|PROT_WRITE);
+  if (homehost(faultaddr)==jia_pid){  // page's home is current host
+    memprotect((caddr_t)faultaddr,Pagesize,PROT_READ|PROT_WRITE); // grant write right
     homei=homepage(faultaddr);
     home[homei].wtnt|=3;
     if ((W_VEC==ON)&&(home[homei].wvfull==0)){
@@ -580,7 +587,7 @@ jiastat.kernelflag=0;
 jiastat.segvLcnt++;
 }
 #endif
-  }else{
+  }else{ // page's home is not current host
     writefault=(writefault==0) ? 0 : 1;
     cachei=(int)page[((unsigned long)faultaddr-Startaddr)/Pagesize].cachei;
     if (cachei<Cachepages){

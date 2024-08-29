@@ -82,7 +82,7 @@
 
 #ifdef SOLARIS
 #include        <ucontext.h>
-#include        <ginfo.h>
+#include        <siginfo.h>
 #include        <sys/file.h>
 #endif /* SOLARIS */
 
@@ -94,7 +94,6 @@
 #ifdef LINUX
 #include        <sys/fcntl.h>
 //#include        <asm/sigcontext.h>
-//#include        <asm-generic/siginfo.h>
 #include        <asm/mman.h> 
 #endif         
 
