@@ -163,7 +163,8 @@ void initmem()
 
   { struct sigaction act;
 
-    act.sa_handler = (void_func_handler)sigsegv_handler;
+    //act.sa_handler = (void_func_handler)sigsegv_handler;
+    act.sa_sigaction = (void_func_handler)sigsegv_handler;
     sigemptyset(&act.sa_mask);
     act.sa_flags = SA_SIGINFO;
     if (sigaction(SIGSEGV, &act, NULL))
