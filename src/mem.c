@@ -573,7 +573,7 @@ void sigsegv_handler(int signo, siginfo_t *sip, void *context)
   writefault = sip->si_code & 2;  /* si_code: 1 means that address not mapped to object => ()
                                      si_code: 2 means that invalid permissions for mapped object => ()*/
   #endif 
-
+  printf("Enter sigsegv handler\n");
   printf("Shared memory out of range from 0x%x to 0x%x!, faultaddr=0x%x, writefault=0x%x\n",
           Startaddr, Startaddr+globaladdr, faultaddr, writefault);
 
@@ -768,7 +768,7 @@ void getpgrantserver(jia_msg_t *rep)
       }
     }
   }else{
-    printf("addr is %#x \n", addr);
+    printf("addr is %#x , rep->data+datai = %#x\n", addr, rep->data+datai);
     memcpy(addr,rep->data+datai,Pagesize);  // TODO:possible bug
     printf("I have copy the page from remote home to %#x\n", addr);
   }
