@@ -114,7 +114,7 @@ unsigned long   globaladdr;
 long            jiamapfd;   /* file descriptor of the file that mapped to process's virtual address space */
 volatile int getpwait;
 volatile int diffwait;
-int repcnt[Setnum];
+int repcnt[Setnum]; /* record the last replacement index of every set */
 jia_msg_t *diffmsg[Maxhosts];   /* store every host's diff msgs */
 
 
@@ -132,7 +132,7 @@ void initmem()
   diffwait = 0;
   getpwait = 0;
 
-  for (i = 0; i <= hostc; i++) {
+  for (i = 0; i <= hostc; i++) {  // set every host's homesize to 0
     hosts[i].homesize=0;
   }
 
@@ -418,7 +418,12 @@ unsigned long jia_alloc2p(int size, int proc)
   return(jia_alloc3(size,size,proc));
 }
 
-
+/**
+ * @brief xor -- get the index of the first page of the set based on the addr
+ * 
+ * @param addr address of a bytes
+ * @return int 
+ */
 int xor(address_t addr)
 {
   return((((unsigned long)(addr-Startaddr)/Pagesize)%Setnum)*Setpages);
@@ -430,20 +435,24 @@ int xor(address_t addr)
  * @param cachei: index of cache
  * @return int 
  */
-int replacei(int cachei)
+int replacei(int cachei)  // TODO: implement LRU replacement 
 {
   int seti;
 
-  if (REPSCHEME==0)
+  if (REPSCHEME==0) // replace scheme equals to zero, random replacement
     return((random()>>8)%Setpages);
-  else{
-    seti=cachei/Setpages;
+  else{ // circular replacement in corresponding set
+    seti=cachei/Setpages; //
     repcnt[seti]=(repcnt[seti]+1)%Setpages;
     return(repcnt[seti]);
   } 
 }
 
-
+/**
+ * @brief flushpage -- 
+ * 
+ * @param cachei page index in cache
+ */
 void flushpage(int cachei)
 {
   memunmap((void*)cache[cachei].addr,Pagesize);
@@ -456,7 +465,12 @@ void flushpage(int cachei)
   cache[cachei].addr=0;
 }
 
-
+/**
+ * @brief findposition -- 
+ * 
+ * @param addr 
+ * @return int 
+ */
 int findposition(address_t addr)
 {
   int cachei;             /*index of cache*/
@@ -464,41 +478,41 @@ int findposition(address_t addr)
   int invi;
   int i;
   
-    cachei=xor(addr);
-    seti=replacei(cachei);
-    invi=-1;
-    for (i=0;(cache[cachei+seti].state!=UNMAP)&&(i<Setpages);i++){
+  cachei=xor(addr);
+  seti=replacei(cachei);
+  invi=-1;
+  for (i=0;(cache[cachei+seti].state!=UNMAP)&&(i<Setpages);i++){
 
-      if ((invi==(-1))&&(cache[cachei+seti].state==INV))
-        invi=seti;
+    if ((invi==(-1))&&(cache[cachei+seti].state==INV))
+      invi=seti;
 
-      seti=(seti+1)%Setpages;
-    }
+    seti=(seti+1)%Setpages;
+  }
 
-    if ((cache[cachei+seti].state!=UNMAP)&&(invi!=(-1))){
-      seti=invi;
-    }   
+  if ((cache[cachei+seti].state!=UNMAP)&&(invi!=(-1))){
+    seti=invi;
+  }   
 
-    if ((cache[cachei+seti].state==INV)||(cache[cachei+seti].state==RO)){
-      flushpage(cachei+seti);
+  if ((cache[cachei+seti].state==INV)||(cache[cachei+seti].state==RO)){
+    flushpage(cachei+seti);
 #ifdef DOSTAT
 if (statflag==1){
-     if (cache[cachei+seti].state==RO) jiastat.repROcnt++;
+  if (cache[cachei+seti].state==RO) jiastat.repROcnt++;
 }
 #endif
-    }else if (cache[cachei+seti].state==RW){
-      savepage(cachei+seti);
-      senddiffs();
-      while(diffwait);
-      flushpage(cachei+seti);
+  }else if (cache[cachei+seti].state==RW){
+    savepage(cachei+seti);
+    senddiffs();
+    while(diffwait);
+    flushpage(cachei+seti);
 #ifdef DOSTAT
 if (statflag==1){
-     jiastat.repRWcnt++;
+  jiastat.repRWcnt++;
 }
 #endif
-    }
-    page[((unsigned long)addr-Startaddr)/Pagesize].cachei=(unsigned short)(cachei+seti);
-    return(cachei+seti);
+  }
+  page[((unsigned long)addr-Startaddr)/Pagesize].cachei=(unsigned short)(cachei+seti);
+  return(cachei+seti);
 }
 
 
@@ -556,8 +570,8 @@ void sigsegv_handler(int signo, siginfo_t *sip, void *context)
   // writefault = (int) sigctx.err & 2;
   faultaddr = (address_t) sip->si_addr;
   faultaddr = (address_t) ((unsigned long)faultaddr/Pagesize*Pagesize);
-  writefault = sip->si_code & 2;  /* si_code: 1 means that address not mapped to object => writefault=0
-                                     si_code: 2 means that invalid permissions for mapped object => writefault=1 */
+  writefault = sip->si_code & 2;  /* si_code: 1 means that address not mapped to object => 
+                                     si_code: 2 means that invalid permissions for mapped object => */
   #endif 
 
   printf("Shared memory out of range from 0x%x to 0x%x!, faultaddr=0x%x, writefault=0x%x\n",
@@ -565,19 +579,20 @@ void sigsegv_handler(int signo, siginfo_t *sip, void *context)
 
   printf("sig info structure siginfo_t\n");
   printf("\terrno value: %d \n"
+         "\tsignal err : %d \n"
          "\tsignal code: %d \n"
-         "\t    si_addr: %#x\n", sip->si_errno, sip->si_code, sip->si_addr);
+         "\t    si_addr: %#x\n", sip->si_errno, sip->si_errno, sip->si_code, sip->si_addr);
 
   sprintf(errstr,"Access shared memory out of range from 0x%x to 0x%x!, faultaddr=0x%x, writefault=0x%x", 
                   Startaddr, Startaddr+globaladdr, faultaddr, writefault);
   assert((((unsigned long)faultaddr<(Startaddr+globaladdr))&& 
-         ((unsigned long)faultaddr>=Startaddr)), errstr);  // TODO bug point
+         ((unsigned long)faultaddr>=Startaddr)), errstr);
 
 
-  if (homehost(faultaddr)==jia_pid){  // page's home is current host (writefault == 0)
+  if (homehost(faultaddr)==jia_pid){  // page's home is current host (si_code = 2)
     memprotect((caddr_t)faultaddr,Pagesize,PROT_READ|PROT_WRITE); // grant write right
     homei=homepage(faultaddr);
-    home[homei].wtnt|=3;
+    home[homei].wtnt|=3;  /* set bit0 = 1, bit1 = 1 */
     if ((W_VEC==ON)&&(home[homei].wvfull==0)){
       newtwin(&(home[homei].twin));
       memcpy(home[homei].twin,home[homei].addr,Pagesize);
@@ -589,7 +604,7 @@ jiastat.kernelflag=0;
 jiastat.segvLcnt++;
 }
 #endif
-  }else{ // page's home is not current host (writefault == 1)
+  }else{ // page's home is not current host (si_code = 1, )
     writefault=(writefault==0) ? 0 : 1;
     cachei=(int)page[((unsigned long)faultaddr-Startaddr)/Pagesize].cachei;
     if (cachei<Cachepages){
@@ -627,20 +642,25 @@ jiastat.kernelflag=0;
   }
 }
 
-
+/**
+ * @brief getpage -- according to addr, get page from remote host (page's home)
+ * 
+ * @param addr page global address
+ * @param flag indicate read(0) or write(1) request
+ */
 void getpage(address_t addr,int flag)
 {
   int homeid;
- jia_msg_t *req;
+  jia_msg_t *req;
 
-  homeid=homehost(addr); 
+  homeid=homehost(addr);
   assert((homeid!=jia_pid),"This should not have happened 2!");
   req=newmsg();
 
   req->op=GETP;
   req->frompid=jia_pid;
   req->topid=homeid;
-  req->temp=flag;       /*0:read request,1:write request*/
+  req->temp=flag;       /*0:read request, 1:write request*/
   req->size=0;
   appendmsg(req,ltos(addr),Intbytes);
 
@@ -660,90 +680,93 @@ if (statflag==1){
 
 
 void getpserver(jia_msg_t *req)
-{address_t paddr; 
- int homei;
- jia_msg_t *rep;
+{
+  address_t paddr; 
+  int homei;
+  jia_msg_t *rep;
 
- assert((req->op==GETP)&&(req->topid==jia_pid),"Incorrect GETP Message!");
+  assert((req->op==GETP)&&(req->topid==jia_pid),"Incorrect GETP Message!");
 
- paddr=(address_t)stol(req->data);
+  paddr=(address_t)stol(req->data);
 /*
  printf("getpage=0x%x from host %d\n",(unsigned long) paddr,req->frompid);
 */
- if ((H_MIG==ON)&&(homehost(paddr)!=jia_pid)){
-   /*This is a new home, the home[] data structure may
-     not be updated, but the page has already been here
-     the rdnt item of new home is set to 1 in migpage()*/
- }else{
-   assert((homehost(paddr)==jia_pid),"This should have not been happened! 4");
-   homei=homepage(paddr);
+  if ((H_MIG==ON)&&(homehost(paddr)!=jia_pid)){
+    /*This is a new home, the home[] data structure may
+      not be updated, but the page has already been here
+      the rdnt item of new home is set to 1 in migpage()*/
+  }else{
+    assert((homehost(paddr)==jia_pid),"This should have not been happened! 4");
+    homei=homepage(paddr);
 
-   if ((W_VEC==ON)&&(home[homei].wvfull==1)){
-     home[homei].wvfull=0;
-     newtwin(&(home[homei].twin));
-     memcpy(home[homei].twin,home[homei].addr,Pagesize);
-   }
+    if ((W_VEC==ON)&&(home[homei].wvfull==1)){
+      home[homei].wvfull=0;
+      newtwin(&(home[homei].twin));
+      memcpy(home[homei].twin,home[homei].addr,Pagesize);
+    }
 
-   home[homei].rdnt=1;
- }
- rep=newmsg();
- rep->op=GETPGRANT;
- rep->frompid=jia_pid;
- rep->topid=req->frompid;
- rep->temp=0;
- rep->size=0;
- appendmsg(rep,req->data,Intbytes);
- 
- if ((W_VEC==ON)&&(req->temp==1)){int i;
-   for (i=0;i<Wvbits;i++){
-     if (((home[homei].wtvect[req->frompid]) & (((wtvect_t)1)<<i))!=0){
-       appendmsg(rep,paddr+i*Blocksize,Blocksize);
-     }
-   }
-   rep->temp=home[homei].wtvect[req->frompid];
- }else{
-   appendmsg(rep,paddr,Pagesize);
-   rep->temp=WVFULL;
- }
+    home[homei].rdnt=1;
+  }
+  rep=newmsg();
+  rep->op=GETPGRANT;
+  rep->frompid=jia_pid;
+  rep->topid=req->frompid;
+  rep->temp=0;
+  rep->size=0;
+  appendmsg(rep,req->data,Intbytes);
+  
+  if ((W_VEC==ON)&&(req->temp==1)){int i;
+    for (i=0;i<Wvbits;i++){
+      if (((home[homei].wtvect[req->frompid]) & (((wtvect_t)1)<<i))!=0){
+        appendmsg(rep,paddr+i*Blocksize,Blocksize);
+      }
+    }
+    rep->temp=home[homei].wtvect[req->frompid];
+  }else{
+    printf("possible bug point\n");
+    appendmsg(rep,paddr,Pagesize);
+    rep->temp=WVFULL;
+  }
 
- if (W_VEC==ON){
-   home[homei].wtvect[req->frompid]=WVNULL;
-/*
-   printf("0x%x\n",rep->temp);
-*/
- }
+  if (W_VEC==ON){
+    home[homei].wtvect[req->frompid]=WVNULL;
+  /*
+    printf("0x%x\n",rep->temp);
+  */
+  }
 
- asendmsg(rep);
- freemsg(rep);
+  asendmsg(rep);
+  freemsg(rep);
 }
 
 
 void getpgrantserver(jia_msg_t *rep)
-{address_t addr;
- unsigned int datai;
- unsigned long wv;
- int i;
-	
- assert((rep->op==GETPGRANT),"Incorrect returned message!");
- 
- wv=rep->temp;
+{
+  address_t addr;
+  unsigned int datai;
+  unsigned long wv;
+  int i;
+    
+  assert((rep->op==GETPGRANT),"Incorrect returned message!");
+  
+  wv=rep->temp;
 
- datai=0;
- addr=(address_t)stol(rep->data+datai);
- datai+=Intbytes;
+  datai=0;
+  addr=(address_t)stol(rep->data+datai);
+  datai+=Intbytes;
 
- if ((W_VEC==ON)&&(wv!=WVFULL)){
-   for (i=0;i<Wvbits;i++){
-     if ((wv & (((wtvect_t)1)<<i))!=0){
-       memcpy(addr+i*Blocksize,rep->data+datai,Blocksize);
-       datai+=Blocksize;
-     }
-   }
- }else{
-   memcpy(addr,rep->data+datai,Pagesize);
- }
+  if ((W_VEC==ON)&&(wv!=WVFULL)){
+    for (i=0;i<Wvbits;i++){
+      if ((wv & (((wtvect_t)1)<<i))!=0){
+        memcpy(addr+i*Blocksize,rep->data+datai,Blocksize);
+        datai+=Blocksize;
+      }
+    }
+  }else{
+    memcpy(addr,rep->data+datai,Pagesize);
+  }
 
- getpwait=0;
+  getpwait=0;
 }
 
 

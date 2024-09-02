@@ -52,7 +52,7 @@
 #define   Homesize    (Homepages*Pagesize)
 #define   Cachesize   (Pagesize*Cachepages) 
 #define   Setpages    Cachepages   /* change Setpages so that have multiple sets */
-#define   Setnum      (Cachepages/Setpages)      
+#define   Setnum      (Cachepages/Setpages)  /* num of entries in a set */
 
 #define   DIFFNULL    ((jia_msg_t*) NULL)
 

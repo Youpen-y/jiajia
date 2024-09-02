@@ -190,9 +190,9 @@ void freetwin(address_t *twin)
 }
 
 /**
- * @brief newmsg() -- Find an available msg space in msgarray
+ * @brief newmsg() -- find an available msg space in msgarray
  * 
- * @return jia_msg_t* The first free space address in msgarray that available
+ * @return jia_msg_t* the first free space address in msgarray that available
  */
 jia_msg_t *newmsg()
 {
@@ -234,7 +234,7 @@ void freemsg(jia_msg_t *msg)
 void appendmsg(jia_msg_t *msg, unsigned char *str, int len)
 {
   assert(((msg->size+len)<=Maxmsgsize),"Message too large");
-  memcpy(msg->data+msg->size,str,len);
+  memcp(msg->data+msg->size,str,len);
   msg->size+=len;
 }
 

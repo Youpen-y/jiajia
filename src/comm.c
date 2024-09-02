@@ -472,7 +472,7 @@ if (statflag==1){
   while (res > 0) {
     // handle ready fd(from other hosts)
     for (i=0; i<hostc; i++) 
-      if (i!=jia_pid) 
+      if (i!=jia_pid)  
         if (FD_ISSET(commreq.rcv_fds[i], &readfds)) {
       assert0((incount<Maxqueue), "sigio_handler(): Inqueue exceeded!");
 

@@ -88,7 +88,6 @@ void grantlock(long lock, int toproc, int acqscope);
 void grantbarr(long lock);
 void acqserver(jia_msg_t *req);
 void relserver(jia_msg_t *req);
-void grantbarr();
 void barrserver(jia_msg_t *req);
 void recordwtnts(jia_msg_t *req);
 void wtntserver(jia_msg_t *req);
@@ -148,7 +147,7 @@ void initsyn()
 {
   int i,j,k;
 
-  for (i=0; i<=Maxlocks; i++) {
+  for (i=0; i<=Maxlocks; i++) { // initialize locks setting
     locks[i].acqc=0;
     locks[i].scope=0;
     locks[i].myscope=-1;
@@ -158,7 +157,7 @@ void initsyn()
     }
     if ((i%hostc) == jia_pid)
       locks[i].wtntp=newwtnt();
-    else 
+    else
       locks[i].wtntp=WNULL;
   }
 
@@ -219,6 +218,7 @@ void jia_lock(int lock)
 
   sprintf(errstr,"lock %d should range from 0 to %d", lock, Maxlocks-1);
   assert(((lock>=0)&&(lock<Maxlocks)), errstr);
+
   for (i=0; i<=stackptr; i++)
     assert((lockstack[i].lockid!=lock),"Embeding of the same lock is not allowed!");
 
@@ -356,7 +356,7 @@ void endinterval(int synop)
 
   hpages = hosts[jia_pid].homesize / Pagesize;  // page number of jia_pid host
   for (pagei = 0; pagei < hpages; pagei++) {
-    if ((home[pagei].wtnt&1) != 0) {
+    if ((home[pagei].wtnt&1) != 0) {  // bit1 == 1
       if (home[pagei].rdnt != 0) {
         savewtnt(top.wtntp, home[pagei].addr, Maxhosts);
         if (synop==BARR) home[pagei].rdnt=0;
@@ -562,7 +562,7 @@ void savepage(int cachei)
 }
 
 /**
- * @brief savewtnt -- 
+ * @brief savewtnt -- save 
  * 
  * @param ptr 
  * @param addr 
@@ -580,11 +580,11 @@ void savewtnt(wtnt_t *ptr, address_t addr, int frompid)
     for (wtnti=0;(wtnti<wnptr->wtntc)&&
         (((unsigned long)addr/Pagesize)!=((unsigned long)wnptr->wtnts[wtnti]/Pagesize));wtnti++);
     if (wtnti>=wnptr->wtntc)
-      wnptr=wnptr->more;
-    else exist=1;
+      wnptr=wnptr->more; 
+    else exist=1; // wtnt about the same address has existed
   }
 
-  if (exist==0) {
+  if (exist==0) { // wtnt don't exist
     wnptr=ptr;
     while (wnptr->wtntc>=Maxwtnts){
       if (wnptr->more==WNULL) wnptr->more=newwtnt(); 
@@ -847,34 +847,39 @@ void recordwtnts(jia_msg_t *req)
 
 
 void wtntserver(jia_msg_t *req)
-{int lock;
+{
+  int lock;
 
- assert((req->op==WTNT)&&(req->topid==jia_pid),"Incorrect WTNT Message!"); 
+  assert((req->op==WTNT)&&(req->topid==jia_pid),"Incorrect WTNT Message!"); 
 
- lock=(int) stol(req->data);
- assert((lock%hostc==jia_pid),"Incorrect home of lock!");
+  lock=(int) stol(req->data);
+  assert((lock%hostc==jia_pid),"Incorrect home of lock!");
 
- recordwtnts(req); 
+  recordwtnts(req); 
 } 
 
-
+/**
+ * @brief migcheckcache -- 
+ * 
+ */
 void migcheckcache()
-{wtnt_t *wnptr; 
- int wtnti,cachei;
- unsigned long addr;
+{
+  wtnt_t *wnptr; 
+  int wtnti,cachei;
+  unsigned long addr;
 
- wnptr=top.wtntp; 
- while (wnptr!=WNULL){
-   for (wtnti=0;(wtnti<wnptr->wtntc);wtnti++){
-     addr=(unsigned long)wnptr->wtnts[wtnti];
-     cachei=page[(addr-Startaddr)/Pagesize].cachei;
-     if ((cache[cachei].state==RO)||(cache[cachei].state==RW)){
-       addr++;
-       wnptr->wtnts[wtnti]=(address_t)addr;
-     }
-   }
-   wnptr=wnptr->more;
- }
+  wnptr=top.wtntp; 
+  while (wnptr!=WNULL){
+    for (wtnti=0;(wtnti<wnptr->wtntc);wtnti++){
+      addr=(unsigned long)wnptr->wtnts[wtnti];
+      cachei=page[(addr-Startaddr)/Pagesize].cachei;
+      if ((cache[cachei].state==RO)||(cache[cachei].state==RW)){
+        addr++;
+        wnptr->wtnts[wtnti]=(address_t)addr;
+      }
+    }
+    wnptr=wnptr->more;
+  }
 }
 
 

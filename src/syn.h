@@ -52,7 +52,7 @@
 
 
 typedef struct wtnttype {
-        unsigned char*  wtnts[Maxwtnts];
+        unsigned char*  wtnts[Maxwtnts];   /*address*/
         int             from[Maxwtnts];   // from pid or from scope
         int             wtntc;            // write notice count
         struct wtnttype *more;
@@ -61,7 +61,7 @@ typedef struct wtnttype {
 typedef struct locktype {
         int         acqs[Maxhosts];
         int         acqscope[Maxhosts];
-        int         acqc;
+        int         acqc;       /* acquire counter */
         int         scope;
         int         myscope;
         wtnt_t      *wtntp;             /* write notice list pointer */

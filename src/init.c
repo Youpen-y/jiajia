@@ -237,8 +237,8 @@ void copyfiles(int argc, char **argv)
 /**
  * @brief startprocs -- start process on slaves
  * 
- * @param argc 
- * @param argv 
+ * @param argc same as masters'
+ * @param argv same as masters'
  * @return int 
  */
 int startprocs(int argc, char **argv)
@@ -315,7 +315,7 @@ int startprocs(int argc, char **argv)
                               cmd,&(hosts[hosti].rerrfd));
 #else  /* NFS */
     hosts[hosti].riofd=rexec(&hostname,sp->s_port,hosts[hosti].user,
-                              hosts[hosti].passwd,cmd,&(hosts[hosti].rerrfd));  // TODO rexec is obsoleted by rcmd
+                              hosts[hosti].passwd,cmd,&(hosts[hosti].rerrfd));  // TODO rexec is obsoleted by rcmd (reason: rexec sends the unencrypted password across the network)
 #endif /* NFS */
 #endif /* LINUX */
     sprintf(errstr,"Fail to start process on %s!",hosts[hosti].name);
@@ -372,12 +372,12 @@ int mypid()
  */
 void jiacreat(int argc, char **argv)
 {
-  gethosts();
+  gethosts(); // step 1
   if (hostc==0) {
     printf("  No hosts specified!\n");
     exit(0);
   }
-  jia_pid=mypid();
+  jia_pid=mypid();  // step 2: get current host's pid
 
   if (jia_pid==0){ // master does, slave doesn't
     printf("*********Total of %d hosts found!**********\n\n",hostc);
@@ -385,7 +385,7 @@ void jiacreat(int argc, char **argv)
       copyfiles(argc,argv); 
 #endif /* NFS */
     sleep(1);
-    startprocs(argc,argv);
+    startprocs(argc,argv);  // step 3
   } else {  // slave does
     int c;
     optind=1;
