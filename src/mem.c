@@ -77,8 +77,8 @@ void sigsegv_handler();
 #endif /* AIX41 || IRIX62 */
 
 #ifdef LINUX 
-// void sigsegv_handler(int, struct sigcontext);
-void sigsegv_handler(int, siginfo_t *, void *);
+void sigsegv_handler(int, struct sigcontext);
+//void sigsegv_handler(int, siginfo_t *, void *);
 #endif
 
 void getpserver(jia_msg_t *req);
