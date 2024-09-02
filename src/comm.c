@@ -461,7 +461,7 @@ if (statflag==1){
 }
 #endif
 
-  SPACE(1); printf("Enter sigio_handler!\n");
+  printf("\nEnter sigio_handler!\n");
 
   servemsg = 0;
   readfds  = commreq.rcv_set;	
@@ -582,8 +582,7 @@ void asendmsg(jia_msg_t *msg)
   outqt.seqno = commreq.snd_seq[msg->topid];
   outcount++;
   outtail     = (outtail+1)%Maxqueue;
-  //outsendmsg  = (outcount==1)? 1 : 0;
-  outsendmsg = (outcount>0)?1:0;
+  outsendmsg  = (outcount==1)? 1 : 0;
   ENDCS;
   printf("Before outsend(), Out asendmsg! outc=%d, outh=%d, outt=%d\n",outcount,outhead,outtail);
   while (outsendmsg==1) {
