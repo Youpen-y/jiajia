@@ -561,8 +561,6 @@ if (statflag==1){
  */
 void asendmsg(jia_msg_t *msg)
 {
-  printf("222222222222222.111111111111111111.22222222222222222\n");
-  
   int outsendmsg;
 #ifdef DOSTAT
   register unsigned int begin = get_usecs();
@@ -584,7 +582,8 @@ void asendmsg(jia_msg_t *msg)
   outqt.seqno = commreq.snd_seq[msg->topid];
   outcount++;
   outtail     = (outtail+1)%Maxqueue;
-  outsendmsg  = (outcount==1)? 1 : 0;
+  //outsendmsg  = (outcount==1)? 1 : 0;
+  outsendmsg = (outcount>0)?1:0;
   ENDCS;
   printf("Before outsend(), Out asendmsg! outc=%d, outh=%d, outt=%d\n",outcount,outhead,outtail);
   while (outsendmsg==1) {
@@ -624,9 +623,9 @@ void outsend()
  register unsigned int begin;
 #endif
   
-  printf("Enter outsend!\n");
+  printf("\nEnter outsend!\n");
 
-  if (msgprint==1) printmsg(&outqh, 0);
+  if (msgprint==1) printmsg(&outqh, 1);
 
   toproc   = outqh.topid;
   fromproc = outqh.frompid;
@@ -700,10 +699,8 @@ if (statflag==1){
 recv_again:
         // seems that from doesn't assignment value correctly(or no need)
         s= sizeof(from);
-        BEGINCS;
         res = recvfrom(commrep.rcv_fds[toproc], (char *)&rep, Intbytes, 0,
                         (struct sockaddr *)&from, &s);
-        ENDCS;
         if ((res < 0) && (errno == EINTR)) {
           printf("A signal interrupted recvfrom() before any data was available\n");
           goto recv_again;
@@ -720,7 +717,7 @@ recv_again:
     }
   }
 
-  printf("Out outsend!\n");
+  printf("Out outsend!\n\n");
 } 
 
 /**

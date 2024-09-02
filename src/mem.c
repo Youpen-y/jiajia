@@ -292,7 +292,7 @@ unsigned long jia_alloc3(int size, int block, int starthost)
   homepid = starthost;
 
   while (allocsize > 0) {
-    if (jia_pid == homepid) {
+    if (jia_pid == homepid) { // only when current host pid == homepid, use mmap alloc space
       assert((hosts[homepid].homesize+mapsize)<(Homepages*Pagesize),"Too many home pages");
 
       protect = (hostc==1) ? PROT_READ|PROT_WRITE : PROT_READ;
@@ -570,18 +570,17 @@ void sigsegv_handler(int signo, siginfo_t *sip, void *context)
   // writefault = (int) sigctx.err & 2;
   faultaddr = (address_t) sip->si_addr;
   faultaddr = (address_t) ((unsigned long)faultaddr/Pagesize*Pagesize);
-  writefault = sip->si_code & 2;  /* si_code: 1 means that address not mapped to object => 
-                                     si_code: 2 means that invalid permissions for mapped object => */
+  writefault = sip->si_code & 2;  /* si_code: 1 means that address not mapped to object => ()
+                                     si_code: 2 means that invalid permissions for mapped object => ()*/
   #endif 
 
   printf("Shared memory out of range from 0x%x to 0x%x!, faultaddr=0x%x, writefault=0x%x\n",
           Startaddr, Startaddr+globaladdr, faultaddr, writefault);
 
   printf("sig info structure siginfo_t\n");
-  printf("\terrno value: %d \n"
-         "\tsignal err : %d \n"
+  printf("\tsignal err : %d \n"
          "\tsignal code: %d \n"
-         "\t    si_addr: %#x\n", sip->si_errno, sip->si_errno, sip->si_code, sip->si_addr);
+         "\t    si_addr: %#x\n", sip->si_errno, sip->si_code, sip->si_addr);
 
   sprintf(errstr,"Access shared memory out of range from 0x%x to 0x%x!, faultaddr=0x%x, writefault=0x%x", 
                   Startaddr, Startaddr+globaladdr, faultaddr, writefault);
@@ -678,7 +677,11 @@ if (statflag==1){
 #endif
 }
 
-
+/**
+ * @brief getpserver -- 
+ * 
+ * @param req 
+ */
 void getpserver(jia_msg_t *req)
 {
   address_t paddr; 
@@ -687,7 +690,7 @@ void getpserver(jia_msg_t *req)
 
   assert((req->op==GETP)&&(req->topid==jia_pid),"Incorrect GETP Message!");
 
-  paddr=(address_t)stol(req->data);
+  paddr=(address_t)stol(req->data); // getp message data is the page's addr
 /*
  printf("getpage=0x%x from host %d\n",(unsigned long) paddr,req->frompid);
 */
@@ -696,7 +699,7 @@ void getpserver(jia_msg_t *req)
       not be updated, but the page has already been here
       the rdnt item of new home is set to 1 in migpage()*/
   }else{
-    assert((homehost(paddr)==jia_pid),"This should have not been happened! 4");
+    assert((homehost(paddr)==jia_pid),"This should have not been happened!");
     homei=homepage(paddr);
 
     if ((W_VEC==ON)&&(home[homei].wvfull==1)){
@@ -713,7 +716,7 @@ void getpserver(jia_msg_t *req)
   rep->topid=req->frompid;
   rep->temp=0;
   rep->size=0;
-  appendmsg(rep,req->data,Intbytes);
+  appendmsg(rep,req->data,Intbytes);  // reply msg data format [req->data(4bytes), pagedata(4096bytes)], req->data is the page start address
   
   if ((W_VEC==ON)&&(req->temp==1)){int i;
     for (i=0;i<Wvbits;i++){

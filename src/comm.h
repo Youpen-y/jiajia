@@ -89,7 +89,7 @@ typedef struct Jia_Msg {
 	unsigned int op;			/* operation type */
 	unsigned int frompid;		/* from pid */
 	unsigned int topid;			/* to pid */
-        unsigned int temp;      /* Useless */
+        unsigned int temp;      /* Useless (flag to indicate read or write request)*/
 	unsigned int seqno;
         unsigned int index;		/* msg index in msg array */
         unsigned int scope;     /* Inca. no.  used as tag in msg. passing */
