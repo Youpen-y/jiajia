@@ -667,9 +667,7 @@ void getpage(address_t addr,int flag)
   asendmsg(req);
 
   freemsg(req);
-/*
- while(getpwait) ;
-*/
+  while(getpwait) ;
 #ifdef DOSTAT
 if (statflag==1){
   jiastat.getpcnt++;
@@ -742,7 +740,11 @@ void getpserver(jia_msg_t *req)
   freemsg(rep);
 }
 
-
+/**
+ * @brief getpgrantserver -- getpgrant server
+ * 
+ * @param rep 
+ */
 void getpgrantserver(jia_msg_t *rep)
 {
   address_t addr;
@@ -766,7 +768,8 @@ void getpgrantserver(jia_msg_t *rep)
       }
     }
   }else{
-    memcpy(addr,rep->data+datai,Pagesize);
+    memcpy(addr,rep->data+datai,Pagesize);  // TODO:possible bug
+    printf("I have copy the page from remote home to %#x\n", addr);
   }
 
   getpwait=0;
