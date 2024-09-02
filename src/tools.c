@@ -234,7 +234,7 @@ void freemsg(jia_msg_t *msg)
 void appendmsg(jia_msg_t *msg, unsigned char *str, int len)
 {
   assert(((msg->size+len)<=Maxmsgsize),"Message too large");
-  memcp(msg->data+msg->size,str,len);
+  memcpy(msg->data+msg->size,str,len);
   msg->size+=len;
 }
 
