@@ -768,6 +768,7 @@ void getpgrantserver(jia_msg_t *rep)
       }
     }
   }else{
+    printf("addr is %#x \n", addr);
     memcpy(addr,rep->data+datai,Pagesize);  // TODO:possible bug
     printf("I have copy the page from remote home to %#x\n", addr);
   }
