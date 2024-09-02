@@ -77,8 +77,8 @@ void sigsegv_handler();
 #endif /* AIX41 || IRIX62 */
 
 #ifdef LINUX 
-void sigsegv_handler(int, struct sigcontext);
-//void sigsegv_handler(int, siginfo_t *, void *);
+// void sigsegv_handler(int, struct sigcontext);
+void sigsegv_handler(int, siginfo_t *, void *);
 #endif
 
 void getpserver(jia_msg_t *req);
@@ -525,8 +525,8 @@ void sigsegv_handler(int signo, int code, struct sigcontext *scp, char *addr)
 #endif 
 
 #ifdef LINUX
-void sigsegv_handler(int signo, struct sigcontext sigctx)
-// void sigsegv_handler(int signo, siginfo_t *sip, void *context)
+//void sigsegv_handler(int signo, struct sigcontext sigctx)
+void sigsegv_handler(int signo, siginfo_t *sip, void *context)
 #endif 
 {
   address_t faultaddr;
@@ -565,22 +565,22 @@ void sigsegv_handler(int signo, struct sigcontext sigctx)
   #endif 
 
   #ifdef LINUX 
-  faultaddr = (address_t) sigctx.cr2;
-  faultaddr = (address_t) ((unsigned long)faultaddr/Pagesize*Pagesize); // page aligned
-  writefault = (int) sigctx.err & 2;
-  // faultaddr = (address_t) sip->si_addr;
-  // faultaddr = (address_t) ((unsigned long)faultaddr/Pagesize*Pagesize);
-  // writefault = sip->si_code & 2;  /* si_code: 1 means that address not mapped to object => ()
-  //                                    si_code: 2 means that invalid permissions for mapped object => ()*/
+  // faultaddr = (address_t) sigctx.cr2;
+  // faultaddr = (address_t) ((unsigned long)faultaddr/Pagesize*Pagesize); // page aligned
+  // writefault = (int) sigctx.err & 2;
+  faultaddr = (address_t) sip->si_addr;
+  faultaddr = (address_t) ((unsigned long)faultaddr/Pagesize*Pagesize);
+  writefault = sip->si_code & 2;  /* si_code: 1 means that address not mapped to object => ()
+                                     si_code: 2 means that invalid permissions for mapped object => ()*/
   #endif 
 
   printf("Shared memory out of range from 0x%x to 0x%x!, faultaddr=0x%x, writefault=0x%x\n",
           Startaddr, Startaddr+globaladdr, faultaddr, writefault);
 
-  // printf("sig info structure siginfo_t\n");
-  // printf("\tsignal err : %d \n"
-  //        "\tsignal code: %d \n"
-  //        "\t    si_addr: %#x\n", sip->si_errno, sip->si_code, sip->si_addr);
+  printf("sig info structure siginfo_t\n");
+  printf("\tsignal err : %d \n"
+         "\tsignal code: %d \n"
+         "\t    si_addr: %#x\n", sip->si_errno, sip->si_code, sip->si_addr);
 
   sprintf(errstr,"Access shared memory out of range from 0x%x to 0x%x!, faultaddr=0x%x, writefault=0x%x", 
                   Startaddr, Startaddr+globaladdr, faultaddr, writefault);
