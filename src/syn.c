@@ -627,121 +627,133 @@ wtnt_t *appendstackwtnts(jia_msg_t *msg, wtnt_t *ptr)
   return(wnptr);
 }
 
-
+/**
+ * @brief appendlockwtnts -- 
+ * 
+ * @param msg 
+ * @param ptr 
+ * @param acqscope 
+ * @return wtnt_t* 
+ */
 wtnt_t *appendlockwtnts(jia_msg_t *msg, wtnt_t *ptr, int acqscope)
-{int wtnti;
- int full;
- wtnt_t *wnptr;
- 
- full=0;
- wnptr=ptr;
- while ((wnptr!=WNULL)&&(full==0)){
-   if ((msg->size+(wnptr->wtntc*Intbytes))<Maxmsgsize){
-     for (wtnti=0;wtnti<wnptr->wtntc;wtnti++)
-       if ((wnptr->from[wtnti]>acqscope)&&
-           (homehost(wnptr->wtnts[wtnti])!=msg->topid))
-         appendmsg(msg,ltos(wnptr->wtnts[wtnti]),Intbytes);
-     wnptr=wnptr->more;   
-   }else{
-     full=1;
-   }
- }
- return(wnptr);
+{
+  int wtnti;
+  int full;
+  wtnt_t *wnptr;
+  
+  full=0;
+  wnptr=ptr;
+  while ((wnptr!=WNULL)&&(full==0)){
+    if ((msg->size+(wnptr->wtntc*Intbytes))<Maxmsgsize){
+      for (wtnti=0;wtnti<wnptr->wtntc;wtnti++)
+        if ((wnptr->from[wtnti]>acqscope)&&
+            (homehost(wnptr->wtnts[wtnti])!=msg->topid))
+          appendmsg(msg,ltos(wnptr->wtnts[wtnti]),Intbytes);
+      wnptr=wnptr->more;   
+    }else{
+      full=1;
+    }
+  }
+  return(wnptr);
 }
 
 
 void grantlock(long lock, int toproc, int acqscope)
-{jia_msg_t *grant;
- wtnt_t *wnptr; 
- 
- grant=newmsg();
+{
+  jia_msg_t *grant;
+  wtnt_t *wnptr; 
+  
+  grant=newmsg();
 
- grant->frompid=jia_pid;
- grant->topid=toproc;
- grant->scope=locks[lock].scope;
- grant->size=0;
+  grant->frompid=jia_pid;
+  grant->topid=toproc;
+  grant->scope=locks[lock].scope;
+  grant->size=0;
 
- appendmsg(grant,ltos(lock),Intbytes);
+  appendmsg(grant,ltos(lock),Intbytes);
 
- wnptr=locks[lock].wtntp;
- wnptr=appendlockwtnts(grant,wnptr,acqscope);
- while (wnptr!=WNULL){
-   grant->op=INVLD; 
-   asendmsg(grant);
-   grant->size=Intbytes;
-   wnptr=appendlockwtnts(grant,wnptr,acqscope);
- }
+  wnptr=locks[lock].wtntp;
+  wnptr=appendlockwtnts(grant,wnptr,acqscope);
+  while (wnptr!=WNULL){
+    grant->op=INVLD; 
+    asendmsg(grant);
+    grant->size=Intbytes;
+    wnptr=appendlockwtnts(grant,wnptr,acqscope);
+  }
 
- grant->op=ACQGRANT; 
- asendmsg(grant);
- 
- freemsg(grant);
+  grant->op=ACQGRANT; 
+  asendmsg(grant);
+  
+  freemsg(grant);
 }
 
 
 void acqserver(jia_msg_t *req)
-{long lock;
- int wtnti;
- 
- assert((req->op==ACQ)&&(req->topid==jia_pid),"Incorrect ACQ message!");
- 
- lock=(int) stol(req->data);
- assert((lock%hostc==jia_pid),"Incorrect home of lock!");
- 
- locks[lock].acqs[locks[lock].acqc]=req->frompid;
- locks[lock].acqscope[locks[lock].acqc]=req->scope;
- locks[lock].acqc++;
+{
+  long lock;
+  int wtnti;
+  
+  assert((req->op==ACQ)&&(req->topid==jia_pid),"Incorrect ACQ message!");
+  
+  lock=(int) stol(req->data);
+  assert((lock%hostc==jia_pid),"Incorrect home of lock!");
+  
+  locks[lock].acqs[locks[lock].acqc]=req->frompid;
+  locks[lock].acqscope[locks[lock].acqc]=req->scope;
+  locks[lock].acqc++;
 
- if (locks[lock].acqc==1) 
-   grantlock(lock,locks[lock].acqs[0],locks[lock].acqscope[0]);
+  if (locks[lock].acqc==1) 
+    grantlock(lock,locks[lock].acqs[0],locks[lock].acqscope[0]);
 }
 
 
 void relserver(jia_msg_t *req)
-{long lock;
- int acqi;
- 
- assert((req->op==REL)&&(req->topid==jia_pid),"Incorrect REL Message!"); 
+{
+  long lock;
+  int acqi;
+  
+  assert((req->op==REL)&&(req->topid==jia_pid),"Incorrect REL Message!"); 
 
- lock=(int) stol(req->data);
- assert((lock%hostc==jia_pid),"Incorrect home of lock!");
- assert((req->frompid==locks[lock].acqs[0]),"This should not have happened! 6");
+  lock=(int) stol(req->data);
+  assert((lock%hostc==jia_pid),"Incorrect home of lock!");
+  assert((req->frompid==locks[lock].acqs[0]),"This should not have happened! 6");
 
- if (req->scope>locks[hidelock].myscope) noclearlocks=1;
+  if (req->scope>locks[hidelock].myscope) noclearlocks=1;
 
- recordwtnts(req); 
- locks[lock].scope++;
+  recordwtnts(req); 
+  locks[lock].scope++;
 
- for (acqi=0;acqi<(locks[lock].acqc-1);acqi++){
-   locks[lock].acqs[acqi]=locks[lock].acqs[acqi+1];
-   locks[lock].acqscope[acqi]=locks[lock].acqscope[acqi+1];
- }
- locks[lock].acqc--;
- 
- if (locks[lock].acqc>0) 
-   grantlock(lock,locks[lock].acqs[0],locks[lock].acqscope[0]);
+  for (acqi=0;acqi<(locks[lock].acqc-1);acqi++){
+    locks[lock].acqs[acqi]=locks[lock].acqs[acqi+1];
+    locks[lock].acqscope[acqi]=locks[lock].acqscope[acqi+1];
+  }
+  locks[lock].acqc--;
+  
+  if (locks[lock].acqc>0) 
+    grantlock(lock,locks[lock].acqs[0],locks[lock].acqscope[0]);
 }
 
 
 wtnt_t *appendbarrwtnts(jia_msg_t *msg, wtnt_t *ptr)
-{int wtnti;
- int full;
- wtnt_t *wnptr;
- 
- full=0;
- wnptr=ptr;
- while ((wnptr!=WNULL)&&(full==0)){
-   if ((msg->size+(wnptr->wtntc*Intbytes*2))<Maxmsgsize){
-     for (wtnti=0;wtnti<wnptr->wtntc;wtnti++){
-       appendmsg(msg,ltos(wnptr->wtnts[wtnti]),Intbytes);
-       appendmsg(msg,ltos(wnptr->from[wtnti]),Intbytes);
-     }
-     wnptr=wnptr->more;   
-   }else{
-     full=1;
-   }
- }
- return(wnptr);
+{
+  int wtnti;
+  int full;
+  wtnt_t *wnptr;
+  
+  full=0;
+  wnptr=ptr;
+  while ((wnptr!=WNULL)&&(full==0)){
+    if ((msg->size+(wnptr->wtntc*Intbytes*2))<Maxmsgsize){
+      for (wtnti=0;wtnti<wnptr->wtntc;wtnti++){
+        appendmsg(msg,ltos(wnptr->wtnts[wtnti]),Intbytes);
+        appendmsg(msg,ltos(wnptr->from[wtnti]),Intbytes);
+      }
+      wnptr=wnptr->more;   
+    }else{
+      full=1;
+    }
+  }
+  return(wnptr);
 }
 
 /**
@@ -884,101 +896,103 @@ void migcheckcache()
 
 
 void migarrangehome()
-{int end,i,homei;
+{
+  int end,i,homei;
 
- end=0;
- for (i=0;((i<Homepages)&&(end==0));i++){
-   if (home[i].addr==(address_t)0){
-     for (homei=i+1;(homei<Homepages)&&(home[homei].addr==(address_t)0);homei++);
-     if (homei<Homepages){
-       page[((unsigned int)home[homei].addr-Startaddr)/Pagesize].homei=i;
-       home[i].addr=home[homei].addr;
-       home[i].wtnt=home[homei].wtnt;
-       home[i].rdnt=home[homei].rdnt;
-       home[homei].addr=(address_t)0;
-       if (W_VEC==ON){wtvect_t *temp;
-         temp=home[i].wtvect;
-         home[i].wtvect=home[homei].wtvect;
-         home[homei].wtvect=temp; 
-         home[i].wvfull=home[homei].wvfull;
-       }
-     }else{
-       end=1;
-     }
-   }
- }  
- hosts[jia_pid].homesize=(i-1)*Pagesize;
+  end=0;
+  for (i=0;((i<Homepages)&&(end==0));i++){
+    if (home[i].addr==(address_t)0){
+      for (homei=i+1;(homei<Homepages)&&(home[homei].addr==(address_t)0);homei++);
+      if (homei<Homepages){
+        page[((unsigned int)home[homei].addr-Startaddr)/Pagesize].homei=i;
+        home[i].addr=home[homei].addr;
+        home[i].wtnt=home[homei].wtnt;
+        home[i].rdnt=home[homei].rdnt;
+        home[homei].addr=(address_t)0;
+        if (W_VEC==ON){wtvect_t *temp;
+          temp=home[i].wtvect;
+          home[i].wtvect=home[homei].wtvect;
+          home[homei].wtvect=temp; 
+          home[i].wvfull=home[homei].wvfull;
+        }
+      }else{
+        end=1;
+      }
+    }
+  }  
+  hosts[jia_pid].homesize=(i-1)*Pagesize;
 // printf("New homepages=%d\n",hosts[jia_pid].homesize/Pagesize);
 }
 
 
 void migpage(unsigned long addr,int frompid,int topid)
-{int pagei,homei,cachei;
+{
+  int pagei,homei,cachei;
 
- pagei=(addr-Startaddr)/Pagesize;
+  pagei=(addr-Startaddr)/Pagesize;
 /*
  printf("Mig page 0x%x from host %d to %d\n",pagei,frompid,topid);
 */
 
- if (topid==jia_pid) {       /*New Home*/
-   cachei=page[pagei].cachei;
-   for (homei=0;(homei<Homepages)&&(home[homei].addr!=(address_t)0);homei++);
-  
-   if (homei<Homepages){
-     home[homei].addr=(address_t)addr;
-     home[homei].wtnt=(cache[cachei].wtnt==0)? 2 : 3;
-     home[homei].rdnt=1;
-     if (W_VEC==ON) setwtvect(homei,WVFULL);
-     page[pagei].homei=homei;
-   }else{
-     assert(0,"Home exceed in home migration");
-   }
+  if (topid==jia_pid) {       /*New Home*/
+    cachei=page[pagei].cachei;
+    for (homei=0;(homei<Homepages)&&(home[homei].addr!=(address_t)0);homei++);
+    
+    if (homei<Homepages){
+      home[homei].addr=(address_t)addr;
+      home[homei].wtnt=(cache[cachei].wtnt==0)? 2 : 3;
+      home[homei].rdnt=1;
+      if (W_VEC==ON) setwtvect(homei,WVFULL);
+      page[pagei].homei=homei;
+    }else{
+      assert(0,"Home exceed in home migration");
+    }
 
-   if (cachei<Cachepages){  /*Old Cache*/
-     /*memprotect((caddr_t)addr,Pagesize,PROT_READ); */
-     page[pagei].cachei=Cachepages;
-     if (cache[cachei].state==RW) freetwin(&(cache[cachei].twin));
-     cache[cachei].state=UNMAP;
-     cache[cachei].wtnt=0;
-     cache[cachei].addr=0;
-   }else{
-     assert(0,"This should not have happened---MIG");
-   }
+    if (cachei<Cachepages){  /*Old Cache*/
+      /*memprotect((caddr_t)addr,Pagesize,PROT_READ); */
+      page[pagei].cachei=Cachepages;
+      if (cache[cachei].state==RW) freetwin(&(cache[cachei].twin));
+      cache[cachei].state=UNMAP;
+      cache[cachei].wtnt=0;
+      cache[cachei].addr=0;
+    }else{
+      assert(0,"This should not have happened---MIG");
+    }
 #ifdef DOSTAT
 if (statflag==1){
    jiastat.migincnt++;
 }
 #endif
- }else if (frompid==jia_pid){   /*Old Home*/
-   homei=homepage(addr);
-   assert((unsigned long)home[homei].addr==addr,"MIG ERROR");
+  }else if (frompid==jia_pid){   /*Old Home*/
+    homei=homepage(addr);
+    assert((unsigned long)home[homei].addr==addr,"MIG ERROR");
 
-   for (cachei=0;((cachei<Cachepages)&&
-       (cache[cachei].state!=UNMAP)&&(cache[cachei].state!=INV));cachei++);
+    for (cachei=0;((cachei<Cachepages)&&
+        (cache[cachei].state!=UNMAP)&&(cache[cachei].state!=INV));cachei++);
 
-   if (cachei<Cachepages){     /*New Cache*/ 
-     if (cache[cachei].state==INV) flushpage(cachei);
-     cache[cachei].state=RO;
-     cache[cachei].wtnt=home[homei].wtnt&1;
-     cache[cachei].addr=(address_t)addr;
-     page[pagei].cachei=cachei;
-   }else{
-     memunmap((address_t)addr,Pagesize);
-   }  
- 
-   home[homei].wtnt=0;
-   home[homei].rdnt=0;
-   home[homei].addr=(address_t)0;
-   if (W_VEC==ON) setwtvect(homei,WVFULL);
-   page[pagei].homei=Homepages;
+    if (cachei<Cachepages){     /*New Cache*/ 
+      if (cache[cachei].state==INV) flushpage(cachei);
+      cache[cachei].state=RO;
+      cache[cachei].wtnt=home[homei].wtnt&1;
+      cache[cachei].addr=(address_t)addr;
+      page[pagei].cachei=cachei;
+    }else{
+      memunmap((address_t)addr,Pagesize);
+    }  
+  
+    home[homei].wtnt=0;
+    home[homei].rdnt=0;
+    home[homei].addr=(address_t)0;
+    if (W_VEC==ON) setwtvect(homei,WVFULL);
+    page[pagei].homei=Homepages;
 
 #ifdef DOSTAT
 if (statflag==1){
    jiastat.migoutcnt++;
 }
 #endif
- }
- page[pagei].homepid=topid;
+  }
+  page[pagei].homepid=topid;
 }
 
 
@@ -1069,14 +1083,15 @@ void barrgrantserver(jia_msg_t *req)
 
 
 void acqgrantserver(jia_msg_t *req)
-{int lock;
+{
+  int lock;
  
- assert((req->op==ACQGRANT)&&(req->topid==jia_pid),"Incorrect ACQGRANT Message!"); 
- invalidate(req);
+  assert((req->op==ACQGRANT)&&(req->topid==jia_pid),"Incorrect ACQGRANT Message!"); 
+  invalidate(req);
 
- lock=(int) stol(req->data);
- locks[lock].myscope=req->scope;
- acqwait=0;
+  lock=(int) stol(req->data);
+  locks[lock].myscope=req->scope;
+  acqwait=0;
 }
 
 

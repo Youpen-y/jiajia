@@ -770,7 +770,7 @@ void getpgrantserver(jia_msg_t *rep)
     }
   }else{
     printf("addr is %#x , rep->data+datai = %#x\n", addr, rep->data+datai);
-    memcpy(addr,rep->data+datai,Pagesize);  // TODO:possible bug
+    memcpy((unsigned char *)addr,rep->data+datai,Pagesize);  // TODO:possible bug
     printf("I have copy the page from remote home to %#x\n", addr);
   }
 

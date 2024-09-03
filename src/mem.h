@@ -59,7 +59,7 @@
 #define   homehost(addr) page[((unsigned long)(addr)-Startaddr)/Pagesize].homepid   /* get home host according to addr */
 #define   homepage(addr) page[((unsigned long)(addr)-Startaddr)/Pagesize].homei     /* get home page index according to addr */
 
-typedef unsigned char* address_t; 
+typedef unsigned char* address_t;
 
 typedef unsigned long  wtvect_t;
 #define   Wvbits       32
@@ -90,7 +90,7 @@ typedef struct{
            pagestate_t        state;      /*cache state: UNMAP, INV, RO, RW*/
            address_t          addr;       /*cached page address */
            address_t          twin;       /*cached page's twin's address */
-           char               wtnt;       /* */
+           char               wtnt;       /*write notice*/
               } jiacache_t;
 
 typedef struct{

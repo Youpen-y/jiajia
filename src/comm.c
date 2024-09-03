@@ -112,12 +112,12 @@ unsigned int interruptflag=0;
 /* following definitions are defined by Shi */
 unsigned long reqports[Maxhosts][Maxhosts];   // every host has Maxhosts request ports
 unsigned long repports[Maxhosts][Maxhosts];   // every host has Maxhosts reply ports
-CommManager commreq, commrep;
+CommManager commreq, commrep; // commreq used to send and recv request, commrep used to send and recv reply
 unsigned long timeout_time;
-static struct timeval   polltime = { 0, 0 };
-jia_msg_t inqueue[Maxqueue], outqueue[Maxqueue];
+static struct timeval polltime = { 0, 0 };
+jia_msg_t inqueue[Maxqueue], outqueue[Maxqueue];  // inqueue used to store in-msg, outqueue used to store out-msg
 volatile int inhead, intail, incount;
-volatile int outhead, outtail, outcount;  /*head msg, tail msg, msg count in out queue*/
+volatile int outhead, outtail, outcount;  /* head msg, tail msg, msg count in out queue */
 long   Startport;
 
 // void    initcomm();
@@ -149,11 +149,12 @@ int oldsigiomask;
 
 /*---------------------------------------------------------*/
 /**
- * @brief req_fdcreate -- request socket file descriptor create and bind it to an address (ip/port combination)
+ * @brief req_fdcreate -- creat socket file descriptor used to send and recv request
  * 
  * @param i the index of host
- * @param flag 1 means sin_port = 0, random; others means specified sin_port = reqports[jia_pid][i]
+ * @param flag 1 means sin_port = 0, random port; others means specified sin_port = reqports[jia_pid][i]
  * @return int socket file descriptor
+ * creat socket file descriptor(fd) used to send and recv request and bind it to an address (ip/port combination)
  */
 int req_fdcreate(int i, int flag)
 {   
@@ -182,7 +183,13 @@ int req_fdcreate(int i, int flag)
   return fd;
 }
 
-/*------------------------------------------------------------*/
+/**
+ * @brief rep_fdcreate -- create socket file descriptor(fd) used to send and recv reply 
+ * 
+ * @param i the index of host [0, hostc)
+ * @param flag equals to 1 means fd with random port, 0 means fd with specified port(repports[jia_pid][i])
+ * @return int socket file descriptor(fd)
+ */
 int rep_fdcreate(int i, int flag)
 {
   int         fd,res;
@@ -213,7 +220,15 @@ int rep_fdcreate(int i, int flag)
   return fd;
 }
 
-/*------------------------------------------------------------*/
+
+/**
+ * @brief initcomm -- initialize communication setting
+ * step1: initialize msg array and correpsonding flag to indicate busy or free
+ * step2: initialize pointer that indicate head, tail and count of inqueue and outqueue
+ * step3: register signal handler (SIGIO, SIGINT)
+ * step4: initialize comm ports (reqports, repports)
+ * step5: initialize comm manager (commreq, commrep)
+ */
 void initcomm()
 { 
   int i,j,fd;
@@ -327,7 +342,7 @@ void initcomm()
   FD_ZERO(&(commreq.rcv_set));
   for (i = 0; i < Maxhosts; i++) { 
     fd = req_fdcreate(i,0); // create socket and bind it to [INADDR_ANY, reqports[jia_pid][i]]
-    commreq.rcv_fds[i] = fd;
+    commreq.rcv_fds[i] = fd;  // request from (host i) is will be receive from commreq.rcv_fds[i] (whose port = reqports[jia_pid][i]])
     FD_SET(fd, &commreq.rcv_set);
     commreq.rcv_maxfd = MAX(fd+1, commreq.rcv_maxfd);
 
@@ -335,11 +350,11 @@ void initcomm()
        assert0(0,"initcomm()-->fcntl(..F_SETOWN..)");
 
     // if (0 > fcntl(commreq.rcv_fds[i], F_SETFL, FASYNC|FNDELAY))
-    if (0 > fcntl(commreq.rcv_fds[i], F_SETFL, O_ASYNC|O_NONBLOCK|O_APPEND))
+    if (0 > fcntl(commreq.rcv_fds[i], F_SETFL, O_ASYNC|O_NONBLOCK))
        assert0(0,"initcomm()-->fcntl(..F_SETFL..)");
 
     fd= req_fdcreate(i,1);
-    commreq.snd_fds[i] = fd;
+    commreq.snd_fds[i] = fd;  // snd_fds socket fd with random port
     FD_SET(fd, &commreq.snd_set);
     commreq.snd_maxfd = MAX(fd+1, commreq.snd_maxfd);
   }
@@ -357,19 +372,18 @@ void initcomm()
 
   for(i=0; i<Maxhosts; i++) { 
     fd= rep_fdcreate(i,0);
-    commrep.rcv_fds[i]= fd;
+    commrep.rcv_fds[i]= fd;   // reply from (host i) will be received from commrep.rcv_fds[i] (ports = repports[jiapid][i])
     FD_SET(fd, &(commrep.rcv_set));
     commrep.rcv_maxfd = MAX(fd+1, commrep.rcv_maxfd);
  
-    fd= rep_fdcreate(i,1);
-    commrep.snd_fds[i] = fd;
+    fd= rep_fdcreate(i,1);  // fd with random port
+    commrep.snd_fds[i] = fd;  // the reply to (host i) will be sended to snd_fds[i] (whose port is random)
     FD_SET(fd, &commrep.snd_set);
     commrep.snd_maxfd = MAX(fd+1, commrep.snd_maxfd);
   }
 }
 
 
-/*----------------------------------------------------------*/
 /**
  * @brief msgserver -- according to inqueue head msg.op choose different server
  * 
@@ -412,12 +426,15 @@ void msgserver()
                               printmsg(&inqh,1);
                               assert0(0,"msgserver(): Incorrect Message!");
                             }
-                            break;   
+                            break;
      }
      SPACE(1);printf("Out servermsg!\n");
 }
 
-/*----------------------------------------------------------*/
+/**
+ * @brief sigint_handler -- sigint handler
+ * 
+ */
 void sigint_handler()
 {
   	assert(0,"Exit by user!!\n");
@@ -468,31 +485,30 @@ if (statflag==1){
   polltime.tv_sec  = 0;
   polltime.tv_usec = 0;
   // polltime equals 0, select will return immediately
-  res = select(commreq.rcv_maxfd, &readfds, NULL, NULL, &polltime);
+  res = select(commreq.rcv_maxfd, &readfds, NULL, NULL, &polltime); // whether there is a requested from other hosts 
   while (res > 0) {
     // handle ready fd(from other hosts)
-    for (i=0; i<hostc; i++) 
+    for (i=0; i<hostc; i++) {
       if (i!=jia_pid)  
-        if (FD_ISSET(commreq.rcv_fds[i], &readfds)) {
-      assert0((incount<Maxqueue), "sigio_handler(): Inqueue exceeded!");
+        if (FD_ISSET(commreq.rcv_fds[i], &readfds)) { // caught a request from host i
+          assert0((incount<Maxqueue), "sigio_handler(): Inqueue exceeded!");
 
-      s=sizeof(from);
-      // receive data from host i
-      res=recvfrom(commreq.rcv_fds[i],(char *)&(inqt),Maxmsgsize+Msgheadsize,0,
-                                 (struct sockaddr *)&from, &s);
-      assert0((res>=0), "sigio_handler()-->recvfrom()");
+          s=sizeof(from);
+          // receive data from host i and store it into inqueue[intail], 
+          res=recvfrom(commreq.rcv_fds[i],(char *)&(inqt),Maxmsgsize+Msgheadsize,0,(struct sockaddr *)&from, &s);
+          assert0((res>=0), "sigio_handler()-->recvfrom()");
 
-      to.sin_family = AF_INET;
-      memcpy(&to.sin_addr,hosts[inqt.frompid].addr,hosts[inqt.frompid].addrlen);
-      to.sin_port = htons(repports[inqt.frompid][inqt.topid]);
+          to.sin_family = AF_INET;
+          memcpy(&to.sin_addr, hosts[inqt.frompid].addr, hosts[inqt.frompid].addrlen);
+          to.sin_port = htons(repports[inqt.frompid][inqt.topid]);
       
-      // send ack(actually seqno) to host i
-      res = sendto(commrep.snd_fds[i],(char *)&(inqt.seqno),sizeof(inqt.seqno),0,
-                         (struct sockaddr *)&to, sizeof(to));
-      assert0((res!=-1),"sigio_handler()-->sendto() ACK");
+          // send ack(actually seqno(4bytes)) to host i
+          res = sendto(commrep.snd_fds[i],(char *)&(inqt.seqno),sizeof(inqt.seqno),0,
+                            (struct sockaddr *)&to, sizeof(to));
+          assert0((res!=-1),"sigio_handler()-->sendto() ACK");
 
-      // new msg's seqno is greater than the former's from the same host
-      if (inqt.seqno>commreq.rcv_seq[i]) {
+          // new msg's seqno is greater than the former's from the same host
+          if (inqt.seqno>commreq.rcv_seq[i]) {
 #ifdef DOSTAT
 if (statflag==1){
         if (inqt.frompid != inqt.topid) {
@@ -501,22 +517,22 @@ if (statflag==1){
         }
 }
 #endif
-        commreq.rcv_seq[i] = inqt.seqno;
-        if (msgprint==1) printmsg(&inqt,1);
-        BEGINCS;
-        intail=(intail+1)%Maxqueue;
-        incount++;
-        if (incount==1) servemsg=1;
-        ENDCS;
-      }else {
-        if (msgprint==1) printmsg(&inqt,1);
-        printf("Receive resend message!\n");
+          commreq.rcv_seq[i] = inqt.seqno;  // update seqno from host i
+          if (msgprint==1) printmsg(&inqt,1);
+          BEGINCS;  // modify global variables (mask io signal)
+          intail=(intail+1)%Maxqueue;
+          incount++;
+          if (incount==1) servemsg=1;
+          ENDCS;
+          }else {
+            if (msgprint==1) printmsg(&inqt,1);
+            printf("Receive resend message!\n");
 #ifdef DOSTAT
         jiastat.resentcnt++;
 #endif
-      }
+          }
+        }
     }
-
     // check whether there are more data or not
     readfds = commreq.rcv_set;	
     polltime.tv_sec=0;
@@ -577,7 +593,7 @@ void asendmsg(jia_msg_t *msg)
 
   BEGINCS;
   assert0((outcount<Maxqueue), "asendmsg(): Outqueue exceeded!");
-  memcpy(&(outqt), msg, Msgheadsize+msg->size); // copy msg to outqueue[tail]
+  memcpy(&(outqt), msg, Msgheadsize+msg->size); // copy msg to outqueue[outtail]
   commreq.snd_seq[msg->topid]++;
   outqt.seqno = commreq.snd_seq[msg->topid];
   outcount++;
@@ -585,7 +601,7 @@ void asendmsg(jia_msg_t *msg)
   outsendmsg  = (outcount==1)? 1 : 0;
   ENDCS;
   printf("Before outsend(), Out asendmsg! outc=%d, outh=%d, outt=%d\n",outcount,outhead,outtail);
-  while (outsendmsg==1) {
+  while (outsendmsg==1) { // there is msg need to be sended in outqueue
     outsend();
     BEGINCS;
     outhead   = (outhead+1)%Maxqueue;
@@ -603,7 +619,7 @@ if (statflag==1){
 }
 
 /**
- * @brief outsend -- 
+ * @brief outsend -- outsend the outqueue[outhead] msg
  * 
  */
 void outsend()
@@ -631,7 +647,7 @@ void outsend()
   printf("outc=%d, outh=%d, outt=%d\n",outcount,outhead,outtail);
   printf("outqueue[outhead].topid = %d, outqueue[outhead].frompid = %d\n", toproc, fromproc);
   
-  if (toproc == fromproc) { // single machine
+  if (toproc == fromproc) { // single machine communication
     BEGINCS;
     assert0((incount<=Maxqueue), "outsend(): Inqueue exceeded!");
     commreq.rcv_seq[toproc] = outqh.seqno;
@@ -652,7 +668,7 @@ void outsend()
       servemsg=(incount>0)? 1 : 0;
       ENDCS;
     }
-  }else{
+  }else{ // comm between different hosts
     msgsize=outqh.size+Msgheadsize;   
 #ifdef DOSTAT
 if (statflag==1){
@@ -672,7 +688,7 @@ if (statflag==1){
 
     printf("commreq.snd_fds[toproc] = %d\n", commreq.snd_fds[toproc]);
     printf("commreq.rcv_fds[toproc] = %d\n", commreq.rcv_fds[toproc]);
-    while ((retries_num<MAX_RETRIES) && (sendsuccess!=1)) {
+    while ((retries_num<MAX_RETRIES) && (sendsuccess!=1)) { // retransimission
       BEGINCS;
       res=sendto(commreq.snd_fds[toproc], (char *)&(outqh), msgsize, 0,
                     (struct sockaddr *)&to, sizeof(to));
@@ -683,7 +699,7 @@ if (statflag==1){
       start = jia_current_time();
       end  = start + TIMEOUT;
 
-      while ((jia_current_time()<end) && (arrived!=1)){
+      while ((jia_current_time()<end) && (arrived!=1)){ // wait for ack
         FD_ZERO(&readfds);
         FD_SET(commrep.rcv_fds[toproc], &readfds);
         polltime.tv_sec=0;
@@ -696,7 +712,6 @@ if (statflag==1){
       printf("arrived = %d\n", arrived);
       if (arrived == 1) {
 recv_again:
-        // seems that from doesn't assignment value correctly(or no need)
         s= sizeof(from);
         res = recvfrom(commrep.rcv_fds[toproc], (char *)&rep, Intbytes, 0,
                         (struct sockaddr *)&from, &s);
@@ -704,10 +719,13 @@ recv_again:
           printf("A signal interrupted recvfrom() before any data was available\n");
           goto recv_again;
         }
-        if ((res!=-1)&&(rep==outqh.seqno)) sendsuccess=1;
+        if ((res!=-1)&&(rep==outqh.seqno)){
+          sendsuccess=1;
+        }
       }
       retries_num++;
     }
+
     if (sendsuccess!=1) {
       printf("I am host %d, hostname = %s, I am running outsend() function\n", jia_pid, hosts[jia_pid].name);
       sprintf(errstr,"I Can't asend message(%d,%d) to host %d!", outqh.op, outqh.seqno, toproc); 
@@ -720,49 +738,56 @@ recv_again:
 } 
 
 /**
- * @brief bsendmsg -- 
+ * @brief bsendmsg -- broadcast msg
  * 
  * @param msg 
  */
 void bsendmsg(jia_msg_t *msg)
 {
-  unsigned long root, level;
+  unsigned int root, level;
 
-  msg->op += BCAST;
+  msg->op += BCAST; // op >= BCAST, always call bcastserver
 
-  root=jia_pid;
+  root = jia_pid;   // current host as root
 
-  if (hostc==1){
-    level=1;
-  }else{
-    for (level=0;(1<<level)<hostc;level++);
+  if (hostc == 1) { // single machine
+    level = 1;
+  } else {
+    for(level=0; (1<<level)<hostc; level++)
+      ; // TODO: some problem here (hostc==2, level equals 1 too)
   }
 
-  msg->temp=((root & 0xffff) <<16) | (level & 0xffff);
+  msg->temp = ((root & 0xffff)<<16) | (level & 0xffff);
 
   bcastserver(msg); 
 }
 
-
+/**
+ * @brief bcastserver -- 
+ * 
+ * @param msg 
+ */
 void bcastserver(jia_msg_t *msg)
 {
-  int mypid,child1,child2;
+  int mypid, child1, child2;
   int rootlevel, root, level;
 
-  rootlevel=msg->temp;
-  root= (rootlevel >> 16) & 0xffff;
-  level=rootlevel & 0xffff; 
+  rootlevel = msg->temp;
+  root      = (rootlevel >> 16) & 0xffff;
+  level     = rootlevel & 0xffff; 
   level--;
 
-  mypid=((jia_pid-root)>=0) ? (jia_pid-root) : (jia_pid-root+hostc);
-  child1=mypid;
-  child2=mypid+(1<<level);
+  mypid  = ((jia_pid-root)>=0) ? (jia_pid-root) : (jia_pid-root+hostc);
+  child1 = mypid;
+  child2 = mypid+(1<<level);
 
-  if (level==0) msg->op-=BCAST;
+  if (level==0) {
+    msg->op-=BCAST;
+  }
   msg->temp=((root & 0xffff) <<16) | (level & 0xffff);
   msg->frompid=jia_pid;
 
-  if (child2<hostc){
+  if (child2<hostc) {
     msg->topid=(child2+root)%hostc;
     asendmsg(msg); 
   }

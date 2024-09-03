@@ -99,7 +99,7 @@ void inittools()
   B_CAST=OFF;
   LOAD_BAL=OFF;
   W_VEC=OFF; 
-  RDMA_SUPPORT=OFF;
+  RDMA_SUPPORT=OFF;   // TODO: RDMA_SUPPORT
 }
 
 
@@ -132,18 +132,19 @@ void assert(int cond, char *amsg)
 {
   int hosti;
 
-  if (!cond){ // if condition is false then ...
+  if (!cond){ // if condition is false then send JIAEXIT msg to all hosts
     assertmsg.op=JIAEXIT;
     assertmsg.frompid=jia_pid; 
     memcpy(assertmsg.data,amsg,strlen(amsg));
     assertmsg.data[strlen(amsg)]='\0';
     assertmsg.size=strlen(amsg)+1;
-    for (hosti=0;hosti<hostc;hosti++)
+    for (hosti=0;hosti<hostc;hosti++){
       if (hosti!=jia_pid){
         assertmsg.topid=hosti;
         asendmsg(&assertmsg);
       }
-    assertmsg.topid=jia_pid;
+    }
+    assertmsg.topid=jia_pid;  // self send JIAEXIT msg in the last
     asendmsg(&assertmsg);
   } 
 }
@@ -158,7 +159,8 @@ void assert(int cond, char *amsg)
 void jiaexitserver(jia_msg_t *req)
 {
   printf("Assert error from host %d --- %s\n",req->frompid, (char*)req->data);
-  fflush(stderr); fflush(stdout);
+  fflush(stderr);
+  fflush(stdout);
   exit(-1);
 }
 

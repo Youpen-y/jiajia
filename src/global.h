@@ -48,7 +48,7 @@
 #ifndef Cachepages
 #define Cachepages 1024             /* cache size in number of pages */
 #endif
-#define   Startaddr   0x60000000    /* start virtual address from which the allocation of shared space starts */
+#define   Startaddr   0x600000000000    /* start virtual address from which the allocation of shared space starts */
 #define   Maxmemsize  0x8000000     /* max number of bytes of the shared memory 128MB, [Startaddr, Startaddr+Maxmemsize) */
 #define   Maxmempages (Maxmemsize/Pagesize) /* max number of pages of the shared memory£¬ 32K */
 

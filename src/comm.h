@@ -41,14 +41,15 @@
 #include "global.h"
 #include "init.h"
 
-#define TIMEOUT      1000
-#define MAX_RETRIES  64
+#define TIMEOUT      1000	/* used to wait for ack */
+#define MAX_RETRIES  64 	/* number of retransmissions */
 
-#define Maxmsgsize   (40960-Msgheadsize) 
-#define Msgheadsize  32
-#define Maxmsgs      8 
-#define Maxqueue     32			/* size of input and output queue for communication (>= 2*maxhosts)*/
+#define Msgheadsize  32 	/* fixed header of msg */
+#define Maxmsgsize   (40960-Msgheadsize)	/* data size of msg */
+#define Maxmsgs      8 		/* */
+#define Maxqueue     32		/* size of input and output queue for communication (>= 2*maxhosts)*/
 
+/* msg operation (type) */
 #define  DIFF      0
 #define  DIFFGRANT 1     
 #define  GETP      2  
@@ -90,7 +91,7 @@ typedef struct Jia_Msg {
 	unsigned int frompid;		/* from pid */
 	unsigned int topid;			/* to pid */
         unsigned int temp;      /* Useless (flag to indicate read or write request)*/
-	unsigned int seqno;
+	unsigned int seqno;			/* sequence number */
         unsigned int index;		/* msg index in msg array */
         unsigned int scope;     /* Inca. no.  used as tag in msg. passing */
 	unsigned int size;			/* data size */
@@ -105,12 +106,12 @@ typedef struct CommManager{
     	int                 snd_fds[Maxhosts];		// send file descriptor
    		fd_set              snd_set;				// send fd_set, use with `select`
     	int                 snd_maxfd;				// max_fd, use with `select`
-    	unsigned            snd_seq[Maxhosts];		// 
+    	unsigned            snd_seq[Maxhosts];		// sequence number that used to acknowledge
 
     	int                 rcv_fds[Maxhosts];		// read file descriptor
     	fd_set              rcv_set;				// read fd_set
     	int                 rcv_maxfd;				// max_fd, use with `select`
-    	unsigned            rcv_seq[Maxhosts];
+    	unsigned            rcv_seq[Maxhosts];		// sequence number
 } CommManager;
 
 

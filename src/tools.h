@@ -23,4 +23,5 @@ wtnt_t *newwtnt();
 void newtwin(address_t *twin);
 void freetwin(address_t *twin);
 void emptyprintf();
+
 #endif  /* TOOLS_H */

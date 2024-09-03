@@ -481,7 +481,9 @@ void jia_init(int argc, char **argv)
   rl.rlim_cur=Maxmemsize;
   rl.rlim_max=Maxmemsize;
   setrlimit(RLIMIT_DATA,&rl);   /* set maximum size of process's data segment */
-  
+
+  redirstdio(argc,argv); /*redirect slave's output*/
+
   initmem();
   initsyn();
   initcomm();
@@ -498,7 +500,7 @@ void jia_init(int argc, char **argv)
 #else
   sleep(2);
 #endif
-  redirstdio(argc,argv);
+
 
   if(jia_pid != 0){ // slave does
     printf("I am %d, running here\n", jia_pid);
