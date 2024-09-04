@@ -594,7 +594,7 @@ void asendmsg(jia_msg_t *msg)
   printf("Enter asendmsg! outc=%d, outh=%d, outt=%d\n",
                outcount, outhead, outtail);
 
-  printmsg(msg, 1);
+  // printmsg(msg, 1);
 
   BEGINCS;
   assert0((outcount<Maxqueue), "asendmsg(): Outqueue exceeded!");
