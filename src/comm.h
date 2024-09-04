@@ -116,6 +116,7 @@ typedef struct CommManager{
 
 
 /* function declaration*/
+
 void initcomm();
 int req_fdcreate(int, int);
 int rep_fdcreate(int, int);

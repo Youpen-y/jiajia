@@ -110,7 +110,7 @@ jiahome_t       home[Homepages+1];    /* host owned page */
 jiacache_t      cache[Cachepages+1];  /* host cached page */
 jiapage_t       page[Maxmempages];    /* global page space */
 
-unsigned long   globaladdr;
+unsigned long   globaladdr; /* [0, Maxmemsize)*/
 long            jiamapfd;   /* file descriptor of the file that mapped to process's virtual address space */
 volatile int getpwait;
 volatile int diffwait;
@@ -121,18 +121,29 @@ jia_msg_t *diffmsg[Maxhosts];   /* store every host's diff msgs */
 /**
  * @brief initmem - initialize memory setting (wait for SIGSEGV signal)
  * 
+ * step1: initialize diff msg for every host and some condition variables(diffwait, getpwait)
+ * 
+ * step2: initialize the homesize of every host
+ * 
+ * step3: initialize every home page's attributes
+ * 
+ * step4: initialize every page's attributes
+ * 
+ * step5: initialize cache page's attributes
+ * 
+ * step6: register sigsegv handler
  */
 void initmem()
 {
   int i, j;
 
-  for (i = 0; i < Maxhosts; i++) {
+  for (i = 0; i < Maxhosts; i++) { // step1
     diffmsg[i] = DIFFNULL;
   }
   diffwait = 0;
   getpwait = 0;
 
-  for (i = 0; i <= hostc; i++) {  // set every host's homesize to 0
+  for (i = 0; i <= hostc; i++) {  // step2: set every host's homesize to 0
     hosts[i].homesize=0;
   }
 
@@ -196,7 +207,9 @@ void initmem()
     }
   #endif /* SOLARIS */
   
-  for (i=0;i<Setnum;i++) repcnt[i]=0;
+  for (i=0; i<Setnum; i++) { // TODO: consider multiple sets
+    repcnt[i]=0;
+  }
   srand(1);
 }
 
@@ -255,9 +268,9 @@ void memunmap(void* addr,size_t len)
   int unmapyes;                                            
 
   unmapyes=munmap(addr,len);  
-  if (unmapyes != 0) {                                        
+  if (unmapyes != 0) {                                   
     sprintf(errstr,"munmap failed! addr=0x%lx, errno=%d",(unsigned long)addr,errno); 
-    assert(0,errstr);  // TODO assert or assert0 (need to distinguish)                    
+    assert(0,errstr);                   
   }                                                       
 }
 
@@ -443,7 +456,7 @@ int replacei(int cachei)  // TODO: implement LRU replacement
   if (REPSCHEME==0) // replace scheme equals to zero, random replacement
     return((random()>>8)%Setpages);
   else{ // circular replacement in corresponding set
-    seti=cachei/Setpages; //
+    seti=cachei/Setpages;
     repcnt[seti]=(repcnt[seti]+1)%Setpages;
     return(repcnt[seti]);
   } 
@@ -575,13 +588,13 @@ void sigsegv_handler(int signo, siginfo_t *sip, void *context)
                                      si_code: 2 means that invalid permissions for mapped object => ()*/
   #endif 
   printf("Enter sigsegv handler\n");
-  printf("Shared memory out of range from 0x%x to 0x%x!, faultaddr=0x%x, writefault=0x%x\n",
+  printf("Shared memory out of range from %p to %p!, faultaddr=%p, writefault=%d\n",
           Startaddr, Startaddr+globaladdr, faultaddr, writefault);
 
   printf("sig info structure siginfo_t\n");
   printf("\tsignal err : %d \n"
          "\tsignal code: %d \n"
-         "\t    si_addr: %#x\n", sip->si_errno, sip->si_code, sip->si_addr);
+         "\t    si_addr: %p\n", sip->si_errno, sip->si_code, sip->si_addr);
 
   sprintf(errstr,"Access shared memory out of range from 0x%x to 0x%x!, faultaddr=0x%x, writefault=0x%x", 
                   Startaddr, Startaddr+globaladdr, faultaddr, writefault);

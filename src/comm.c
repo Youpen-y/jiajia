@@ -223,10 +223,15 @@ int rep_fdcreate(int i, int flag)
 
 /**
  * @brief initcomm -- initialize communication setting
+ * 
  * step1: initialize msg array and correpsonding flag to indicate busy or free
+ * 
  * step2: initialize pointer that indicate head, tail and count of inqueue and outqueue
+ * 
  * step3: register signal handler (SIGIO, SIGINT)
+ * 
  * step4: initialize comm ports (reqports, repports)
+ * 
  * step5: initialize comm manager (commreq, commrep)
  */
 void initcomm()
