@@ -85,7 +85,7 @@ void popstack();
 void jia_unlock(int lock);
 void jia_barrier();
 void grantlock(long lock, int toproc, int acqscope);
-void grantbarr(long lock);
+void grantbarr(unsigned long lock);
 void acqserver(jia_msg_t *req);
 void relserver(jia_msg_t *req);
 void barrserver(jia_msg_t *req);
