@@ -176,7 +176,6 @@ int main(int argc, char *argv[])
   }
   printf("is there are executed?\n");
   jia_barrier();
-  print_board();
   /*
   jia_config(HMIG,ON);
   */	
