@@ -533,6 +533,7 @@ void sendwtnts(int operation)
 
   wnptr=top.wtntp; 
   wnptr=appendstackwtnts(req, wnptr);
+  printf("Enter sendwtnts!\n");
   printf("req message frompid = %d, topid = %d\n", jia_pid, req->topid);
   printf("req size is %d, req data is %s\n", req->size, req->data);
   printf("wnptr == WNULL is %d\n", wnptr == WNULL ? 1 : 0);
@@ -775,8 +776,12 @@ void broadcast(jia_msg_t *msg)
   }
 }
 
-
-void grantbarr(long lock)
+/**
+ * @brief grantbarr -- 
+ * 
+ * @param lock 
+ */
+void grantbarr(unsigned long lock)
 {
   jia_msg_t *grant;
   wtnt_t *wnptr;
@@ -789,7 +794,7 @@ void grantbarr(long lock)
   grant->scope=locks[lock].scope;
   grant->size=0;
 
-  appendmsg(grant,ltos(lock),Intbytes);
+  appendmsg(grant,ltos(lock),sizeof(unsigned long));
 
   wnptr=locks[lock].wtntp;
   wnptr=appendbarrwtnts(grant,wnptr);
@@ -812,11 +817,12 @@ void grantbarr(long lock)
 void barrserver(jia_msg_t *req)
 {
   printf("host %d is running in barrserver\n", jiapid);
-  long lock;
+  unsigned long lock;
   
   assert((req->op==BARR)&&(req->topid==jia_pid),"Incorrect BARR Message!"); 
 
-  lock=(int) stol(req->data);
+  // lock=(int) stol(req->data);
+  lock = stol(req->data);
   assert((lock%hostc==jia_pid),"Incorrect home of lock!");
   assert((lock==hidelock),"This should not have happened! 8");
 

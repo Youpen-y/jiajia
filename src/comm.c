@@ -464,7 +464,7 @@ void sigio_handler()
   int servemsg;
   int testresult;
 
-  
+
 #ifdef DOSTAT
 register unsigned int begin;
 if (statflag==1){
@@ -718,8 +718,10 @@ if (statflag==1){
       if (arrived == 1) {
 recv_again:
         s= sizeof(from);
+        BEGINCS;
         res = recvfrom(commrep.rcv_fds[toproc], (char *)&rep, Intbytes, 0,
                         (struct sockaddr *)&from, &s);
+        ENDCS;
         if ((res < 0) && (errno == EINTR)) {
           printf("A signal interrupted recvfrom() before any data was available\n");
           goto recv_again;

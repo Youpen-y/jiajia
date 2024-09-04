@@ -315,8 +315,8 @@ void printmsg(jia_msg_t *msg, int right)
    SPACE(right); printf("msg.index   = %d\n",msg->index);
    SPACE(right); printf("msg.size    = %d\n",msg->size);
    SPACE(right); printf("msg.data    = %p\n",stol(msg->data));
-   SPACE(right); printf("msg.data    = %p\n",stol(msg->data+4));
    SPACE(right); printf("msg.data    = %p\n",stol(msg->data+8));
+   SPACE(right); printf("msg.data    = %p\n",stol(msg->data+16));
 }
 
 

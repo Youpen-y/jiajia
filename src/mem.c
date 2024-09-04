@@ -653,6 +653,7 @@ jiastat.kernelflag=0;
 }
 #endif
   }
+  printf("Out sigsegv_handler\n\n");
 }
 
 /**
@@ -675,8 +676,8 @@ void getpage(address_t addr,int flag)
   req->topid=homeid;
   req->temp=flag;       /*0:read request, 1:write request*/
   req->size=0;
-  appendmsg(req,ltos(addr),Intbytes);
-
+  //appendmsg(req,ltos(addr),Intbytes);
+  appendmsg(req, ltos(addr), sizeof(unsigned char *));
   getpwait=1;
   asendmsg(req);
 
@@ -688,6 +689,7 @@ if (statflag==1){
 }
 #endif
 }
+
 
 /**
  * @brief getpserver -- 
@@ -728,8 +730,9 @@ void getpserver(jia_msg_t *req)
   rep->topid=req->frompid;
   rep->temp=0;
   rep->size=0;
-  appendmsg(rep,req->data,Intbytes);  // reply msg data format [req->data(4bytes), pagedata(4096bytes)], req->data is the page start address
-  
+  //appendmsg(rep,req->data,Intbytes);  // reply msg data format [req->data(4bytes), pagedata(4096bytes)], req->data is the page start address
+  appendmsg(rep, req->data, sizeof(unsigned char *));
+
   if ((W_VEC==ON)&&(req->temp==1)){int i;
     for (i=0;i<Wvbits;i++){
       if (((home[homei].wtvect[req->frompid]) & (((wtvect_t)1)<<i))!=0){
@@ -995,7 +998,8 @@ void savediff(int cachei)
 }
 
 /**
- * @brief senddiffs() -- send msg in diffmsg[] to 
+ * @brief senddiffs() -- send msg in diffmsg[hosti] to correponding hosti host
+ * 
  * 
  */
 void senddiffs()
