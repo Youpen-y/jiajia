@@ -220,8 +220,10 @@ jia_msg_t *newmsg()
 void freemsg(jia_msg_t *msg)
 {
   int i;
+  disable_sigio();
   msgbusy[msg->index]=0;
   msgcnt--;
+  enable_sigio();
 }
 
 

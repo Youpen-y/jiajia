@@ -591,8 +591,7 @@ void asendmsg(jia_msg_t *msg)
   }
 #endif
   
-  printf("Enter asendmsg! outc=%d, outh=%d, outt=%d\n",
-               outcount, outhead, outtail);
+  printf("Enter asendmsg!");
 
   // printmsg(msg, 1);
 

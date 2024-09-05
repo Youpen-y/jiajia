@@ -775,7 +775,8 @@ void getpgrantserver(jia_msg_t *rep)
 
   datai=0;
   addr=(address_t)stol(rep->data+datai);
-  datai+=Intbytes;
+  // datai+=Intbytes;
+  datai += sizeof(unsigned char *);
 
   if ((W_VEC==ON)&&(wv!=WVFULL)){
     for (i=0;i<Wvbits;i++){
