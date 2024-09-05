@@ -917,23 +917,23 @@ if (statflag==1){
  * @return the total size of bytes encoded in diff
  * 
  * diff[]:
- * | cache page addr (4bytes) | size of all elements in diff[] (4bytes) |  (start,size) 4bytes | cnt bytes different data |
+ * | cache page addr (8bytes) | size of all elements in diff[] (4bytes) |  (start,size) 4bytes | cnt bytes different data |
  */
 int encodediff(int cachei, unsigned char* diff)
 {
   int size;
   int bytei;
-  unsigned long cnt;
-  unsigned long start;
-  unsigned long header;
+  int cnt;
+  int start;
+  int header;
 
 #ifdef DOSTAT
   register unsigned int begin = get_usecs();
 #endif
 
   size=0;
-  memcpy(diff+size,ltos(cache[cachei].addr),Intbytes);  // step 1: encode the cache page addr first (4 bytes)
-  size+=Intbytes;
+  memcpy(diff+size,ltos(cache[cachei].addr),sizeof(unsigned char *));  // step 1: encode the cache page addr first (4 bytes)
+  size+=sizeof(unsigned char *);
   size+=Intbytes;                       /* leave space for size */
 
   bytei=0;
@@ -941,8 +941,8 @@ int encodediff(int cachei, unsigned char* diff)
     for (; (bytei<Pagesize)&&(memcmp(cache[cachei].addr+bytei,
           cache[cachei].twin+bytei,Diffunit)==0); bytei+=Diffunit); // find the diff
     if (bytei<Pagesize) {  // here we got the difference between cache page and its twin
-      cnt=(unsigned long) 0;
-      start=(unsigned long) bytei; // record the start byte index of the diff
+      cnt = 0;
+      start = bytei; // record the start byte index of the diff
       for (; (bytei<Pagesize)&&(memcmp(cache[cachei].addr+bytei,
             cache[cachei].twin+bytei,Diffunit)!=0); bytei+=Diffunit) // how much diffunit is different
         cnt+=Diffunit;
@@ -953,7 +953,7 @@ int encodediff(int cachei, unsigned char* diff)
       size+=cnt;   
     }
   }
-  memcpy(diff+Intbytes,ltos(size),Intbytes);    // step 4: fill the size
+  memcpy(diff+sizeof(unsigned char *),ltos(size),Intbytes);    // step 4: fill the size
 
 #ifdef DOSTAT
 if (statflag==1){
