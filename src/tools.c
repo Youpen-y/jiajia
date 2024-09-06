@@ -103,7 +103,6 @@ void inittools()
 }
 
 
-/*-----------------------------------------------------------*/
 /**
  * @brief assert0 -- assert the condition, if cond is false, print the amsg and exit
  * 
@@ -121,7 +120,6 @@ void assert0(int cond, char *amsg)
 }
 
 
-/*-----------------------------------------------------------*/
 /**
  * @brief assert -- judge the cond condition and send assert message
  * 
@@ -150,7 +148,6 @@ void assert(int cond, char *amsg)
 }
 
 
-/*-----------------------------------------------------------*/
 /**
  * @brief jiaexitserver -- output error message and exit
  * 
@@ -246,6 +243,7 @@ void appendmsg(jia_msg_t *msg, unsigned char *str, int len)
  * @brief newwtnt() -- allocate a space for a new wtnt_t object
  * 
  * @return wtnt_t* return a pointer to the allocated memory on success, NULL is returned on error and set errno
+ * 
  */
 wtnt_t *newwtnt()
 {
@@ -376,7 +374,6 @@ float jia_clock()
 }
 
 
-/*-----------------------------------------------------------*/
 /**
  * @brief disable_sigio - block SIGIO signal
  * 
@@ -390,7 +387,6 @@ void disable_sigio() {
 }
 
  
-/*-----------------------------------------------------------*/
 /**
  * Macro: int SIGIO (The signal is sent when a file descriptor is ready to perform input or output) 
  * */

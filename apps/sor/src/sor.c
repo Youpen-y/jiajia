@@ -174,7 +174,7 @@ int main(int argc, char *argv[])
       }
     }
   }
-  printf("is there are executed?\n");
+  printf("\n\nafter master handle first, going to barrier in the next\n");
   jia_barrier();
   /*
   jia_config(HMIG,ON);

@@ -40,8 +40,6 @@
 
 #include "comm.h" // jia_msg_t
 
-/*
-*/
 #define   RESERVE_TWIN_SPACE
 #define   REPSCHEME   0
 #define   Maxdiffs    64

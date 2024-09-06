@@ -265,7 +265,7 @@ void memmap(void* addr, size_t len, int prot)
  */
 void memunmap(void* addr,size_t len)                               
 {
-  int unmapyes;                                            
+  int unmapyes;                                          
 
   unmapyes=munmap(addr,len);  
   if (unmapyes != 0) {                                   
@@ -435,8 +435,9 @@ unsigned long jia_alloc2p(int size, int proc)
 /**
  * @brief xor -- get the index of the first page of the set based on the addr
  * 
- * @param addr address of a bytes
- * @return int 
+ * @param addr address of a byte in one page
+ * @return int -  the first cache index of the page's corresponding setnum in the cache
+ * 
  */
 int xor(address_t addr)
 {
@@ -444,14 +445,14 @@ int xor(address_t addr)
 }
 
 /**
- * @brief replacei - 
+ * @brief replacei - return the cache index that will be replaced according to different replacement scheme
  * 
  * @param cachei: index of cache
- * @return int 
+ * @return int - the index of a cache item that that will be replaced (in one set)
  */
 int replacei(int cachei)  // TODO: implement LRU replacement 
 {
-  int seti;
+  int seti; // set index
 
   if (REPSCHEME==0) // replace scheme equals to zero, random replacement
     return((random()>>8)%Setpages);
@@ -459,7 +460,7 @@ int replacei(int cachei)  // TODO: implement LRU replacement
     seti=cachei/Setpages;
     repcnt[seti]=(repcnt[seti]+1)%Setpages;
     return(repcnt[seti]);
-  } 
+  }
 }
 
 /**
@@ -469,11 +470,13 @@ int replacei(int cachei)  // TODO: implement LRU replacement
  */
 void flushpage(int cachei)
 {
-  memunmap((void*)cache[cachei].addr,Pagesize);
+  memunmap((void*)cache[cachei].addr, Pagesize);
 
-  page[((unsigned long)cache[cachei].addr-Startaddr)/Pagesize].cachei=Cachepages;
+  page[((unsigned long)cache[cachei].addr-Startaddr)/Pagesize].cachei = Cachepages;   // normal cachi range: [0, Cachepages) 
 
-  if (cache[cachei].state==RW) freetwin(&(cache[cachei].twin));
+  if (cache[cachei].state==RW) {  // cache's state equals RW means that there is a twin(copy) for the cached page.
+    freetwin(&(cache[cachei].twin));
+  }
   cache[cachei].state=UNMAP;
   cache[cachei].wtnt=0;
   cache[cachei].addr=0;
@@ -482,14 +485,14 @@ void flushpage(int cachei)
 /**
  * @brief findposition -- 
  * 
- * @param addr 
+ * @param addr addr of a byte in one page
  * @return int 
  */
 int findposition(address_t addr)
 {
   int cachei;             /*index of cache*/
   int seti;               /*index in a set*/
-  int invi;
+  int invi;               /*invalid index*/
   int i;
   
   cachei=xor(addr);
@@ -692,9 +695,9 @@ if (statflag==1){
 
 
 /**
- * @brief getpserver -- 
+ * @brief getpserver -- getp msg server
  * 
- * @param req 
+ * @param req the request getp msg
  */
 void getpserver(jia_msg_t *req)
 {
@@ -758,9 +761,9 @@ void getpserver(jia_msg_t *req)
 }
 
 /**
- * @brief getpgrantserver -- getpgrant server
+ * @brief getpgrantserver -- getpgrant msg server
  * 
- * @param rep 
+ * @param rep the reply msg getpgrant
  */
 void getpgrantserver(jia_msg_t *rep)
 {
@@ -786,15 +789,21 @@ void getpgrantserver(jia_msg_t *rep)
       }
     }
   }else{
-    printf("addr is %#x , rep->data+datai = %#x\n", addr, rep->data+datai);
+    printf("addr is %p , rep->data+datai = %p\n", addr, rep->data+datai);
     memcpy((unsigned char *)addr,rep->data+datai,Pagesize);  // TODO:possible bug
-    printf("I have copy the page from remote home to %#x\n", addr);
+    printf("I have copy the page from remote home to %p\n", addr);
   }
 
   getpwait=0;
 }
 
-
+/**
+ * @brief addwtvect -- 
+ * 
+ * @param homei 
+ * @param wv 
+ * @param from 
+ */
 void addwtvect(int homei,wtvect_t wv,int from)
 {
   int i;
@@ -819,23 +828,37 @@ void setwtvect(int homei,wtvect_t wv)
   }
 }
 
-
-unsigned long s2l(unsigned char *str)
+/**
+ * @brief s2l -- 
+ * 
+ * @param str 
+ * @return unsigned long 
+ */
+unsigned long s2l(unsigned char *str) // TODO: unsigned long now is 8 bytes (we need to support both 32bit and 64bit machine)
 {
   union {
     unsigned long l;
-    unsigned char c[Intbytes];
+    //unsigned char c[Intbytes];
+    unsigned char c[sizeof(unsigned char *)];
        } notype;
  
   notype.c[0]=str[0];
   notype.c[1]=str[1];
   notype.c[2]=str[2];
   notype.c[3]=str[3];
+  notype.c[4]=str[4];
+  notype.c[5]=str[5];
+  notype.c[6]=str[6];
+  notype.c[7]=str[7];
 
   return(notype.l);
 }
 
-
+/**
+ * @brief diffserver -- msg diff server
+ * 
+ * @param req 
+ */
 void diffserver(jia_msg_t *req)
 {
   int datai;
@@ -853,61 +876,64 @@ void diffserver(jia_msg_t *req)
 
   datai=0;
   while(datai<req->size){
-   paddr=s2l(req->data+datai);
-   datai+=Intbytes;
-   wv=WVNULL;
+    paddr=s2l(req->data+datai); // consider use stol macro
+    //datai+=Intbytes;
+    datai += sizeof(unsigned char *);
+    wv=WVNULL;
 
-   homei=homepage(paddr);
+    homei=homepage(paddr);
    /* In the case of H_MIG==ON, homei may be the index of 
       the new home[] which has not be updated due to difference
       of barrier arrival. In this case, homei==Homepages and
       home[Homepages].wtnt==0*/
 
-   if ((home[homei].wtnt&1)!=1)
-     memprotect((caddr_t)paddr,Pagesize,PROT_READ|PROT_WRITE);
+    if ((home[homei].wtnt&1)!=1)
+      memprotect((caddr_t)paddr,Pagesize,PROT_READ|PROT_WRITE);
 
-   pstop=s2l(req->data+datai)+datai-Intbytes;
-   datai+=Intbytes;
-   while(datai<pstop){
-     dsize=s2l(req->data+datai) & 0xffff;
-     doffset=(s2l(req->data+datai)>>16) & 0xffff;
-     datai+=Intbytes;
-     memcpy((address_t)(paddr+doffset),req->data+datai,dsize);
-     datai+=dsize;
+    //pstop=s2l(req->data+datai)+datai-Intbytes;
+    //datai+=Intbytes;
+    pstop = bytestoi(req->data+datai) + datai - sizeof(unsigned char *);
+    datai += Intbytes;
+    while(datai<pstop){
+      dsize   = bytestoi(req->data+datai) & 0xffff;
+      doffset = (bytestoi(req->data+datai)>>16) & 0xffff;
+      datai  += Intbytes;
+      memcpy((address_t)(paddr+doffset),req->data+datai,dsize);
+      datai  += dsize;
 
-     if ((W_VEC==ON)&&(dsize>0)) {int i;
-       for(i=doffset/Blocksize*Blocksize;i<(doffset+dsize);i+=Blocksize)
-         wv |= ((wtvect_t)1)<<(i/Blocksize);
-     }
-   }
+      if ((W_VEC==ON)&&(dsize>0)) {int i;
+        for(i=doffset/Blocksize*Blocksize;i<(doffset+dsize);i+=Blocksize)
+          wv |= ((wtvect_t)1)<<(i/Blocksize);
+      }
+    }
 
-   if (W_VEC==ON) addwtvect(homei,wv,req->frompid);
+    if (W_VEC==ON) addwtvect(homei,wv,req->frompid);
 
-   if ((home[homei].wtnt&1)!=1)
-     memprotect((caddr_t)paddr,(size_t)Pagesize,(int)PROT_READ);
+    if ((home[homei].wtnt&1)!=1)
+      memprotect((caddr_t)paddr,(size_t)Pagesize,(int)PROT_READ);
 
 #ifdef DOSTAT
-   if (statflag==1){
-     jiastat.mwdiffcnt++;
-   }
+if (statflag==1){
+  jiastat.mwdiffcnt++;
+}
 #endif
  }
 
 #ifdef DOSTAT
 if (statflag==1){
- jiastat.dedifftime += get_usecs() - begin;
- jiastat.diffcnt++;
+  jiastat.dedifftime += get_usecs() - begin;
+  jiastat.diffcnt++;
 }
 #endif
 
- rep=newmsg();
- rep->op=DIFFGRANT;
- rep->frompid=jia_pid;
- rep->topid=req->frompid;
- rep->size=0;
+  rep=newmsg();
+  rep->op=DIFFGRANT;
+  rep->frompid=jia_pid;
+  rep->topid=req->frompid;
+  rep->size=0;
 
- asendmsg(rep);
- freemsg(rep);
+  asendmsg(rep);
+  freemsg(rep);
 }
 
 /**
@@ -1001,7 +1027,6 @@ void savediff(int cachei)
 /**
  * @brief senddiffs() -- send msg in diffmsg[hosti] to correponding hosti host
  * 
- * 
  */
 void senddiffs()
 {
@@ -1018,11 +1043,15 @@ void senddiffs()
     }
  }
 /*
- while(diffwait);
+ while(diffwait); // diffwait is detected after senddiffs() called
 */
 }
 
-
+/**
+ * @brief diffgrantserver -- msg diffgrant server
+ * 
+ * @param rep 
+ */
 void diffgrantserver(jia_msg_t *rep)
 {
   assert((rep->op==DIFFGRANT)&&(rep->size==0),"Incorrect returned message!");

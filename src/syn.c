@@ -283,7 +283,10 @@ if (statflag==1){
 #endif
 }
 
-
+/**
+ * @brief jia_barrier -- end an interval and start next
+ * 
+ */
 void jia_barrier()
 {
 #ifdef DOSTAT
@@ -302,9 +305,8 @@ void jia_barrier()
 
   assert((stackptr==0),"barrier can not be used in CS!"); 
 
-  printf("111111111111111\n");
+  printf("\nEnter jia barrier\n");
   endinterval(BARR);
-  printf("222222222222222\n");
 
   if (H_MIG==ON) {
     migcheckcache(); 
@@ -313,7 +315,6 @@ void jia_barrier()
   barrwait=1;
   sendwtnts(BARR);
   freewtntspace(top.wtntp);
-  printf("444444444444444\n");
   while(barrwait);
   printf("555555555555555\n");
   if ((H_MIG==ON)&&(W_VEC==ON)){
@@ -345,7 +346,7 @@ void endinterval(int synop)
   register int cachei;
   register int pagei;
   register int hpages;
-
+  printf("Enter endinterval!\n");
   for (cachei = 0; cachei < Cachepages; cachei++) {
     if (cache[cachei].wtnt==1) {  // when cached page wtnt == 1, save it
       savepage(cachei);
@@ -376,6 +377,7 @@ void endinterval(int synop)
     }/*if*/
   }/*for*/
   while (diffwait); // wait all diffs were handled
+  printf("Out of endinterval!\n");
 }
 
 
@@ -565,10 +567,10 @@ void savepage(int cachei)
 }
  
 /**
- * @brief savewtnt -- save 
+ * @brief savewtnt -- save write notice to 
  * 
- * @param ptr 
- * @param addr 
+ * @param ptr lockstack[stackptr]'s wtnt_t pointer
+ * @param addr the original address of cached page
  * @param frompid 
  */
 void savewtnt(wtnt_t *ptr, address_t addr, int frompid)
@@ -579,24 +581,29 @@ void savewtnt(wtnt_t *ptr, address_t addr, int frompid)
 
   exist=0;
   wnptr=ptr;
+
   while((exist==0)&&(wnptr!=WNULL)){
-    for (wtnti=0;(wtnti<wnptr->wtntc)&&
-        (((unsigned long)addr/Pagesize)!=((unsigned long)wnptr->wtnts[wtnti]/Pagesize));wtnti++);
-    if (wtnti>=wnptr->wtntc)
-      wnptr=wnptr->more; 
-    else exist=1; // wtnt about the same address has existed
+    wtnti = 0;
+    while((wtnti < wnptr->wtntc) && (((unsigned long)addr/Pagesize)!=((unsigned long)wnptr->wtnts[wtnti]/Pagesize)))
+    {
+      wtnti++;
+    }
+    if (wtnti >= wnptr->wtntc)  // if addr wan't found in current wtnt_t object, go to next
+      wnptr = wnptr->more; 
+    else
+      exist=1; // wtnt about the address has been found
   }
 
-  if (exist==0) { // wtnt don't exist
-    wnptr=ptr;
-    while (wnptr->wtntc>=Maxwtnts){
+  if (exist == 0) { // addr's wtnt don't exist
+    wnptr = ptr;
+    while(wnptr->wtntc >= Maxwtnts){ //
       if (wnptr->more==WNULL) wnptr->more=newwtnt(); 
       wnptr=wnptr->more;
     }
     wnptr->wtnts[wnptr->wtntc]=addr;
     wnptr->from[wnptr->wtntc]=frompid;
     wnptr->wtntc++;
-  }else{
+  }else{ // wtnt found
     if (ptr==locks[hidelock].wtntp){     /*barrier*/
       wnptr->from[wtnti]=Maxhosts;
     }else{
@@ -663,7 +670,13 @@ wtnt_t *appendlockwtnts(jia_msg_t *msg, wtnt_t *ptr, int acqscope)
   return(wnptr);
 }
 
-
+/**
+ * @brief 
+ * 
+ * @param lock 
+ * @param toproc 
+ * @param acqscope 
+ */
 void grantlock(int lock, int toproc, int acqscope)
 {
   jia_msg_t *grant;
