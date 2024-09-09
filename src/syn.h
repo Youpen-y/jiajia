@@ -60,9 +60,9 @@ typedef struct wtnttype {
                } wtnt_t;
 
 typedef struct locktype {
-        int         acqs[Maxhosts];
-        int         acqscope[Maxhosts];
-        int         acqc;       /* acquire counter */
+        int         acqs[Maxhosts];     /* acquire the lock's hostid*/
+        int         acqscope[Maxhosts]; /**/
+        int         acqc;               /* acquire counter */
         int         scope;
         int         myscope;
         wtnt_t      *wtntp;             /* write notice list pointer */

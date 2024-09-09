@@ -734,9 +734,10 @@ void getpserver(jia_msg_t *req)
   rep->temp=0;
   rep->size=0;
   //appendmsg(rep,req->data,Intbytes);  // reply msg data format [req->data(4bytes), pagedata(4096bytes)], req->data is the page start address
-  appendmsg(rep, req->data, sizeof(unsigned char *));
+  appendmsg(rep, req->data, sizeof(unsigned char *)); // carry the addr
 
-  if ((W_VEC==ON)&&(req->temp==1)){int i;
+  if ((W_VEC==ON)&&(req->temp==1)){
+    int i;
     for (i=0;i<Wvbits;i++){
       if (((home[homei].wtvect[req->frompid]) & (((wtvect_t)1)<<i))!=0){
         appendmsg(rep,paddr+i*Blocksize,Blocksize);
@@ -744,8 +745,7 @@ void getpserver(jia_msg_t *req)
     }
     rep->temp=home[homei].wtvect[req->frompid];
   }else{
-    printf("possible bug point\n");
-    appendmsg(rep,paddr,Pagesize);
+    appendmsg(rep, paddr, Pagesize);  // copy the page content to msg data
     rep->temp=WVFULL;
   }
 
@@ -858,6 +858,8 @@ unsigned long s2l(unsigned char *str) // TODO: unsigned long now is 8 bytes (we 
  * @brief diffserver -- msg diff server
  * 
  * @param req 
+ * 
+ * diff msg data : | addr | totalsize | (start|count) | diffs
  */
 void diffserver(jia_msg_t *req)
 {

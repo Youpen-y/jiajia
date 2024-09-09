@@ -85,7 +85,7 @@ void popstack();
 void jia_unlock(int lock);
 void jia_barrier();
 void grantlock(int lock, int toproc, int acqscope);
-void grantbarr(unsigned long lock);
+void grantbarr(int lock);
 void acqserver(jia_msg_t *req);
 void relserver(jia_msg_t *req);
 void barrserver(jia_msg_t *req);
@@ -127,8 +127,8 @@ extern int statflag;
 extern jiastat_t jiastat;
 #endif
 
-jialock_t     locks[Maxlocks+1];
-jiastack_t    lockstack[Maxstacksize];
+jialock_t     locks[Maxlocks+1]; // lock array, according to the hosts allocate lock(eg. host0: 0, 2,... 62; host1 = 1, 3, ..., 63)
+jiastack_t    lockstack[Maxstacksize];  // lock stack
 
 int           stackptr;
 volatile int  acqwait;
@@ -194,7 +194,7 @@ void clearlocks()
 }
 
 /**
- * @brief jia_lock -- 
+ * @brief jia_lock -- get the lock 
  * 
  * @param lock 
  */
@@ -242,7 +242,11 @@ void jia_lock(int lock)
 #endif
 }
 
-
+/**
+ * @brief jia_unlock -- 
+ * 
+ * @param lock 
+ */
 void jia_unlock(int lock)
 {
 #ifdef DOSTAT
@@ -336,7 +340,7 @@ void jia_barrier()
 }
 
 /**
- * @brief endinterval -- 
+ * @brief endinterval -- end an interval, save the changes and send them to their home page
  * 
  * @param synop syn operation
  */
@@ -381,7 +385,11 @@ void endinterval(int synop)
 }
 
 
-
+/**
+ * @brief startinterval -- start an interval
+ * 
+ * @param synop 
+ */
 void startinterval(int synop)
 {
   register int cachei;
@@ -465,7 +473,9 @@ void pushstack(int lock)
 }
 
 /**
- * @brief popstack -- 
+ * @brief popstack -- pop the top lock in lockstack
+ * 
+ * (save the unlucky one's write notice pairs (wtnts[i], from[i]) to the new top one)
  * 
  */
 void popstack()
@@ -490,9 +500,11 @@ void popstack()
 
 
 /**
- * @brief acquire() -- 
+ * @brief acquire() -- send ACQ msg to lock%hostc to acquire the lock
  * 
  * @param lock 
+ * 
+ * acq msg data: | lock |
  */
 void acquire(int lock)
 {
@@ -502,12 +514,12 @@ void acquire(int lock)
 
   req->op=ACQ;
   req->frompid=jia_pid;
-  req->topid=lock%hostc;
+  req->topid=lock%hostc;  // it seems that lock was divided circularly
   req->scope=locks[lock].myscope;
   req->size=0;
   appendmsg(req,ltos(lock),Intbytes);
 
-  asendmsg(req);
+  asendmsg(req); // send the ACQ msg the lock owner
 
   freemsg(req);
   while(acqwait) ;
@@ -515,18 +527,18 @@ void acquire(int lock)
 
 
 /**
- * @brief sendwtnts() -- 
+ * @brief sendwtnts() -- send wtnts 
  * 
  * @param operation BARR or REL
  * 
- * BARR or REL message's data[] = top.lockid(4bytes)
+ * BARR or REL message's data : | top.lockid(4bytes) | addr1 | ... | addrn |
  */
 void sendwtnts(int operation)
 {
   int   wtnti;
   jia_msg_t *req;
   wtnt_t *wnptr;  // write notice pointer
-  
+  printf("Enter sendwtnts!\n");
   req = newmsg();
 
   req->frompid=jia_pid;
@@ -537,22 +549,21 @@ void sendwtnts(int operation)
 
   wnptr=top.wtntp; 
   wnptr=appendstackwtnts(req, wnptr);
-  printf("Enter sendwtnts!\n");
+  
   printf("req message frompid = %d, topid = %d\n", jia_pid, req->topid);
   printf("req size is %d, req data is %s\n", req->size, req->data);
   printf("wnptr == WNULL is %d\n", wnptr == WNULL ? 1 : 0);
   while (wnptr!=WNULL) {
     req->op=WTNT; 
     asendmsg(req);
-    req->size=Intbytes;
+    req->size=Intbytes; // TODO: Need to check
     wnptr=appendstackwtnts(req,wnptr);
   }
   req->op=operation; 
-  printf("222222222222222.111111111111111111\n");
   printf("my pid is %d\n", jiapid);
   asendmsg(req);
-  printf("222222222222222.222222222222222222\n");
   freemsg(req);
+  printf("\nOut of sendwtnts!\n\n");
 }
 
 /**
@@ -567,7 +578,7 @@ void savepage(int cachei)
 }
  
 /**
- * @brief savewtnt -- save write notice to 
+ * @brief savewtnt -- save write notice about the page of the addr to ptr
  * 
  * @param ptr lockstack[stackptr]'s wtnt_t pointer
  * @param addr the original address of cached page
@@ -613,10 +624,10 @@ void savewtnt(wtnt_t *ptr, address_t addr, int frompid)
 }
 
 /**
- * @brief appendstackwtnts -- append wtnt data to msg as many as possible
+ * @brief appendstackwtnts -- append wtnt_t wtnts(i.e addr) to msg as many as possible
  * 
- * @param msg 
- * @param ptr 
+ * @param msg msg that include ptr->wtnts
+ * @param ptr write notice pointer
  * @return wtnt_t* 
  */
 wtnt_t *appendstackwtnts(jia_msg_t *msg, wtnt_t *ptr)
@@ -634,13 +645,13 @@ wtnt_t *appendstackwtnts(jia_msg_t *msg, wtnt_t *ptr)
       wnptr=wnptr->more;   
     }else{
       full=1;
-    }
+    } 
   }
   return(wnptr);
 }
 
 /**
- * @brief appendlockwtnts -- 
+ * @brief appendlockwtnts -- append lock's wtnts to msg
  * 
  * @param msg 
  * @param ptr 
@@ -671,11 +682,13 @@ wtnt_t *appendlockwtnts(jia_msg_t *msg, wtnt_t *ptr, int acqscope)
 }
 
 /**
- * @brief 
+ * @brief grantlock -- grant the acquire lock msg request
  * 
  * @param lock 
  * @param toproc 
  * @param acqscope 
+ * 
+ * ACQGRANT msg data : | lock | addr1 | ... | addrn | 
  */
 void grantlock(int lock, int toproc, int acqscope)
 {
@@ -693,7 +706,7 @@ void grantlock(int lock, int toproc, int acqscope)
 
   wnptr=locks[lock].wtntp;
   wnptr=appendlockwtnts(grant,wnptr,acqscope);
-  while (wnptr!=WNULL){
+  while (wnptr!=WNULL){ // current msg is full, but still wtnts  left
     grant->op=INVLD; 
     asendmsg(grant);
     grant->size=Intbytes;
@@ -706,7 +719,13 @@ void grantlock(int lock, int toproc, int acqscope)
   freemsg(grant);
 }
 
-
+/**
+ * @brief acqserver -- ACQ msg server
+ * 
+ * @param req ACQ msg
+ * 
+ * ACQ msg data : | lock | 
+ */
 void acqserver(jia_msg_t *req)
 {
   int lock;
@@ -714,18 +733,25 @@ void acqserver(jia_msg_t *req)
   
   assert((req->op==ACQ)&&(req->topid==jia_pid),"Incorrect ACQ message!");
   
-  lock=(int) stol(req->data);
+  lock=(int) stol(req->data); // get the lock
   assert((lock%hostc==jia_pid),"Incorrect home of lock!");
   
   locks[lock].acqs[locks[lock].acqc]=req->frompid;
   locks[lock].acqscope[locks[lock].acqc]=req->scope;
   locks[lock].acqc++;
 
-  if (locks[lock].acqc==1) 
+  if (locks[lock].acqc==1)
     grantlock(lock,locks[lock].acqs[0],locks[lock].acqscope[0]);
 }
 
 
+/**
+ * @brief relserver -- REL msg server
+ * 
+ * @param req request msg REL
+ * 
+ * REL msg data : | lock | addr | ... | addr
+ */
 void relserver(jia_msg_t *req)
 {
   int lock;
@@ -733,7 +759,7 @@ void relserver(jia_msg_t *req)
   
   assert((req->op==REL)&&(req->topid==jia_pid),"Incorrect REL Message!"); 
 
-  lock=(int) stol(req->data);
+  lock=(int) stol(req->data); // get the lock
   assert((lock%hostc==jia_pid),"Incorrect home of lock!");
   assert((req->frompid==locks[lock].acqs[0]),"This should not have happened! 6");
 
@@ -753,9 +779,9 @@ void relserver(jia_msg_t *req)
 }
 
 /**
- * @brief 
+ * @brief appendbarrwtnts -- append wtnt_t ptr's pair (wtnts, from) to msg
  * 
- * @param msg 
+ * @param msg grantbarr msg
  * @param ptr lock's write notice's pointer
  * @return wtnt_t* 
  */
@@ -769,14 +795,14 @@ wtnt_t *appendbarrwtnts(jia_msg_t *msg, wtnt_t *ptr)
   wnptr=ptr;
   while ((wnptr!=WNULL)&&(full==0)){
     //if ((msg->size+(wnptr->wtntc*Intbytes*2))<Maxmsgsize){
-    if ((msg->size+(wnptr->wtntc*(Intbytes + sizeof(unsigned char *))))<Maxmsgsize){
+    if ((msg->size + (wnptr->wtntc*(Intbytes + sizeof(unsigned char *)))) < Maxmsgsize){
       for (wtnti=0;wtnti<wnptr->wtntc;wtnti++){
         //appendmsg(msg,ltos(wnptr->wtnts[wtnti]),Intbytes);
         appendmsg(msg, ltos(wnptr->wtnts[wtnti]), sizeof(unsigned char *));
         appendmsg(msg, ltos(wnptr->from[wtnti]), Intbytes);
       }
       wnptr=wnptr->more;   
-    }else{
+    } else {
       full=1;
     }
   }
@@ -803,13 +829,13 @@ void broadcast(jia_msg_t *msg)
 }
 
 /**
- * @brief grantbarr -- 
+ * @brief grantbarr -- grant barr request msg
  * 
  * @param lock 
  * 
  * grantbarr msg data: | lock(4bytes)  | maybe (addr (8bytes)) , from(4bytes)
  */
-void grantbarr(unsigned long lock)
+void grantbarr(int lock)
 {
   jia_msg_t *grant;
   wtnt_t *wnptr;
@@ -822,14 +848,14 @@ void grantbarr(unsigned long lock)
   grant->scope=locks[lock].scope;
   grant->size=0;
 
-  appendmsg(grant,ltos(lock),Intbytes);
+  appendmsg(grant,ltos(lock),Intbytes); // encapsulate the lock
 
-  wnptr=locks[lock].wtntp;
-  wnptr=appendbarrwtnts(grant,wnptr);
+  wnptr=locks[lock].wtntp;  // get lock's write notice list's head
+  wnptr=appendbarrwtnts(grant,wnptr); // append lock's write notice contents(addr, from) to msg if possible
   while (wnptr!=WNULL) {
     grant->op=INVLD; 
     broadcast(grant);
-    grant->size=Intbytes;
+    grant->size=Intbytes; // lock
     wnptr=appendbarrwtnts(grant,wnptr);
   }
   grant->op=BARRGRANT;
@@ -838,9 +864,10 @@ void grantbarr(unsigned long lock)
 }
 
 /**
- * @brief barrserver -- 
+ * @brief barrserver -- barr msg server
  * 
- * @param req 
+ * @param req barr msg
+ * barr msg data: | lock (4bytes) | 
  */
 void barrserver(jia_msg_t *req)
 {
@@ -854,7 +881,7 @@ void barrserver(jia_msg_t *req)
   assert((lock%hostc==jia_pid),"Incorrect home of lock!");
   assert((lock==hidelock),"This should not have happened! 8");
 
-  recordwtnts(req); 
+  recordwtnts(req); // record write notices in msg barr's data
 
   locks[lock].acqc++;
 
@@ -872,26 +899,32 @@ void barrserver(jia_msg_t *req)
 }
 
 /**
- * @brief recordwtnts -- 
+ * @brief recordwtnts -- record write notices in msg req's data
  * 
- * @param req 
+ * @param req request msg
  */
 void recordwtnts(jia_msg_t *req)
 {
   int lock;
   int datai;
   
-  lock=(int) stol(req->data);
+  lock=(int) stol(req->data);  // get the lock
   if (lock != hidelock){       /*lock*/
-    for (datai = Intbytes; datai < req->size; datai += Intbytes)
+    for (datai = Intbytes; datai < req->size; datai += sizeof(unsigned char *))
       savewtnt(locks[lock].wtntp,(address_t)stol(req->data+datai),locks[lock].scope);
   }else{                    /*barrier*/
-    for (datai = Intbytes; datai < req->size; datai += Intbytes)
+    for (datai = Intbytes; datai < req->size; datai += sizeof(unsigned char *))
       savewtnt(locks[lock].wtntp,(address_t)stol(req->data+datai),req->frompid);
   }
 }
 
-
+/**
+ * @brief wtntserver -- msg wtnt server
+ * 
+ * @param req 
+ * 
+ * wtnt msg: | lock | addr | addr |...|
+ */
 void wtntserver(jia_msg_t *req)
 {
   int lock;
@@ -958,7 +991,13 @@ void migarrangehome()
 // printf("New homepages=%d\n",hosts[jia_pid].homesize/Pagesize);
 }
 
-
+/**
+ * @brief migpage --
+ * 
+ * @param addr 
+ * @param frompid 
+ * @param topid 
+ */
 void migpage(unsigned long addr,int frompid,int topid)
 {
   int pagei,homei,cachei;
@@ -1044,11 +1083,11 @@ void invalidate(jia_msg_t *req)
   int from;
   int homei,pagei;
 
-  lock = (int)stol(req->data);
+  lock = (int)stol(req->data);  // get the lock
   datai= Intbytes;
 
-  while (datai<req->size){
-    addr=(address_t)stol(req->data+datai);
+  while (datai < req->size){
+    addr=(address_t)stol(req->data+datai);  // get the addr
     if (H_MIG==ON){
       migtag=((unsigned long)addr)%Pagesize;
       addr=(address_t)(((unsigned long)addr/Pagesize)*Pagesize);
@@ -1092,7 +1131,11 @@ if (statflag==1){
   } /*while*/
 }
 
-
+/**
+ * @brief invserver -- INVLD msg server
+ * 
+ * @param req INVID msg
+ */
 void invserver(jia_msg_t *req)
 {
  assert((req->op==INVLD)&&(req->topid==jia_pid),"Incorrect INVLD Message!"); 
@@ -1100,7 +1143,11 @@ void invserver(jia_msg_t *req)
  invalidate(req);
 }
 
-
+/**
+ * @brief barrgrantserver -- barrgrant msg server
+ * 
+ * @param req BARRGRANT msg
+ */
 void barrgrantserver(jia_msg_t *req)
 {
   int lock;
@@ -1121,7 +1168,11 @@ void barrgrantserver(jia_msg_t *req)
   noclearlocks=0;
 }
 
-
+/**
+ * @brief acqgrantserver -- ACQGRANT msg server
+ * 
+ * @param req ACQGRANT msg
+ */
 void acqgrantserver(jia_msg_t *req)
 {
   int lock;
@@ -1138,143 +1189,169 @@ void acqgrantserver(jia_msg_t *req)
 /************Conditional Variable Part****************/
 
 void jia_setcv(int cvnum)
-{jia_msg_t *req;
+{
+  jia_msg_t *req;
 
- if (hostc==1) return;
+  if (hostc==1) return;
 
- sprintf(errstr,"condv %d should range from 0 to %d",cvnum,Maxcvs-1);
- assert(((cvnum>=0)&&(cvnum<Maxcvs)),errstr);
+  sprintf(errstr,"condv %d should range from 0 to %d",cvnum,Maxcvs-1);
+  assert(((cvnum>=0)&&(cvnum<Maxcvs)),errstr);
 
- req=newmsg();
- req->op=SETCV;
- req->frompid=jia_pid;
- req->topid=cvnum%hostc;
- req->size=0;
- appendmsg(req,ltos(cvnum),Intbytes);
+  req=newmsg();
+  req->op=SETCV;
+  req->frompid=jia_pid;
+  req->topid=cvnum%hostc;
+  req->size=0;
+  appendmsg(req,ltos(cvnum),Intbytes);
 
- asendmsg(req);
+  asendmsg(req);
 
- freemsg(req);
+  freemsg(req);
 }
 
 
 void jia_resetcv(int cvnum)
-{jia_msg_t *req;
+{
+  jia_msg_t *req;
 
- if (hostc==1) return;
+  if (hostc==1) return;
 
- sprintf(errstr,"condv %d should range from 0 to %d",cvnum,Maxcvs-1);
- assert(((cvnum>=0)&&(cvnum<Maxcvs)),errstr);
+  sprintf(errstr,"condv %d should range from 0 to %d",cvnum,Maxcvs-1);
+  assert(((cvnum>=0)&&(cvnum<Maxcvs)),errstr);
 
- req=newmsg();
- req->op=RESETCV;
- req->frompid=jia_pid;
- req->topid=cvnum%hostc;
- req->size=0;
- appendmsg(req,ltos(cvnum),Intbytes);
+  req=newmsg();
+  req->op=RESETCV;
+  req->frompid=jia_pid;
+  req->topid=cvnum%hostc;
+  req->size=0;
+  appendmsg(req,ltos(cvnum),Intbytes);
 
- asendmsg(req);
+  asendmsg(req);
 
- freemsg(req);
+  freemsg(req);
 }
 
 
 void jia_waitcv(int cvnum) 
-{jia_msg_t *req;
- int lockid;
+{
+  jia_msg_t *req;
+  int lockid;
 
- if (hostc==1) return;
+  if (hostc==1) return;
 
- sprintf(errstr,"condv %d should range from 0 to %d",cvnum,Maxcvs-1);
- assert(((cvnum>=0)&&(cvnum<Maxcvs)),errstr);
+  sprintf(errstr,"condv %d should range from 0 to %d",cvnum,Maxcvs-1);
+  assert(((cvnum>=0)&&(cvnum<Maxcvs)),errstr);
 
- req=newmsg();
- req->op=WAITCV;
- req->frompid=jia_pid;
- req->topid=cvnum%hostc;
- req->size=0;
- appendmsg(req,ltos(cvnum),Intbytes);
+  req=newmsg();
+  req->op=WAITCV;
+  req->frompid=jia_pid;
+  req->topid=cvnum%hostc;
+  req->size=0;
+  appendmsg(req,ltos(cvnum),Intbytes);
 
- cvwait=1;
+  cvwait=1;
 
- asendmsg(req);
+  asendmsg(req);
 
- freemsg(req);
- while(cvwait);
+  freemsg(req);
+  while(cvwait);
 }
 
-
+/**
+ * @brief jia_wait -- send WAIT msg to master and wait for WAITGRANT reply to be served
+ * 
+ */
 void jia_wait()
-{jia_msg_t *req;
+{
+  jia_msg_t *req;
 
- if (hostc==1) return;
+  if (hostc==1) return;
 
- if (LOAD_BAL==ON){
-    endtime=jia_clock();
-    caltime+=(endtime-starttime);
- }
+  if (LOAD_BAL==ON){
+      endtime=jia_clock();
+      caltime+=(endtime-starttime);
+  }
 
- req=newmsg();
- req->frompid=jia_pid;
- req->topid=0;
- req->op=WAIT;
- req->size=0;
+  req=newmsg();
+  req->frompid=jia_pid;
+  req->topid=0;
+  req->op=WAIT;
+  req->size=0;
 
- waitwait=1;
- asendmsg(req);
- freemsg(req);
- while(waitwait) ;
+  waitwait=1;
+  asendmsg(req);
+  freemsg(req);
+  while(waitwait) ;
 
- if (LOAD_BAL==ON) 
-   starttime=jia_clock();  
+  if (LOAD_BAL==ON) 
+    starttime=jia_clock();  
 
 }
 
-
+/**
+ * @brief waitserver -- WAIT msg request server
+ * 
+ * @param req WAIT msg request
+ */
 void waitserver(jia_msg_t *req)
-{jia_msg_t *grant;
- int i;
- 
- assert((req->op==WAIT)&&(req->topid==jia_pid),"Incorrect WAIT Message!"); 
+{
+  jia_msg_t *grant;
+  int i;
+  
+  assert((req->op==WAIT)&&(req->topid==jia_pid),"Incorrect WAIT Message!"); 
 
- waitcounter++;
- 
- if (waitcounter==hostc){
-   grant=newmsg();
-   waitcounter=0;
-   grant->frompid=jia_pid;
-   grant->size=0;
-   grant->op=WAITGRANT;
-   broadcast(grant);
-   freemsg(grant);
- }
+  waitcounter++;
+  
+  if (waitcounter==hostc){
+    grant=newmsg();
+    waitcounter=0;
+    grant->frompid=jia_pid;
+    grant->size=0;
+    grant->op=WAITGRANT;
+    broadcast(grant);
+    freemsg(grant);
+  }
 }
 
-
+/**
+ * @brief waitgrantserver -- waitgrant msg server
+ * 
+ * @param req WAITGRANT msg request
+ */
 void waitgrantserver(jia_msg_t *req)
 {
- assert((req->op==WAITGRANT)&&(req->topid==jia_pid),"Incorrect WAITGRANT Message!"); 
+  assert((req->op==WAITGRANT)&&(req->topid==jia_pid),"Incorrect WAITGRANT Message!"); 
 
- waitwait=0;
+  waitwait=0;
 }
 
-
+/**
+ * @brief grantcondv -- append condv to CVGRANT msg and send it to toproc
+ * 
+ * @param condv condition variable
+ * @param toproc destination host
+ */
 void grantcondv(int condv, int toproc)
-{jia_msg_t *grant;
+{
+  jia_msg_t *grant;
 
- grant=newmsg();
- grant->op=CVGRANT;
- grant->frompid=jia_pid;
- grant->topid=toproc;
- grant->size=0;
- appendmsg(grant,ltos(condv),Intbytes);
+  grant=newmsg();
+  grant->op=CVGRANT;
+  grant->frompid=jia_pid;
+  grant->topid=toproc;
+  grant->size=0;
+  appendmsg(grant,ltos(condv),Intbytes);
 
- asendmsg(grant);
+  asendmsg(grant);
 
- freemsg(grant);
+  freemsg(grant);
 }
 
-
+/**
+ * @brief setcvserver -- setcv msg server
+ * 
+ * @param req SETCV msg request
+ */
 void setcvserver(jia_msg_t *req)
 {
   int condv;
@@ -1294,13 +1371,17 @@ void setcvserver(jia_msg_t *req)
   }
 }
 
-
+/**
+ * @brief resetcvserver -- resetcv msg server
+ * 
+ * @param req resetcv msg
+ */
 void resetcvserver(jia_msg_t *req)
 {
   int condv;
 
   assert((req->op==RESETCV)&&(req->topid==jia_pid),"Incorrect RESETCV Message!"); 
-  condv=(int) stol(req->data);
+  condv=(int) stol(req->data);  // get the condition variable
   condvars[condv].value=0;
 }
 
