@@ -35,10 +35,10 @@
 #define  Delta     0.05
 
 typedef struct loadtype {
-        float power;
-        float  time;
-        int    begin;
-        int    end; 
+        float   power;
+        float   time;
+        int     begin;
+        int     end; 
 } jiaload_t;
 
 #endif /*JIAMEM_H*/

@@ -372,7 +372,7 @@ int mypid()
  */
 void jiacreat(int argc, char **argv)
 {
-  gethosts(); // step 1
+  gethosts(); // step 1: get hosts info
   if (hostc==0) {
     printf("  No hosts specified!\n");
     exit(0);
@@ -382,10 +382,10 @@ void jiacreat(int argc, char **argv)
   if (jia_pid==0){ // master does, slave doesn't
     printf("*********Total of %d hosts found!**********\n\n",hostc);
 #ifndef NFS
-      copyfiles(argc,argv); 
+      copyfiles(argc,argv); // step 3
 #endif /* NFS */
     sleep(1);
-    startprocs(argc,argv);  // step 3
+    startprocs(argc,argv);  // step 4
   } else {  // slave does
     int c;
     optind=1;
@@ -459,7 +459,12 @@ void redirstdio(int argc, char **argv)
   }
 }
 
-
+/**
+ * @brief jia_init -- init jiajia basic setting
+ * 
+ * @param argc 
+ * @param argv 
+ */
 void jia_init(int argc, char **argv)
 {
   unsigned long timel,time1;
