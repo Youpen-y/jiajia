@@ -1,8 +1,5 @@
 #include <stdio.h>
- 
 #include <sys/time.h>
-
-
 #include "tsp.h"
 
 #define SILENT
@@ -14,12 +11,12 @@ GlobalMemory	*glob = NULL;
 
 int 		StartNode, TspSize, NodesFromEnd;
 int 		dump, debug, debugPrioQ;
-int		performance;
+int			performance;
 extern int	visitNodes;
 
 
 
-usage()
+void usage()
 {
 	fprintf(stderr, "tsp:\n\t%s\n\t%s\n\t%s\n\t%s\n\t%s\n\t%s\n\t%s\n",
 			"-n: number of hosts", "-s: start node",
@@ -49,9 +46,7 @@ void Worker()
 }
 
 
-main(argc,argv)
-unsigned argc;
-char **argv;
+int main(int argc, char **argv)
 {
     int 		c, i, j, silent;
     char 	       *fname;
@@ -69,7 +64,7 @@ char **argv;
 */
     if (argc == 1) usage();
 
-    while ((c = getopt(argc, argv, "df:pr:s:DSh")) != -1)
+    while ((c = getopt(argc, argv, "df:pr:s:DSh")) != -1) {
 		switch (c) {
 		  case 'd':
 			debug++;
@@ -103,7 +98,7 @@ char **argv;
 			usage();
 			exit(0);
 		}
-
+	}
     jia_init(argc, argv);
 /*
 */
@@ -114,52 +109,53 @@ char **argv;
 		fprintf(stderr, "Unable to alloc shared memory\n");
 		exit(-1);
 	}
-        jia_barrier();
-        if(jiapid ==0) {
-	bzero((char *)glob, sizeof(*glob));
+    jia_barrier();
+    if(jiapid ==0) {
+		bzero((char *)glob, sizeof(*glob));
         jia_wtnt(glob,sizeof(*glob));
-	glob->TourStackTop = -1;
+		glob->TourStackTop = -1;
         jia_wtntw(&(glob->TourStackTop));
-	glob->MinTourLen = BIGINT;
+		glob->MinTourLen = BIGINT;
         jia_wtntw(&(glob->MinTourLen));
-	glob->TourLock = 1;
+		glob->TourLock = 1;
         jia_wtntw(&(glob->TourLock));
-	glob->MinLock = 2;
+		glob->MinLock = 2;
         jia_wtntw(&(glob->MinLock));
-	glob->barrier = 0;
+		glob->barrier = 0;
         jia_wtntw(&(glob->barrier));
-        }
+    }
 	/* Read in the data file with graph description. */
 	TspSize = read_tsp(fname);
 
 	/* Initialize the first tour. */
-        if (jiapid ==0) {
-	glob->Tours[0].prefix[0] = StartNode;
+    if (jiapid ==0) {
+		glob->Tours[0].prefix[0] = StartNode;
         jia_wtntw(&(glob->Tours[0].prefix[0]));
-	glob->Tours[0].conn = 1;
+		glob->Tours[0].conn = 1;
         jia_wtntw(&(glob->Tours[0].conn));
-	glob->Tours[0].last = 0;
+		glob->Tours[0].last = 0;
         jia_wtntw(&(glob->Tours[0].last));
-	glob->Tours[0].prefix_weight = 0;
+		glob->Tours[0].prefix_weight = 0;
         jia_wtntw(&(glob->Tours[0].prefix_weight));
-        }
+    }
 	calc_bound(0);			/* Sets lower_bound. */
 
 	/* Initialize the priority queue structures. */
-        if (jiapid ==0) {
-	glob->PrioQ[1].index = 0;	/* The first PrioQ entry is Tour 0. */
+    if (jiapid ==0) {
+		glob->PrioQ[1].index = 0;	/* The first PrioQ entry is Tour 0. */
         jia_wtntw(&(glob->PrioQ[1].index));
-	glob->PrioQ[1].priority = glob->Tours[0].lower_bound;
+		glob->PrioQ[1].priority = glob->Tours[0].lower_bound;
         jia_wtntw(&(glob->PrioQ[1].priority));
-	glob->PrioQLast = 1;
+		glob->PrioQLast = 1;
         jia_wtntw(&(glob->PrioQLast));
 
 	/* Put all the unused tours in the free tour stack. */
-	for (i = MAX_NUM_TOURS - 1; i > 0; i--)
-		glob->TourStack[++glob->TourStackTop] = i;
-                jia_wtntw(&(glob->TourStackTop));
-                jia_wtntw(&(glob->TourStack[glob->TourStackTop]));
-        }
+		for (i = MAX_NUM_TOURS - 1; i > 0; i--){
+			glob->TourStack[++glob->TourStackTop] = i;
+		}
+		jia_wtntw(&(glob->TourStackTop));
+		jia_wtntw(&(glob->TourStack[glob->TourStackTop]));
+    }
     jia_barrier();			
     jia_startstat();
     gettimeofday(&start, NULL);

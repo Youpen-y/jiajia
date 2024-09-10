@@ -14,8 +14,7 @@ extern int jia_pid;
 
 
 
-new_tour(prev_index, move)
-int prev_index, move;
+new_tour(int prev_index, int move)
 {
     int index, i;
     TourElement *curr, *prev;
@@ -65,9 +64,7 @@ int prev_index, move;
  *  Set the global `best' value.
  *
  */
-set_best(best, path)
-int best;
-int *path;
+void set_best(int best, int *path)
 {
     int i;
 

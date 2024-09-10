@@ -4,9 +4,11 @@
 #include "tsp.h"
 
 typedef struct {
-unsigned 	CurDist, PathLen;
-int 		Visit[MAX_TOUR_SIZE], Path[MAX_TOUR_SIZE];
-int		visitNodes;
+	unsigned 	CurDist;
+	unsigned	PathLen;
+	int 		Visit[MAX_TOUR_SIZE];
+	int 		Path[MAX_TOUR_SIZE];
+	int			visitNodes;
 } EXPANDED;
 EXPANDED solve[16];
 
@@ -25,8 +27,7 @@ EXPANDED solve[16];
  *	calling visit_nodes to do the actual recursive solution.
  *
  */
-recursive_solve(index)
-    int index;
+void recursive_solve(int index)
 {
     unsigned i, j;
     TourElement *curr = &glob->Tours[index];
@@ -72,8 +73,7 @@ recursive_solve(index)
  *       Assumes that search started at node from.
  *
  */
-visit_nodes(from)
-    int from;
+void visit_nodes(int from)
 {
     int i, j;
     int dist, last;
@@ -115,8 +115,7 @@ visit_nodes(from)
  *  bound should be higher (and therefore more accurate) but will take
  *  longer to compute. 
  */
-calc_bound(curr_index)
-    int curr_index;
+int calc_bound(int curr_index)
 {
     int i, j, wt, wt1, wt2;
     TourElement *curr = &glob->Tours[curr_index];

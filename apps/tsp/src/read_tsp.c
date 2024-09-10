@@ -1,9 +1,10 @@
 #include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
+
 #include 	"tsp.h"
 
-char *read_int(char_ptr, wt)
-    char *char_ptr;
-    int *wt;
+char *read_int(char *char_ptr, int *wt)
 {
     char *temp_ptr;
 
@@ -26,8 +27,7 @@ char *read_int(char_ptr, wt)
 }
 
 
-read_tsp(file)
-    char *file;
+int read_tsp(char *file)
 {
     FILE *fp;
     char *scan_ptr, line[81], fname[80];
@@ -44,24 +44,27 @@ read_tsp(file)
 
     TspSize = atoi(line);
     if (TspSize > MAX_TOUR_SIZE) {
-	fprintf(stderr,"Error: Problem size (%d) larger than maximum (%d).\n",
-		TspSize, MAX_TOUR_SIZE);
-	fprintf(stderr,"ABORTING.\n");
-	exit(-1);
+        fprintf(stderr,"Error: Problem size (%d) larger than maximum (%d).\n",
+            TspSize, MAX_TOUR_SIZE);
+        fprintf(stderr,"ABORTING.\n");
+        exit(-1);
     }
 
     for (i = 0; i < TspSize; i++) {
-	scan_ptr = fgets(line, 80, fp);
-	j = 0;
-	while (scan_ptr = read_int(scan_ptr, &wt)) {
-                jia_wtntw(&(glob->weights[i][j]));
-		glob->weights[i][j++] = wt;
+        scan_ptr = fgets(line, 80, fp);
+        j = 0;
+        while (scan_ptr = read_int(scan_ptr, &wt)) {
+            jia_wtntw(&(glob->weights[i][j]));
+            glob->weights[i][j++] = wt;
         }
     }
 
-    if (debug) for (i = 0; i < TspSize; i++)
-	for (j = 0; j < TspSize; j++)
-	    printf("%2d%s", glob->weights[i][j], j == TspSize - 1 ? "\n" : " ");
-
+    if (debug) { 
+        for (i = 0; i < TspSize; i++) {
+	        for (j = 0; j < TspSize; j++) {
+	            printf("%2d%s", glob->weights[i][j], j == TspSize - 1 ? "\n" : " ");
+            }
+        }
+    }
     return(TspSize);
 }

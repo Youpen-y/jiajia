@@ -48,8 +48,9 @@ typedef struct
 
 extern GlobalMemory	*glob;
 
-extern read_tsp(), set_best();
-extern char *fgets();
+extern int read_tsp(char *file);
+extern void set_best(int best, int *path);
+//extern char *fgets();
 
 extern int TspSize, StartNode;
 
@@ -57,4 +58,4 @@ extern int NodesFromEnd, debug, debugPrioQ;
 
 extern char TOUR_STR[16][256];
 
-#define _tour_str       TOUR_STR[jia_pid]
+#define _tour_str TOUR_STR[jia_pid]
