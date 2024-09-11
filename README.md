@@ -6,7 +6,7 @@ As a static library, it provide some usable interfaces to programmer so that the
 What I want to do is mainly include these aspects:
 
 - Upgrade it so that it can be adapted to 64-bit machines
-- Redesign some interfaces to increase usability
+- Redesign some interfaces to increase usability (eg. replace select IO multiplex with epoll in linux system)
 - Optimize cache design to support LRU
 - Adopt RDMA technology to redesign the whole system desing (two directions)
   - RDMA support as a extra function that can be truned on or off. It means that there are two side-by-side network protocol stacks in the system, and will use RDMA first if possible.
@@ -14,10 +14,11 @@ What I want to do is mainly include these aspects:
 - The last one need to consider is its availability (fault tolerance), consider checkpoint(store it's memory content to persistent storage periodically)
 
 ### JIAJIA3.0 Interfaces
-
+(will coming soon)
 
 
 ### Work up to Now
 - Upgrade origin code with detailed comments
 - Remove obsolete code (functions or usages) snippets
-- Adapt it to 64bit machine (redesign msg )
+- Adapt it to 64bit machine (redesign msg structure)
+- Some tests (IPoIB vs traditional TCP/IP stack performance comparsion)
