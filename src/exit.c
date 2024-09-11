@@ -321,7 +321,7 @@ fflush(stdout);
 
        printf("\n");
        for (i=0; i<20+hostc*9; i++) printf("-");
-       printf(" (us) ");
+       printf(" (ms) ");
        printf("\nBarrier time       = ");
        for (i=0; i<hostc; i++) printf("%8.2f ", allstats[i].barrtime/1000.0);
        printf("\nLock time          = ");
