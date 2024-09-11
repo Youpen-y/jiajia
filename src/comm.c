@@ -281,6 +281,7 @@ void initcomm()
 
     act.sa_handler = (void_func_handler)sigio_handler;
     sigemptyset(&act.sa_mask);
+    act.sa_flags = SA_RESTART;
     if (sigaction(SIGIO, &act, NULL))
       assert0(0,"initcomm()-->sigaction()");
 
