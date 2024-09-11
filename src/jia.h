@@ -130,14 +130,14 @@ void           jia_error(char*, ...);
 /**
  * @brief jia_startstat -- start statistics (available with Macro DOSTAT)
  * 
- * @return unsigned int 
+ * @return unsigned int the start time or the elapsed time since base (us)
  */
 unsigned int   jia_startstat();
 
 /**
  * @brief jia_stopstat -- stop statistics (available with Macro DOSTAT)
  * 
- * @return unsigned int 
+ * @return unsigned int the elapsed time since base(us)
  */
 unsigned int   jia_stopstat();
 

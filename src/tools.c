@@ -627,7 +627,7 @@ void jia_error(char *errstr)
 /**
  * @brief get_usecs -- Get the usecs object
  * 
- * @return unsigned int 
+ * @return unsigned int the elapsed time since base (microsecond)
  */
 unsigned int get_usecs()
 {
@@ -656,7 +656,7 @@ unsigned int get_usecs()
     struct timeval         time;
 
     gettimeofday(&time, NULL);
-    if (!base.tv_usec) {
+    if (!base.tv_usec) {  // if base has been initialized
         base = time;
     }
     return ((time.tv_sec - base.tv_sec) * 1000000 +

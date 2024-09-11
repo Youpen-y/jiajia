@@ -22,19 +22,19 @@ new_tour(int prev_index, int move)
     /* get index of a blank tour */
     if (glob->TourStackTop >= 0) index = glob->TourStack[glob->TourStackTop--];
     else {
-		fprintf(stderr, "TourStackTop: %d\n", glob->TourStackTop);
-		fflush(stderr);
-		exit(-1);
+      fprintf(stderr, "TourStackTop: %d\n", glob->TourStackTop);
+      fflush(stderr);
+      exit(-1);
     }
 
     curr = &glob->Tours[index];
     prev = &glob->Tours[prev_index];
 
     for (i = 0; i < TspSize; i++) {
-		curr->prefix[i] = prev->prefix[i];
-                jia_wtntw(&(curr->prefix[i]));
-		curr->conn = prev->conn;
-                jia_wtntw(&(curr->conn));
+      curr->prefix[i] = prev->prefix[i];
+      jia_wtntw(&(curr->prefix[i]));
+      curr->conn = prev->conn;
+      jia_wtntw(&(curr->conn));
     }
 
     curr->last = prev->last;
@@ -46,7 +46,7 @@ new_tour(int prev_index, int move)
     jia_wtntw(&(curr->last));
     jia_wtntw(&(curr->prefix[(curr->last)]));
     if (debug) {
-		MakeTourString(curr->last, curr->prefix);
+		  MakeTourString(curr->last, curr->prefix);
     }
 
     /* add our new move */
@@ -66,33 +66,33 @@ new_tour(int prev_index, int move)
  */
 void set_best(int best, int *path)
 {
-    int i;
+  int i;
 
-    if (best >= glob->MinTourLen) {
-		if (debug)
-			fprintf(stderr, "\nset_best: %d <-> %d\n", best, glob->MinTourLen);
-		return(0);	/* MinTourLen monotonically decreases */
+  if (best >= glob->MinTourLen) {
+    if (debug)
+      fprintf(stderr, "\nset_best: %d <-> %d\n", best, glob->MinTourLen);
+    return(0);	/* MinTourLen monotonically decreases */
+  }
+
+  /* Ensure that changes to the minimum are serialized. */
+
+  jia_lock(glob->MinLock);
+
+  if (best < glob->MinTourLen) {
+    if (debug || debugPrioQ) {
+      MakeTourString(TspSize, path);
     }
-
-    /* Ensure that changes to the minimum are serialized. */
-
-    jia_lock(glob->MinLock);
-
-    if (best < glob->MinTourLen) {
-		if (debug || debugPrioQ) {
-			MakeTourString(TspSize, path);
-		}
-		fprintf(stderr, "MinTourLen: %d (old: %d): ", best, glob->MinTourLen, glob->MinTour[0]);
-		glob->MinTourLen = best;
-                jia_wtntw(&(glob->MinTourLen));
-		for (i = 0; i < TspSize; i++) {
-			glob->MinTour[i] = path[i];
-		/*	jia_wtntw(&(glob->MinTour[i]));*/
-		}
-		jia_wtnt(&(glob->MinTour[i]),4*TspSize);
-		fprintf(stderr, "\n");
+    fprintf(stderr, "MinTourLen: %d (old: %d): ", best, glob->MinTourLen, glob->MinTour[0]);
+    glob->MinTourLen = best;
+    jia_wtntw(&(glob->MinTourLen));
+    for (i = 0; i < TspSize; i++) {
+      glob->MinTour[i] = path[i];
+    /*	jia_wtntw(&(glob->MinTour[i]));*/
     }
-    jia_unlock(glob->MinLock);
+    jia_wtnt(&(glob->MinTour[i]),4*TspSize);
+    fprintf(stderr, "\n");
+  }
+  jia_unlock(glob->MinLock);
 }
 
 
@@ -102,16 +102,14 @@ void set_best(int best, int *path)
  *  Make a string for printing that describes the tour passed via len and path.
  *
  */
-MakeTourString(len, path)
-int   	len;
-int 	*path;
+MakeTourString(int len, int *path)
 {
-    int i, j;
+  int i, j;
 
-    for (i = j = 0; i < len; i++) {
-		sprintf((_tour_str + j), "%1d - ", (int)path[i]);
-		if ((int)path[i] >= 10) j += 5;	/* Two digit number. */
-		else j += 4;
-    }
-    sprintf((_tour_str + j), "%1d\0", (int) path[i]);
+  for (i = j = 0; i < len; i++) {
+    sprintf((_tour_str + j), "%1d - ", (int)path[i]);
+    if ((int)path[i] >= 10) j += 5;	/* Two digit number. */
+    else j += 4;
+  }
+  sprintf((_tour_str + j), "%1d\0", (int) path[i]);
 }

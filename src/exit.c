@@ -62,6 +62,11 @@ extern unsigned long globaladdr;
 int statcnt=0;
 volatile int waitstat;
 
+/**
+ * @brief statserver -- stat msg server
+ * 
+ * @param rep 
+ */
 void statserver(jia_msg_t *rep)
 { int i;
  jia_msg_t *grant;
@@ -148,9 +153,12 @@ void statgrantserver(jia_msg_t *req)
 
  waitstat = 0;
 }
-#endif
+#endif /* DOSTAT */
 
-
+/**
+ * @brief jia_exit -- 
+ * 
+ */
 void jia_exit()
 {
 #ifdef DOSTAT
@@ -185,48 +193,48 @@ fflush(stdout);
 
    /*Follow used by Shi*/
     if (jia_pid == 0) {
-       memset((char*)&total,0, sizeof(total)); 
+       memset((char*)&total, 0, sizeof(total)); 
        for (i=0; i<hostc; i++) {
-          total.msgsndcnt   += allstats[i].msgsndcnt;
-          total.msgrcvcnt   += allstats[i].msgrcvcnt;
-          total.msgsndbytes += allstats[i].msgsndbytes;
-          total.msgrcvbytes += allstats[i].msgrcvbytes;
-          total.segvLcnt    += allstats[i].segvLcnt;
-          total.segvRcnt    += allstats[i].segvRcnt;
-          total.barrcnt      = allstats[i].barrcnt;
-          total.lockcnt     += allstats[i].lockcnt;
-          total.getpcnt     += allstats[i].getpcnt;
-          total.diffcnt     += allstats[i].diffcnt;
-          total.invcnt      += allstats[i].invcnt;
-          total.mwdiffcnt   += allstats[i].mwdiffcnt;
-          total.repROcnt    += allstats[i].repROcnt;
-          total.repRWcnt    += allstats[i].repRWcnt;
-          total.migincnt    += allstats[i].migincnt;
-          total.migoutcnt    += allstats[i].migoutcnt;
-          total.resentcnt    += allstats[i].resentcnt;
+         total.msgsndcnt   += allstats[i].msgsndcnt;
+         total.msgrcvcnt   += allstats[i].msgrcvcnt;
+         total.msgsndbytes += allstats[i].msgsndbytes;
+         total.msgrcvbytes += allstats[i].msgrcvbytes;
+         total.segvLcnt    += allstats[i].segvLcnt;
+         total.segvRcnt    += allstats[i].segvRcnt;
+         total.barrcnt      = allstats[i].barrcnt;
+         total.lockcnt     += allstats[i].lockcnt;
+         total.getpcnt     += allstats[i].getpcnt;
+         total.diffcnt     += allstats[i].diffcnt;
+         total.invcnt      += allstats[i].invcnt;
+         total.mwdiffcnt   += allstats[i].mwdiffcnt;
+         total.repROcnt    += allstats[i].repROcnt;
+         total.repRWcnt    += allstats[i].repRWcnt;
+         total.migincnt    += allstats[i].migincnt;
+         total.migoutcnt    += allstats[i].migoutcnt;
+         total.resentcnt    += allstats[i].resentcnt;
 
-          total.usersigiocnt+= allstats[i].usersigiocnt;
-          total.synsigiocnt += allstats[i].synsigiocnt;
-          total.segvsigiocnt+= allstats[i].segvsigiocnt;
-          total.overlapsigiocnt+= allstats[i].overlapsigiocnt;
+         total.usersigiocnt+= allstats[i].usersigiocnt;
+         total.synsigiocnt += allstats[i].synsigiocnt;
+         total.segvsigiocnt+= allstats[i].segvsigiocnt;
+         total.overlapsigiocnt+= allstats[i].overlapsigiocnt;
 
-	  total.segvLtime   += allstats[i].segvLtime;
-	  total.segvRtime   += allstats[i].segvRtime;
-	  total.barrtime    += allstats[i].barrtime;
-	  total.locktime    += allstats[i].locktime;
-	  total.unlocktime  += allstats[i].unlocktime;
-	  total.usersigiotime += allstats[i].usersigiotime;
-	  total.synsigiotime  += allstats[i].synsigiotime;
-	  total.segvsigiotime += allstats[i].segvsigiotime;
-	  total.overlapsigiotime += allstats[i].overlapsigiotime;
- 
-          total.largecnt      += allstats[i].largecnt;
-          total.smallcnt      += allstats[i].smallcnt;
-	  total.syntime     += allstats[i].syntime;
-	  total.commsofttime  += allstats[i].commsofttime;
-	  total.commhardtime  += allstats[i].commhardtime;
-	  total.difftime    += allstats[i].difftime;
-	  total.waittime    += allstats[i].waittime;
+         total.segvLtime   += allstats[i].segvLtime;
+         total.segvRtime   += allstats[i].segvRtime;
+         total.barrtime    += allstats[i].barrtime;
+         total.locktime    += allstats[i].locktime;
+         total.unlocktime  += allstats[i].unlocktime;
+         total.usersigiotime += allstats[i].usersigiotime;
+         total.synsigiotime  += allstats[i].synsigiotime;
+         total.segvsigiotime += allstats[i].segvsigiotime;
+         total.overlapsigiotime += allstats[i].overlapsigiotime;
+      
+         total.largecnt      += allstats[i].largecnt;
+         total.smallcnt      += allstats[i].smallcnt;
+         total.syntime     += allstats[i].syntime;
+         total.commsofttime  += allstats[i].commsofttime;
+         total.commhardtime  += allstats[i].commhardtime;
+         total.difftime    += allstats[i].difftime;
+         total.waittime    += allstats[i].waittime;
        }	
     /*end Shi*/
 
@@ -313,37 +321,37 @@ fflush(stdout);
 
        printf("\n");
        for (i=0; i<20+hostc*9; i++) printf("-");
-
+       printf(" (us) ")
        printf("\nBarrier time       = ");
-       for (i=0; i<hostc; i++) printf("%8.2f ", allstats[i].barrtime/1000000.0);
+       for (i=0; i<hostc; i++) printf("%8.2f ", allstats[i].barrtime/1000.0);
        printf("\nLock time          = ");
-       for (i=0; i<hostc; i++) printf("%8.2f ", allstats[i].locktime/1000000.0);
+       for (i=0; i<hostc; i++) printf("%8.2f ", allstats[i].locktime/1000.0);
        printf("\nUnlock time        = ");
-       for (i=0; i<hostc; i++) printf("%8.2f ", allstats[i].unlocktime/1000000.0);
+       for (i=0; i<hostc; i++) printf("%8.2f ", allstats[i].unlocktime/1000.0);
        printf("\nSEGV time (local)  = ");
-       for (i=0; i<hostc; i++) printf("%8.2f ", allstats[i].segvLtime/1000000.0);
+       for (i=0; i<hostc; i++) printf("%8.2f ", allstats[i].segvLtime/1000.0);
        printf("\nSEGV time (remote) = ");
-       for (i=0; i<hostc; i++) printf("%8.2f ", allstats[i].segvRtime/1000000.0);
+       for (i=0; i<hostc; i++) printf("%8.2f ", allstats[i].segvRtime/1000.0);
        printf("\nSIGIO time (user)  = ");
-       for (i=0; i<hostc; i++) printf("%8.2f ", allstats[i].usersigiotime/1000000.0);
+       for (i=0; i<hostc; i++) printf("%8.2f ", allstats[i].usersigiotime/1000.0);
        printf("\nSIGIO time (Syn.)  = ");
-       for (i=0; i<hostc; i++) printf("%8.2f ", allstats[i].synsigiotime/1000000.0);
+       for (i=0; i<hostc; i++) printf("%8.2f ", allstats[i].synsigiotime/1000.0);
        printf("\nSIGIO time (SEGV)  = ");
-       for (i=0; i<hostc; i++) printf("%8.2f ", allstats[i].segvsigiotime/1000000.0);
+       for (i=0; i<hostc; i++) printf("%8.2f ", allstats[i].segvsigiotime/1000.0);
        printf("\nSIGIO time (Over)  = ");
-       for (i=0; i<hostc; i++) printf("%8.2f ", allstats[i].overlapsigiotime/1000000.0);
+       for (i=0; i<hostc; i++) printf("%8.2f ", allstats[i].overlapsigiotime/1000.0);
        printf("\nEncode diff time   = ");
-       for (i=0; i<hostc; i++) printf("%8.2f ", allstats[i].endifftime/1000000.0);
+       for (i=0; i<hostc; i++) printf("%8.2f ", allstats[i].endifftime/1000.0);
        printf("\nDecode diff time   = ");
-       for (i=0; i<hostc; i++) printf("%8.2f ", allstats[i].dedifftime/1000000.0);
+       for (i=0; i<hostc; i++) printf("%8.2f ", allstats[i].dedifftime/1000.0);
        printf("\nAsendmsg time      = ");
-       for (i=0; i<hostc; i++) printf("%8.2f ", allstats[i].asendtime/1000000.0);
-       printf("\ncomm soft time     = ");
-       for (i=0; i<hostc; i++) printf("%8.2f ", allstats[i].commsofttime/1000000.0);
-       printf("\ncomm hard time     = ");
-       for (i=0; i<hostc; i++) printf("%8.2f ", allstats[i].commhardtime/1000000.0);
-       /*printf("\nWait time          = ");
-       for (i=0; i<hostc; i++) printf("%8.2f ", allstats[i].waittime/1000000.0);*/
+       for (i=0; i<hostc; i++) printf("%8.2f ", allstats[i].asendtime/1000.0);
+       //printf("\ncomm soft time     = ");
+       //for (i=0; i<hostc; i++) printf("%8.2f ", allstats[i].commsofttime/1000.0);
+       //printf("\ncomm hard time     = ");
+       //for (i=0; i<hostc; i++) printf("%8.2f ", allstats[i].commhardtime/1000.0);
+       printf("\nWait time          = ");
+       for (i=0; i<hostc; i++) printf("%8.2f ", allstats[i].waittime/1000.0);
 
        printf("\n");
        for (i=0; i<20+hostc*9; i++) printf("-");
@@ -351,15 +359,15 @@ fflush(stdout);
        printf("\nSEGV time          = ");
        for (i=0; i<hostc; i++) printf("%8.2f ", (allstats[i].segvLtime+allstats[i].segvRtime+
            allstats[i].segvLcnt*SEGVoverhead+allstats[i].segvRcnt*SEGVoverhead-
-           allstats[i].segvsigiotime-allstats[i].segvsigiocnt*SIGIOoverhead)/1000000.0);
+           allstats[i].segvsigiotime-allstats[i].segvsigiocnt*SIGIOoverhead)/1000.0);
        printf("\nSyn. time          = ");
        for (i=0; i<hostc; i++) printf("%8.2f ", (allstats[i].barrtime+allstats[i].locktime+
            allstats[i].unlocktime- allstats[i].synsigiotime-
-           allstats[i].synsigiocnt*SIGIOoverhead)/1000000.0);
+           allstats[i].synsigiocnt*SIGIOoverhead)/1000.0);
        printf("\nServer time        = ");
        for (i=0; i<hostc; i++) printf("%8.2f ", (allstats[i].usersigiotime+allstats[i].synsigiotime+
            allstats[i].segvsigiotime+(allstats[i].usersigiocnt+allstats[i].synsigiocnt+
-           allstats[i].segvsigiocnt)*SIGIOoverhead)/1000000.0);
+           allstats[i].segvsigiocnt)*SIGIOoverhead)/1000.0);
 
        printf("\n");
        for (i=0; i<20+hostc*9; i++) printf("#");

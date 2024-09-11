@@ -35,7 +35,7 @@ double BOXH, BOXL, XMA, XMB;
   for (I = 0; I <  14; I++) {
     /* if the value is greater than the cutoff radius */
     if (fabs(XL[I]) > BOXH) {
-	XL[I]  =  XL[I] -(sign(BOXL,XL[I]));
+	    XL[I]  =  XL[I] -(sign(BOXL,XL[I]));
     }
   } /* for */
 } /* end of subroutine CSHIFT */

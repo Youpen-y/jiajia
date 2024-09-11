@@ -5,7 +5,7 @@
 CC = cc
 #CFLAGS = -dn
 
-ARCH = solaris
-LDFLAGS = -lnsl -lsocket -lcurses  -lucb -lm
+ARCH = linux
+LDFLAGS = -lnsl -lcurses -lm
 
 include ../Makefile.common

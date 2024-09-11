@@ -73,24 +73,24 @@ typedef struct host_t {
 typedef struct Stats {
         unsigned int kernelflag;
 
-        unsigned int msgsndbytes;
-        unsigned int msgrcvbytes;
-        unsigned int msgrcvcnt;
-        unsigned int msgsndcnt;
-        unsigned int segvLcnt;
-        unsigned int segvRcnt;
-        unsigned int usersigiocnt;
-        unsigned int synsigiocnt;
-        unsigned int segvsigiocnt;
-        unsigned int sigiocnt;
-        unsigned int barrcnt;
-        unsigned int lockcnt;
-        unsigned int getpcnt;
-        unsigned int diffcnt;
-        unsigned int invcnt;
-        unsigned int mwdiffcnt;
-        unsigned int repROcnt;
-        unsigned int repRWcnt;
+        unsigned int msgsndbytes;       /*msg send bytes*/
+        unsigned int msgrcvbytes;       /*msg recv bytes*/
+        unsigned int msgrcvcnt;         /*msg recv count*/
+        unsigned int msgsndcnt;         /*msg send count*/
+        unsigned int segvLcnt;          /*segv local count*/
+        unsigned int segvRcnt;          /*segv remote count*/
+        unsigned int usersigiocnt;      /*user SIGIO count*/
+        unsigned int synsigiocnt;       /*syn SIGIO count*/
+        unsigned int segvsigiocnt;      /*segv SIGIO count*/
+        unsigned int sigiocnt;          /*total SIGIO count*/
+        unsigned int barrcnt;           /*barriers count*/
+        unsigned int lockcnt;           /*lock count*/
+        unsigned int getpcnt;           /*getp msg count*/
+        unsigned int diffcnt;           /*diff msg count*/
+        unsigned int invcnt;            /*inv msg count*/
+        unsigned int mwdiffcnt;         /*MWdiffs count*/
+        unsigned int repROcnt;          /*Replaced RO pages*/
+        unsigned int repRWcnt;          /*Replaced RW pages*/
         unsigned int migincnt;
         unsigned int migoutcnt;
         unsigned int resentcnt;
@@ -118,13 +118,11 @@ typedef struct Stats {
 	unsigned int commtime;
 	unsigned int commsofttime;
 	unsigned int commhardtime;
-	unsigned int largecnt;
-	unsigned int smallcnt;
+	unsigned int largecnt;          /*large msg count*/
+	unsigned int smallcnt;          /*small msg count*/
         unsigned int overlapsigiotime;
         unsigned int overlapsigiocnt;
         unsigned int waittime;
-    
-
 } jiastat_t;
 #endif
 

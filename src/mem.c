@@ -464,7 +464,8 @@ int replacei(int cachei)  // TODO: implement LRU replacement
 }
 
 /**
- * @brief flushpage -- 
+ * @brief flushpage -- flush the cached page(reset the cache's info); 
+ * remove the cache relation with its original page. if the cache's state is RW, free its twin
  * 
  * @param cachei page index in cache
  */
@@ -483,10 +484,10 @@ void flushpage(int cachei)
 }
 
 /**
- * @brief findposition -- 
+ * @brief findposition -- find an available cache slot in cache
  * 
  * @param addr addr of a byte in one page
- * @return int 
+ * @return int the index of 
  */
 int findposition(address_t addr)
 {
@@ -499,18 +500,17 @@ int findposition(address_t addr)
   seti=replacei(cachei);
   invi=-1;
   for (i=0;(cache[cachei+seti].state!=UNMAP)&&(i<Setpages);i++){
-
-    if ((invi==(-1))&&(cache[cachei+seti].state==INV))
+    if ((invi==(-1))&&(cache[cachei+seti].state==INV)){ // find a cached page whose state is INV
       invi=seti;
-
-    seti=(seti+1)%Setpages;
+    }
+    seti=(seti+1)%Setpages; // next index in this set
   }
 
-  if ((cache[cachei+seti].state!=UNMAP)&&(invi!=(-1))){
+  if ((cache[cachei+seti].state!=UNMAP)&&(invi!=(-1))){ // if there is no UNMAP cache, used cache in INV state
     seti=invi;
   }   
 
-  if ((cache[cachei+seti].state==INV)||(cache[cachei+seti].state==RO)){
+  if ((cache[cachei+seti].state==INV)||(cache[cachei+seti].state==RO)){ // the cached page's state is INV or RO
     flushpage(cachei+seti);
 #ifdef DOSTAT
 if (statflag==1){

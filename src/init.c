@@ -83,7 +83,7 @@ int statflag;
 #endif
 
 /**
- * @brief my_getline -- 
+ * @brief my_getline -- get 
  * 
  * @param wordc 
  * @param wordv 
@@ -498,7 +498,7 @@ void jia_init(int argc, char **argv)
 
 #ifdef DOSTAT
   clearstat();
-  statflag=1;
+  statflag=1; // stat switch on
 #endif
 #ifndef LINUX
   barrier0();
@@ -522,7 +522,7 @@ void jia_init(int argc, char **argv)
 }
 
 #ifdef DOSTAT
-void clearstat()
+void clearstat()  // initialized jiastat with 0
 {
   memset((char*)&jiastat, 0,sizeof(jiastat));
 }

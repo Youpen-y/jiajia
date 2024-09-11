@@ -421,17 +421,17 @@ void msgserver()
             case LOADREQ:  loadserver(&inqh);     break;
             case LOADGRANT:loadgrantserver(&inqh);break;
 #ifdef DOSTAT
-             case STAT:     statserver(&inqh);     break;
-             case STATGRANT:statgrantserver(&inqh);break;
+            case STAT:     statserver(&inqh);     break;
+            case STATGRANT:statgrantserver(&inqh);break;
 #endif 
 
-             default:       if (inqh.op>=BCAST) {
-                               bcastserver(&inqh);
+            default:       if (inqh.op>=BCAST) {
+                                bcastserver(&inqh);
                             } else  { 
                               printmsg(&inqh,1);
                               assert0(0,"msgserver(): Incorrect Message!");
                             }
-                            break;
+                          break;
      }
      SPACE(1);printf("Out servermsg!\n");
 }
