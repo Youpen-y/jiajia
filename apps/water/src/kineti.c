@@ -7,11 +7,7 @@
 #include "split.h"
 #include "global.h"
 
-KINETI(NMOL,SUM,HMAS,OMAS)
-int NMOL;
-double HMAS,OMAS;
-double SUM[];
-
+void KINETI(int NMOL, double SUM[], double HMAS, double OMAS)
         /* this routine computes kinetic energy in each of the three
             spatial dimensions, and puts the computed values in the
             SUM array */ 

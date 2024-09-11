@@ -10,8 +10,7 @@
 #include "split.h"
 #include "global.h"
 
-INTRAF(VIR)
-double *VIR;
+void INTRAF(double *VIR)
 {
 /*
 .....this routine calculates the intra-molecular force/mass acting on

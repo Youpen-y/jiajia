@@ -6,7 +6,7 @@
  *
  */
 #include <stdio.h>
-
+#include <stdlib.h>
 #include "tsp.h"
 
 #define LEFT_CHILD(x)	((x)<<1)
@@ -16,6 +16,8 @@
 			 ((x)->priority == (y)->priority) && \
 			  (glob->Tours[(x)->index].last > glob->Tours[(y)->index].last))
 
+extern void MakeTourString(int len, int *path);
+extern int new_tour(int prev_index, int move);
 /*
  * DumpPrioQ():
  *
@@ -235,7 +237,7 @@ int get_tour(int curr)
 {
 #ifdef	LOCK_PREFETCH
     PREFETCH2(glob, glob + 1);
-#endif	LOCK_PREFETCH
+#endif	/* LOCK_PREFETCH */
     jia_lock(glob->TourLock);
     if (curr != -1){
        glob->TourStack[++glob->TourStackTop] = curr;

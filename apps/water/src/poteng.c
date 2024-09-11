@@ -10,8 +10,7 @@
 #include "split.h"
 #include "global.h"
 
-POTENG(POTA,POTR,PTRF)
-double *POTA, *POTR, *PTRF;     /* some shared sums computed by POTENG */
+void POTENG(double *POTA, double *POTR, double *PTRF)  /* parameters are some shared sums computed by POTENG */
 {
 
 /*

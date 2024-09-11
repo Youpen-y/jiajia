@@ -1,7 +1,10 @@
 #include <jia.h>
 
-#include "stdio.h"
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h> // sleep
 #include <sys/time.h>
+#include <strings.h>
 #include "comments.h"	/* moves leading comments to another file */
 #include "split.h"
 
@@ -39,8 +42,14 @@ int MolsPerProc;                /* number of mols per processor */
 
 extern char	*optarg;
 int errout;
-int main(argc, argv)
-char **argv;
+
+extern void INTRAF(double *VIR);
+extern void SYSCNS();
+extern void INITIA(FILE *nfmc);
+extern void INTERF(int DEST, double *VIR);
+void CNSTNT(int N, double *C);
+
+int main(int argc, char **argv)
 {
   FILE *fp;
   char *input_file = "waterfiles/sample.in";
@@ -100,7 +109,7 @@ char **argv;
     fprintf(stderr, "Unable to open '%s'\n", input_file);
     exit(-1);
   }
-  fscanf(fp, "%lf%d%d%d%d%d%d%d%d",&TSTEP, &NMOL, &NSTEP, &NORDER, 
+  fscanf(fp, "%lf%d%d%d%d%d%d%d",&TSTEP, &NMOL, &NSTEP, &NORDER, 
     &NSAVE, &NRST, &NPRINT, &NFMC);
   if (tsteps) NSTEP = tsteps;
   if (NMOL > MAXMOLS) {
@@ -109,7 +118,7 @@ char **argv;
     exit(-1);
   }
   jia_init(argc, argv);
-  jia_config(WVEC,ON2);
+  jia_config(WVEC,ONE);
   
 
   printf("Using %d procs on %d steps of %d mols\n", jiahosts, NSTEP, NMOL);

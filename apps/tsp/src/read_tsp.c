@@ -2,7 +2,7 @@
 #include <string.h>
 #include <stdlib.h>
 
-#include 	"tsp.h"
+#include "tsp.h"
 
 char *read_int(char *char_ptr, int *wt)
 {
@@ -40,7 +40,13 @@ int read_tsp(char *file)
         exit(0);
     }
 
-    fgets(line, 80, fp);
+    if(fgets(line, 80, fp) == NULL){
+        if(feof(fp)){
+            printf("End of file reached.\n");
+        } else {
+            printf("Failed to read line");
+        }
+    }
 
     TspSize = atoi(line);
     if (TspSize > MAX_TOUR_SIZE) {

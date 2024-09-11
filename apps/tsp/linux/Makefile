@@ -3,9 +3,10 @@
 #*********************************************************
 
 CC = cc
-#CFLAGS = -dn
+CFLAGS = -Wunused-result
 
 ARCH = linux
-LDFLAGS = -lnsl -lcurses
+#LDFLAGS = -lnsl -lcurses
+LDFLAGS = 
 
 include ../Makefile.common

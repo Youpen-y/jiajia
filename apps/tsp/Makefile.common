@@ -9,8 +9,8 @@ VPATH = ../src
 JIALIB = ../../../lib/$(ARCH)
 
 %.d:%.c 
-	@echo "Creating $@..."
-	@$(SHELL) -ec "$(CC) $(CPPFLAGS) $< | sed ' s/$*\.o/& $@/g' > $@"
+#	@echo "Creating $@..."
+#	@$(SHELL) -ec "$(CC) $(CPPFLAGS) $< | sed ' s/$*\.o/& $@/g' > $@"
 
 TARGET 	= ./TSP.$(ARCH)
 
@@ -22,4 +22,4 @@ all:$(TARGET)
 clean:
 	rm -f *.[od] *.log *.err $(TARGET)
 
-include $(OBJS:.o=.d)
+# include $(OBJS:.o=.d)

@@ -3,6 +3,9 @@
 #include <stdio.h>
 #include <sys/time.h>
 #include <math.h>
+#include <string.h> // bzero, memcpy
+#include <stdlib.h> // malloc, atoi
+#include <unistd.h> // getopt
 #include <jia.h>
 
 double aint(double x)
@@ -108,67 +111,67 @@ void  bucksort(int key[], int rank[], int shared_keyden[])
   bzero(local_keyden, MAXKEY * sizeof(int));
 
   for (i = 0; i < count; i++)
-    {
-      local_keyden[key[i]]++;
-    }
+  {
+    local_keyden[key[i]]++;
+  }
 
   for (i = 1; i < MAXKEY; i++)
     local_keyden[i] += local_keyden[i-1];
    if (jiapid == 0) bzero(shared_keyden, MAXKEY * sizeof(int));
 
   if (jiahosts > 1)
-    {
-	jia_barrier();
-      jia_lock(0);
-      for (i=0; i < MAXKEY; i++)
-	shared_keyden[i] += local_keyden[i];
-      /* copy intermediate shared_keyden into local keyden */
-      memcpy(local_keyden, shared_keyden, MAXKEY * sizeof(int));
+  {
+    jia_barrier();
+    jia_lock(0);
+    for (i=0; i < MAXKEY; i++)
+shared_keyden[i] += local_keyden[i];
+    /* copy intermediate shared_keyden into local keyden */
+    memcpy(local_keyden, shared_keyden, MAXKEY * sizeof(int));
 
 
-      jia_unlock(0);
-  
-      jia_barrier();
+    jia_unlock(0);
 
-      for (i = MAXKEY-1; i > 0; i--)
-	local_keyden[i] += shared_keyden[i-1] - local_keyden[i-1];
-    }
+    jia_barrier();
+
+    for (i = MAXKEY-1; i > 0; i--)
+      local_keyden[i] += shared_keyden[i-1] - local_keyden[i-1];
+  }
 
   for (i = 0; i < count; i++) 
-    {
-      rank[i] = --local_keyden[key[i]];
-    }
-    if (jiahosts > 1) jia_barrier();
+  {
+    rank[i] = --local_keyden[key[i]];
+  }
+  if (jiahosts > 1) jia_barrier();
 }
 
 
 void    partsmall(int rank[], int i)
 {
   if (start <= 48427 && 48427 < finish)
-    {
-      if (rank[48427-start] != (0+i))
-	fprintf(stderr, "FAILED partial verification test\n");
-    }
+  {
+    if (rank[48427-start] != (0+i))
+      fprintf(stderr, "FAILED partial verification test\n");
+  }
   if (start <= 17148 && 17148 < finish)
-    {
-      if (rank[17148-start] != (18+i))
-	fprintf(stderr, "FAILED partial verification test\n");
-    }
+  {
+    if (rank[17148-start] != (18+i))
+      fprintf(stderr, "FAILED partial verification test\n");
+  }
   if (start <= 23627 && 23627 < finish)
-    {
-      if (rank[23627-start] != (346+i))
-	fprintf(stderr, "FAILED partial verification test\n");
-    }
+  {
+    if (rank[23627-start] != (346+i))
+      fprintf(stderr, "FAILED partial verification test\n");
+  }
   if (start <= 62548 && 62548 < finish)
-    {
-      if (rank[62548-start] != (64917-i))
-	fprintf(stderr, "FAILED partial verification test\n");
-    }
+  {
+    if (rank[62548-start] != (64917-i))
+      fprintf(stderr, "FAILED partial verification test\n");
+  }
   if (start <= 4431 && 4431 < finish)
-    {
-      if (rank[4431-start] != (65463-i))
-	fprintf(stderr, "FAILED partial verification test\n");
-    }
+  {
+    if (rank[4431-start] != (65463-i))
+      fprintf(stderr, "FAILED partial verification test\n");
+  }
 }
 
 
@@ -221,7 +224,7 @@ void    main (int argc, char **argv)
   /* alocate local key array */
   key  = (int *) malloc(3000+count * sizeof(int));
   rank = (int *) malloc(count * sizeof(int));
-  printf("key %x, rank %x\n", key, rank);
+  printf("key %p, rank %p\n", key, rank);
   
   /* Initialize seed for random number generator */
   init_rand(); seed = S;

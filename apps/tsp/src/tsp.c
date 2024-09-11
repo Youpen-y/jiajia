@@ -1,4 +1,7 @@
 #include <stdio.h>
+#include <stdlib.h>
+#include <strings.h>	// bzero
+#include <unistd.h>
 #include <sys/time.h>
 #include "tsp.h"
 
@@ -14,7 +17,9 @@ int 		dump, debug, debugPrioQ;
 int			performance;
 extern int	visitNodes;
 
-
+extern int get_tour(int curr);
+extern void recursive_solve(int index);
+extern int calc_bound(int curr_index);
 
 void usage()
 {
@@ -58,7 +63,7 @@ int main(int argc, char **argv)
     fname = "19b";
 #ifdef SILENT
     silent = 1;
-#endif SILENT
+#endif /* SILENT */
 /*
     jia_init(argc, argv);
 */

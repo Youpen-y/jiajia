@@ -5,3 +5,4 @@ extern int NATOMS;
 #define ONE ((double) 1)
 #define TWO ((double) 2)
 #define FIVE ((double) 5)
+

@@ -44,6 +44,7 @@
 #include <stdlib.h>
 #include <jia.h>
 #include <sys/time.h>
+#include <unistd.h>
 /*----------add PAGE_SIZE-----------------------------------------------*/
 #define PAGE_SIZE                       8192
 #define MAXRAND                         32767.0
@@ -113,9 +114,7 @@ void CheckResult(int, double **, double *);
 void printerr(char *);
 
 
-main(argc, argv)
-int argc;
-char *argv[];
+int main(int argc, char **argv)
 {
   int i, j;
   int ch;
@@ -444,14 +443,7 @@ void SlaveStart()
 }
 
 
-void OneSolve(n, block_size, a, MyNum, dostats)
-
-double **a;
-int n;
-int block_size;
-int MyNum;
-int dostats;
-
+void OneSolve(int n, int block_size, double **a, int MyNum, int dostats)
 {
   unsigned int i; 
   unsigned int myrs; 
@@ -507,12 +499,7 @@ int dostats;
 }
 
 
-void lu0(a, n, stride)
-
-double *a;
-int n; 
-int stride;
-
+void lu0(double *a, int n, int stride)
 {
   int j; 
   int k; 
@@ -531,15 +518,7 @@ int stride;
 }
 
 
-void bdiv(a, diag, stride_a, stride_diag, dimi, dimk)
-
-double *a; 
-double *diag;
-int stride_a; 
-int stride_diag; 
-int dimi; 
-int dimk;
-
+void bdiv(double *a, double *diag, int stride_a, int stride_diag, int dimi, int dimk)
 {
   int j; 
   int k;
@@ -554,15 +533,7 @@ int dimk;
 }
 
 
-void bmodd(a, c, dimi, dimj, stride_a, stride_c)
-
-double *a; 
-double *c;
-int dimi; 
-int dimj; 
-int stride_a; 
-int stride_c;
-
+void bmodd(double *a, double *c, int dimi, int dimj, int stride_a, int stride_c)
 {
   int i; 
   int j; 
@@ -581,18 +552,7 @@ int stride_c;
 }
 
 
-void bmod(a, b, c, dimi, dimj, dimk, stridea, strideb, stridec)
-
-double *a; 
-double *b; 
-double *c;
-int dimi; 
-int dimj; 
-int dimk; 
-int stridea;
-int strideb;
-int stridec;
-
+void bmod(double *a, double *b, double *c, int dimi, int dimj, int dimk, int stridea, int strideb, int stridec)
 {
   int i; 
   int j; 
@@ -609,12 +569,7 @@ int stridec;
 }
 
 
-void daxpy(a, b, n, alpha)
-double *a; 
-double *b; 
-double alpha;
-int n;
-
+void daxpy(double *a, double *b, int n, double alpha)
 {
   int i;
 
@@ -624,24 +579,13 @@ int n;
 }
 
 
-int BlockOwner(I, J)
-
-int I; 
-int J;
-
+int BlockOwner(int I, int J)
 {
   return((J%num_cols) + (I%num_rows)*num_cols); 
 }
 
 
-void lu(n, bs, MyNum, lc, dostats)
-
-int n;
-int bs;
-int MyNum;
-struct LocalCopies *lc;
-int dostats;
-
+void lu(int n, int bs, int MyNum, struct LocalCopies *lc, int dostats)
 {
   int i, il, j, jl, k, kl;
   int I, J, K;
@@ -761,10 +705,7 @@ int dostats;
 }
 
 
-void InitA(rhs)
-
-double *rhs;
-
+void InitA(double *rhs)
 {
   int i, j;
   int ii, jj;
@@ -827,10 +768,7 @@ double *rhs;
   }
 }
 
-double TouchA(bs, MyNum)
-int bs; 
-int MyNum;
-
+double TouchA(int bs, int MyNum)
 {
   int i, j, I, J;
   double tot = 0.0;
@@ -905,11 +843,7 @@ void PrintA()
 }
 
 
-void CheckResult(n, a, rhs)
-int n;
-double **a; 
-double *rhs;
-
+void CheckResult(int n, double **a, double *rhs)
 {
   int i, j, bogus = 0;
   double *y, diff, max_diff;
@@ -994,10 +928,7 @@ double *rhs;
 }
 
 
-void printerr(s)
-
-char *s;
-
+void printerr(char *s)
 {
   fprintf(stderr,"ERROR: %s\n",s);
 }

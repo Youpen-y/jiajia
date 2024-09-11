@@ -1,16 +1,14 @@
-#include "stdio.h"
+#include <stdio.h>
 #include <math.h>
-
-#define extern
 #include "parameters.h"
 #include "mdvar.h"
 #include "water.h"
 #include "wwpot.h"
 #include "cnst.h"
 #include "mddata.h"
-#undef extern
 
-SYSCNS()                    /* sets up some system constants */
+
+void SYSCNS()                    /* sets up some system constants */
 {
     TSTEP=TSTEP/UNITT;        /* time between steps */
     NATMO=NATOMS*NMOL;        /* total number of atoms in system */

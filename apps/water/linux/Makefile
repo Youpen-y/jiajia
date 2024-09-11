@@ -6,6 +6,7 @@ CC = cc
 #CFLAGS = -dn
 
 ARCH = linux
-LDFLAGS = -lnsl -lcurses -lm
+#LDFLAGS = -lnsl -lcurses -lm
+LDFLAGS = -lm
 
 include ../Makefile.common

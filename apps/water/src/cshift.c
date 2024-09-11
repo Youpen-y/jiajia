@@ -3,15 +3,12 @@
 /* return the value of a with the same sign as b */
 #define sign(a,b)  (b < 0 ) ? ( (a < 0) ? a : -a) : ( (a < 0) ? -a : a) 
 
-CSHIFT(XA,XB,XMA,XMB,XL,BOXH,BOXL)
+void CSHIFT(double XA[], double XB[], double XMA, double XMB, double XL[], double BOXH, double BOXL)
 /* compute some relevant distances between the two input molecules to
     this routine. if they are greater than the cutoff radius, compute
     these distances as if one of the particles were at its mirror image
     (periodic boundary conditions).
     used by the intermolecular interactions routines */
-
-double XA[], XB[], XL[];
-double BOXH, BOXL, XMA, XMB;
 {
 
   int I;

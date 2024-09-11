@@ -11,6 +11,7 @@
 #include "global.h"
 
 #include <stdio.h>
+#include <strings.h>
 #include "fileio.h"
 extern FILE *dump;
 
@@ -21,13 +22,12 @@ typedef struct tmp_dummy {
     double Desti[NDIR][NATOM];
 } dmol_type;
 dmol_type localVAR[MAXMOLS];
-#endif	LOCAL_COMP
+#endif	/* LOCAL_COMP */
 
+extern void CSHIFT(double XA[], double XB[], double XMA, double XMB, double XL[], double BOXH, double BOXL);
+void UPDATE_FORCES(int DEST, int mol, int comp, double XL[], double YL[], double ZL[], double FF[]);
 
-
-INTERF(DEST,VIR)
-int DEST;
-double *VIR;
+void INTERF(int DEST, double *VIR)
 {
      /* This routine gets called both from main() and from mdmain().
         When called from main(), it is used to estimate the initial
@@ -53,7 +53,7 @@ double *VIR;
 
 #ifdef	LOCAL_COMP
     bzero(localVAR, sizeof(dmol_type) * NMOL);
-#endif	LOCAL_COMP
+#endif	/* LOCAL_COMP */
 
     half_mol = NMOL/2;
     for (mol = StartMol[jiapid]; mol < StartMol[jiapid+1]; mol++) {
@@ -157,7 +157,7 @@ double *VIR;
 	jia_unlock(gl->MolLock[pid]);  
 	}
       }
-#endif	LOCAL_COMP
+#endif	/* LOCAL_COMP */
             /*  accumulate the running sum from private 
                  per-interaction partial sums   */
     jia_lock(gl->InterfVirLock);
@@ -194,12 +194,10 @@ double *VIR;
     } /* for mol */
 }/* end of subroutine INTERF */
 
-UPDATE_FORCES(DEST, mol, comp, XL, YL, ZL, FF)
+void UPDATE_FORCES(int DEST, int mol, int comp, double XL[], double YL[], double ZL[], double FF[])
         /* from the computed distances etc., compute the 
             intermolecular forces and update the force (or 
             acceleration) locations */
-
-double XL[], YL[], ZL[], FF[];
 {
     int K;
     double G110[3], G23[3], G45[3], TT1[3], TT[3], TT2[3];
@@ -270,7 +268,7 @@ double XL[], YL[], ZL[], FF[];
     localVAR[comp].Desti[ZDIR][H2] +=
     	-GG[7][ZDIR]-GG[9][ZDIR]-GG[12][ZDIR]-TT2[ZDIR]-GG[3][ZDIR];
 
-#else	LOCAL_COMP
+#else	/* LOCAL_COMP */
 
     jia_lock(gl->MolLock[mol]);
     VAR[mol].F[DEST][XDIR][O] +=

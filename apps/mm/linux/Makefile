@@ -4,7 +4,7 @@
 
 CC = gcc
 
-ARCH = solaris
-LDFLAGS = -lnsl -lsocket -lcurses  -lucb
-
+ARCH = linux
+#LDFLAGS = -lnsl -lsocket -lcurses  -lucb
+LDFLAGS =
 include ../Makefile.common

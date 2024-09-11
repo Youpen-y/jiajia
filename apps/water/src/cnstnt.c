@@ -6,10 +6,10 @@
 #include "fileio.h"
 #include "parameters.h"
 
-CNSTNT(N,C)                     /* set up some constants */
-
-int N;		/* NORDER + 1 = 7 for a sixth-order method*/
-double* C; 	/* DIMENSION C(N,N) */
+/* NORDER + 1 = 7 for a sixth-order method
+* DIMENSION C(N,N)
+*/
+void CNSTNT(int N, double *C)                     /* set up some constants */
 {
     int NN,N1,K1;
     double TN,TK,CM;

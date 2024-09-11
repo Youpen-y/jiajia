@@ -18,13 +18,9 @@
 extern FILE *dump;
 
 /************************************************************************/
-double  MDMAIN(NFSV,NFRST,NSTEP,NRST,NPRINT,NSAVE,LKT,NORD1)
-
-    /* routine that implements the time-steps. Called by main routine 
+double  MDMAIN(int NFSV, int NFRST, int NSTEP, int NRST, int NPRINT, int NSAVE, int LKT, int NORD1)
+{    /* routine that implements the time-steps. Called by main routine 
         and calls others */
-
-int NFSV,NFRST,NSTEP,NRST,NPRINT,NSAVE,LKT,NORD1;
-{
     double XTT;
     int i, ii, II,mol, func, dir;
     double POTA,POTR,POTRF;

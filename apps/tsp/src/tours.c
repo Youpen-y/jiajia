@@ -1,9 +1,11 @@
 #include <stdio.h>
-
+#include <stdlib.h>
 #include "tsp.h"
 
 char TOUR_STR[16][256];
 extern int jia_pid;
+void MakeTourString(int len, int *path);
+extern int calc_bound(int curr_index);
 /*
  * new_tour():
  *
@@ -11,10 +13,7 @@ extern int jia_pid;
  *  the next edge to add to the tour.  Returns the index of the new structure.
  *
  */
-
-
-
-new_tour(int prev_index, int move)
+int new_tour(int prev_index, int move)
 {
     int index, i;
     TourElement *curr, *prev;
@@ -71,7 +70,7 @@ void set_best(int best, int *path)
   if (best >= glob->MinTourLen) {
     if (debug)
       fprintf(stderr, "\nset_best: %d <-> %d\n", best, glob->MinTourLen);
-    return(0);	/* MinTourLen monotonically decreases */
+    	/* MinTourLen monotonically decreases */
   }
 
   /* Ensure that changes to the minimum are serialized. */
@@ -82,7 +81,7 @@ void set_best(int best, int *path)
     if (debug || debugPrioQ) {
       MakeTourString(TspSize, path);
     }
-    fprintf(stderr, "MinTourLen: %d (old: %d): ", best, glob->MinTourLen, glob->MinTour[0]);
+    fprintf(stderr, "MinTourLen: %d (old: %d): ", glob->MinTourLen, glob->MinTour[0]);
     glob->MinTourLen = best;
     jia_wtntw(&(glob->MinTourLen));
     for (i = 0; i < TspSize; i++) {
@@ -102,7 +101,7 @@ void set_best(int best, int *path)
  *  Make a string for printing that describes the tour passed via len and path.
  *
  */
-MakeTourString(int len, int *path)
+void MakeTourString(int len, int *path)
 {
   int i, j;
 
@@ -111,5 +110,5 @@ MakeTourString(int len, int *path)
     if ((int)path[i] >= 10) j += 5;	/* Two digit number. */
     else j += 4;
   }
-  sprintf((_tour_str + j), "%1d\0", (int) path[i]);
+  sprintf((_tour_str + j), "%1d", (int) path[i]);
 }

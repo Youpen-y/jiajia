@@ -1,5 +1,6 @@
-#include "math.h"
-#include "stdio.h"
+#include <math.h>
+#include <stdio.h>
+#include <stdlib.h>
 #include "mdvar.h"
 #include "water.h"
 #include "cnst.h"
@@ -7,9 +8,7 @@
 #include "parameters.h"
 #include "mddata.h"
 #include "split.h"
-INITIA(nfmc)
-FILE *nfmc;			   /* points to LWI12, the input file
-                                    with the initial displacements  */
+void INITIA(FILE *nfmc)   /* nfmc points to LWI12, the input file with the initial displacements  */
 {
 /*   THIS ROUTINE INITIALIZES POSITIONS IN A CUBE AND RANDOMIZES 
      VELOCITY OF EACH ATOM */
@@ -26,7 +25,7 @@ FILE *nfmc;			   /* points to LWI12, the input file
     int atom=0;
     
     if (!(random_numbers = fopen("waterfiles/random.in","r"))) {
-	assert(0,"Can't open 'random.in'");
+	    fprintf(stderr,"Can't open 'random.in'");
     }
     XMAS[1]=sqrt(OMAS*HMAS);
     XMAS[0]=HMAS;

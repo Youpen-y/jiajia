@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 
 #include "tsp.h"
@@ -17,6 +18,8 @@ EXPANDED solve[16];
 #define _Visit		solve[1].Visit
 #define _Path		solve[1].Path
 #define _visitNodes	solve[1].visitNodes
+
+void visit_nodes(int from);
 
 /*
  *   recursive_solve(curr_ind)
@@ -80,7 +83,7 @@ void visit_nodes(int from)
 
 #ifdef	DEBUG
     _visitNodes++;
-#endif	DEBUG    
+#endif	/* DEBUG */    
     for (i = 1; i < TspSize; i++) {
 	if (_Visit[i]) continue;	/* Already visited. */
 	if ((dist = glob->weights[from][i]) == 0) continue; /* Not connected. */
@@ -151,7 +154,7 @@ int calc_bound(int curr_index)
                 jia_wtntw(&(curr->lower_bound));
 #ifdef	LOCK_PREFETCH
 		PREFETCH2(glob->TourStack, glob->PrioQ);
-#endif	LOCK_PREFETCH
+#endif	/* LOCK_PREFETCH */
 		jia_lock(glob->TourLock);
 		glob->TourStack[++glob->TourStackTop] = curr_index; /* Free tour. */
                 jia_wtntw(&(glob->TourStackTop));
