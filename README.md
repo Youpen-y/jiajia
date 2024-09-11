@@ -1,0 +1,20 @@
+### Next generation JIAJIA (SDSM) --- JIAJIA3.0
+JIAJIA is a software distributed shared memory system that written at the beginning of the century. What makes it unique is its lock-based consistency.
+
+As a static library, it provide some usable interfaces to programmer so that they can use it divide their task to run on multiple machines. [Interface](#jiajia30-interface)
+
+What I want to do is mainly include these aspects:
+
+- Upgrade it so that it can be adapted to 64-bit machines
+- Redesign some interfaces to increase usability
+- Optimize cache design to support LRU
+- Adopt RDMA technology to redesign the whole system desing (two directions)
+  - RDMA support as a extra function that can be truned on or off. It means that there are two side-by-side network protocol stacks in the system, and will use RDMA first if possible.
+  - Pure RDMA (pursue extreme performance)
+- The last one need to consider is its availability (fault tolerance), will be 
+
+### JIAJIA3.0 Interfaces
+
+
+
+### Work up to Now
