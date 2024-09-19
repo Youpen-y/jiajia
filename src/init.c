@@ -348,6 +348,7 @@ int mypid()
   printf("hostc = %d\n", hostc);
   strtok(hostname,".");
   printf("hostname = %s\n", hostname);
+  printf("hosts[i].name = %s\n", hosts[i].name);
   while ((i<hostc) &&
 #ifdef NFS
          (!(strncmp(hosts[i].name,hostname,strlen(hostname))==0)))
