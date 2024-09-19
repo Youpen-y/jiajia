@@ -1,5 +1,8 @@
 .vscode/
 boot.ps1
-*.o
-*.d
-*.a
+**.o
+**.d
+**.a
+apps/*/*/*
+!**/Makefile
+.clang-format

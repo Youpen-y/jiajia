@@ -8,7 +8,7 @@
  */
 #include <stdio.h>
 #include <sys/time.h>
-#include <jia.h>
+#include "jia.h"
 #include <stdlib.h>
 #include <unistd.h> // getopt
 /*

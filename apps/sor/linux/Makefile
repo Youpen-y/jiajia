@@ -3,9 +3,9 @@
 #*********************************************************
 
 CC = gcc
-CFLAGS = 
+CFLAGS += -g
 
 ARCH = linux
 #LDFLAGS = -lm -lbsd 
 LDFLAGS =
-include ../Makefile.common
+include ../sor.mk

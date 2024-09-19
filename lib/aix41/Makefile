@@ -7,4 +7,4 @@ ARCH_FLAGS = -DAIX41
 CPPFLAGS = -O2 
 
 
-include ../Makefile.common
+include ../lib.mk

@@ -8,4 +8,4 @@ CC = cc
 ARCH = linux
 #LDFLAGS = -lnsl -lsocket -lcurses -lucb -lm
 LDFLAGS = 
-include ../Makefile.common
+include ../pi.mk

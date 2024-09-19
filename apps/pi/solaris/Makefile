@@ -8,4 +8,4 @@ CC = cc
 ARCH = solaris
 LDFLAGS = -lnsl -lsocket -lcurses -lucb -lm
 
-include ../Makefile.common
+include ../pi.mk

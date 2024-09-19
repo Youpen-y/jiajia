@@ -9,4 +9,4 @@ ARCH = aix41
 LDFLAGS = -lm -lbsd 	# ALWAYS link math lib first!.RE: pow() man page
 			# bsd is required for valloc/malloc/...
 
-include ../Makefile.common
+include ../pi.mk

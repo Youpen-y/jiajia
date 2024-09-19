@@ -4,7 +4,7 @@
 
 ARCH = linux
 ARCH_FLAGS = -DLINUX
-CPPFLAGS = -O2 
+CPPFLAGS = -O0
 
 
-include ../Makefile.common
+include ../lib.mk

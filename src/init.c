@@ -92,26 +92,24 @@ int statflag;
 int my_getline(int *wordc, char wordv[Maxwords][Wordsize])
 {
   char line[Linesize];
-  int ch;
+  char ch;
   int linei,wordi1,wordi2;
-  int note;
+  int note = 0;
 
+  //  reading a line in the configuration file except the comment
   linei=0;
-  note=0;
-  ch=getc(config);
-  if (ch=='#') note=1;
-  while ((ch!='\n')&&(ch!=EOF)){
-    if ((linei<Linesize-1)&&(note==0)){
+  while (((ch=getc(config))!='\n')&&(ch!=EOF)){
+    if (ch=='#') note=1;
+    if (linei<Linesize-1 && !note){
       line[linei]=ch;
       linei++;
     }
-    ch=getc(config);
-    if (ch=='#') note=1;
   }
   line[linei]='\0';
 
-  for (wordi1=0;wordi1<Maxwords;wordi1++)
-    wordv[wordi1][0]='\0';
+  // for (wordi1=0;wordi1<Maxwords;wordi1++)
+  //   wordv[wordi1][0]='\0';
+  // Parse strings to tokens
   wordi1=0; linei=0;
   while ((line[linei]!='\0')&&(wordi1<Maxwords)){
     while ((line[linei]==' ')||(line[linei]=='\t'))  
@@ -346,7 +344,6 @@ int mypid()
   assert0((userp!=NULL),"Cannot get user name!");
 
   i=0;
-
   // test1
   printf("hostc = %d\n", hostc);
   strtok(hostname,".");

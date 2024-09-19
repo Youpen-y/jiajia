@@ -8,4 +8,4 @@ CFLAGS =
 ARCH = irix62
 LDFLAGS = -lbsd
 
-include ../Makefile.common
+include ../sor.mk

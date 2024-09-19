@@ -2,7 +2,7 @@
 # Application specific rules and defines...
 #*********************************************************
 
-CPPFLAGS = -I../../../src -O2
+CPPFLAGS += -I../../../src -O0 -g
 
 OBJS 	= sor.o
 VPATH = ../src 
@@ -26,3 +26,4 @@ clean:
 	rm -f *.[od] *.log *.err $(TARGET)
 
 # include $(OBJS:.o=.d)
+ 
