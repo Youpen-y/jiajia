@@ -120,24 +120,6 @@ volatile int inhead, intail, incount;
 volatile int outhead, outtail, outcount;  /* head msg, tail msg, msg count in out queue */
 long   Startport;
 
-// void    initcomm();
-// int     req_fdcreate(int, int);
-// int     rep_fdcreate(int, int);
-// #if defined SOLARIS || defined IRIX62
-// void    sigio_handler(int sig, siginfo_t *sip, ucontext_t *uap);
-// #endif /* SOLARIS */
-// #ifdef LINUX
-// void    sigio_handler();
-// #endif
-// #ifdef AIX41
-// void    sigio_handler();
-// #endif /* AIX41 */
-// void    sigint_handler();
-// void    asendmsg(jia_msg_t *);
-// void    msgserver();
-// void    outsend();
-// void bcastserver(jia_msg_t *msg);
-
 extern void assert(int,char *);
 extern void assert0(int,char *);
 extern unsigned long jia_current_time();
@@ -147,7 +129,6 @@ extern void enable_sigio();
 extern sigset_t oldset;
 int oldsigiomask;
 
-/*---------------------------------------------------------*/
 /**
  * @brief req_fdcreate -- creat socket file descriptor used to send and recv request
  * 
@@ -314,15 +295,6 @@ void initcomm()
       repports[i][j] = Startport+Maxhosts*Maxhosts+i*Maxhosts+j;
     }
   }
-
-/* output comm ports */
-// printf("reqports\t repports\n");
-//   for(i = 0; i < Maxhosts; i++){
-//     for(j = 0; j < Maxhosts; j++){
-//       printf("reqports[%d][%d] = %d\t", i, j, reqports[i][j]);
-//       printf("repports[%d][%d] = %d\n", i, j, repports[i][j]);
-//     }
-//   }
 
 #ifdef JIA_DEBUG
   for(i=0; i<Maxhosts; i++) 

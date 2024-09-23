@@ -157,7 +157,7 @@ int main(int argc, char *argv[])
     for (i = (M+2)*jiapid/jiahosts; i < (M+2)*(jiapid+1)/jiahosts; i++) {
   */
       for (j = 0, sum = 0.0; j <= N; j++) {
-        red_[i][j] = black_[i][j] = sum += (float)j;  // TODO Bug point
+        red_[i][j] = black_[i][j] = sum += (float)j;
       }
 
       if ((i==0)||(i==M+1)){

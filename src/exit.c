@@ -156,7 +156,7 @@ void statgrantserver(jia_msg_t *req)
 #endif /* DOSTAT */
 
 /**
- * @brief jia_exit -- 
+ * @brief jia_exit -- if defined DOSTAT, print statistic; else do nothing
  * 
  */
 void jia_exit()
