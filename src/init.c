@@ -235,7 +235,7 @@ int startprocs(int argc, char **argv) {
         sprintf(cmd, "%s %s ", cmd, hostname);
 
         for (int i = 0; i < argc; i++)
-            sprintf(cmd, "%s ", argv[i]);
+            sprintf(cmd, "%s %s ", cmd, argv[i]);
 
         strcat(cmd, "-P");
         sprintf(cmd, "%s %ld", cmd, Startport);
