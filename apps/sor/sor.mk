@@ -2,7 +2,7 @@
 # Application specific rules and defines...
 #*********************************************************
 
-CPPFLAGS += -I../../../src -O0 -g
+CPPFLAGS += -I../../../src/include -O0 -g
 
 OBJS 	= sor.o
 VPATH = ../src 

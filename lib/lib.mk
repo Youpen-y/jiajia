@@ -8,14 +8,17 @@ CCC = gcc
 FC = gfortran	# gfortran is more common
 
 # define VPATH to search dependent file
-VPATH = ./$(DIR)
+VPATH = ./$(SRCDIR) ./$(UTILSDIR)
 
 # define dirs
-DIR	= ../../src
-CFLAGS	+= -I./${DIR} $(ARCH_FLAGS) -DDOSTAT -g
+SRCDIR	= ../../src
+UTILSDIR	= ../../src/utils
+INCLUDEDIR = $(SRCDIR)/include
+CFLAGS	+= -I./${INCLUDEDIR} $(ARCH_FLAGS) -DDOSTAT -g
 
 # define files
-SRCS 	:= $(wildcard $(DIR)/*.c)
+SRCS 	:= $(wildcard $(SRCDIR)/*.c)
+SRCS 	+= $(wildcard $(UTILSDIR)/*.c)
 OBJS 	:= $(patsubst %.c, %.o, $(foreach file, $(SRCS), $(notdir $(file))))
 
 TARGET 	= libjia.a

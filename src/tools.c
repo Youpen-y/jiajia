@@ -45,26 +45,6 @@
 
 extern void asendmsg(jia_msg_t *msg);
 
-// void inittools();
-// void assert0(int, char *);
-// void assert(int, char *);
-// void jiaexitserver(jia_msg_t *req);
-// jia_msg_t *newmsg();
-// void freemsg(jia_msg_t *msg);
-// void appendmsg(jia_msg_t *msg, unsigned char *str, int len);
-// void printmsg(jia_msg_t *msg,int right);
-// void printstack(int ptr);
-// unsigned long jia_current_time();
-// float jia_clock();
-// void  jiasleep(unsigned long);
-// void  disable_sigio();         
-// void  enable_sigio();       
-// void freewtntspace(wtnt_t *ptr);
-// wtnt_t *newwtnt();
-// void newtwin(address_t *twin);
-// void freetwin(address_t *twin);
-// void emptyprintf();
-
 extern int jia_pid;
 extern int hostc;
 extern jiastack_t    lockstack[Maxstacksize];
@@ -109,10 +89,17 @@ void inittools()
  * @param cond condition
  * @param amsg assert message
  */
-void assert0(int cond, char *amsg)
+void assert0(int cond, char *format, ...)
 { 
   if (!cond){
-    fprintf(stderr,"Assert0 error from host %d --- %s\n", jia_pid, amsg);
+    // print error message
+    fprintf(stderr,"Assert0 error from host %d ---\n", jia_pid);
+    va_list args;
+    va_start(args, format);
+    vfprintf(stderr, format, args);
+    va_end(args);
+
+    // print Unix error; fflush&&exit
     perror("Unix Error");
     fflush(stderr); fflush(stdout);
     exit(-1);

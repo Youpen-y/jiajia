@@ -2,7 +2,7 @@
 # Application specific rules and defines...
 #*********************************************************
 
-CFLAGS += -I../../../src -O2 -g
+CFLAGS += -I../../../src/include -O2 -g
 
 OBJS 	= pi.o
 VPATH = ../src 

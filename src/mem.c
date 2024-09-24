@@ -41,6 +41,7 @@
 #include "init.h"
 #include "comm.h"
 #include "syn.h"
+#include "tools.h"
 
 #ifdef IRIX62
 #include <sys/sbd.h>
@@ -57,7 +58,6 @@ extern void disable_sigio();
 extern void jia_barrier();
 extern float jia_clock();
 
-extern void assert0(int, char *);
 extern unsigned int get_usecs();
 extern void appendmsg(jia_msg_t *, unsigned char *, int);
 extern void assert(int cond, char *amsg);
@@ -582,9 +582,6 @@ void sigsegv_handler(int signo, siginfo_t *sip, void *context)
   #endif 
 
   #ifdef LINUX 
-  // faultaddr = (address_t) sigctx.cr2;
-  // faultaddr = (address_t) ((unsigned long)faultaddr/Pagesize*Pagesize); // page aligned
-  // writefault = (int) sigctx.err & 2;
   faultaddr = (address_t) sip->si_addr;
   faultaddr = (address_t) ((unsigned long)faultaddr/Pagesize*Pagesize);
   writefault = sip->si_code & 2;  /* si_code: 1 means that address not mapped to object => ()
