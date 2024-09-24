@@ -230,9 +230,8 @@ int startprocs(int argc, char **argv) {
 #else
         cmd[0] = '\0';
         sprintf(cmd, "ssh -l %s", hosts[hosti].user);
-        VERBOSE_OUT(3, "%s\n", cmd);
 #endif /* NFS */
-        sprintf(cmd, "%s %s ", cmd, hostname);
+        sprintf(cmd, "%s %s", cmd, hostname);
 
         for (int i = 0; i < argc; i++)
             sprintf(cmd, "%s %s ", cmd, argv[i]);
@@ -355,7 +354,7 @@ void jiacreat(int argc, char **argv) {
         optind = 1;
         int i=0;
         while ((c = getopt(argc, argv, "P:")) != -1) {
-            VERBOSE_OUT(3, "%d: %d ", i, c);
+            VERBOSE_LOG(3, "%d: %d ", i, c);
             switch (c) {
             case 'P': {
                 Startport = atol(optarg);
