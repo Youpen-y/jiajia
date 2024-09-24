@@ -230,6 +230,7 @@ int startprocs(int argc, char **argv) {
 #else
         cmd[0] = '\0';
         sprintf(cmd, "ssh -l %s", hosts[hosti].user);
+        VERBOSE_OUT(3, "%s\n", cmd);
 #endif /* NFS */
         sprintf(cmd, "%s %s ", cmd, hostname);
 
