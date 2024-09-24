@@ -157,19 +157,19 @@ void copyfiles(int argc, char **argv) {
     int hosti, rcpyes;
     char cmd[Linesize];
 
-    printf("******Start to copy system files to slaves!******\n");
+    VERBOSE_OUT(1, "******Start to copy system files to slaves!******\n");
 
     for (hosti = 1; hosti < hostc; hosti++) {
-        printf("Copy files to %s@%s.\n", hosts[hosti].user, hosts[hosti].name);
+        VERBOSE_OUT(1, "Copy files to %s@%s.\n", hosts[hosti].user,
+                    hosts[hosti].name);
 
+        /* copy .jiahosts to slaves */
         cmd[0] = '\0';
-        // strcat(cmd,"rcp .jiahosts ");
         strcat(cmd, "scp .jiahosts ");
         strcat(cmd, hosts[hosti].user);
         strcat(cmd, "@");
         strcat(cmd, hosts[hosti].name);
         strcat(cmd, ":");
-
         rcpyes = system(cmd);
         assert0((rcpyes == 0), "Cannot scp .jiahosts to %s!\n",
                 hosts[hosti].name);
@@ -187,7 +187,7 @@ void copyfiles(int argc, char **argv) {
         assert0((rcpyes == 0), "Cannot scp %s to %s!\n", argv[0],
                 hosts[hosti].name);
     }
-    printf("Remote copy succeed!\n\n");
+    VERBOSE_OUT(1, "Remote copy succeed!\n\n");
 }
 
 /**
@@ -205,9 +205,8 @@ int startprocs(int argc, char **argv) {
 #endif /* NFS*/
     int hosti;
     char cmd[Linesize], *hostname;
-    int i;
 
-    printf("******Start to create processes on slaves!******\n\n");
+    VERBOSE_OUT(1, "******Start to create processes on slaves!******\n\n");
 
 #ifdef NFS
     sprintf(errstr, "Failed to get current working directory");
@@ -221,27 +220,26 @@ int startprocs(int argc, char **argv) {
     Startport = 10000 + (Startport * Maxhosts * Maxhosts * 4) % 20000;
 
 #ifdef LINUX
+    // cmd on every host
     for (hosti = 1; hosti < hostc; hosti++) {
+
+        /* ssh -l user@hostname (argv) -P 1234 & */
+        hostname = hosts[hosti].name;
 #ifdef NFS
         sprintf(cmd, "cd %s; %s", pwd, pwd);
 #else
         cmd[0] = '\0';
-        strcat(cmd, "ssh -l ");
-        strcat(cmd, hosts[hosti].user);
+        sprintf(cmd, "ssh -l %s", hosts[hosti].user);
 #endif /* NFS */
-        hostname = hosts[hosti].name;
-        strcat(cmd, " ");
-        strcat(cmd, hostname);
-        strcat(cmd, " ");
-        for (i = 0; i < argc; i++) {
-            strcat(cmd, argv[i]);
-            strcat(cmd, " ");
-        }
+        sprintf(cmd, "%s %s ", cmd, hostname);
+
+        for (int i = 0; i < argc; i++)
+            sprintf(cmd, "%s ", argv[i]);
 
         strcat(cmd, "-P");
         sprintf(cmd, "%s %ld", cmd, Startport);
         strcat(cmd, " &");
-        printf("Starting CMD %s on host %s\n", cmd, hosts[hosti].name);
+        VERBOSE_OUT(1, "Starting CMD %s on host %s\n", cmd, hostname);
         system(cmd);
 #else /*LINUX*/
     for (hosti = 1; hosti < hostc; hosti++) {
@@ -279,6 +277,8 @@ int startprocs(int argc, char **argv) {
         assert0((hosts[hosti].riofd != -1), "Fail to start process on %s!",
                 hosts[hosti].name);
     }
+
+    return 0;
 }
 
 /**
@@ -303,7 +303,7 @@ int mypid() {
 
     // check host(hostname && username) && return host's seq
     strtok(hostname, ".");
-    VERBOSE_OUT(1, "hostc = %d\n hostname = %s\n", hostc, hostname);
+    VERBOSE_OUT(1, "hostc = %d\nhostname = %s\n", hostc, hostname);
     while ((i < hostc) &&
 #ifdef NFS
            (!(strncmp(hosts[i].name, hostname, strlen(hostname)) == 0)))
@@ -326,24 +326,35 @@ int mypid() {
  */
 void jiacreat(int argc, char **argv) {
     logfile = fopen("./jiajia.log", "w");
-    gethosts(); // step 1: get hosts info
+
+    // step 1: get hosts info
+    gethosts();
     if (hostc == 0) {
-        printf("  No hosts specified!\n");
+        VERBOSE_OUT(1, "  No hosts specified!\n");
         exit(0);
     }
-    jia_pid = mypid(); // step 2: get current host's pid
 
+    // step 2: get current host's jia_pid
+    jia_pid = mypid();
     if (jia_pid == 0) { // master does, slave doesn't
-        printf("*********Total of %d hosts found!**********\n\n", hostc);
+        VERBOSE_OUT(1, "*********Total of %d hosts found!**********\n\n",
+                    hostc);
+
+        // step 3: copy files to remote
 #ifndef NFS
-        copyfiles(argc, argv); // step 3
-#endif                         /* NFS */
+        copyfiles(argc, argv);
+#endif /* NFS */
         sleep(1);
-        startprocs(argc, argv); // step 4
-    } else {                    // slave does
+
+        // step 4: start proc on slaves
+        startprocs(argc, argv);
+    } else {
+        // slave does
         int c;
         optind = 1;
+        int i=0;
         while ((c = getopt(argc, argv, "P:")) != -1) {
+            VERBOSE_OUT(3, "%d: %d ", i, c);
             switch (c) {
             case 'P': {
                 Startport = atol(optarg);
@@ -420,8 +431,9 @@ void jia_init(int argc, char **argv) {
     unsigned long timel, time1;
     struct rlimit rl;
 
-    printf("\n***JIAJIA---Software DSM***\n");
-    printf("***  Cachepages = %4d  Pagesize=%d***\n\n", Cachepages, Pagesize);
+    VERBOSE_OUT(1, "\n***JIAJIA---Software DSM***\n***  \
+                Cachepages = %4d  Pagesize=%d***\n\n",
+                Cachepages, Pagesize);
     strcpy(argv0, argv[0]);
     disable_sigio();
     jia_lock_index = 0;

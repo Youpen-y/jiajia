@@ -1,6 +1,8 @@
 #include "utils.h"
 #include "init.h"
+#include <stdarg.h>
 #include <stdio.h>
+#include <string.h>
 
 extern FILE* config;
 
