@@ -35,7 +35,9 @@
  * =================================================================== *
  **********************************************************************/
 
+#include <bits/types/clockid_t.h>
 #ifndef NULL_LIB
+#include <time.h>
 #include "global.h"
 #include "init.h"
 #include "mem.h"
@@ -113,16 +115,22 @@ void assert0(int cond, char *format, ...)
  * @param cond conditons
  * @param amsg assert error message
  */
-void assert(int cond, char *amsg)
+void assert(int cond, char *format, ...)
 {
   int hosti;
 
   if (!cond){ // if condition is false then send JIAEXIT msg to all hosts
+
+    // init assertmsg
+    va_list args;
+    va_start(args, format);
+    sprintf((char*)assertmsg.data, format, args);
+    va_end(args);
     assertmsg.op=JIAEXIT;
     assertmsg.frompid=jia_pid; 
-    memcpy(assertmsg.data,amsg,strlen(amsg));
-    assertmsg.data[strlen(amsg)]='\0';
-    assertmsg.size=strlen(amsg)+1;
+    assertmsg.size=strlen((char*)assertmsg.data)+1;
+
+    // asend message
     for (hosti=0;hosti<hostc;hosti++){
       if (hosti!=jia_pid){
         assertmsg.topid=hosti;
@@ -451,18 +459,19 @@ unsigned long start_msec = 0;
  */
 unsigned long jia_current_time()
 {
-  struct timeval tp;
+  struct timespec clock;
 
-  /* Return the time, in milliseconds, elapsed after the first call
+  /* 
+   * Return the time, in milliseconds, elapsed after the first call
    * to this routine.
    */  
-  gettimeofday(&tp, NULL);  // TODO clock_gettime() instead of gettimeofday
+  clock_gettime(CLOCK_REALTIME, &clock);
   if (!start_sec)
   {
-    start_sec = tp.tv_sec;
-    start_msec = (unsigned long) (tp.tv_usec/1000);
+    start_sec = clock.tv_sec;
+    start_msec = (unsigned long) (clock.tv_nsec/1000000);
   }
-  return (1000*(tp.tv_sec-start_sec) + (tp.tv_usec/1000 - start_msec));
+  return (1000*(clock.tv_sec-start_sec) + (clock.tv_nsec/1000000 - start_msec));
 }
  
 

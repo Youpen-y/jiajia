@@ -19,7 +19,7 @@
  */
 int	iterations = 100;
 
-int	M = 2046;
+int	M = 254;
 int	N = 1023;	/* N.B. There are 2N columns. */
 
 float **red_;

@@ -354,7 +354,6 @@ void jiacreat(int argc, char **argv) {
         optind = 1;
         int i=0;
         while ((c = getopt(argc, argv, "P:")) != -1) {
-            VERBOSE_LOG(3, "%d: %d ", i, c);
             switch (c) {
             case 'P': {
                 Startport = atol(optarg);
@@ -471,7 +470,7 @@ void jia_init(int argc, char **argv) {
 #endif
 
     if (jia_pid != 0) { // slave does
-        printf("I am %d, running here\n", jia_pid);
+        VERBOSE_OUT(1, "I am %d, running here\n", jia_pid);
     }
     enable_sigio();
 

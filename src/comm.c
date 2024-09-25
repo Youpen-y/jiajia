@@ -151,7 +151,6 @@ long Startport;
 // void    outsend();
 // void bcastserver(jia_msg_t *msg);
 
-extern void assert(int, char *);
 extern unsigned long jia_current_time();
 extern void disable_sigio();
 extern void enable_sigio();

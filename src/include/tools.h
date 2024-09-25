@@ -8,7 +8,7 @@
 /* Function Declaration */
 void inittools();
 void assert0(int, char *, ...);
-void assert(int, char *);
+void assert(int cond, char *format, ...);
 void jiaexitserver(jia_msg_t *req);
 jia_msg_t *newmsg();
 void freemsg(jia_msg_t *msg);
