@@ -44,7 +44,6 @@
 #include "comm.h"
 #include "msg.h"
 
-extern void assert(int cond, char *errstr);
 extern jia_msg_t *newmsg();
 extern void freemsg(jia_msg_t*);
 extern void printmsg(jia_msg_t *msg,int right);
