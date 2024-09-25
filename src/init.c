@@ -401,7 +401,7 @@ void barrier0() {
 void redirstdio(int argc, char **argv) {
     char outfile[Wordsize];
 
-    //if (jia_pid != 0) { // slaves does
+    if (jia_pid != 0) { // slaves does
 #ifdef NFS
         sprintf(outfile, "%s-%d.log\0", argv[0], jia_pid);
 #else
@@ -417,7 +417,7 @@ void redirstdio(int argc, char **argv) {
 #endif                                 /* NFS */
         freopen(outfile, "w", stderr); // redirect stderr to file outfile
         setbuf(stderr, NULL);          //
-    //}
+    }
 }
 
 /**
@@ -436,7 +436,6 @@ void jia_init(int argc, char **argv) {
     strcpy(argv0, argv[0]);
     disable_sigio();
     jia_lock_index = 0;
-    redirstdio(argc, argv); /*redirect slave's output*/
     jiacreat(argc, argv);
 #if defined SOLARIS || defined LINUX
     sleep(2);
@@ -451,7 +450,7 @@ void jia_init(int argc, char **argv) {
     setrlimit(RLIMIT_DATA,
               &rl); /* set maximum size of process's data segment */
 
-    // redirstdio(argc, argv); /*redirect slave's output*/
+    redirstdio(argc, argv); /*redirect slave's output*/
 
     initmem();
     initsyn();
