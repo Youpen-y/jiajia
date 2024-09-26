@@ -175,7 +175,8 @@ static inline int inqrecv(int fromproc) {
     // update seqno from host fromproc
     commreq.rcv_seq[fromproc] = inqt.seqno;
     printmsg(&inqt, 1);
-    return (incount == 1);
+    VERBOSE_OUT(3, "incount: %d\n", incount);
+    return (incount > 0);
 };
 
 /**
@@ -187,6 +188,7 @@ static inline int inqcomp() {
     inqh.op = ERRMSG;
     inhead = (inhead + 1) % Maxqueue;
     incount--;
+    VERBOSE_OUT(3, "incount: %d\n", incount);
     return (incount > 0);
 };
 
