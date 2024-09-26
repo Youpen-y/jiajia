@@ -37,6 +37,7 @@
 
 #ifndef JIASYN_H
 #define JIASYN_H
+#pragma once
 
 #include "comm.h"
 #include "global.h"

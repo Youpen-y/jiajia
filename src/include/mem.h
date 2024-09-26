@@ -37,6 +37,7 @@
 
 #ifndef JIAMEM_H
 #define JIAMEM_H
+#pragma once
 
 #include "comm.h" // jia_msg_t
 

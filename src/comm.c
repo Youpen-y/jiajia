@@ -35,6 +35,7 @@
  * =================================================================== *
  **********************************************************************/
 
+#include "utils.h"
 #ifndef NULL_LIB
 #include "comm.h"
 #include "mem.h"
@@ -62,7 +63,7 @@
 // #else  /* JIA_DEBUG */
 // #define msgprint  1
 // #endif  /* JIA_DEBUG */
-#define msgprint 1
+// #define msgprint 1
 
 /*----------------------------------------------------------*/
 /* following definitions are defined by Hu */
@@ -120,17 +121,10 @@ unsigned long reqports[Maxhosts]
                       [Maxhosts]; // every host has Maxhosts request ports
 unsigned long repports[Maxhosts]
                       [Maxhosts]; // every host has Maxhosts reply ports
-CommManager commreq,
-    commrep; // commreq used to send and recv request, commrep used to send and
-             // recv reply
+// commreq used to send and recv request, commrep used to send and
+// recv reply
 unsigned long timeout_time;
 static struct timeval polltime = {0, 0};
-jia_msg_t inqueue[Maxqueue],
-    outqueue[Maxqueue]; // inqueue used to store in-msg, outqueue used to store
-                        // out-msg
-volatile int inhead, intail, incount;
-volatile int outhead, outtail,
-    outcount; /* head msg, tail msg, msg count in out queue */
 long Startport;
 
 // void    initcomm();
@@ -159,6 +153,34 @@ extern sigset_t oldset;
 int oldsigiomask;
 
 /*---------------------------------------------------------*/
+
+/**
+ * @brief inqrecv() -- recv msg (update incount&&intail)
+ *
+ * @return iff incount==1
+ */
+static inline int inqrecv(int fromproc) {
+	assert0((incount < Maxqueue), "outsend(): Inqueue exceeded!");
+    incount++;
+    intail = (intail + 1) % Maxqueue;
+	// update seqno from host fromproc
+    commreq.rcv_seq[fromproc] = inqt.seqno;
+    printmsg(&inqt, 1);
+    return (incount == 1);
+};
+
+/**
+ * @brief inqcomp() -- complete msg (update incount&&inhead)
+ *
+ * @return iff incount > 0
+ */
+static inline int inqcomp() {
+    inqh.op = ERRMSG;
+    inhead = (inhead + 1) % Maxqueue;
+    incount--;
+    return (incount > 0);
+};
+
 /**
  * @brief req_fdcreate -- creat socket file descriptor used to send and recv
  * request
@@ -606,19 +628,12 @@ void sigio_handler(int sig, siginfo_t *sip, ucontext_t *uap)
                             }
                         }
 #endif
-                        commreq.rcv_seq[i] =
-                            inqt.seqno; // update seqno from host i
-                        if (msgprint == 1)
-                            printmsg(&inqt, 1);
+                
                         BEGINCS; // modify global variables (mask io signal)
-                        intail = (intail + 1) % Maxqueue;
-                        incount++;
-                        if (incount == 1)
-                            servemsg = 1;
+                        servemsg = inqrecv(i);
                         ENDCS;
                     } else {
-                        if (msgprint == 1)
-                            printmsg(&inqt, 1);
+                        printmsg(&inqt, 1);
                         printf("Receive resend message!\n");
 #ifdef DOSTAT
                         jiastat.resentcnt++;
@@ -639,10 +654,7 @@ void sigio_handler(int sig, siginfo_t *sip, ucontext_t *uap)
     while (servemsg == 1) {
         msgserver();
         BEGINCS;
-        inqh.op = ERRMSG;
-        inhead = (inhead + 1) % Maxqueue;
-        incount--;
-        servemsg = (incount > 0) ? 1 : 0;
+        servemsg = inqcomp();
         ENDCS;
     }
 
@@ -734,41 +746,33 @@ void outsend() {
     register unsigned int begin;
 #endif
 
-    printf("\nEnter outsend!\n");
+    VERBOSE_OUT(1, "\nEnter outsend!\n");
 
-    if (msgprint == 1)
-        printmsg(&outqh, 1);
+    printmsg(&outqh, 1);
 
     toproc = outqh.topid;
     fromproc = outqh.frompid;
-    printf("outc=%d, outh=%d, outt=%d\n", outcount, outhead, outtail);
-    printf("outqueue[outhead].topid = %d, outqueue[outhead].frompid = %d\n",
-           toproc, fromproc);
+    VERBOSE_OUT(1, "outc=%d, outh=%d, outt=%d\n \
+                outqueue[outhead].topid = %d outqueue[outhead].frompid = %d\n",
+                outcount, outhead, outtail, toproc, fromproc);
 
     if (toproc == fromproc) { // single machine communication
+
+        // recv msg (outq to inq)
         BEGINCS;
-        assert0((incount <= Maxqueue), "outsend(): Inqueue exceeded!");
-        commreq.rcv_seq[toproc] = outqh.seqno;
-        memcpy(&(inqt), &(outqh),
-               Msgheadsize +
-                   outqh.size); // copy outqueue[head] to inqueue[tail]
-        if (msgprint == 1)
-            printmsg(&(inqt), 1);
-        incount++;
-        intail = (intail + 1) % Maxqueue;
-        servemsg = (incount == 1) ? 1 : 0;
+        memcpy(&(inqt), &(outqh), Msgheadsize + outqh.size);
+        servemsg = inqrecv(fromproc);
         ENDCS;
-        SPACE(1);
-        printf("Finishcopymsg,incount=%d,inhead=%d,intail=%d!\n", incount,
-               inhead, intail);
-        printf("servemsg == %d\n", servemsg);
+
+        VERBOSE_OUT(
+            1,
+            "Finishcopymsg,incount=%d,inhead=%d,intail=%d!\nservemsg == %d\n",
+            incount, inhead, intail, servemsg);
+
         while (servemsg == 1) { // there are some msg need be served
             msgserver();
             BEGINCS;
-            inqh.op = ERRMSG;
-            inhead = (inhead + 1) % Maxqueue;
-            incount--;
-            servemsg = (incount > 0) ? 1 : 0;
+            servemsg = inqcomp();
             ENDCS;
         }
     } else { // comm between different hosts

@@ -994,47 +994,50 @@ void diffserver(jia_msg_t *req) {
  * (start,size) 4bytes | cnt bytes different data |
  */
 int encodediff(int cachei, unsigned char *diff) {
-    int size;
-    int bytei;
-    int cnt;
+    int size = 0;
+    int bytei = 0;
+    int cnt = 0;
     int start;
-    int header;
+    unsigned header;
 
 #ifdef DOSTAT
     register unsigned int begin = get_usecs();
 #endif
 
-    size = 0;
-    memcpy(diff + size, ltos(cache[cachei].addr),
-           sizeof(unsigned char
-                      *)); // step 1: encode the cache page addr first (4 bytes)
+    // step 1: encode the cache page addr first (4 bytes)
+    memcpy(diff + size, ltos(cache[cachei].addr), sizeof(unsigned char *));
     size += sizeof(unsigned char *);
     size += Intbytes; /* leave space for size */
 
-    bytei = 0;
+    // here we got the difference between cache page and its twin
+    // check how much diffunit is different in one Page (bytei is the index)
     while (bytei < Pagesize) {
+        // find the start byte index of the diff
         for (; (bytei < Pagesize) &&
                (memcmp(cache[cachei].addr + bytei, cache[cachei].twin + bytei,
                        Diffunit) == 0);
              bytei += Diffunit)
-            ;                   // find the diff
-        if (bytei < Pagesize) { // here we got the difference between cache page
-                                // and its twin
-            cnt = 0;
+            ;
+
+        if (bytei < Pagesize) {
             start = bytei; // record the start byte index of the diff
+
+            // how much diffunit is different
             for (; (bytei < Pagesize) &&
                    (memcmp(cache[cachei].addr + bytei,
                            cache[cachei].twin + bytei, Diffunit) != 0);
-                 bytei += Diffunit) // how much diffunit is different
+                 bytei += Diffunit)
                 cnt += Diffunit;
-            header = ((start & 0xffff) << 16) |
-                     (cnt &
-                      0xffff); // header is composed of start and cnt(diff size)
+
+            // step 2: encode the header
+            // header is composed of start and cnt(diff size)
+            header = ((start & 0xffff) << 16) | (cnt & 0xffff);
             memcpy(diff + size, ltos(header),
                    Intbytes); // step 2: encode the header
             size += Intbytes;
-            memcpy(diff + size, cache[cachei].addr + start,
-                   cnt); // step 3: encode cnt different bytes
+
+            // step 3: encode cnt different bytes
+            memcpy(diff + size, cache[cachei].addr + start, cnt);
             size += cnt;
         }
     }

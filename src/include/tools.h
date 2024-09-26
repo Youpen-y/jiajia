@@ -1,5 +1,6 @@
 #ifndef TOOLS_H
 #define TOOLS_H
+#pragma once
 
 #include "mem.h"
 #include "syn.h"
