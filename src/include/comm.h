@@ -112,6 +112,8 @@ typedef struct CommManager {
 #define outqh outqueue[outhead] // outqueue msg head
 #define outqt outqueue[outtail] // outqueue msg tail
 
+#define STATOP(op) if(statflag){op};
+
 /* function declaration*/
 
 void initcomm();

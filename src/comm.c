@@ -133,7 +133,7 @@ unsigned long repports[Maxhosts]
 // commreq used to send and recv request, commrep used to send and
 // recv reply
 unsigned long timeout_time;
-static struct timeval polltime = {0, 0};
+static struct timeval zerotime = {0, 0};
 long Startport;
 
 // void    initcomm();
@@ -169,10 +169,10 @@ int oldsigiomask;
  * @return iff incount==1
  */
 static inline int inqrecv(int fromproc) {
-	assert0((incount < Maxqueue), "outsend(): Inqueue exceeded!");
+    assert0((incount < Maxqueue), "outsend(): Inqueue exceeded!");
     incount++;
     intail = (intail + 1) % Maxqueue;
-	// update seqno from host fromproc
+    // update seqno from host fromproc
     commreq.rcv_seq[fromproc] = inqt.seqno;
     printmsg(&inqt, 1);
     return (incount == 1);
@@ -555,11 +555,14 @@ void sigint_handler() {
 #if defined SOLARIS || defined IRIX62
 void sigio_handler(int sig, siginfo_t *sip, ucontext_t *uap)
 #endif
-#ifdef LINUX
+
+/**
+ * @brief sigio_handler -- sigio handler (it can be interrupt)
+ *
+ */
+
+#if defined LINUX || defined AIX41
     void sigio_handler()
-#endif
-#ifdef AIX41
-        void sigio_handler()
 #endif
 {
     int res, len, oldindex;
@@ -567,98 +570,84 @@ void sigio_handler(int sig, siginfo_t *sip, ucontext_t *uap)
     fd_set readfds;
     struct sockaddr_in from, to;
     sigset_t set, oldset;
-    int servemsg;
-    int testresult;
+    int servemsg = 0;
 
+    // begin segvio time
 #ifdef DOSTAT
     register unsigned int begin;
-    if (statflag == 1) {
-        jiastat.sigiocnt++;
-        if (interruptflag == 0) {
-            begin = get_usecs();
-            if (jiastat.kernelflag == 0) {
-                jiastat.usersigiocnt++;
-            } else if (jiastat.kernelflag == 1) {
-                jiastat.synsigiocnt++;
-            } else if (jiastat.kernelflag == 2) {
-                jiastat.segvsigiocnt++;
-            }
+    STATOP(jiastat.sigiocnt++; if (interruptflag == 0) {
+        begin = get_usecs();
+        if (jiastat.kernelflag == 0) {
+            jiastat.usersigiocnt++;
+        } else if (jiastat.kernelflag == 1) {
+            jiastat.synsigiocnt++;
+        } else if (jiastat.kernelflag == 2) {
+            jiastat.segvsigiocnt++;
         }
-        interruptflag++;
-    }
+    } interruptflag++;)
 #endif
 
     printf("\nEnter sigio_handler!\n");
 
-    servemsg = 0;
+    // whether there is a requested from other hosts
     readfds = commreq.rcv_set;
-    polltime.tv_sec = 0;
-    polltime.tv_usec = 0;
-    // polltime equals 0, select will return immediately
     res = select(commreq.rcv_maxfd, &readfds, NULL, NULL,
-                 &polltime); // whether there is a requested from other hosts
+                 &zerotime);
     while (res > 0) {
         // handle ready fd(from other hosts)
         for (i = 0; i < hostc; i++) {
-            if (i != jia_pid)
-                if (FD_ISSET(commreq.rcv_fds[i],
-                             &readfds)) { // caught a request from host i
-                    assert0((incount < Maxqueue),
-                            "sigio_handler(): Inqueue exceeded!");
+            if ((i != jia_pid) && FD_ISSET(commreq.rcv_fds[i], &readfds)) {
 
-                    s = sizeof(from);
-                    // receive data from host i and store it into
-                    // inqueue[intail],
-                    res = recvfrom(commreq.rcv_fds[i], (char *)&(inqt),
-                                   Maxmsgsize + Msgheadsize, 0,
-                                   (struct sockaddr *)&from, &s);
-                    assert0((res >= 0), "sigio_handler()-->recvfrom()");
+                /* step 1: receive data from host i and store it into
+                 * inqueue[intail]*/
+                s = sizeof(from);
+                res = recvfrom(commreq.rcv_fds[i], (char *)&(inqt),
+                               Maxmsgsize + Msgheadsize, 0,
+                               (struct sockaddr *)&from, &s);
+                assert0((res >= 0), "sigio_handler()-->recvfrom()");
 
-                    to.sin_family = AF_INET;
-                    memcpy(&to.sin_addr, hosts[inqt.frompid].addr,
-                           hosts[inqt.frompid].addrlen);
-                    to.sin_port = htons(repports[inqt.frompid][inqt.topid]);
-
-                    // send ack(actually seqno(4bytes)) to host i
-                    res = sendto(commrep.snd_fds[i], (char *)&(inqt.seqno),
-                                 sizeof(inqt.seqno), 0, (struct sockaddr *)&to,
-                                 sizeof(to));
-                    assert0((res != -1), "sigio_handler()-->sendto() ACK");
-
-                    // new msg's seqno is greater than the former's from the
-                    // same host
-                    if (inqt.seqno > commreq.rcv_seq[i]) {
+                /* step 2: recv msg iff new msg's seqno is greater than the
+                   former's from the same host, instead print resend  */
+                if (inqt.seqno > commreq.rcv_seq[i]) {
 #ifdef DOSTAT
-                        if (statflag == 1) {
-                            if (inqt.frompid != inqt.topid) {
-                                jiastat.msgrcvcnt++;
-                                jiastat.msgrcvbytes +=
-                                    (inqt.size + Msgheadsize);
-                            }
-                        }
+                    STATOP(if (inqt.frompid != inqt.topid) {
+                        jiastat.msgrcvcnt++;
+                        jiastat.msgrcvbytes += (inqt.size + Msgheadsize);
+                    })
 #endif
-                
-                        BEGINCS; // modify global variables (mask io signal)
-                        servemsg = inqrecv(i);
-                        ENDCS;
-                    } else {
-                        printmsg(&inqt, 1);
-                        printf("Receive resend message!\n");
+
+                    BEGINCS;
+                    servemsg = inqrecv(i);
+                    ENDCS;
+                } else {
+                    printmsg(&inqt, 1);
+                    VERBOSE_OUT(1, "Receive resend message!\n");
 #ifdef DOSTAT
-                        jiastat.resentcnt++;
+                    STATOP(jiastat.resentcnt++;)
 #endif
-                    }
                 }
+
+                /* step 3: init socket to && send ack(actually
+                 * seqno(4bytes)) to host i */
+                to.sin_family = AF_INET;
+                memcpy(&to.sin_addr, hosts[inqt.frompid].addr,
+                       hosts[inqt.frompid].addrlen);
+                to.sin_port = htons(repports[inqt.frompid][inqt.topid]);
+                res = sendto(commrep.snd_fds[i], (char *)&(inqt.seqno),
+                             sizeof(inqt.seqno), 0, (struct sockaddr *)&to,
+                             sizeof(to));
+                assert0((res != -1), "sigio_handler()-->sendto() ACK");
+            }
         }
         // check whether there are more data or not
         readfds = commreq.rcv_set;
-        polltime.tv_sec = 0;
-        polltime.tv_usec = 0;
-        res = select(commreq.rcv_maxfd, &readfds, NULL, NULL, &polltime);
+        res = select(commreq.rcv_maxfd, &readfds, NULL, NULL, &zerotime);
     }
 
     SPACE(1);
-    printf("Finishrecvmsg!inc=%d,inh=%d,int=%d\n", incount, inhead, intail);
+    VERBOSE_OUT(1, "Finishrecvmsg!inc=%d,inh=%d,int=%d\n", incount, inhead,
+                intail);
+
     // handle msg
     while (servemsg == 1) {
         msgserver();
@@ -668,21 +657,20 @@ void sigio_handler(int sig, siginfo_t *sip, ucontext_t *uap)
     }
 
     SPACE(1);
-    printf("Out sigio_handler!\n");
+    VERBOSE_OUT(1, "Out sigio_handler!\n");
+
+    // end segvio time
 #ifdef DOSTAT
-    if (statflag == 1) {
-        interruptflag--;
-        if (interruptflag == 0) {
-            if (jiastat.kernelflag == 0) {
-                jiastat.usersigiotime += get_usecs() - begin;
-            } else if (jiastat.kernelflag == 1) {
-                jiastat.synsigiotime += get_usecs() - begin;
-            } else if (jiastat.kernelflag == 2) {
-                jiastat.segvsigiotime += get_usecs() - begin;
-            }
+    STATOP(interruptflag--; if (interruptflag == 0) {
+        if (jiastat.kernelflag == 0) {
+            jiastat.usersigiotime += get_usecs() - begin;
+        } else if (jiastat.kernelflag == 1) {
+            jiastat.synsigiotime += get_usecs() - begin;
+        } else if (jiastat.kernelflag == 2) {
+            jiastat.segvsigiotime += get_usecs() - begin;
         }
-    }
-#endif // DOSTAT
+    })
+#endif
 }
 
 /**
@@ -822,15 +810,11 @@ void outsend() {
                    (arrived != 1)) { // wait for ack
                 FD_ZERO(&readfds);
                 FD_SET(commrep.rcv_fds[toproc], &readfds);
-                polltime.tv_sec = 0;
-                polltime.tv_usec = 0;
                 res =
-                    select(commrep.rcv_maxfd, &readfds, NULL, NULL, &polltime);
-                if (FD_ISSET(commrep.rcv_fds[toproc], &readfds) != 0) {
-                    arrived = 1;
-                }
+                    select(commrep.rcv_maxfd, &readfds, NULL, NULL, &zerotime);
+                arrived = (FD_ISSET(commrep.rcv_fds[toproc], &readfds) != 0);
             }
-            printf("arrived = %d\n", arrived);
+            VERBOSE_OUT(3, "arrived = %d\n", arrived);
             if (arrived == 1) {
             recv_again:
                 s = sizeof(from);
