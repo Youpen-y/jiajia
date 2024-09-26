@@ -175,7 +175,7 @@ static inline int inqrecv(int fromproc) {
     // update seqno from host fromproc
     commreq.rcv_seq[fromproc] = inqt.seqno;
     printmsg(&inqt, 1);
-    return (incount == 1);
+    return (incount > 0);
 };
 
 /**
@@ -591,8 +591,7 @@ void sigio_handler(int sig, siginfo_t *sip, ucontext_t *uap)
 
     // whether there is a requested from other hosts
     readfds = commreq.rcv_set;
-    res = select(commreq.rcv_maxfd, &readfds, NULL, NULL,
-                 &zerotime);
+    res = select(commreq.rcv_maxfd, &readfds, NULL, NULL, &zerotime);
     while (res > 0) {
         // handle ready fd(from other hosts)
         for (i = 0; i < hostc; i++) {
@@ -606,8 +605,10 @@ void sigio_handler(int sig, siginfo_t *sip, ucontext_t *uap)
                                (struct sockaddr *)&from, &s);
                 assert0((res >= 0), "sigio_handler()-->recvfrom()");
 
-                /* step 3: init socket to && send ack(actually
+                /* step 2: init socket to && send ack(actually
                  * seqno(4bytes)) to host i */
+                /* must send ack before inqrecv update intail(ack use intail)
+                 */
                 to.sin_family = AF_INET;
                 memcpy(&to.sin_addr, hosts[inqt.frompid].addr,
                        hosts[inqt.frompid].addrlen);
@@ -617,7 +618,7 @@ void sigio_handler(int sig, siginfo_t *sip, ucontext_t *uap)
                              sizeof(to));
                 assert0((res != -1), "sigio_handler()-->sendto() ACK");
 
-                /* step 2: recv msg iff new msg's seqno is greater than the
+                /* step 3: recv msg iff new msg's seqno is greater than the
                    former's from the same host, instead print resend  */
                 if (inqt.seqno > commreq.rcv_seq[i]) {
 #ifdef DOSTAT
