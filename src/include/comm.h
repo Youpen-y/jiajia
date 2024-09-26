@@ -112,15 +112,6 @@ typedef struct CommManager {
 #define outqh outqueue[outhead] // outqueue msg head
 #define outqt outqueue[outtail] // outqueue msg tail
 
-/* head msg, tail msg, msg count in out queue */
-volatile int inhead, intail, incount;
-volatile int outhead, outtail, outcount;
-
-// inqueue used to store in-msg, outqueue used to store out-msg
-jia_msg_t inqueue[Maxqueue], outqueue[Maxqueue];
-
-CommManager commreq, commrep;
-
 /* function declaration*/
 
 void initcomm();

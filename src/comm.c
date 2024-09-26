@@ -75,6 +75,15 @@ extern int msgbusy[Maxmsgs];
 extern jia_msg_t msgarray[Maxmsgs];
 extern int msgcnt;
 
+CommManager commreq, commrep;
+
+/* head msg, tail msg, msg count in out queue */
+volatile int inhead, intail, incount;
+volatile int outhead, outtail, outcount;
+
+// inqueue used to store in-msg, outqueue used to store out-msg
+jia_msg_t inqueue[Maxqueue], outqueue[Maxqueue];
+
 /* servers used by asynchronous */
 extern void diffserver(jia_msg_t *);
 extern void getpserver(jia_msg_t *);
