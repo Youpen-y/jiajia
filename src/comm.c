@@ -606,6 +606,17 @@ void sigio_handler(int sig, siginfo_t *sip, ucontext_t *uap)
                                (struct sockaddr *)&from, &s);
                 assert0((res >= 0), "sigio_handler()-->recvfrom()");
 
+                /* step 3: init socket to && send ack(actually
+                 * seqno(4bytes)) to host i */
+                to.sin_family = AF_INET;
+                memcpy(&to.sin_addr, hosts[inqt.frompid].addr,
+                       hosts[inqt.frompid].addrlen);
+                to.sin_port = htons(repports[inqt.frompid][inqt.topid]);
+                res = sendto(commrep.snd_fds[i], (char *)&(inqt.seqno),
+                             sizeof(inqt.seqno), 0, (struct sockaddr *)&to,
+                             sizeof(to));
+                assert0((res != -1), "sigio_handler()-->sendto() ACK");
+
                 /* step 2: recv msg iff new msg's seqno is greater than the
                    former's from the same host, instead print resend  */
                 if (inqt.seqno > commreq.rcv_seq[i]) {
@@ -626,17 +637,6 @@ void sigio_handler(int sig, siginfo_t *sip, ucontext_t *uap)
                     STATOP(jiastat.resentcnt++;)
 #endif
                 }
-
-                /* step 3: init socket to && send ack(actually
-                 * seqno(4bytes)) to host i */
-                to.sin_family = AF_INET;
-                memcpy(&to.sin_addr, hosts[inqt.frompid].addr,
-                       hosts[inqt.frompid].addrlen);
-                to.sin_port = htons(repports[inqt.frompid][inqt.topid]);
-                res = sendto(commrep.snd_fds[i], (char *)&(inqt.seqno),
-                             sizeof(inqt.seqno), 0, (struct sockaddr *)&to,
-                             sizeof(to));
-                assert0((res != -1), "sigio_handler()-->sendto() ACK");
             }
         }
         // check whether there are more data or not
@@ -815,7 +815,7 @@ void outsend() {
                 arrived = (FD_ISSET(commrep.rcv_fds[toproc], &readfds) != 0);
             }
             VERBOSE_OUT(3, "arrived = %d\n", arrived);
-            if (arrived == 1) {
+            if (arrived) {
             recv_again:
                 s = sizeof(from);
                 BEGINCS;
