@@ -175,7 +175,7 @@ static inline int inqrecv(int fromproc) {
     // update seqno from host fromproc
     commreq.rcv_seq[fromproc] = inqt.seqno;
     printmsg(&inqt, 1);
-    return (incount > 0);
+    return (incount == 1);
 };
 
 /**
