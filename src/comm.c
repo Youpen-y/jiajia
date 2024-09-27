@@ -193,6 +193,31 @@ static inline int inqcomp() {
 };
 
 /**
+ * @brief inqrecv() -- send msg (update outcount&&outtail)
+ *
+ * @return iff outcount==1
+ */
+static inline int outqsend(int toproc) {
+    assert0((outcount < Maxqueue), "asendmsg(): Outqueue exceeded!");
+    commreq.snd_seq[toproc]++;
+    outqt.seqno = commreq.snd_seq[toproc];
+    outcount++;
+    outtail = (outtail + 1) % Maxqueue;
+    return (outcount > 0);
+};
+
+/**
+ * @brief outqcomp() -- complete msg (update outcount&&outhead)
+ *
+ * @return iff outcount > 0
+ */
+static inline int outqcomp() {
+    outhead = (outhead + 1) % Maxqueue;
+    outcount--;
+    return (outcount > 0);
+};
+
+/**
  * @brief req_fdcreate -- creat socket file descriptor used to send and recv
  * request
  *
@@ -309,7 +334,7 @@ void initcomm() {
 
         act.sa_handler = (void_func_handler)sigio_handler;
         sigemptyset(&act.sa_mask);
-        act.sa_flags = SA_SIGINFO;
+        act.sa_flags = SA_NODEFER | SA_SIGINFO;
         if (sigaction(SIGIO, &act, NULL))
             assert0(0, "initcomm()-->sigaction()");
 
@@ -325,15 +350,17 @@ void initcomm() {
     {
         struct sigaction act;
 
+        // sigio's action: sigio_handler
         act.sa_handler = (void_func_handler)sigio_handler;
         sigemptyset(&act.sa_mask);
-        act.sa_flags = SA_RESTART;
+        act.sa_flags = SA_NODEFER | SA_RESTART;
         if (sigaction(SIGIO, &act, NULL))
             assert0(0, "initcomm()-->sigaction()");
 
+        // sigint's action: sigint_handler
         act.sa_handler = (void_func_handler)sigint_handler;
         sigemptyset(&act.sa_mask);
-        act.sa_flags = SA_NOMASK;
+        act.sa_flags = SA_NODEFER;
         if (sigaction(SIGINT, &act, NULL)) {
             assert0(0, "segv sigaction problem");
         }
@@ -682,48 +709,42 @@ void sigio_handler(int sig, siginfo_t *sip, ucontext_t *uap)
  * @param msg
  */
 void asendmsg(jia_msg_t *msg) {
-    int outsendmsg;
+
+    int outsendmsg = 0;
+
+    // begin asend time && cal s/l jiamsg cnt
 #ifdef DOSTAT
     register unsigned int begin = get_usecs();
-    if (statflag == 1) {
-        if (msg->size > 4096)
-            jiastat.largecnt++;
-        if (msg->size < 128)
-            jiastat.smallcnt++;
-    }
+    STATOP(if (msg->size > 4096) jiastat.largecnt++;
+           if (msg->size < 128) jiastat.smallcnt++;)
 #endif
 
-    printf("Enter asendmsg!");
+    VERBOSE_OUT(1, "Enter asendmsg!");
 
     // printmsg(msg, 1);
 
+    /* step 1: memcpy to outqt && update outqueue */
     BEGINCS;
-    assert0((outcount < Maxqueue), "asendmsg(): Outqueue exceeded!");
-    memcpy(&(outqt), msg,
-           Msgheadsize + msg->size); // copy msg to outqueue[outtail]
-    commreq.snd_seq[msg->topid]++;
-    outqt.seqno = commreq.snd_seq[msg->topid];
-    outcount++;
-    outtail = (outtail + 1) % Maxqueue;
-    outsendmsg = (outcount == 1) ? 1 : 0;
-    ENDCS;
-    printf("Before outsend(), Out asendmsg! outc=%d, outh=%d, outt=%d\n",
-           outcount, outhead, outtail);
-    while (outsendmsg == 1) { // there is msg need to be sended in outqueue
+    memcpy(&(outqt), msg, Msgheadsize + msg->size);
+    outsendmsg = outqsend(outqt.topid);
+    VERBOSE_OUT(1,
+                "Before outsend(), Out asendmsg! outc=%d, outh=%d, outt=%d\n",
+                outcount, outhead, outtail);
+
+    /* step 2: call outsend() to send msg && update outqueue */
+    // there is msg need to be sent in outqueue
+    while (outsendmsg == 1) {
         outsend();
         BEGINCS;
-        outhead = (outhead + 1) % Maxqueue;
-        outcount--;
-        outsendmsg = (outcount > 0) ? 1 : 0;
+        outsendmsg = outqcomp();
         ENDCS;
     }
-    printf("Out asendmsg! outc=%d, outh=%d, outt=%d\n", outcount, outhead,
-           outtail);
+    VERBOSE_OUT(1, "Out asendmsg! outc=%d, outh=%d, outt=%d\n", outcount,
+                outhead, outtail);
 
+    // end asend time
 #ifdef DOSTAT
-    if (statflag == 1) {
-        jiastat.asendtime += get_usecs() - begin;
-    }
+    STATOP(jiastat.asendtime += get_usecs() - begin;)
 #endif
 }
 
@@ -758,7 +779,7 @@ void outsend() {
 
     if (toproc == fromproc) { // single machine communication
 
-        // recv msg (outq to inq)
+        /* step 1: memcpy to inqt && update inqueue */
         BEGINCS;
         memcpy(&(inqt), &(outqh), Msgheadsize + outqh.size);
         servemsg = inqrecv(fromproc);
@@ -769,7 +790,9 @@ void outsend() {
             "Finishcopymsg,incount=%d,inhead=%d,intail=%d!\nservemsg == %d\n",
             incount, inhead, intail, servemsg);
 
-        while (servemsg == 1) { // there are some msg need be served
+        /* step 2: call msgserver() to manage msg && update inqueue */
+        // there are some msg need be served
+        while (servemsg == 1) {
             msgserver();
             BEGINCS;
             servemsg = inqcomp();
