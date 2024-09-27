@@ -176,7 +176,7 @@ static inline int inqrecv(int fromproc) {
     commreq.rcv_seq[fromproc] = inqt.seqno;
     printmsg(&inqt, 1);
     VERBOSE_OUT(3, "incount: %d\n", incount);
-    return (incount > 0);
+    return (incount == 1);
 };
 
 /**
@@ -203,7 +203,7 @@ static inline int outqsend(int toproc) {
     outqt.seqno = commreq.snd_seq[toproc];
     outcount++;
     outtail = (outtail + 1) % Maxqueue;
-    return (outcount > 0);
+    return (outcount == 1);
 };
 
 /**
