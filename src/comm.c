@@ -334,7 +334,7 @@ void initcomm() {
 
         act.sa_handler = (void_func_handler)sigio_handler;
         sigemptyset(&act.sa_mask);
-        act.sa_flags = SA_SIGINFO;
+        act.sa_flags = SA_NODEFER | SA_SIGINFO;
         if (sigaction(SIGIO, &act, NULL))
             assert0(0, "initcomm()-->sigaction()");
 
@@ -353,14 +353,14 @@ void initcomm() {
         // sigio's action: sigio_handler
         act.sa_handler = (void_func_handler)sigio_handler;
         sigemptyset(&act.sa_mask);
-        act.sa_flags = SA_RESTART;
+        act.sa_flags = SA_NODEFER | SA_RESTART;
         if (sigaction(SIGIO, &act, NULL))
             assert0(0, "initcomm()-->sigaction()");
 
         // sigint's action: sigint_handler
         act.sa_handler = (void_func_handler)sigint_handler;
         sigemptyset(&act.sa_mask);
-        act.sa_flags = SA_NOMASK;
+        act.sa_flags = SA_NODEFER;
         if (sigaction(SIGINT, &act, NULL)) {
             assert0(0, "segv sigaction problem");
         }
@@ -727,6 +727,7 @@ void asendmsg(jia_msg_t *msg) {
     BEGINCS;
     memcpy(&(outqt), msg, Msgheadsize + msg->size);
     outsendmsg = outqsend(outqt.topid);
+    ENDCS;
     VERBOSE_OUT(1,
                 "Before outsend(), Out asendmsg! outc=%d, outh=%d, outt=%d\n",
                 outcount, outhead, outtail);
