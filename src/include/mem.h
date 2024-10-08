@@ -50,8 +50,9 @@
 #define Homepages 16384 /* maximum number of home pages in a host */
 #define Homesize (Homepages * Pagesize)
 #define Cachesize (Pagesize * Cachepages)
-#define Setpages Cachepages /* change Setpages so that have multiple sets */
-#define Setnum (Cachepages / Setpages) /* num of entries in a set */
+#define Setnum 1 /* num of entries in a set */
+#define Setpages                                                               \
+    Cachepages / Setnum /* change Setpages so that have multiple sets */
 
 #define DIFFNULL ((jia_msg_t *)NULL)
 

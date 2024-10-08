@@ -446,7 +446,8 @@ unsigned long jia_alloc2p(int size, int proc) {
 }
 
 /**
- * @brief xor -- get the index of the first page of the set based on the addr
+ * @brief xor -- get the index of the first page of the set based on the addr,
+ * setnum group connection
  *
  * @param addr address of a byte in one page
  * @return int -  the first cache index of the page's corresponding setnum in
@@ -517,22 +518,27 @@ int findposition(address_t addr) {
     cachei = xor(addr);
     seti = replacei(cachei);
     invi = -1;
+
+    // find a cached page whose state is UNMAP (or INV, use invi to record it)
+    // or the last page in this set
     for (i = 0; (cache[cachei + seti].state != UNMAP) && (i < Setpages); i++) {
-        if ((invi == (-1)) && (cache[cachei + seti].state ==
-                               INV)) { // find a cached page whose state is INV
+        if ((invi == (-1)) && (cache[cachei + seti].state == INV))
             invi = seti;
-        }
         seti = (seti + 1) % Setpages; // next index in this set
     }
 
-    if ((cache[cachei + seti].state != UNMAP) &&
-        (invi != (-1))) { // if there is no UNMAP cache, used cache in INV state
+    // if there is no UNMAP cache, used cache in INV state
+    if ((cache[cachei + seti].state != UNMAP) && (invi != (-1))) {
         seti = invi;
     }
 
+    /**
+     * INV||RO : flush
+     * RW : save&&flush
+     * UNMAP : no op
+     */
     if ((cache[cachei + seti].state == INV) ||
-        (cache[cachei + seti].state ==
-         RO)) { // the cached page's state is INV or RO
+        (cache[cachei + seti].state == RO)) {
         flushpage(cachei + seti);
 #ifdef DOSTAT
         if (statflag == 1) {
@@ -635,8 +641,8 @@ void sigsegv_handler(int signo, siginfo_t *sip, ucontext_t *uap)
             ((unsigned long)faultaddr >= Startaddr)),
            errstr);
 
-    if (homehost(faultaddr) ==
-        jia_pid) { // page's home is current host (si_code = 2)
+    // page's home is current host (si_code = 2)
+    if (homehost(faultaddr) == jia_pid) {
         memprotect((caddr_t)faultaddr, Pagesize,
                    PROT_READ | PROT_WRITE); // grant write right
         homei = homepage(faultaddr);
@@ -646,16 +652,20 @@ void sigsegv_handler(int signo, siginfo_t *sip, ucontext_t *uap)
             memcpy(home[homei].twin, home[homei].addr, Pagesize);
         }
 #ifdef DOSTAT
-        if (statflag == 1) {
-            jiastat.segvLtime += get_usecs() - begin;
-            jiastat.kernelflag = 0;
-            jiastat.segvLcnt++;
-        }
+        STATOP(jiastat.segvLtime += get_usecs() - begin; jiastat.kernelflag = 0;
+               jiastat.segvLcnt++;)
 #endif
     } else { // page's home is not current host (si_code = 1, )
         writefault = (writefault == 0) ? 0 : 1;
         cachei =
             (int)page[((unsigned long)faultaddr - Startaddr) / Pagesize].cachei;
+
+        /**
+         * cachei == Cachepages: page's cache has exist
+         * cachei != Cachepages: should be mmapped
+         * note: first protect it as writable, and then make changes based on
+         * writefault later.
+         */
         if (cachei < Cachepages) {
             memprotect((caddr_t)faultaddr, Pagesize, PROT_READ | PROT_WRITE);
             if (!((writefault) && (cache[cachei].state == RO))) {
@@ -667,6 +677,9 @@ void sigsegv_handler(int signo, siginfo_t *sip, ucontext_t *uap)
             getpage(faultaddr, 0);
         }
 
+        /**
+         * make changes based on writefault later.
+         */
         if (writefault) {
             cache[cachei].addr = faultaddr;
             cache[cachei].state = RW;
@@ -691,7 +704,7 @@ void sigsegv_handler(int signo, siginfo_t *sip, ucontext_t *uap)
         }
 #endif
     }
-    printf("Out sigsegv_handler\n\n");
+    VERBOSE_OUT(1, "Out sigsegv_handler\n\n");
 }
 
 /**
@@ -899,7 +912,7 @@ unsigned long
  *
  * @param req
  *
- * diff msg data : | addr | totalsize | (start|count) | diffs
+ * diff msg data : (| addr | totalsize | (start|count) | diffs) * n
  */
 void diffserver(jia_msg_t *req) {
     int datai;
@@ -918,31 +931,38 @@ void diffserver(jia_msg_t *req) {
 
     datai = 0;
     while (datai < req->size) {
+        // get cache addr
         paddr = s2l(req->data + datai); // consider use stol macro
-        // datai+=Intbytes;
         datai += sizeof(unsigned char *);
         wv = WVNULL;
 
         homei = homepage(paddr);
-        /* In the case of H_MIG==ON, homei may be the index of
-           the new home[] which has not be updated due to difference
-           of barrier arrival. In this case, homei==Homepages and
-           home[Homepages].wtnt==0*/
+
+        /**
+         * In the case of H_MIG==ON, homei may be the index of
+         * the new home[] which has not be updated due to difference
+         * of barrier arrival. In this case, homei==Homepages and
+         * home[Homepages].wtnt==0
+         */
 
         if ((home[homei].wtnt & 1) != 1)
             memprotect((caddr_t)paddr, Pagesize, PROT_READ | PROT_WRITE);
 
-        // pstop=s2l(req->data+datai)+datai-Intbytes;
-        // datai+=Intbytes;
+        // pstop = (current diffmsg size + current offset - sizeof(addr)) =
+        // current diffmsg's end offset
         pstop = bytestoi(req->data + datai) + datai - sizeof(unsigned char *);
         datai += Intbytes;
         while (datai < pstop) {
+            // cal size && offset
             dsize = bytestoi(req->data + datai) & 0xffff;
             doffset = (bytestoi(req->data + datai) >> 16) & 0xffff;
             datai += Intbytes;
+
+            // copy diffmsg to cache
             memcpy((address_t)(paddr + doffset), req->data + datai, dsize);
             datai += dsize;
 
+            // cal which diffunit should be modified
             if ((W_VEC == ON) && (dsize > 0)) {
                 int i;
                 for (i = doffset / Blocksize * Blocksize; i < (doffset + dsize);
@@ -958,17 +978,12 @@ void diffserver(jia_msg_t *req) {
             memprotect((caddr_t)paddr, (size_t)Pagesize, (int)PROT_READ);
 
 #ifdef DOSTAT
-        if (statflag == 1) {
-            jiastat.mwdiffcnt++;
-        }
+        STATOP(jiastat.mwdiffcnt++;)
 #endif
     }
 
 #ifdef DOSTAT
-    if (statflag == 1) {
-        jiastat.dedifftime += get_usecs() - begin;
-        jiastat.diffcnt++;
-    }
+    STATOP(jiastat.dedifftime += get_usecs() - begin; jiastat.diffcnt++;)
 #endif
 
     rep = newmsg();
