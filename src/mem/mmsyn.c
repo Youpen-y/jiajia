@@ -265,15 +265,15 @@ void sigsegv_handler(int signo, siginfo_t *sip, ucontext_t *uap)
                              => () si_code: 2 means that invalid permissions for
                              mapped object => ()*/
 #endif
-    VERBOSE_OUT(1, "Enter sigsegv handler\n");
-    VERBOSE_OUT(1,
+    VERBOSE_LOG(3, "Enter sigsegv handler\n");
+    VERBOSE_LOG(3,
                 "Shared memory out of range from %p to %p!, faultaddr=%p, "
                 "writefault=%d\n",
                 (void *)Startaddr, (void *)(Startaddr + globaladdr), faultaddr,
                 writefault);
 
-    VERBOSE_OUT(1, "sig info structure siginfo_t\n");
-    VERBOSE_OUT(1,
+    VERBOSE_LOG(3, "sig info structure siginfo_t\n");
+    VERBOSE_LOG(3,
                 "\tsignal err : %d \n"
                 "\tsignal code: %d \n"
                 "\t    si_addr: %p\n",
@@ -350,7 +350,7 @@ void sigsegv_handler(int signo, siginfo_t *sip, ucontext_t *uap)
         }
 #endif
     }
-    VERBOSE_OUT(1, "Out sigsegv_handler\n\n");
+    VERBOSE_LOG(3, "Out sigsegv_handler\n\n");
 }
 
 

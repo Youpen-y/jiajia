@@ -107,7 +107,7 @@ unsigned long jia_alloc3(int size, int block, int starthost) {
         }
 
         if (jia_pid == homepid) {
-            VERBOSE_OUT(1, "Map 0x%x bytes in home %4d! globaladdr = 0x%lx\n",
+            VERBOSE_LOG(3, "Map 0x%x bytes in home %4d! globaladdr = 0x%lx\n",
                         mapsize, homepid, globaladdr);
         }
 
@@ -172,7 +172,7 @@ unsigned long jia_alloc3b(int size, int *block, int starthost) {
 
 #ifdef JIA_DEBUG
 #endif
-        printf("Map 0x%x bytes in home %4d! globaladdr = 0x%lx\n", mapsize,
+        VERBOSE_LOG(3, "Map 0x%x bytes in home %4d! globaladdr = 0x%lx\n", mapsize,
                homepid, globaladdr);
 
         hosts[homepid].homesize += mapsize;

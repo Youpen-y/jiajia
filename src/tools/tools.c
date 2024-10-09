@@ -148,7 +148,7 @@ void assert(int cond, char *format, ...) {
  * @param req msg that will be printed
  */
 void jiaexitserver(jia_msg_t *req) {
-    printf("Assert error from host %d --- %s\n", req->frompid,
+    VERBOSE_LOG(3, "Assert error from host %d --- %s\n", req->frompid,
            (char *)req->data);
     fflush(stderr);
     fflush(stdout);
@@ -194,8 +194,8 @@ jia_msg_t *newmsg() {
 
 #ifdef JIA_DEBUG
     for (j = 0; j < Maxmsgs; j++)
-        printf("%d ", msgbusy[j]);
-    printf("  msgcnt=%d\n", msgcnt);
+        VERBOSE_LOG(3, "%d ", msgbusy[j]);
+    VERBOSE_LOG(3, "  msgcnt=%d\n", msgcnt);
 #endif
     return (&(msgarray[i]));
 }
@@ -277,301 +277,301 @@ void printmsg(jia_msg_t *msg, int right) {
 
     if (verbose_out >= 3) {
         SPACE(right);
-        printf("********Print message********\n");
+        VERBOSE_LOG(3, "********Print message********\n");
         SPACE(right);
         switch (msg->op) {
         case DIFF:
-            printf("msg.op      = DIFF     \n");
+            VERBOSE_LOG(3, "msg.op      = DIFF     \n");
             SPACE(right);
-            printf("msg.frompid = %d\n", msg->frompid);
+            VERBOSE_LOG(3, "msg.frompid = %d\n", msg->frompid);
             SPACE(right);
-            printf("msg.topid   = %d\n", msg->topid);
+            VERBOSE_LOG(3, "msg.topid   = %d\n", msg->topid);
             SPACE(right);
-            printf("msg.temp    = %d\n", msg->temp);
+            VERBOSE_LOG(3, "msg.temp    = %d\n", msg->temp);
             SPACE(right);
-            printf("msg.seqno   = %d\n", msg->seqno);
+            VERBOSE_LOG(3, "msg.seqno   = %d\n", msg->seqno);
             SPACE(right);
-            printf("msg.index   = %d\n", msg->index);
+            VERBOSE_LOG(3, "msg.index   = %d\n", msg->index);
             SPACE(right);
-            printf("msg.size    = %d\n", msg->size);
+            VERBOSE_LOG(3, "msg.size    = %d\n", msg->size);
             SPACE(right);
-            printf("msg.data(addr) = %p\n", stol(msg->data)); // addr(8bytes)
+            VERBOSE_LOG(3, "msg.data(addr) = %p\n", stol(msg->data)); // addr(8bytes)
             SPACE(right);
-            printf("msg.data(totalsize)    = %p\n", bytestoi(msg->data + 8));
+            VERBOSE_LOG(3, "msg.data(totalsize)    = %p\n", bytestoi(msg->data + 8));
             SPACE(right);
-            printf("msg.data(start|count)    = %p\n", bytestoi(msg->data + 12));
+            VERBOSE_LOG(3, "msg.data(start|count)    = %p\n", bytestoi(msg->data + 12));
             break;
         case DIFFGRANT:
-            printf("msg.op      = DIFFGRANT\n");
+            VERBOSE_LOG(3, "msg.op      = DIFFGRANT\n");
             SPACE(right);
-            printf("msg.frompid = %d\n", msg->frompid);
+            VERBOSE_LOG(3, "msg.frompid = %d\n", msg->frompid);
             SPACE(right);
-            printf("msg.topid   = %d\n", msg->topid);
+            VERBOSE_LOG(3, "msg.topid   = %d\n", msg->topid);
             SPACE(right);
-            printf("msg.temp     =%d\n", msg->temp);
+            VERBOSE_LOG(3, "msg.temp     =%d\n", msg->temp);
             SPACE(right);
-            printf("msg.seqno   = %d\n", msg->seqno);
+            VERBOSE_LOG(3, "msg.seqno   = %d\n", msg->seqno);
             SPACE(right);
-            printf("msg.index   = %d\n", msg->index);
+            VERBOSE_LOG(3, "msg.index   = %d\n", msg->index);
             SPACE(right);
-            printf("msg.size    = %d\n", msg->size);
+            VERBOSE_LOG(3, "msg.size    = %d\n", msg->size);
             break;
         case GETP:
-            printf("msg.op      = GETP     \n");
+            VERBOSE_LOG(3, "msg.op      = GETP     \n");
             SPACE(right);
-            printf("msg.frompid = %d\n", msg->frompid);
+            VERBOSE_LOG(3, "msg.frompid = %d\n", msg->frompid);
             SPACE(right);
-            printf("msg.topid   = %d\n", msg->topid);
+            VERBOSE_LOG(3, "msg.topid   = %d\n", msg->topid);
             SPACE(right);
-            printf("msg.temp     =%d\n", msg->temp);
+            VERBOSE_LOG(3, "msg.temp     =%d\n", msg->temp);
             SPACE(right);
-            printf("msg.seqno   = %d\n", msg->seqno);
+            VERBOSE_LOG(3, "msg.seqno   = %d\n", msg->seqno);
             SPACE(right);
-            printf("msg.index   = %d\n", msg->index);
+            VERBOSE_LOG(3, "msg.index   = %d\n", msg->index);
             SPACE(right);
-            printf("msg.size    = %d\n", msg->size);
+            VERBOSE_LOG(3, "msg.size    = %d\n", msg->size);
             SPACE(right);
-            printf("msg.data    = %p\n", stol(msg->data));
+            VERBOSE_LOG(3, "msg.data    = %p\n", stol(msg->data));
             break;
         case GETPGRANT:
-            printf("msg.op      = GETPGRANT\n");
+            VERBOSE_LOG(3, "msg.op      = GETPGRANT\n");
             SPACE(right);
-            printf("msg.frompid = %d\n", msg->frompid);
+            VERBOSE_LOG(3, "msg.frompid = %d\n", msg->frompid);
             SPACE(right);
-            printf("msg.topid   = %d\n", msg->topid);
+            VERBOSE_LOG(3, "msg.topid   = %d\n", msg->topid);
             SPACE(right);
-            printf("msg.temp     =%d\n", msg->temp);
+            VERBOSE_LOG(3, "msg.temp     =%d\n", msg->temp);
             SPACE(right);
-            printf("msg.seqno   = %d\n", msg->seqno);
+            VERBOSE_LOG(3, "msg.seqno   = %d\n", msg->seqno);
             SPACE(right);
-            printf("msg.index   = %d\n", msg->index);
+            VERBOSE_LOG(3, "msg.index   = %d\n", msg->index);
             SPACE(right);
-            printf("msg.size    = %d\n", msg->size);
+            VERBOSE_LOG(3, "msg.size    = %d\n", msg->size);
             SPACE(right);
-            printf("msg.data    = %p\n", stol(msg->data));
+            VERBOSE_LOG(3, "msg.data    = %p\n", stol(msg->data));
             SPACE(right);
-            printf("msg.data    = %p\n", stol(msg->data + 8));
+            VERBOSE_LOG(3, "msg.data    = %p\n", stol(msg->data + 8));
             break;
         case ACQ:
-            printf("msg.op      = ACQ      \n");
+            VERBOSE_LOG(3, "msg.op      = ACQ      \n");
             SPACE(right);
-            printf("msg.frompid = %d\n", msg->frompid);
+            VERBOSE_LOG(3, "msg.frompid = %d\n", msg->frompid);
             SPACE(right);
-            printf("msg.topid   = %d\n", msg->topid);
+            VERBOSE_LOG(3, "msg.topid   = %d\n", msg->topid);
             SPACE(right);
-            printf("msg.temp     =%d\n", msg->temp);
+            VERBOSE_LOG(3, "msg.temp     =%d\n", msg->temp);
             SPACE(right);
-            printf("msg.seqno   = %d\n", msg->seqno);
+            VERBOSE_LOG(3, "msg.seqno   = %d\n", msg->seqno);
             SPACE(right);
-            printf("msg.index   = %d\n", msg->index);
+            VERBOSE_LOG(3, "msg.index   = %d\n", msg->index);
             SPACE(right);
-            printf("msg.size    = %d\n", msg->size);
+            VERBOSE_LOG(3, "msg.size    = %d\n", msg->size);
             SPACE(right);
-            printf("msg.data    = %p\n", bytestoi(msg->data));
+            VERBOSE_LOG(3, "msg.data    = %p\n", bytestoi(msg->data));
             break;
         case ACQGRANT:
-            printf("msg.op      = ACQGRANT \n");
+            VERBOSE_LOG(3, "msg.op      = ACQGRANT \n");
             SPACE(right);
-            printf("msg.frompid = %d\n", msg->frompid);
+            VERBOSE_LOG(3, "msg.frompid = %d\n", msg->frompid);
             SPACE(right);
-            printf("msg.topid   = %d\n", msg->topid);
+            VERBOSE_LOG(3, "msg.topid   = %d\n", msg->topid);
             SPACE(right);
-            printf("msg.temp     =%d\n", msg->temp);
+            VERBOSE_LOG(3, "msg.temp     =%d\n", msg->temp);
             SPACE(right);
-            printf("msg.seqno   = %d\n", msg->seqno);
+            VERBOSE_LOG(3, "msg.seqno   = %d\n", msg->seqno);
             SPACE(right);
-            printf("msg.index   = %d\n", msg->index);
+            VERBOSE_LOG(3, "msg.index   = %d\n", msg->index);
             SPACE(right);
-            printf("msg.size    = %d\n", msg->size);
+            VERBOSE_LOG(3, "msg.size    = %d\n", msg->size);
             SPACE(right);
-            printf("msg.data    = %p\n", bytestoi(msg->data));
+            VERBOSE_LOG(3, "msg.data    = %p\n", bytestoi(msg->data));
             SPACE(right);
-            printf("msg.data    = %p\n", stol(msg->data + 4));
+            VERBOSE_LOG(3, "msg.data    = %p\n", stol(msg->data + 4));
             SPACE(right);
-            printf("msg.data    = %p\n", stol(msg->data + 12));
+            VERBOSE_LOG(3, "msg.data    = %p\n", stol(msg->data + 12));
             break;
         case INVLD:
-            printf("msg.op      = INVLD    \n");
+            VERBOSE_LOG(3, "msg.op      = INVLD    \n");
             SPACE(right);
-            printf("msg.frompid = %d\n", msg->frompid);
+            VERBOSE_LOG(3, "msg.frompid = %d\n", msg->frompid);
             SPACE(right);
-            printf("msg.topid   = %d\n", msg->topid);
+            VERBOSE_LOG(3, "msg.topid   = %d\n", msg->topid);
             SPACE(right);
-            printf("msg.temp     =%d\n", msg->temp);
+            VERBOSE_LOG(3, "msg.temp     =%d\n", msg->temp);
             SPACE(right);
-            printf("msg.seqno   = %d\n", msg->seqno);
+            VERBOSE_LOG(3, "msg.seqno   = %d\n", msg->seqno);
             SPACE(right);
-            printf("msg.index   = %d\n", msg->index);
+            VERBOSE_LOG(3, "msg.index   = %d\n", msg->index);
             SPACE(right);
-            printf("msg.size    = %d\n", msg->size);
+            VERBOSE_LOG(3, "msg.size    = %d\n", msg->size);
             SPACE(right);
-            printf("msg.data    = %p\n", bytestoi(msg->data));
+            VERBOSE_LOG(3, "msg.data    = %p\n", bytestoi(msg->data));
             SPACE(right);
-            printf("msg.data    = %p\n", stol(msg->data + 4));
+            VERBOSE_LOG(3, "msg.data    = %p\n", stol(msg->data + 4));
             SPACE(right);
-            printf("msg.data    = %p\n", stol(msg->data + 12));
+            VERBOSE_LOG(3, "msg.data    = %p\n", stol(msg->data + 12));
             break;
         case BARR:
-            printf("msg.op      = BARR     \n");
+            VERBOSE_LOG(3, "msg.op      = BARR     \n");
             SPACE(right);
-            printf("msg.frompid = %d\n", msg->frompid);
+            VERBOSE_LOG(3, "msg.frompid = %d\n", msg->frompid);
             SPACE(right);
-            printf("msg.topid   = %d\n", msg->topid);
+            VERBOSE_LOG(3, "msg.topid   = %d\n", msg->topid);
             SPACE(right);
-            printf("msg.temp     =%d\n", msg->temp);
+            VERBOSE_LOG(3, "msg.temp     =%d\n", msg->temp);
             SPACE(right);
-            printf("msg.seqno   = %d\n", msg->seqno);
+            VERBOSE_LOG(3, "msg.seqno   = %d\n", msg->seqno);
             SPACE(right);
-            printf("msg.index   = %d\n", msg->index);
+            VERBOSE_LOG(3, "msg.index   = %d\n", msg->index);
             SPACE(right);
-            printf("msg.size    = %d\n", msg->size);
+            VERBOSE_LOG(3, "msg.size    = %d\n", msg->size);
             SPACE(right);
-            printf("msg.data    = %p\n", bytestoi(msg->data)); // lock (4bytes)
+            VERBOSE_LOG(3, "msg.data    = %p\n", bytestoi(msg->data)); // lock (4bytes)
             SPACE(right);
-            printf("msg.data    = %p\n", stol(msg->data + 4));
+            VERBOSE_LOG(3, "msg.data    = %p\n", stol(msg->data + 4));
             SPACE(right);
-            printf("msg.data    = %p\n", stol(msg->data + 12));
+            VERBOSE_LOG(3, "msg.data    = %p\n", stol(msg->data + 12));
             break;
         case BARRGRANT:
-            printf("msg.op      = BARRGRANT\n");
+            VERBOSE_LOG(3, "msg.op      = BARRGRANT\n");
             SPACE(right);
-            printf("msg.frompid = %d\n", msg->frompid);
+            VERBOSE_LOG(3, "msg.frompid = %d\n", msg->frompid);
             SPACE(right);
-            printf("msg.topid   = %d\n", msg->topid);
+            VERBOSE_LOG(3, "msg.topid   = %d\n", msg->topid);
             SPACE(right);
-            printf("msg.temp     =%d\n", msg->temp);
+            VERBOSE_LOG(3, "msg.temp     =%d\n", msg->temp);
             SPACE(right);
-            printf("msg.seqno   = %d\n", msg->seqno);
+            VERBOSE_LOG(3, "msg.seqno   = %d\n", msg->seqno);
             SPACE(right);
-            printf("msg.index   = %d\n", msg->index);
+            VERBOSE_LOG(3, "msg.index   = %d\n", msg->index);
             SPACE(right);
-            printf("msg.size    = %d\n", msg->size);
+            VERBOSE_LOG(3, "msg.size    = %d\n", msg->size);
             SPACE(right);
-            printf("msg.data    = %p\n", bytestoi(msg->data)); // lock (4bytes)
+            VERBOSE_LOG(3, "msg.data    = %p\n", bytestoi(msg->data)); // lock (4bytes)
             SPACE(right);
-            printf("msg.data    = %p\n", stol(msg->data + 4));
+            VERBOSE_LOG(3, "msg.data    = %p\n", stol(msg->data + 4));
             SPACE(right);
-            printf("msg.data(from)    = %p\n", bytestoi(msg->data + 12));
+            VERBOSE_LOG(3, "msg.data(from)    = %p\n", bytestoi(msg->data + 12));
             break;
         case WAIT:
-            printf("msg.op      = WAIT     \n");
+            VERBOSE_LOG(3, "msg.op      = WAIT     \n");
             SPACE(right);
-            printf("msg.frompid = %d\n", msg->frompid);
+            VERBOSE_LOG(3, "msg.frompid = %d\n", msg->frompid);
             SPACE(right);
-            printf("msg.topid   = %d\n", msg->topid);
+            VERBOSE_LOG(3, "msg.topid   = %d\n", msg->topid);
             SPACE(right);
-            printf("msg.temp     =%d\n", msg->temp);
+            VERBOSE_LOG(3, "msg.temp     =%d\n", msg->temp);
             SPACE(right);
-            printf("msg.seqno   = %d\n", msg->seqno);
+            VERBOSE_LOG(3, "msg.seqno   = %d\n", msg->seqno);
             SPACE(right);
-            printf("msg.index   = %d\n", msg->index);
+            VERBOSE_LOG(3, "msg.index   = %d\n", msg->index);
             SPACE(right);
-            printf("msg.size    = %d\n", msg->size);
+            VERBOSE_LOG(3, "msg.size    = %d\n", msg->size);
             break;
         case WAITGRANT:
-            printf("msg.op      = WAITGRANT\n");
+            VERBOSE_LOG(3, "msg.op      = WAITGRANT\n");
             SPACE(right);
-            printf("msg.frompid = %d\n", msg->frompid);
+            VERBOSE_LOG(3, "msg.frompid = %d\n", msg->frompid);
             SPACE(right);
-            printf("msg.topid   = %d\n", msg->topid);
+            VERBOSE_LOG(3, "msg.topid   = %d\n", msg->topid);
             SPACE(right);
-            printf("msg.temp     =%d\n", msg->temp);
+            VERBOSE_LOG(3, "msg.temp     =%d\n", msg->temp);
             SPACE(right);
-            printf("msg.seqno   = %d\n", msg->seqno);
+            VERBOSE_LOG(3, "msg.seqno   = %d\n", msg->seqno);
             SPACE(right);
-            printf("msg.index   = %d\n", msg->index);
+            VERBOSE_LOG(3, "msg.index   = %d\n", msg->index);
             SPACE(right);
-            printf("msg.size    = %d\n", msg->size);
+            VERBOSE_LOG(3, "msg.size    = %d\n", msg->size);
             break;
         case REL:
-            printf("msg.op      = REL      \n");
+            VERBOSE_LOG(3, "msg.op      = REL      \n");
             SPACE(right);
-            printf("msg.frompid = %d\n", msg->frompid);
+            VERBOSE_LOG(3, "msg.frompid = %d\n", msg->frompid);
             SPACE(right);
-            printf("msg.topid   = %d\n", msg->topid);
+            VERBOSE_LOG(3, "msg.topid   = %d\n", msg->topid);
             SPACE(right);
-            printf("msg.temp     =%d\n", msg->temp);
+            VERBOSE_LOG(3, "msg.temp     =%d\n", msg->temp);
             SPACE(right);
-            printf("msg.seqno   = %d\n", msg->seqno);
+            VERBOSE_LOG(3, "msg.seqno   = %d\n", msg->seqno);
             SPACE(right);
-            printf("msg.index   = %d\n", msg->index);
+            VERBOSE_LOG(3, "msg.index   = %d\n", msg->index);
             SPACE(right);
-            printf("msg.size    = %d\n", msg->size);
+            VERBOSE_LOG(3, "msg.size    = %d\n", msg->size);
             SPACE(right);
-            printf("msg.data    = %p\n", bytestoi(msg->data)); // lock (4bytes)
+            VERBOSE_LOG(3, "msg.data    = %p\n", bytestoi(msg->data)); // lock (4bytes)
             SPACE(right);
-            printf("msg.data    = %p\n", stol(msg->data + 4));
+            VERBOSE_LOG(3, "msg.data    = %p\n", stol(msg->data + 4));
             SPACE(right);
-            printf("msg.data(from)    = %p\n", bytestoi(msg->data + 12));
+            VERBOSE_LOG(3, "msg.data(from)    = %p\n", bytestoi(msg->data + 12));
             break;
         case WTNT:
-            printf("msg.op      = WTNT     \n");
+            VERBOSE_LOG(3, "msg.op      = WTNT     \n");
             SPACE(right);
-            printf("msg.frompid = %d\n", msg->frompid);
+            VERBOSE_LOG(3, "msg.frompid = %d\n", msg->frompid);
             SPACE(right);
-            printf("msg.topid   = %d\n", msg->topid);
+            VERBOSE_LOG(3, "msg.topid   = %d\n", msg->topid);
             SPACE(right);
-            printf("msg.temp     =%d\n", msg->temp);
+            VERBOSE_LOG(3, "msg.temp     =%d\n", msg->temp);
             SPACE(right);
-            printf("msg.seqno   = %d\n", msg->seqno);
+            VERBOSE_LOG(3, "msg.seqno   = %d\n", msg->seqno);
             SPACE(right);
-            printf("msg.index   = %d\n", msg->index);
+            VERBOSE_LOG(3, "msg.index   = %d\n", msg->index);
             SPACE(right);
-            printf("msg.size    = %d\n", msg->size);
+            VERBOSE_LOG(3, "msg.size    = %d\n", msg->size);
             SPACE(right);
-            printf("msg.data    = %p\n", bytestoi(msg->data)); // lock (4bytes)
+            VERBOSE_LOG(3, "msg.data    = %p\n", bytestoi(msg->data)); // lock (4bytes)
             SPACE(right);
-            printf("msg.data    = %p\n", stol(msg->data + 4));
+            VERBOSE_LOG(3, "msg.data    = %p\n", stol(msg->data + 4));
             SPACE(right);
-            printf("msg.data    = %p\n", stol(msg->data + 12));
+            VERBOSE_LOG(3, "msg.data    = %p\n", stol(msg->data + 12));
             break;
         case STAT:
-            printf("msg.op      = STAT     \n");
+            VERBOSE_LOG(3, "msg.op      = STAT     \n");
             break;
         case STATGRANT:
-            printf("msg.op      = STATGRANT\n");
+            VERBOSE_LOG(3, "msg.op      = STATGRANT\n");
             break;
         case JIAEXIT:
-            printf("msg.op      = JIAEXIT  \n");
+            VERBOSE_LOG(3, "msg.op      = JIAEXIT  \n");
             SPACE(right);
-            printf("msg.frompid = %d\n", msg->frompid);
+            VERBOSE_LOG(3, "msg.frompid = %d\n", msg->frompid);
             SPACE(right);
-            printf("msg.topid   = %d\n", msg->topid);
+            VERBOSE_LOG(3, "msg.topid   = %d\n", msg->topid);
             SPACE(right);
-            printf("msg.temp     =%d\n", msg->temp);
+            VERBOSE_LOG(3, "msg.temp     =%d\n", msg->temp);
             SPACE(right);
-            printf("msg.seqno   = %d\n", msg->seqno);
+            VERBOSE_LOG(3, "msg.seqno   = %d\n", msg->seqno);
             SPACE(right);
-            printf("msg.index   = %d\n", msg->index);
+            VERBOSE_LOG(3, "msg.index   = %d\n", msg->index);
             SPACE(right);
-            printf("msg.size    = %d\n", msg->size);
+            VERBOSE_LOG(3, "msg.size    = %d\n", msg->size);
             SPACE(right);
-            printf("msg.data    = %p\n", stol(msg->data));
+            VERBOSE_LOG(3, "msg.data    = %p\n", stol(msg->data));
             SPACE(right);
-            printf("msg.data    = %p\n", stol(msg->data + 8));
+            VERBOSE_LOG(3, "msg.data    = %p\n", stol(msg->data + 8));
             SPACE(right);
-            printf("msg.data    = %p\n", stol(msg->data + 16));
+            VERBOSE_LOG(3, "msg.data    = %p\n", stol(msg->data + 16));
             break;
         default:
-            printf("msg.op      = %d       \n", msg->op);
+            VERBOSE_LOG(3, "msg.op      = %d       \n", msg->op);
             SPACE(right);
-            printf("msg.frompid = %d\n", msg->frompid);
+            VERBOSE_LOG(3, "msg.frompid = %d\n", msg->frompid);
             SPACE(right);
-            printf("msg.topid   = %d\n", msg->topid);
+            VERBOSE_LOG(3, "msg.topid   = %d\n", msg->topid);
             SPACE(right);
-            printf("msg.temp     =%d\n", msg->temp);
+            VERBOSE_LOG(3, "msg.temp     =%d\n", msg->temp);
             SPACE(right);
-            printf("msg.seqno   = %d\n", msg->seqno);
+            VERBOSE_LOG(3, "msg.seqno   = %d\n", msg->seqno);
             SPACE(right);
-            printf("msg.index   = %d\n", msg->index);
+            VERBOSE_LOG(3, "msg.index   = %d\n", msg->index);
             SPACE(right);
-            printf("msg.size    = %d\n", msg->size);
+            VERBOSE_LOG(3, "msg.size    = %d\n", msg->size);
             SPACE(right);
-            printf("msg.data    = %p\n", stol(msg->data));
+            VERBOSE_LOG(3, "msg.data    = %p\n", stol(msg->data));
             SPACE(right);
-            printf("msg.data    = %p\n", stol(msg->data + 8));
+            VERBOSE_LOG(3, "msg.data    = %p\n", stol(msg->data + 8));
             SPACE(right);
-            printf("msg.data    = %p\n", stol(msg->data + 16));
+            VERBOSE_LOG(3, "msg.data    = %p\n", stol(msg->data + 16));
             break;
         }
     }
@@ -723,10 +723,10 @@ void jia_config(int dest, int value) {
         W_VEC = value;
         break;
     case RDMA:
-        printf("TODO! RDMA support");
+        VERBOSE_LOG(3, "TODO! RDMA support");
         break;
     default:
-        printf("Null configuration!\n");
+        VERBOSE_LOG(3, "Null configuration!\n");
         break;
     }
 }
@@ -751,7 +751,7 @@ float jia_clock() {
 }
 
 void jia_error(char *errstr) {
-    printf("JIAJIA error --- %s\n", errstr);
+    VERBOSE_LOG(3, "JIAJIA error --- %s\n", errstr);
     exit(-1);
 }
 #endif /* NULL_LIB */

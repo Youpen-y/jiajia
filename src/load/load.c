@@ -27,6 +27,7 @@
  *         Author: Weiwu Hu, Weisong Shi, Zhimin Tang                  *
  **********************************************************************/
 
+#include "utils.h"
 #ifndef NULL_LIB
 #include "load.h"
 #include "comm.h"
@@ -108,7 +109,7 @@ void jia_newload() {
         }
         for (i = 0; i < hostc; i++) {
             loadstat[i].power /= Ptotal;
-            printf(" loadstat[%d].power = %.2f\n", i, loadstat[i].power);
+            VERBOSE_LOG(3, " loadstat[%d].power = %.2f\n", i, loadstat[i].power);
         }
     }
 }

@@ -48,18 +48,18 @@
         sigaddset(&newmask, SIGIO);                                            \
         sigprocmask(SIG_BLOCK, &newmask, &oldmask);                            \
         oldsigiomask = sigismember(&oldmask, SIGIO);                           \
-        printf("Enter CS\t");                                                  \
+        VERBOSE_LOG(3, "Enter CS\t");                                          \
     }
 #define ENDCS                                                                  \
     {                                                                          \
         if (oldsigiomask == 0)                                                 \
             enable_sigio();                                                    \
-        printf("Exit CS\n");                                                   \
+        VERBOSE_LOG(3, "Exit CS\n");                                           \
     }
 
 // #ifndef JIA_DEBUG
 // #define  msgprint  0
-// #define  printf   emptyprintf
+// #define  VERBOSE_LOG 3,   emptyprintf
 // #else  /* JIA_DEBUG */
 // #define msgprint  1
 // #endif  /* JIA_DEBUG */
@@ -175,7 +175,7 @@ static inline int inqrecv(int fromproc) {
     // update seqno from host fromproc
     commreq.rcv_seq[fromproc] = inqt.seqno;
     printmsg(&inqt, 1);
-    VERBOSE_OUT(3, "incount: %d\n", incount);
+    VERBOSE_LOG(3, "incount: %d\n", incount);
     return (incount == 1);
 };
 
@@ -188,7 +188,7 @@ static inline int inqcomp() {
     inqh.op = ERRMSG;
     inhead = (inhead + 1) % Maxqueue;
     incount--;
-    VERBOSE_OUT(3, "incount: %d\n", incount);
+    VERBOSE_LOG(3, "incount: %d\n", incount);
     return (incount > 0);
 };
 
@@ -310,10 +310,10 @@ void initcomm() {
     int i, j, fd;
 
     if (jia_pid == 0) {
-        printf("************Initialize Communication!*******\n");
+        VERBOSE_LOG(3, "************Initialize Communication!*******\n");
     }
-    printf("current jia_pid = %d\n", jia_pid);
-    printf(" Startport = %d \n", Startport);
+    VERBOSE_LOG(3, "current jia_pid = %d\n", jia_pid);
+    VERBOSE_LOG(3, " Startport = %d \n", Startport);
 
     msgcnt = 0;
     for (i = 0; i < Maxmsgs; i++) {
@@ -390,11 +390,11 @@ void initcomm() {
     }
 
     /* output comm ports */
-    // printf("reqports\t repports\n");
+    // VERBOSE_LOG(3, "reqports\t repports\n");
     //   for(i = 0; i < Maxhosts; i++){
     //     for(j = 0; j < Maxhosts; j++){
-    //       printf("reqports[%d][%d] = %d\t", i, j, reqports[i][j]);
-    //       printf("repports[%d][%d] = %d\n", i, j, repports[i][j]);
+    //       VERBOSE_LOG(3, "reqports[%d][%d] = %d\t", i, j, reqports[i][j]);
+    //       VERBOSE_LOG(3, "repports[%d][%d] = %d\n", i, j, repports[i][j]);
     //     }
     //   }
 
@@ -402,21 +402,21 @@ void initcomm() {
     for (i = 0; i < Maxhosts; i++)
         for (j = 0; j < Maxhosts; j++) {
             if (j == 0)
-                printf("\nREQ[%02d][] = ", i);
+                VERBOSE_LOG(3, "\nREQ[%02d][] = ", i);
             else if (j % 5)
-                printf("%d  ", reqports[i][j]);
+                VERBOSE_LOG(3, "%d  ", reqports[i][j]);
             else
-                printf("%d  \n            ", reqports[i][j]);
+                VERBOSE_LOG(3, "%d  \n            ", reqports[i][j]);
         }
 
     for (i = 0; i < Maxhosts; i++)
         for (j = 0; j < Maxhosts; j++) {
             if (j == 0)
-                printf("\nREP[%02d][] = ", i);
+                VERBOSE_LOG(3, "\nREP[%02d][] = ", i);
             else if (j % 5)
-                printf("%d  ", repports[i][j]);
+                VERBOSE_LOG(3, "%d  ", repports[i][j]);
             else
-                printf("%d  \n            ", reqports[i][j]);
+                VERBOSE_LOG(3, "%d  \n            ", reqports[i][j]);
         }
 #endif /* JIA_DEBUG */
 
@@ -482,8 +482,8 @@ void initcomm() {
  */
 void msgserver() {
     SPACE(1);
-    printf("Enterserver msg[%d], incount=%d, inhead=%d, intail=%d!\n", inqh.op,
-           incount, inhead, intail);
+    VERBOSE_LOG(3, "Enterserver msg[%d], incount=%d, inhead=%d, intail=%d!\n",
+                inqh.op, incount, inhead, intail);
     switch (inqh.op) {
     case DIFF:
         diffserver(&inqh);
@@ -569,7 +569,7 @@ void msgserver() {
         break;
     }
     SPACE(1);
-    printf("Out servermsg!\n");
+    VERBOSE_LOG(3, "Out servermsg!\n");
 }
 
 /**
@@ -616,7 +616,7 @@ void sigio_handler(int sig, siginfo_t *sip, ucontext_t *uap)
     } interruptflag++;)
 #endif
 
-    printf("\nEnter sigio_handler!\n");
+    VERBOSE_LOG(3, "\nEnter sigio_handler!\n");
 
     // whether there is a requested from other hosts
     readfds = commreq.rcv_set;
@@ -662,7 +662,7 @@ void sigio_handler(int sig, siginfo_t *sip, ucontext_t *uap)
                     ENDCS;
                 } else {
                     printmsg(&inqt, 1);
-                    VERBOSE_OUT(1, "Receive resend message!\n");
+                    VERBOSE_LOG(3, "Receive resend message!\n");
 #ifdef DOSTAT
                     STATOP(jiastat.resentcnt++;)
 #endif
@@ -675,7 +675,7 @@ void sigio_handler(int sig, siginfo_t *sip, ucontext_t *uap)
     }
 
     SPACE(1);
-    VERBOSE_OUT(1, "Finishrecvmsg!inc=%d,inh=%d,int=%d\n", incount, inhead,
+    VERBOSE_LOG(3, "Finishrecvmsg!inc=%d,inh=%d,int=%d\n", incount, inhead,
                 intail);
 
     // handle msg
@@ -687,7 +687,7 @@ void sigio_handler(int sig, siginfo_t *sip, ucontext_t *uap)
     }
 
     SPACE(1);
-    VERBOSE_OUT(1, "Out sigio_handler!\n");
+    VERBOSE_LOG(3, "Out sigio_handler!\n");
 
     // end segvio time
 #ifdef DOSTAT
@@ -719,7 +719,7 @@ void asendmsg(jia_msg_t *msg) {
            if (msg->size < 128) jiastat.smallcnt++;)
 #endif
 
-    VERBOSE_OUT(1, "Enter asendmsg!");
+    VERBOSE_LOG(3, "Enter asendmsg!");
 
     // printmsg(msg, 1);
 
@@ -728,7 +728,7 @@ void asendmsg(jia_msg_t *msg) {
     memcpy(&(outqt), msg, Msgheadsize + msg->size);
     outsendmsg = outqsend(outqt.topid);
     ENDCS;
-    VERBOSE_OUT(1,
+    VERBOSE_LOG(3,
                 "Before outsend(), Out asendmsg! outc=%d, outh=%d, outt=%d\n",
                 outcount, outhead, outtail);
 
@@ -740,7 +740,7 @@ void asendmsg(jia_msg_t *msg) {
         outsendmsg = outqcomp();
         ENDCS;
     }
-    VERBOSE_OUT(1, "Out asendmsg! outc=%d, outh=%d, outt=%d\n", outcount,
+    VERBOSE_LOG(3, "Out asendmsg! outc=%d, outh=%d, outt=%d\n", outcount,
                 outhead, outtail);
 
     // end asend time
@@ -768,13 +768,13 @@ void outsend() {
     register unsigned int begin;
 #endif
 
-    VERBOSE_OUT(1, "\nEnter outsend!\n");
+    VERBOSE_LOG(3, "\nEnter outsend!\n");
 
     printmsg(&outqh, 1);
 
     toproc = outqh.topid;
     fromproc = outqh.frompid;
-    VERBOSE_OUT(1, "outc=%d, outh=%d, outt=%d\n \
+    VERBOSE_LOG(3, "outc=%d, outh=%d, outt=%d\n \
                 outqueue[outhead].topid = %d outqueue[outhead].frompid = %d\n",
                 outcount, outhead, outtail, toproc, fromproc);
 
@@ -786,8 +786,8 @@ void outsend() {
         servemsg = inqrecv(fromproc);
         ENDCS;
 
-        VERBOSE_OUT(
-            1,
+        VERBOSE_LOG(
+            3,
             "Finishcopymsg,incount=%d,inhead=%d,intail=%d!\nservemsg == %d\n",
             incount, inhead, intail, servemsg);
 
@@ -808,19 +808,22 @@ void outsend() {
         }
 #endif
         to.sin_family = AF_INET;
-        printf("toproc IP address is %s, addrlen is %d\n",
-               inet_ntoa(*(struct in_addr *)hosts[toproc].addr),
-               hosts[toproc].addrlen);
+        VERBOSE_LOG(3, "toproc IP address is %s, addrlen is %d\n",
+                    inet_ntoa(*(struct in_addr *)hosts[toproc].addr),
+                    hosts[toproc].addrlen);
         memcpy(&to.sin_addr, hosts[toproc].addr, hosts[toproc].addrlen);
         to.sin_port = htons(reqports[toproc][fromproc]);
 
-        printf("reqports[toproc][fromproc] = %u\n", reqports[toproc][fromproc]);
+        VERBOSE_LOG(3, "reqports[toproc][fromproc] = %u\n",
+                    reqports[toproc][fromproc]);
 
         retries_num = 0;
         sendsuccess = 0;
 
-        printf("commreq.snd_fds[toproc] = %d\n", commreq.snd_fds[toproc]);
-        printf("commreq.rcv_fds[toproc] = %d\n", commreq.rcv_fds[toproc]);
+        VERBOSE_LOG(3, "commreq.snd_fds[toproc] = %d\n",
+                    commreq.snd_fds[toproc]);
+        VERBOSE_LOG(3, "commreq.rcv_fds[toproc] = %d\n",
+                    commreq.rcv_fds[toproc]);
         while ((retries_num < MAX_RETRIES) &&
                (sendsuccess != 1)) { // retransimission
             BEGINCS;
@@ -841,7 +844,7 @@ void outsend() {
                     select(commrep.rcv_maxfd, &readfds, NULL, NULL, &zerotime);
                 arrived = (FD_ISSET(commrep.rcv_fds[toproc], &readfds) != 0);
             }
-            VERBOSE_OUT(3, "arrived = %d\n", arrived);
+            VERBOSE_LOG(3, "arrived = %d\n", arrived);
             if (arrived) {
             recv_again:
                 s = sizeof(from);
@@ -850,7 +853,8 @@ void outsend() {
                                0, (struct sockaddr *)&from, &s);
                 ENDCS;
                 if ((res < 0) && (errno == EINTR)) {
-                    printf("A signal interrupted recvfrom() before any data "
+                    VERBOSE_LOG(
+                        3, "A signal interrupted recvfrom() before any data "
                            "was available\n");
                     goto recv_again;
                 }
@@ -862,17 +866,18 @@ void outsend() {
         }
 
         if (sendsuccess != 1) {
-            printf("I am host %d, hostname = %s, I am running outsend() "
-                   "function\n",
-                   jia_pid, hosts[jia_pid].name);
+            VERBOSE_LOG(3,
+                        "I am host %d, hostname = %s, I am running outsend() "
+                        "function\n",
+                        jia_pid, hosts[jia_pid].name);
             sprintf(errstr, "I Can't asend message(%d,%d) to host %d!",
                     outqh.op, outqh.seqno, toproc);
-            printf("BUFFER SIZE %d (%d)\n", outqh.size, msgsize);
+            VERBOSE_LOG(3, "BUFFER SIZE %d (%d)\n", outqh.size, msgsize);
             assert0((sendsuccess == 1), errstr);
         }
     }
 
-    printf("Out outsend!\n\n");
+    VERBOSE_LOG(3, "Out outsend!\n\n");
 }
 
 /**

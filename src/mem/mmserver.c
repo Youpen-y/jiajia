@@ -181,7 +181,7 @@ void getpserver(jia_msg_t *req) {
 
     paddr = (address_t)stol(req->data); // getp message data is the page's addr
                                         /*
-                                         printf("getpage=0x%x from host %d\n",(unsigned long) paddr,req->frompid);
+                                         VERBOSE_LOG(3, "getpage=0x%x from host %d\n",(unsigned long) paddr,req->frompid);
                                         */
     if ((H_MIG == ON) && (homehost(paddr) != jia_pid)) {
         /*This is a new home, the home[] data structure may
@@ -228,7 +228,7 @@ void getpserver(jia_msg_t *req) {
     if (W_VEC == ON) {
         home[homei].wtvect[req->frompid] = WVNULL;
         /*
-          printf("0x%x\n",rep->temp);
+          VERBOSE_LOG(3, "0x%x\n",rep->temp);
         */
     }
 
@@ -265,10 +265,10 @@ void getpgrantserver(jia_msg_t *rep) {
             }
         }
     } else {
-        printf("addr is %p , rep->data+datai = %p\n", addr, rep->data + datai);
+        VERBOSE_LOG(3, "addr is %p , rep->data+datai = %p\n", addr, rep->data + datai);
         memcpy((unsigned char *)addr, rep->data + datai,
                Pagesize); // TODO:possible bug
-        printf("I have copy the page from remote home to %p\n", addr);
+        VERBOSE_LOG(3, "I have copy the page from remote home to %p\n", addr);
     }
 
     getpwait = 0;

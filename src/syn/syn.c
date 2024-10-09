@@ -35,6 +35,7 @@
  * =================================================================== *
  **********************************************************************/
 
+#include "utils.h"
 #ifndef NULL_LIB
 #include "syn.h"
 #include "comm.h"
@@ -309,7 +310,7 @@ void jia_barrier() {
 
     assert((stackptr == 0), "barrier can not be used in CS!");
 
-    printf("\nEnter jia barrier\n");
+    VERBOSE_LOG(3, "\nEnter jia barrier\n");
     endinterval(BARR);
 
     if (H_MIG == ON) {
@@ -321,12 +322,12 @@ void jia_barrier() {
     freewtntspace(top.wtntp);
     while (barrwait)
         ;
-    printf("555555555555555\n");
+    VERBOSE_LOG(3, "555555555555555\n");
     if ((H_MIG == ON) && (W_VEC == ON)) {
         jia_wait();
     }
     startinterval(BARR);
-    printf("66666666666666\n");
+    VERBOSE_LOG(3, "66666666666666\n");
     if (LOAD_BAL == ON)
         starttime = jia_clock();
 
@@ -336,7 +337,7 @@ void jia_barrier() {
         jiastat.kernelflag = 0;
     }
 #endif
-    printf("jia_barrier completed\n");
+    VERBOSE_LOG(3, "jia_barrier completed\n");
 }
 
 /**
@@ -350,7 +351,7 @@ void endinterval(int synop) {
     register int cachei;
     register int pagei;
     register int hpages;
-    printf("Enter endinterval!\n");
+    VERBOSE_LOG(3, "Enter endinterval!\n");
     for (cachei = 0; cachei < Cachepages; cachei++) {
         if (cache[cachei].wtnt == 1) { // when cached page wtnt == 1, save it
             savepage(cachei);
@@ -385,7 +386,7 @@ void endinterval(int synop) {
     }     /*for*/
     while (diffwait)
         ; // wait all diffs were handled
-    printf("Out of endinterval!\n");
+    VERBOSE_LOG(3, "Out of endinterval!\n");
 }
 
 /**
@@ -543,7 +544,7 @@ void sendwtnts(int operation) {
     int wtnti;
     jia_msg_t *req;
     wtnt_t *wnptr; // write notice pointer
-    printf("Enter sendwtnts!\n");
+    VERBOSE_LOG(3, "Enter sendwtnts!\n");
     req = newmsg();
 
     req->frompid = jia_pid;
@@ -558,9 +559,9 @@ void sendwtnts(int operation) {
     wnptr = top.wtntp;
     wnptr = appendstackwtnts(req, wnptr);
 
-    printf("req message frompid = %d, topid = %d\n", jia_pid, req->topid);
-    printf("req size is %d, req data is %s\n", req->size, req->data);
-    printf("wnptr == WNULL is %d\n", wnptr == WNULL ? 1 : 0);
+    VERBOSE_LOG(3, "req message frompid = %d, topid = %d\n", jia_pid, req->topid);
+    VERBOSE_LOG(3, "req size is %d, req data is %s\n", req->size, req->data);
+    VERBOSE_LOG(3, "wnptr == WNULL is %d\n", wnptr == WNULL ? 1 : 0);
     while (wnptr != WNULL) {
         req->op = WTNT;
         asendmsg(req);
@@ -568,10 +569,10 @@ void sendwtnts(int operation) {
         wnptr = appendstackwtnts(req, wnptr);
     }
     req->op = operation;
-    printf("my pid is %d\n", jiapid);
+    VERBOSE_LOG(3, "my pid is %d\n", jiapid);
     asendmsg(req);
     freemsg(req);
-    printf("\nOut of sendwtnts!\n\n");
+    VERBOSE_LOG(3, "\nOut of sendwtnts!\n\n");
 }
 
 /**
@@ -883,7 +884,7 @@ void grantbarr(int lock) {
  * barr msg data: | lock (4bytes) |
  */
 void barrserver(jia_msg_t *req) {
-    printf("host %d is running in barrserver\n", jiapid);
+    VERBOSE_LOG(3, "host %d is running in barrserver\n", jiapid);
     int lock;
 
     assert((req->op == BARR) && (req->topid == jia_pid),
@@ -899,16 +900,16 @@ void barrserver(jia_msg_t *req) {
     locks[lock].acqc++;
 
 #ifdef DEBUG
-    printf("barrier count=%d, from host %d\n", locks[lock].acqc, req->frompid);
+    VERBOSE_LOG(3, "barrier count=%d, from host %d\n", locks[lock].acqc, req->frompid);
 #endif
-    printf("locks[%d].acqc = %d\n", lock, locks[lock].acqc);
+    VERBOSE_LOG(3, "locks[%d].acqc = %d\n", lock, locks[lock].acqc);
     if (locks[lock].acqc == hostc) {
         locks[lock].scope++;
         grantbarr(lock);
         locks[lock].acqc = 0;
         freewtntspace(locks[lock].wtntp);
     }
-    printf("host %d is out of barrserver\n", jiapid);
+    VERBOSE_LOG(3, "host %d is out of barrserver\n", jiapid);
 }
 
 /**
@@ -1006,7 +1007,7 @@ void migarrangehome() {
         }
     }
     hosts[jia_pid].homesize = (i - 1) * Pagesize;
-    // printf("New homepages=%d\n",hosts[jia_pid].homesize/Pagesize);
+    // VERBOSE_LOG(3, "New homepages=%d\n",hosts[jia_pid].homesize/Pagesize);
 }
 
 /**
@@ -1021,7 +1022,7 @@ void migpage(unsigned long addr, int frompid, int topid) {
 
     pagei = (addr - Startaddr) / Pagesize;
     /*
-     printf("Mig page 0x%x from host %d to %d\n",pagei,frompid,topid);
+     VERBOSE_LOG(3, "Mig page 0x%x from host %d to %d\n",pagei,frompid,topid);
     */
 
     if (topid == jia_pid) { /*New Home*/
