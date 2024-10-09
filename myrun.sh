@@ -61,7 +61,7 @@ for dir in */; do
 
     #运行程序
     # echo "$password" | sudo -S ./"${dir%/}" >> ../../../reports/$ARCH/${dir%/}
-    ./"${dir%/}" > ../../../reports/$ARCH/${dir%/}
+    ./"${dir%/}" > ../../../reports/$ARCH/${dir%/} &
 
     #获得进程pid号并进行监视，防止进程超时
     pid=$!
