@@ -106,7 +106,63 @@ typedef struct {
 } jiapage_t;
 
 /* Function Declaration */
+
+/* server */
 void diffserver(jia_msg_t *);
 void getpserver(jia_msg_t *req);
+
+/* mmsync */
+int replacei(int cachei);
+void savepage(int cachei);
+void senddiffs();
+void sigsegv_handler(int signo, siginfo_t *sip, void *context);
+
+/* mem */
+void memprotect(void *addr, size_t len, int prot);
+void addwtvect(int homei, wtvect_t wv, int from);
+void memmap(void *addr, size_t len, int prot);
+void memunmap(void *addr, size_t len);
+
+/**
+ * @brief s2l --
+ *
+ * @param str
+ * @return unsigned long
+ */
+static inline unsigned long
+    s2l(unsigned char *str) // TODO: unsigned long now is 8 bytes (we need to
+                            // support both 32bit and 64bit machine)
+{
+    union {
+        unsigned long l;
+        // unsigned char c[Intbytes];
+        unsigned char c[sizeof(unsigned char *)];
+    } notype;
+
+    notype.c[0] = str[0];
+    notype.c[1] = str[1];
+    notype.c[2] = str[2];
+    notype.c[3] = str[3];
+    notype.c[4] = str[4];
+    notype.c[5] = str[5];
+    notype.c[6] = str[6];
+    notype.c[7] = str[7];
+
+    return (notype.l);
+}
+
+/**
+ * @brief xor -- get the index of the first page of the set based on the addr,
+ * setnum group connection
+ *
+ * @param addr address of a byte in one page
+ * @return int -  the first cache index of the page's corresponding setnum in
+ * the cache
+ *
+ */
+static inline int xor (address_t addr) {
+    return ((((unsigned long)(addr - Startaddr) / Pagesize) % Setnum) *
+            Setpages);
+}
 
 #endif /*JIAMEM_H*/

@@ -26,5 +26,6 @@ wtnt_t *newwtnt();
 void newtwin(address_t *twin);
 void freetwin(address_t *twin);
 void emptyprintf();
+unsigned int get_usecs();
 
 #endif  /* TOOLS_H */
