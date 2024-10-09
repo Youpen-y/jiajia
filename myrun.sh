@@ -1,6 +1,7 @@
 #!/bin/bash
 ARCH=linux
 MODE=WLAN
+TIMEOUT=30
 
 # 创建reports及其子文件夹文件夹
 if [ ! -d ./reports ]; then
@@ -48,7 +49,6 @@ sleep 1
 # read -s -p "Please enter your sudo password:" password
 
 # 运行所有apps
-echo -e "\nrun apps..."
 for dir in */; do
 
     # 进入文件夹并在reports下创建对应的log文件
@@ -62,6 +62,19 @@ for dir in */; do
     #运行程序
     # echo "$password" | sudo -S ./"${dir%/}" >> ../../../reports/$ARCH/${dir%/}
     ./"${dir%/}" > ../../../reports/$ARCH/${dir%/}
+
+    #获得进程pid号并进行监视，防止进程超时
+    pid=$!
+    sleep $TIMEOUT
+    if ps -p $pid > /dev/null
+    then
+        # 如果进程仍在运行，则终止该进程
+        echo "Terminating process with PID $pid"
+        kill $pid
+    else
+        echo "Process with PID $pid has completed within the time limit"
+    fi
+
     cd ../..
     sleep 5
 done
