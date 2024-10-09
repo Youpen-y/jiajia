@@ -9,4 +9,4 @@ ARCH = linux
 #LDFLAGS = -lnsl -lcurses
 LDFLAGS = 
 
-include ../Makefile.common
+include ../tsp.mk

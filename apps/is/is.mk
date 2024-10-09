@@ -2,9 +2,9 @@
 # Application specific rules and defines...
 #*********************************************************
 
-CPPFLAGS = -I../../../src -O2
+CPPFLAGS = -I../../../src/include -O2 -DMEDIUM
 
-OBJS 	= pq.o solve.o tours.o tsp.o read_tsp.o
+OBJS 	= is.o
 VPATH = ../src 
 JIALIB = ../../../lib/$(ARCH)
 
@@ -12,14 +12,14 @@ JIALIB = ../../../lib/$(ARCH)
 #	@echo "Creating $@..."
 #	@$(SHELL) -ec "$(CC) $(CPPFLAGS) $< | sed ' s/$*\.o/& $@/g' > $@"
 
-TARGET 	= ./TSP.$(ARCH)
+TARGET 	= ./is
 
 $(TARGET):$(OBJS) $(JIALIB)/libjia.a
-	$(CC) $(CFLAGS) -o $@ $(OBJS) -L$(JIALIB) -ljia $(LDFLAGS)
+	$(CC) $(CFLAGS) -o $@ $(OBJS)  -L$(JIALIB) -ljia $(LDFLAGS)
 
 all:$(TARGET)
 
 clean:
 	rm -f *.[od] *.log *.err $(TARGET)
 
-# include $(OBJS:.o=.d)
+#include $(OBJS:.o=.d)

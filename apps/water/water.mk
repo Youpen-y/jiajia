@@ -2,18 +2,17 @@
 # Application specific rules and defines...
 #*********************************************************
 
-CC	= gcc
-CPPFLAGS = -I../../../src
-OBJS 	= lu.o
+CPPFLAGS = -I../../../src/include -O2
 
+OBJS 	= water.o bndry.o cnstnt.o cshift.o initia.o interf.o intraf.o kineti.o poteng.o predcor.o redsync.o syscns.o 
 VPATH = ../src 
 JIALIB = ../../../lib/$(ARCH)
 
 %.d:%.c 
-	@echo "Creating $@..."
-	@$(SHELL) -ec "gcc -MM $(CPPFLAGS) $< | sed ' s/$*\.o/& $@/g' > $@"
+#	@echo "Creating $@..."
+#	@$(SHELL) -ec "$(CC)  $(CPPFLAGS) $< | sed ' s/$*\.o/& $@/g' > $@"
 
-TARGET 	= lu
+TARGET 	= ./water
 
 $(TARGET):$(OBJS) $(JIALIB)/libjia.a
 	$(CC) $(CFLAGS) -o $@ $(OBJS) -L$(JIALIB) -ljia $(LDFLAGS)
@@ -21,6 +20,6 @@ $(TARGET):$(OBJS) $(JIALIB)/libjia.a
 all:$(TARGET)
 
 clean:
-	rm -f *.[od] $(TARGET)
+	rm -f *.[od] *.log *.err $(TARGET)
 
-include $(OBJS:.o=.d)
+# include $(OBJS:.o=.d)

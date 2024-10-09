@@ -15,7 +15,7 @@ JIALIB = ../../../lib/$(ARCH)
 $(OBJS):sor.c
 	$(CC) $(CPPFLAGS) -o $@ -c $?
 
-TARGET 	= sor
+TARGET 	= ./sor
 
 $(TARGET):$(OBJS) $(JIALIB)/libjia.a
 	$(CC) $(CFLAGS) -o $@ $(OBJS) -L$(JIALIB) -ljia $(LDFLAGS)

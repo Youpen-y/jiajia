@@ -8,4 +8,4 @@ CC     = cc
 ARCH = linux
 #LDFLAGS = -lnsl -lsocket -L/usr/ucblib -lcurses -lucb -lm
 LDFLAGS = 
-include ../Makefile.common
+include ../is.mk

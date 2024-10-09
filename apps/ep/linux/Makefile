@@ -7,4 +7,4 @@ CC = cc
 
 ARCH = linux
 LDFLAGS = -lm
-include ../Makefile.common
+include ../ep.mk
