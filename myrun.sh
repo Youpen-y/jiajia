@@ -36,7 +36,7 @@ done
 sleep 1
 
 # 请求用户输入密码
-read -s -p "Please enter your sudo password:" password
+# read -s -p "Please enter your sudo password:" password
 
 # 运行所有apps
 echo -e "\nrun apps"
@@ -46,10 +46,11 @@ for dir in */; do
     cd ./$dir/$ARCH || exit
     rm ../../../reports/$ARCH/${dir%/}
     touch ../../../reports/$ARCH/${dir%/}
-    echo -e "\nrunning ${dir%/}..."
+    echo -e "running ${dir%/}...\n"
 
     #运行程序
-    echo "$password" | sudo -S ./"${dir%/}" >> ../../../reports/$ARCH/${dir%/}
+    # echo "$password" | sudo -S ./"${dir%/}" >> ../../../reports/$ARCH/${dir%/}
+    ./"${dir%/}" >> ../../../reports/$ARCH/${dir%/}
     cd ../..
     sleep 5
 done
