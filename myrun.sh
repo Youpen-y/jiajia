@@ -1,6 +1,6 @@
 #!/bin/bash
 ARCH=linux
-MODE=WLAN
+MODE=IB
 TIMEOUT=60
 
 # 创建reports及其子文件夹文件夹

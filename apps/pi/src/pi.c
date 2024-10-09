@@ -49,6 +49,8 @@ int main(int argc,char *argv[])
        *pa, fabs(*pa - PI25DT));
        printf("Elapsed time = %f\n", endt-startt);
     }
+
+    jia_exit();
 }
 
-            
+          
