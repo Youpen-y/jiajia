@@ -33,7 +33,7 @@ int read_tsp(char *file)
     char *scan_ptr, line[81], fname[80];
     int wt, i ,j, fully_connected = 1;
 
-    strcpy(fname,"tspfiles/tspfile");
+    strcpy(fname,"../tspfiles/tspfile");
     strcat(fname,file);
     if ((fp = fopen(fname, "r")) == NULL) {
         printf("Cannot open TSP file: %s\n", fname);
