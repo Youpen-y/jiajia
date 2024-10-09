@@ -55,11 +55,14 @@ for dir in */; do
     echo -e "\nrunning ${dir%/}..."
     cd ./$dir/$ARCH || exit
     rm ../../../reports/$ARCH/$MODE/${dir%/}
-    touch ../../../reports/$ARCH/$MODE/${dir%/}
+    if [ ! -f ../../../reports/$ARCH/$MODE/${dir%/} ]; then
+        echo "touch reports/$ARCH/$MODE/${dir%/} file..."
+        touch ../../../reports/$ARCH/$MODE/${dir%/}
+    fi
 
     #运行程序
     # echo "$password" | sudo -S ./"${dir%/}" >> ../../../reports/$ARCH/${dir%/}
-    ./"${dir%/}" >> ../../../reports/$ARCH/${dir%/}
+    ./"${dir%/}" > ../../../reports/$ARCH/${dir%/}
     cd ../..
     sleep 5
 done
