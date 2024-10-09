@@ -1,5 +1,6 @@
 #!/bin/bash
 ARCH=linux
+MODE=WLAN
 
 # 创建reports文件夹
 if [ ! -d ./reports ]; then
@@ -44,8 +45,8 @@ for dir in */; do
 
     # 进入文件夹并在reports下创建对应的log文件
     cd ./$dir/$ARCH || exit
-    rm ../../../reports/$ARCH/${dir%/}
-    touch ../../../reports/$ARCH/${dir%/}
+    rm ../../../reports/$ARCH/$MODE/${dir%/}
+    touch ../../../reports/$ARCH/$MODE/${dir%/}
     echo -e "running ${dir%/}...\n"
 
     #运行程序
