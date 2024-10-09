@@ -54,7 +54,6 @@ for dir in */; do
     # 进入文件夹并在reports下创建对应的log文件
     echo -e "\nrunning ${dir%/}..."
     cd ./$dir/$ARCH || exit
-    rm ../../../reports/$ARCH/$MODE/${dir%/}
     if [ ! -f ../../../reports/$ARCH/$MODE/${dir%/} ]; then
         echo "touch reports/$ARCH/$MODE/${dir%/} file..."
         touch ../../../reports/$ARCH/$MODE/${dir%/}
