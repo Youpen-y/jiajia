@@ -6,3 +6,4 @@ boot.ps1
 apps/*/*/*
 !**/Makefile
 .clang-format
+rebuild.sh
