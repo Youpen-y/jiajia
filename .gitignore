@@ -7,4 +7,3 @@ apps/*/*/*
 !**/Makefile
 .clang-format
 rebuild.sh
-reports/

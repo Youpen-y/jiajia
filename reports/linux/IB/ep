@@ -1,0 +1,63 @@
+																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																							Benchmark 1 Results:
+
+CPU Time = 																																																																											8.395
+N = 2 ^ 28
+No. Gaussian Pairs = 210832767
+Counts:
+  0	    98257395
+  1	    93827014
+  2	    17611549
+  3	     1110028
+  4	       26536
+  5	         245
+  6	           0
+  7	           0
+  8	           0
+  9	           0
+																																																																																																																																																																																																			
+Shared Memory (4096-byte pages) : 32768 (total) 1 (used)
+																																																																																																																																													########  JIAJIA STATISTICS  #########
+           hosts -->        0        1      total
+--------------------------------------
+Msgs Sent          =        8        9        17 
+Msgs Received      =        9        8        17 
+Bytes Sent         =     8492      412      8904 
+Bytes Received     =      412     8492      8904 
+SEGVs (local)      =        2        0         2 
+SEGVs (remote)     =        0        3         3 
+SIGIOs (total)     =        9        8         0 
+SIGIOs (user)      =        7        1         8 
+SIGIOs (Syn.)      =        2        5         7 
+SIGIOs (SEGV)      =        0        2         2 
+Barriers           =        3        3         3 
+Locks              =        1        1         2 
+Getp Reqs          =        0        2         2 
+Diff Msgs.         =        1        0         1 
+MWdiffs            =        1        0         1 
+Invalidate         =        0        1         1 
+Replaced RO pages  =        0        0         0 
+Replaced RW pages  =        0        0         0 
+Mig in pages       =        0        0         0 
+Mig out pages      =        0        0         0 
+Resent Msgs        =        0        0         0 
+Large message      =        2        0         2 
+Small message      =       17        9        26 
+-------------------------------------- (ms) 
+Barrier time       =  2109.30  1951.78 
+Lock time          =     0.02     0.16 
+Unlock time        =     0.01     0.07 
+SEGV time (local)  =     0.01     0.00 
+SEGV time (remote) =     0.00     0.15 
+SIGIO time (user)  =     0.28     0.01 
+SIGIO time (Syn.)  =     0.31     0.16 
+SIGIO time (SEGV)  =     0.00     0.03 
+SIGIO time (Over)  =     0.00     0.00 
+Encode diff time   =     0.00     0.00 
+Decode diff time   =     0.01     0.00 
+Asendmsg time      =     0.69     1.70 
+Wait time          =     0.00     0.00 
+--------------------------------------
+SEGV time          =     1.21     1.53 
+Syn. time          =  2108.62  1950.86 
+Server time        =     2.39     1.80 
+######################################

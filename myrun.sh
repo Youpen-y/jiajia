@@ -1,7 +1,7 @@
 #!/bin/bash
 ARCH=linux
-MODE=IB
-TIMEOUT=60
+MODE=WLAN
+TIMEOUT=20
 
 # 创建reports及其子文件夹文件夹
 if [ ! -d ./reports ]; then
