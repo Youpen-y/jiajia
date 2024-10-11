@@ -37,6 +37,7 @@
 
 #ifndef JIASYN_H
 #define JIASYN_H
+#include "mem.h"
 #pragma once
 
 #include "comm.h"
@@ -87,4 +88,31 @@ void acqserver(jia_msg_t *req);
 void invserver(jia_msg_t *req);
 void relserver(jia_msg_t *req);
 void wtntserver(jia_msg_t *req);
+
+/* syn */
+void endinterval(int synop);
+void startinterval(int synop);
+void invalidate(jia_msg_t *req);
+
+/* synwtnts */
+void sendwtnts(int operation);
+void savewtnt(wtnt_t *ptr, address_t addr, int frompid);
+void recordwtnts(jia_msg_t *req);
+wtnt_t *appendbarrwtnts(jia_msg_t *msg, wtnt_t *ptr);
+wtnt_t *appendlockwtnts(jia_msg_t *msg, wtnt_t *ptr, int acqscope);
+
+/* synlockbarr */
+void acquire(int lock);
+void grantlock(int lock, int toproc, int acqscope);
+void grantbarr(int lock);
+void clearlocks();
+void broadcast(jia_msg_t *msg);
+
+/* syncv */
+void grantcondv(int condv, int toproc);
+
+/* mig */
+void migarrangehome();
+void migcheckcache();
+void migpage(unsigned long addr, int frompid, int topid);
 #endif /*JIASYN_H*/

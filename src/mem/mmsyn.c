@@ -40,6 +40,7 @@
 #include "mem.h"
 #include "tools.h"
 #include "utils.h"
+#include "syn.h"
 
 /* user */
 extern jiahome_t home[Homepages + 1];    /* host owned page */
@@ -54,6 +55,10 @@ extern volatile int diffwait;
 /* tools */
 extern int H_MIG, B_CAST, W_VEC;
 
+/* syn */
+extern jiastack_t lockstack[Maxstacksize]; // lock stack
+extern int stackptr;
+
 #ifdef DOSTAT
 extern jiastat_t jiastat;
 extern int statflag;
@@ -63,6 +68,8 @@ jia_msg_t *diffmsg[Maxhosts]; /* store every host's diff msgs */
 long jiamapfd; /* file descriptor of the file that mapped to process's virtual
                   address space */
 int repcnt[Setnum]; /* record the last replacement index of every set */
+
+static void savediff(int cachei);
 
 
 /**
@@ -425,6 +432,15 @@ int encodediff(int cachei, unsigned char *diff) {
     return (size);
 }
 
+/**
+ * @brief savepage() -- save diff and wtnt
+ *
+ * @param cachei cached page index
+ */
+void savepage(int cachei) {
+    savediff(cachei);
+    savewtnt(top.wtntp, cache[cachei].addr, Maxhosts);
+}
 
 /**
  * @brief savediff() -- save the difference between cached page(cachei) and its
