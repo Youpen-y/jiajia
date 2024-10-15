@@ -5,4 +5,4 @@
 ARCH = solaris
 ARCH_FLAGS  = -DSOLARIS  -DCachepages=1024
 
-include ../Makefile.common
+include ../lib.mk

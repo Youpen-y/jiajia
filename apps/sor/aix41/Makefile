@@ -8,4 +8,4 @@ CFLAGS =
 ARCH = aix41
 LDFLAGS = -lm -lbsd 
 
-include ../Makefile.common
+include ../sor.mk

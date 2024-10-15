@@ -7,4 +7,4 @@ CC = gcc
 ARCH = linux
 #LDFLAGS = -lnsl -lsocket -lcurses  -lucb
 LDFLAGS =
-include ../Makefile.common
+include ../mm.mk

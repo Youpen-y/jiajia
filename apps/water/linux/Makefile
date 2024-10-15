@@ -9,4 +9,4 @@ ARCH = linux
 #LDFLAGS = -lnsl -lcurses -lm
 LDFLAGS = -lm
 
-include ../Makefile.common
+include ../water.mk

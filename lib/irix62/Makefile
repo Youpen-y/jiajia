@@ -5,4 +5,4 @@
 ARCH = irix62
 ARCH_FLAGS  = -DIRIX62
 
-include ../Makefile.common
+include ../lib.mk
