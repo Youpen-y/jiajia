@@ -38,9 +38,10 @@
 #include "comm.h"
 #include "jia.h"
 #include "mem.h"
+#include "syn.h"
 #include "tools.h"
 #include "utils.h"
-#include "syn.h"
+
 
 /* user */
 extern jiahome_t home[Homepages + 1];    /* host owned page */
@@ -71,7 +72,6 @@ int repcnt[Setnum]; /* record the last replacement index of every set */
 
 static void savediff(int cachei);
 
-
 /**
  * @brief flushpage -- flush the cached page(reset the cache's info);
  * remove the cache relation with its original page. if the cache's state is RW,
@@ -93,7 +93,6 @@ void flushpage(int cachei) {
     cache[cachei].wtnt = 0;
     cache[cachei].addr = 0;
 }
-
 
 /**
  * @brief getpage -- according to addr, get page from remote host (page's home)
@@ -129,7 +128,6 @@ void getpage(address_t addr, int flag) {
 #endif
 }
 
-
 // TODO: implement LRU replacement
 /**
  * @brief replacei - return the cache index that will be replaced according
@@ -150,7 +148,6 @@ int replacei(int cachei) {
         return (repcnt[seti]);
     }
 }
-
 
 /**
  * @brief findposition -- find an available cache slot in cache
@@ -207,8 +204,7 @@ int findposition(address_t addr) {
         }
 #endif
     }
-    page[((unsigned long)addr - Startaddr) / Pagesize].cachei =
-        (unsigned short)(cachei + seti);
+    cachepage(addr) = (unsigned short)(cachei + seti);
     return (cachei + seti);
 }
 
@@ -222,7 +218,6 @@ void sigsegv_handler(int signo, siginfo_t *sip, ucontext_t *uap)
                          struct sigcontext *scp,
                          char *addr)
 #endif
-
 
 #ifdef LINUX
     // void sigsegv_handler(int signo, struct sigcontext sigctx)
@@ -360,7 +355,6 @@ void sigsegv_handler(int signo, siginfo_t *sip, ucontext_t *uap)
     VERBOSE_LOG(3, "Out sigsegv_handler\n\n");
 }
 
-
 /**
  * @brief encodediff() -- encode the diff of cache page(cachei) and its twin to
  * the paramater diff
@@ -480,7 +474,6 @@ void savediff(int cachei) {
         appendmsg(diffmsg[hosti], diff, diffsize);
     }
 }
-
 
 /**
  * @brief senddiffs() -- send msg in diffmsg[hosti] to correponding hosti host

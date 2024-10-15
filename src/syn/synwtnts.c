@@ -49,7 +49,7 @@ extern jiapage_t page[Maxmempages + 1];
 // lock array, according to the hosts allocate lock(eg.
 // host0: 0, 2,... 62; host1 = 1, 3, ..., 63)
 extern jialock_t locks[Maxlocks + 1];
-extern jiastack_t lockstack[Maxstacksize]; 
+extern jiastack_t lockstack[Maxstacksize];
 extern int stackptr;
 
 static wtnt_t *appendstackwtnts(jia_msg_t *msg, wtnt_t *ptr);
@@ -69,6 +69,10 @@ void savewtnt(wtnt_t *ptr, address_t addr, int frompid) {
     exist = 0;
     wnptr = ptr;
 
+    /**
+     * step 1:
+     * check if there is already an address same to the addr in the WTNT list.
+     */
     while ((exist == 0) && (wnptr != WNULL)) {
         wtnti = 0;
         while ((wtnti < wnptr->wtntc) &&
@@ -76,16 +80,22 @@ void savewtnt(wtnt_t *ptr, address_t addr, int frompid) {
                 ((unsigned long)wnptr->wtnts[wtnti] / Pagesize))) {
             wtnti++;
         }
-        if (wtnti >= wnptr->wtntc) // if addr wan't found in current wtnt_t
-                                   // object, go to next
+
+        // Traversing wtnt list to find addr
+        if (wtnti >= wnptr->wtntc)
             wnptr = wnptr->more;
         else
-            exist = 1; // wtnt about the address has been found
+            exist = 1; 
     }
 
-    if (exist == 0) { // addr's wtnt don't exist
+    /**
+     * step 2:
+     * existed: Change its frompid.
+     * not existed: newwtnt() && record new addr
+     */
+    if (exist == 0) { 
         wnptr = ptr;
-        while (wnptr->wtntc >= Maxwtnts) { //
+        while (wnptr->wtntc >= Maxwtnts) {  
             if (wnptr->more == WNULL)
                 wnptr->more = newwtnt();
             wnptr = wnptr->more;
@@ -93,7 +103,7 @@ void savewtnt(wtnt_t *ptr, address_t addr, int frompid) {
         wnptr->wtnts[wnptr->wtntc] = addr;
         wnptr->from[wnptr->wtntc] = frompid;
         wnptr->wtntc++;
-    } else {                                // wtnt found
+    } else {                                
         if (ptr == locks[hidelock].wtntp) { /*barrier*/
             wnptr->from[wtnti] = Maxhosts;
         } else {
@@ -151,7 +161,8 @@ void sendwtnts(int operation) {
     wnptr = top.wtntp;
     wnptr = appendstackwtnts(req, wnptr);
 
-    VERBOSE_LOG(3, "req message frompid = %d, topid = %d\n", jia_pid, req->topid);
+    VERBOSE_LOG(3, "req message frompid = %d, topid = %d\n", jia_pid,
+                req->topid);
     VERBOSE_LOG(3, "req size is %d, req data is %s\n", req->size, req->data);
     VERBOSE_LOG(3, "wnptr == WNULL is %d\n", wnptr == WNULL ? 1 : 0);
     while (wnptr != WNULL) {

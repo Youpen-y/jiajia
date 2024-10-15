@@ -44,7 +44,6 @@
 #include "tools.h"
 #include "utils.h"
 
-
 /* jiajia */
 extern int jia_pid;
 extern host_t hosts[Maxhosts];
@@ -128,14 +127,17 @@ void endinterval(int synop) {
     register int pagei;
     register int hpages;
     VERBOSE_LOG(3, "Enter endinterval!\n");
+
+    // step 1: send all cache diffs
     for (cachei = 0; cachei < Cachepages; cachei++) {
         if (cache[cachei].wtnt == 1) { // when cached page wtnt == 1, save it
             savepage(cachei);
         }
     }
-
     senddiffs();
 
+    // step 2: save all home page wtnts
+    // TODO: for what?
     hpages = hosts[jia_pid].homesize / Pagesize; // page number of jia_pid host
     for (pagei = 0; pagei < hpages; pagei++) {
         if ((home[pagei].wtnt & 1) != 0) { // bit1 == 1
@@ -263,14 +265,15 @@ void invalidate(jia_msg_t *req) {
     datai = Intbytes;
 
     while (datai < req->size) {
-        addr = (address_t)stol(req->data + datai); // get the addr
+        // get the addr
+        addr = (address_t)stol(req->data + datai); 
         if (H_MIG == ON) {
             migtag = ((unsigned long)addr) % Pagesize;
             addr = (address_t)(((unsigned long)addr / Pagesize) * Pagesize);
         }
-        // datai+=Intbytes;
         datai += sizeof(unsigned char *);
 
+        // TODO: Barrier or Lock?
         if (lock == hidelock) { /*Barrier*/
             from = (int)stol(req->data + datai);
             datai += Intbytes;
@@ -278,9 +281,9 @@ void invalidate(jia_msg_t *req) {
             from = Maxhosts;
         }
 
+        // invalidate all pages that are not on this host(cache)
         if ((from != jia_pid) && (homehost(addr) != jia_pid)) {
-            cachei =
-                (int)page[((unsigned long)addr - Startaddr) / Pagesize].cachei;
+            cachei = (int)cachepage(addr);
             if (cachei < Cachepages) {
                 if (cache[cachei].state != INV) {
                     if (cache[cachei].state == RW)
@@ -290,9 +293,7 @@ void invalidate(jia_msg_t *req) {
                     memprotect((caddr_t)cache[cachei].addr, Pagesize,
                                PROT_NONE);
 #ifdef DOSTAT
-                    if (statflag == 1) {
-                        jiastat.invcnt++;
-                    }
+                    STATOP(jiastat.invcnt++;)
 #endif
                 }
             }
