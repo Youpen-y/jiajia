@@ -1,1 +1,11 @@
 .vscode/
+boot.ps1
+**.o
+**.d
+**.a
+apps/*/*/*
+!**/Makefile
+.clang-format
+rebuild.sh
+reports
+myrun.sh
