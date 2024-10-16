@@ -38,11 +38,9 @@ sleep 1
 
 echo -e "\ncopy .jiahosts..."
 for dir in */; do
-    if [[ "${dir%/}" != "is" ]]; then
-        cd ./$dir/$ARCH || exit
-        cp ../../is/$ARCH/.jiahosts .
-        cd ../..
-    fi
+    cd ./$dir/$ARCH || exit
+    cp ../../.jiahosts .
+    cd ../..
 done
 sleep 1
 
