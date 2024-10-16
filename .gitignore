@@ -4,6 +4,7 @@ boot.ps1
 **.d
 **.a
 **/.jiahosts
+apps/.jiahosts
 apps/*/*/*
 !apps/*/src/*
 !**/Makefile
