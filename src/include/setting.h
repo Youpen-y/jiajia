@@ -112,8 +112,6 @@ int get_hosts(setting_t *setting);
  * @param setting system setting object
  * @return int 0 if success, -1 if failed
  */
- */
-*/
 int get_id(setting_t *setting);
 
 /**
