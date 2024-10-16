@@ -3,7 +3,9 @@ boot.ps1
 **.o
 **.d
 **.a
+**/.jiahosts
 apps/*/*/*
+!apps/*/src/*
 !**/Makefile
 .clang-format
 rebuild.sh

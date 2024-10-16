@@ -35,7 +35,6 @@ done
 sleep 1
 
 # 拷贝.jiahosts到所有文件夹下(从pi出发)
-
 echo -e "\ncopy .jiahosts..."
 for dir in */; do
     cd ./$dir/$ARCH || exit
