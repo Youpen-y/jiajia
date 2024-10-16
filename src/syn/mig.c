@@ -39,17 +39,19 @@
 #include "jia.h"
 #include "mem.h"
 #include "tools.h"
+#include "setting.h"
+#include "stat.h"
 
 /* mm */
-extern jiapage_t page[Maxmempages + 1];
-extern jiacache_t cache[Cachepages + 1];
+extern jiapage_t page[Maxmempages];
+extern jiacache_t cache[Cachepages];
 extern jiahome_t home[Homepages];
 extern void setwtvect(int homei, wtvect_t wv);
 extern void addwtvect(int homei, wtvect_t wv, int from);
 extern void flushpage(int cachei);
 
 /* jiajia */
-extern host_t hosts[Maxhosts];
+// extern host_t hosts[Maxhosts];
 extern int H_MIG, W_VEC;
 
 /* syn */
@@ -74,7 +76,7 @@ void migcheckcache() {
     while (wnptr != WNULL) {
         for (wtnti = 0; (wtnti < wnptr->wtntc); wtnti++) {
             addr = (unsigned long)wnptr->wtnts[wtnti];
-            cachei = page[(addr - Startaddr) / Pagesize].cachei;
+            cachei = page[(addr - system_setting.global_start_addr) / Pagesize].cachei;
             if ((cache[cachei].state == RO) || (cache[cachei].state == RW)) {
                 addr++;
                 wnptr->wtnts[wtnti] = (address_t)addr;
@@ -95,7 +97,7 @@ void migarrangehome() {
                  homei++)
                 ;
             if (homei < Homepages) {
-                page[((unsigned long)home[homei].addr - Startaddr) / Pagesize]
+                page[((unsigned long)home[homei].addr - system_setting.global_start_addr) / Pagesize]
                     .homei = i;
                 home[i].addr = home[homei].addr;
                 home[i].wtnt = home[homei].wtnt;
@@ -113,7 +115,7 @@ void migarrangehome() {
             }
         }
     }
-    hosts[jia_pid].homesize = (i - 1) * Pagesize;
+    system_setting.hosts[system_setting.jia_pid].homesize = (i - 1) * Pagesize;
     // VERBOSE_LOG(3, "New homepages=%d\n",hosts[jia_pid].homesize/Pagesize);
 }
 
@@ -127,12 +129,12 @@ void migarrangehome() {
 void migpage(unsigned long addr, int frompid, int topid) {
     int pagei, homei, cachei;
 
-    pagei = (addr - Startaddr) / Pagesize;
+    pagei = (addr - system_setting.global_start_addr) / Pagesize;
     /*
      VERBOSE_LOG(3, "Mig page 0x%x from host %d to %d\n",pagei,frompid,topid);
     */
 
-    if (topid == jia_pid) { /*New Home*/
+    if (topid == system_setting.jia_pid) { /*New Home*/
         cachei = page[pagei].cachei;
         for (homei = 0;
              (homei < Homepages) && (home[homei].addr != (address_t)0); homei++)
@@ -165,7 +167,7 @@ void migpage(unsigned long addr, int frompid, int topid) {
             jiastat.migincnt++;
         }
 #endif
-    } else if (frompid == jia_pid) { /*Old Home*/
+    } else if (frompid == system_setting.jia_pid) { /*Old Home*/
         homei = homepage(addr);
         assert((unsigned long)home[homei].addr == addr, "MIG ERROR");
 

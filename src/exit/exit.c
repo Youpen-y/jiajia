@@ -37,123 +37,15 @@
 
 #ifndef NULL_LIB
 #include "global.h"
+#include "jia.h"        // jia_wait
 #include "init.h"
-#include "comm.h"
+#include "comm.h"       // asendmsg
 #include "mem.h"
+#include "setting.h"
+#include "tools.h"      // newmsg, freemsg, appendmsg
+#include "stat.h"       // clearstat
 
-extern jia_msg_t *newmsg();
-
-extern void asendmsg(jia_msg_t *msg);  // from tools.c
-extern void freemsg(jia_msg_t *msg);
-extern void jia_wait();
-extern void appendmsg(jia_msg_t *, unsigned char *, int);
-
-extern void clearstat();
-
-extern unsigned int t_start, t_stop;
-#ifdef DOSTAT
-extern jiastat_t jiastat;
-jiastat_t allstats[Maxhosts];
-extern int         jia_pid;
-extern host_t      hosts[Maxhosts];
-extern int         hostc;
 extern unsigned long globaladdr;
-
-int statcnt=0;
-volatile int waitstat;
-
-/**
- * @brief statserver -- stat msg server
- * 
- * @param rep 
- */
-void statserver(jia_msg_t *rep)
-{ int i;
- jia_msg_t *grant;
- jiastat_t *stat;
- unsigned int temp;
-
-
- assert((rep->op==STAT)&&(rep->topid==0),"Incorrect STAT Message!");
-
- stat = (jiastat_t*)rep->data;
- allstats[rep->frompid].msgsndbytes  = stat->msgsndbytes;
- allstats[rep->frompid].msgrcvbytes  = stat->msgrcvbytes;
- allstats[rep->frompid].msgsndcnt    = stat->msgsndcnt;
- allstats[rep->frompid].msgrcvcnt    = stat->msgrcvcnt;
- allstats[rep->frompid].segvRcnt     = stat->segvRcnt;
- allstats[rep->frompid].segvLcnt     = stat->segvLcnt;
- allstats[rep->frompid].sigiocnt     = stat->sigiocnt;
- allstats[rep->frompid].usersigiocnt = stat->usersigiocnt;
- allstats[rep->frompid].synsigiocnt  = stat->synsigiocnt;
- allstats[rep->frompid].segvsigiocnt = stat->segvsigiocnt;
- allstats[rep->frompid].overlapsigiocnt = stat->overlapsigiocnt;
- allstats[rep->frompid].barrcnt      = stat->barrcnt;
- allstats[rep->frompid].lockcnt      = stat->lockcnt;
- allstats[rep->frompid].getpcnt      = stat->getpcnt;
- allstats[rep->frompid].diffcnt      = stat->diffcnt;
- allstats[rep->frompid].invcnt       = stat->invcnt;
- allstats[rep->frompid].mwdiffcnt    = stat->mwdiffcnt;
- allstats[rep->frompid].repROcnt     = stat->repROcnt;
- allstats[rep->frompid].repRWcnt     = stat->repRWcnt;
- allstats[rep->frompid].migincnt     = stat->migincnt;
- allstats[rep->frompid].migoutcnt    = stat->migoutcnt;
- allstats[rep->frompid].resentcnt    = stat->resentcnt;
-
- allstats[rep->frompid].barrtime     = stat->barrtime;
- allstats[rep->frompid].segvRtime    = stat->segvRtime;
- allstats[rep->frompid].segvLtime    = stat->segvLtime;
- allstats[rep->frompid].locktime     = stat->locktime;
- allstats[rep->frompid].unlocktime   = stat->unlocktime;
- allstats[rep->frompid].synsigiotime = stat->synsigiotime;
- allstats[rep->frompid].segvsigiotime= stat->segvsigiotime;
- allstats[rep->frompid].overlapsigiotime= stat->overlapsigiotime;
- allstats[rep->frompid].usersigiotime= stat->usersigiotime;
- allstats[rep->frompid].endifftime   = stat->endifftime;
- allstats[rep->frompid].dedifftime   = stat->dedifftime;
- allstats[rep->frompid].asendtime    = stat->asendtime;
-
-/* Follow used by Shi*/
- allstats[rep->frompid].largecnt    = stat->largecnt;
- allstats[rep->frompid].smallcnt    = stat->smallcnt;
-
- allstats[rep->frompid].commsofttime = stat->msgsndcnt*ALPHAsend+BETAsend*stat->msgsndbytes+\
-                                       stat->msgrcvcnt*ALPHArecv+BETArecv*stat->msgrcvbytes;
- allstats[rep->frompid].commhardtime = stat->msgsndcnt*ALPHA+BETA*stat->msgsndbytes;
-
- allstats[rep->frompid].difftime = allstats[rep->frompid].endifftime+allstats[rep->frompid].dedifftime;
- allstats[rep->frompid].waittime    = stat->waittime;
-
-/*End Shi*/
-
- statcnt++;
-#if DEBUG
-printf("Stats received from %d[%d]\n", rep->frompid, statcnt);
-#endif
-
- if (statcnt == hostc) {
-    statcnt = 0;
-    clearstat();
-    grant = newmsg();
-    grant->frompid = jia_pid;
-    grant->size = 0;
-    grant->op=STATGRANT;
-    for(i=0; i<hostc; i++) {
-       grant->topid = i;
-       asendmsg(grant);
-    }
-    freemsg(grant);
- }
-}
-
-
-void statgrantserver(jia_msg_t *req)
-{
- assert((req->op==STATGRANT)&&(req->topid==jia_pid),"Incorrect STATGRANT Message!");
-
- waitstat = 0;
-}
-#endif /* DOSTAT */
 
 /**
  * @brief jia_exit -- if defined DOSTAT, print statistic; else do nothing
@@ -161,6 +53,8 @@ void statgrantserver(jia_msg_t *req)
  */
 void jia_exit()
 {
+   int jia_pid = system_setting.jia_pid;
+   int hostc = system_setting.hostc;
 #ifdef DOSTAT
  int i;
  jia_msg_t *reply;
@@ -175,7 +69,7 @@ void jia_exit()
  if (hostc > 1) {
 
     reply = newmsg();
-    reply->frompid = jia_pid;
+    reply->frompid = system_setting.jia_pid;
     reply->topid = 0;
     reply->size = 0;
     reply->op = STAT;
@@ -192,7 +86,7 @@ fflush(stdout);
 #endif
 
    /*Follow used by Shi*/
-    if (jia_pid == 0) {
+    if (system_setting.jia_pid == 0) {
        memset((char*)&total, 0, sizeof(total)); 
        for (i=0; i<hostc; i++) {
          total.msgsndcnt   += allstats[i].msgsndcnt;

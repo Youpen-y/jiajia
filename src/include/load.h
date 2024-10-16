@@ -31,6 +31,7 @@
 #define JIALOAD_H
 
 #include "global.h"
+#include "comm.h"
 #define  Lperiod   120
 #define  Delta     0.05
 
@@ -40,5 +41,9 @@ typedef struct loadtype {
         int     begin;
         int     end; 
 } jiaload_t;
+
+
+void loadserver(jia_msg_t *);
+void loadgrantserver(jia_msg_t *);
 
 #endif /*JIAMEM_H*/

@@ -37,12 +37,10 @@
  
 #ifndef JIA_PUBLIC
 #define	JIA_PUBLIC
+#include "setting.h"
 
-#define jiahosts  hostc			/* total number of hosts of a parallel program */
-#define jiapid    jia_pid		/* host identification number */
-
-extern int		jia_pid;
-extern int      hostc;
+#define jiahosts  system_setting.hostc			/* total number of hosts of a parallel program */
+#define jiapid    system_setting.jia_pid		/* host identification number */
 
 /**
  * @brief jia_init -- initialize JIAJIA

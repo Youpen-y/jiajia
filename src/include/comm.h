@@ -136,5 +136,6 @@ void msgserver();
 void outsend();
 void bsendmsg(jia_msg_t *msg);
 void bcastserver(jia_msg_t *msg);
+void statgrantserver(jia_msg_t *);
 
 #endif /* JIACOMM_H */

@@ -40,6 +40,8 @@
 #pragma once
 
 #include "comm.h" // jia_msg_t
+#include "setting.h"
+
 
 #define RESERVE_TWIN_SPACE
 #define REPSCHEME 0
@@ -55,20 +57,10 @@
     Cachepages / Setnum /* change Setpages so that have multiple sets */
 
 #define DIFFNULL ((jia_msg_t *)NULL)
+typedef unsigned char *address_t;
 
-#define homehost(addr)                                                         \
-    page[((unsigned long)(addr)-Startaddr) / Pagesize]                         \
-        .homepid /* get home host according to addr */
-#define homepage(addr)                                                         \
-    page[((unsigned long)(addr)-Startaddr) / Pagesize]                         \
-        .homei /* get home page index according to addr */
-#define cachepage(addr)                                                        \
-    page[((unsigned long)(addr)-Startaddr) / Pagesize]                         \
-        .cachei /* get home page index according to addr */
 #define SIZ2MULSIZ(size)                                                       \
     ((size % Pagesize) == 0) ? (size) : ((size / Pagesize + 1) * Pagesize)
-
-typedef unsigned char *address_t;
 
 typedef unsigned long wtvect_t;
 #define Wvbits 32
@@ -113,6 +105,8 @@ typedef struct {
 /* server */
 void diffserver(jia_msg_t *);
 void getpserver(jia_msg_t *req);
+void diffgrantserver(jia_msg_t *);
+void getpgrantserver(jia_msg_t *rep);
 
 /* mmsync */
 int replacei(int cachei);
@@ -164,8 +158,18 @@ static inline unsigned long
  *
  */
 static inline int xor (address_t addr) {
-    return ((((unsigned long)(addr - Startaddr) / Pagesize) % Setnum) *
+    return ((((unsigned long)(addr - system_setting.global_start_addr) / Pagesize) % Setnum) *
             Setpages);
 }
+
+
+extern jiapage_t page[Maxmempages]; /* global page space */
+
+
+int homehost(address_t addr);
+
+unsigned int homepage(address_t addr);
+
+unsigned int cachepage(address_t addr);
 
 #endif /*JIAMEM_H*/

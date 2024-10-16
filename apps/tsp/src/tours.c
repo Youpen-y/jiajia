@@ -3,7 +3,6 @@
 #include "tsp.h"
 
 char TOUR_STR[16][256];
-extern int jia_pid;
 void MakeTourString(int len, int *path);
 extern int calc_bound(int curr_index);
 /*

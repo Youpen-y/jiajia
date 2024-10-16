@@ -38,13 +38,15 @@
 #ifndef JIACREAT_H
 #define JIACREAT_H
 
-#define Wordsize 80
-#define Linesize 200
-#define Wordnum 3
-#define Maxwords 10
-#define Maxfileno                                                              \
-    1024 /* maximum number of file descriptors that can be concurrently opened \
-            in UNIX, (>= 4*Maxhosts*Maxhosts) */
+#define Wordsize        80
+#define Linesize        200
+#define Wordnum         3
+#define Maxwords        10
+
+/* maximum number of file descriptors that can be concurrently opened
+        in UNIX, (>= 4*Maxhosts*Maxhosts) */
+#define Maxfileno       1024 
+
 
 #define   SEGVoverhead  600
 #define   SIGIOoverhead 200
@@ -54,78 +56,5 @@
 #define   BETArecv      0.06 
 #define   ALPHA         20
 #define   BETA          20
-
-/**
- * @brief struct host_t - info of host
- * 
- */
-typedef struct host_t {
-  char name[Wordsize];          /* host name */
-  char user[Wordsize];          /* user account */
-  char dir[Wordsize];
-  char passwd[Wordsize];        /* user password */
-  char addr[Wordsize];          /* IP address */
-  int  addrlen;                 /* address length bytes*/
-  int  homesize;                /* home usge size */
-  int  riofd;
-  int  rerrfd;
-} host_t;
-
-#ifdef DOSTAT
-typedef struct Stats {
-        unsigned int kernelflag;
-
-        unsigned int msgsndbytes;       /*msg send bytes*/
-        unsigned int msgrcvbytes;       /*msg recv bytes*/
-        unsigned int msgrcvcnt;         /*msg recv count*/
-        unsigned int msgsndcnt;         /*msg send count*/
-        unsigned int segvLcnt;          /*segv local count*/
-        unsigned int segvRcnt;          /*segv remote count*/
-        unsigned int usersigiocnt;      /*user SIGIO count*/
-        unsigned int synsigiocnt;       /*syn SIGIO count*/
-        unsigned int segvsigiocnt;      /*segv SIGIO count*/
-        unsigned int sigiocnt;          /*total SIGIO count*/
-        unsigned int barrcnt;           /*barriers count*/
-        unsigned int lockcnt;           /*lock count*/
-        unsigned int getpcnt;           /*getp msg count*/
-        unsigned int diffcnt;           /*diff msg count*/
-        unsigned int invcnt;            /*inv msg count*/
-        unsigned int mwdiffcnt;         /*MWdiffs count*/
-        unsigned int repROcnt;          /*Replaced RO pages*/
-        unsigned int repRWcnt;          /*Replaced RW pages*/
-        unsigned int migincnt;
-        unsigned int migoutcnt;
-        unsigned int resentcnt;
-
-        unsigned int segvLtime;
-        unsigned int segvRtime;
-        unsigned int barrtime;
-        unsigned int locktime;
-        unsigned int unlocktime;
-        unsigned int usersigiotime;
-        unsigned int synsigiotime;
-        unsigned int segvsigiotime;
-        
-        unsigned int endifftime;
-        unsigned int dedifftime;
-        
-/*Follow used by Shi*/
-        unsigned int asendtime;
-        unsigned int difftime;
-	unsigned int busytime;
-	unsigned int datatime;
-	unsigned int syntime;
-	unsigned int othertime;
-	unsigned int segvtime;
-	unsigned int commtime;
-	unsigned int commsofttime;
-	unsigned int commhardtime;
-	unsigned int largecnt;          /*large msg count*/
-	unsigned int smallcnt;          /*small msg count*/
-        unsigned int overlapsigiotime;
-        unsigned int overlapsigiocnt;
-        unsigned int waittime;
-} jiastat_t;
-#endif
 
 #endif /*JIACREAT_H*/

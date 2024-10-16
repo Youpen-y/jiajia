@@ -39,14 +39,16 @@
 #include "utils.h"
 #include "tools.h"
 #include "mem.h"
+#include "setting.h"
+#include "stat.h"
 
 /* jiajia */
-extern int jia_pid;
-extern host_t hosts[Maxhosts];
-extern int hostc;
+// extern int jia_pid;
+// extern host_t hosts[Maxhosts];
+// extern int hostc;
 
-jiahome_t home[Homepages + 1];    /* host owned page */
-jiacache_t cache[Cachepages + 1]; /* host cached page */
+jiahome_t home[Homepages];    /* host owned page */
+jiacache_t cache[Cachepages]; /* host cached page */
 jiapage_t page[Maxmempages];      /* global page space */
 unsigned long globaladdr; /* [0, Maxmemsize)*/
 
@@ -85,17 +87,17 @@ unsigned long jia_alloc3(int size, int block, int starthost) {
 
     while (allocsize > 0) {
         // only when current host pid == homepid, use mmap alloc space
-        if (jia_pid == homepid) {
-            assert((hosts[homepid].homesize + mapsize) < (Homepages * Pagesize),
+        if (system_setting.jia_pid == homepid) {
+            assert((system_setting.hosts[homepid].homesize + mapsize) < (Homepages * Pagesize),
                    "Too many home pages");
-            protect = (hostc == 1) ? PROT_READ | PROT_WRITE : PROT_READ;
-            memmap((void *)(Startaddr + globaladdr), (size_t)mapsize, protect);
+            protect = (system_setting.hostc == 1) ? PROT_READ | PROT_WRITE : PROT_READ;
+            memmap((void *)(system_setting.global_start_addr + globaladdr), (size_t)mapsize, protect);
 
             // only when page on current host, set page's homei && homei's addr
             for (i = 0; i < mapsize; i += Pagesize) {
                 pagei = (globaladdr + i) / Pagesize;
-                homei = (hosts[homepid].homesize + i) / Pagesize;
-                home[homei].addr = (address_t)(Startaddr + globaladdr + i);
+                homei = (system_setting.hosts[homepid].homesize + i) / Pagesize;
+                home[homei].addr = (address_t)(system_setting.global_start_addr + globaladdr + i);
                 page[pagei].homei = homei;
             }
         }
@@ -106,17 +108,17 @@ unsigned long jia_alloc3(int size, int block, int starthost) {
             page[pagei].homepid = homepid;
         }
 
-        if (jia_pid == homepid) {
+        if (system_setting.jia_pid == homepid) {
             VERBOSE_LOG(3, "Map 0x%x bytes in home %4d! globaladdr = 0x%lx\n",
                         mapsize, homepid, globaladdr);
         }
 
-        hosts[homepid].homesize += mapsize;
+        system_setting.hosts[homepid].homesize += mapsize;
         globaladdr += mapsize;
         allocsize -= mapsize;
-        homepid = (homepid + 1) % hostc; // next host
+        homepid = (homepid + 1) % system_setting.hostc; // next host
     }
-    return (Startaddr + originaddr);
+    return (system_setting.global_start_addr + originaddr);
 }
 
 /**
@@ -150,17 +152,17 @@ unsigned long jia_alloc3b(int size, int *block, int starthost) {
         mapsize = ((block[blocki] % Pagesize) == 0)
                       ? (block[blocki])
                       : ((block[blocki] / Pagesize + 1) * Pagesize);
-        if (jia_pid == homepid) {
-            assert((hosts[homepid].homesize + mapsize) < (Homepages * Pagesize),
+        if (system_setting.jia_pid == homepid) {
+            assert((system_setting.hosts[homepid].homesize + mapsize) < (Homepages * Pagesize),
                    "Too many home pages");
 
-            protect = (hostc == 1) ? PROT_READ | PROT_WRITE : PROT_READ;
-            memmap((void *)(Startaddr + globaladdr), (size_t)mapsize, protect);
+            protect = (system_setting.hostc == 1) ? PROT_READ | PROT_WRITE : PROT_READ;
+            memmap((void *)(system_setting.global_start_addr + globaladdr), (size_t)mapsize, protect);
 
             for (i = 0; i < mapsize; i += Pagesize) {
                 pagei = (globaladdr + i) / Pagesize;
-                homei = (hosts[homepid].homesize + i) / Pagesize;
-                home[homei].addr = (address_t)(Startaddr + globaladdr + i);
+                homei = (system_setting.hosts[homepid].homesize + i) / Pagesize;
+                home[homei].addr = (address_t)(system_setting.global_start_addr + globaladdr + i);
                 page[pagei].homei = homei;
             }
         }
@@ -175,21 +177,21 @@ unsigned long jia_alloc3b(int size, int *block, int starthost) {
         VERBOSE_LOG(3, "Map 0x%x bytes in home %4d! globaladdr = 0x%lx\n", mapsize,
                homepid, globaladdr);
 
-        hosts[homepid].homesize += mapsize;
+        system_setting.hosts[homepid].homesize += mapsize;
         globaladdr += mapsize;
         allocsize -= mapsize;
-        homepid = (homepid + 1) % hostc;
+        homepid = (homepid + 1) % system_setting.hostc;
         if (homepid == 0)
             blocki++;
     }
 
-    return (Startaddr + originaddr);
+    return (system_setting.global_start_addr + originaddr);
 }
 
 unsigned long jia_alloc(int size) {
     static int starthost = -1;
 
-    starthost = (starthost + 1) % hostc;
+    starthost = (starthost + 1) % system_setting.hostc;
     return (jia_alloc3(size, size, starthost));
 }
 

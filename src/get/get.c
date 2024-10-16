@@ -1,17 +1,19 @@
-extern int jia_pid;
-extern int hostc;
+// This file is totally useless, will be deleted
 
-struct jia_ident {
-	int jiapid;
-	int jiahosts;
-} jia_;
+// extern int jia_pid;
+// extern int hostc;
 
-void ident_()
-{
-	jia_.jiapid = jia_pid;
-	jia_.jiahosts = hostc;
-	return;
-}
+// struct jia_ident {
+// 	int jiapid;
+// 	int jiahosts;
+// } jia_;
+
+// void ident_()
+// {
+// 	jia_.jiapid = jia_pid;
+// 	jia_.jiahosts = hostc;
+// 	return;
+// }
 
 /*
 int getpid_()

@@ -88,6 +88,15 @@ void acqserver(jia_msg_t *req);
 void invserver(jia_msg_t *req);
 void relserver(jia_msg_t *req);
 void wtntserver(jia_msg_t *req);
+void barrserver(jia_msg_t *req);
+void barrgrantserver(jia_msg_t *req);
+void acqgrantserver(jia_msg_t *req);
+void waitgrantserver(jia_msg_t *);
+void waitserver(jia_msg_t *);
+void setcvserver(jia_msg_t *);
+void resetcvserver(jia_msg_t *);
+void waitcvserver(jia_msg_t *);
+void cvgrantserver(jia_msg_t *);
 
 /* syn */
 void endinterval(int synop);

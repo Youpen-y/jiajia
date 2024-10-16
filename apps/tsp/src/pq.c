@@ -220,7 +220,7 @@ int find_solvable_tour()
 	else {
 	    /* Bogus tour index. */
 	    MakeTourString(TspSize, glob->Tours[curr].prefix);
-	    fprintf(stderr, "\t%d: %s\n", jia_pid, _tour_str);
+	    fprintf(stderr, "\t%d: %s\n", jiapid, _tour_str);
 	}
 	glob->TourStack[++glob->TourStackTop] = curr; /* Free tour. */
         jia_wtntw(&(glob->TourStackTop));

@@ -43,15 +43,17 @@
 #include "mem.h"
 #include "tools.h"
 #include "utils.h"
+#include "setting.h"
+#include "stat.h"
 
 /* jiajia */
-extern int jia_pid;
-extern host_t hosts[Maxhosts];
-extern int hostc;
+// extern int jia_pid;
+// extern host_t hosts[Maxhosts];
+// extern int hostc;
 
 /* mem */
-extern jiapage_t page[Maxmempages + 1];
-extern jiacache_t cache[Cachepages + 1];
+extern jiapage_t page[Maxmempages];
+extern jiacache_t cache[Cachepages];
 extern jiahome_t home[Homepages];
 extern volatile int diffwait;
 
@@ -90,7 +92,7 @@ void initsyn() {
             locks[i].acqs[j] = -1;
             locks[i].acqscope[j] = -1;
         }
-        if ((i % hostc) == jia_pid)
+        if ((i % system_setting.hostc) == system_setting.jia_pid)
             locks[i].wtntp = newwtnt();
         else
             locks[i].wtntp = WNULL;
@@ -138,7 +140,7 @@ void endinterval(int synop) {
 
     // step 2: save all home page wtnts
     // TODO: for what?
-    hpages = hosts[jia_pid].homesize / Pagesize; // page number of jia_pid host
+    hpages = system_setting.hosts[system_setting.jia_pid].homesize / Pagesize; // page number of jia_pid host
     for (pagei = 0; pagei < hpages; pagei++) {
         if ((home[pagei].wtnt & 1) != 0) { // bit1 == 1
             if (home[pagei].rdnt != 0) {
@@ -157,7 +159,7 @@ void endinterval(int synop) {
                         wv |= ((wtvect_t)1) << (i / Blocksize);
                     }
                 }
-                addwtvect(pagei, wv, jia_pid);
+                addwtvect(pagei, wv, system_setting.jia_pid);
             }
 
         } /*if*/
@@ -187,7 +189,7 @@ void startinterval(int synop) {
         }
     }
 
-    hpages = hosts[jia_pid].homesize / Pagesize;
+    hpages = system_setting.hosts[system_setting.jia_pid].homesize / Pagesize;
     if ((synop != BARR) || (AD_WD != ON)) {
         for (pagei = 0; pagei < hpages; pagei++)
             if ((home[pagei].wtnt & 1) != 0) {
@@ -282,7 +284,7 @@ void invalidate(jia_msg_t *req) {
         }
 
         // invalidate all pages that are not on this host(cache)
-        if ((from != jia_pid) && (homehost(addr) != jia_pid)) {
+        if ((from != system_setting.jia_pid) && (homehost(addr) != system_setting.jia_pid)) {
             cachei = (int)cachepage(addr);
             if (cachei < Cachepages) {
                 if (cache[cachei].state != INV) {
@@ -305,7 +307,7 @@ void invalidate(jia_msg_t *req) {
         }
 
         if ((AD_WD == ON) && (lock == hidelock) &&
-            (homehost(addr) == jia_pid) && (from != jia_pid)) {
+            (homehost(addr) == system_setting.jia_pid) && (from != system_setting.jia_pid)) {
             homei = homepage(addr);
             home[homei].wtnt |= 4;
         }

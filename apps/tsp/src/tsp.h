@@ -58,4 +58,4 @@ extern int NodesFromEnd, debug, debugPrioQ;
 
 extern char TOUR_STR[16][256];
 
-#define _tour_str TOUR_STR[jia_pid]
+#define _tour_str TOUR_STR[jiapid]

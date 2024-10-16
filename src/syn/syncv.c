@@ -43,6 +43,8 @@
 #include "syn.h"
 #include "tools.h"
 #include "utils.h"
+#include "setting.h"
+#include "stat.h"
 
 /**
  * @brief grantcondv -- append condv to CVGRANT msg and send it to toproc
@@ -55,7 +57,7 @@ void grantcondv(int condv, int toproc) {
 
     grant = newmsg();
     grant->op = CVGRANT;
-    grant->frompid = jia_pid;
+    grant->frompid = system_setting.jia_pid;
     grant->topid = toproc;
     grant->size = 0;
     appendmsg(grant, ltos(condv), Intbytes);

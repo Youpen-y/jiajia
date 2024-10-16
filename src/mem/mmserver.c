@@ -39,16 +39,18 @@
 #include "tools.h"
 #include "mem.h"
 #include "comm.h"
+#include "setting.h"
+#include "stat.h"
 
 /* jiajia */
-extern int jia_pid;
-extern host_t hosts[Maxhosts];
-extern int hostc;
+// extern int jia_pid;
+// extern host_t hosts[Maxhosts];
+// extern int hostc;
 
 /* user */
-extern jiahome_t home[Homepages + 1];    /* host owned page */
-extern jiacache_t cache[Cachepages + 1]; /* host cached page */
-extern jiapage_t page[Maxmempages];      /* global page space */
+extern jiahome_t home[Homepages];    /* host owned page */
+extern jiacache_t cache[Cachepages]; /* host cached page */
+extern jiapage_t page[Maxmempages];  /* global page space */
 
 /* server */
 volatile int getpwait;
@@ -82,6 +84,7 @@ void diffserver(jia_msg_t *req) {
     register unsigned int begin = get_usecs();
 #endif
 
+    int jia_pid = system_setting.jia_pid;
     assert((req->op == DIFF) && (req->topid == jia_pid),
            "Incorrect DIFF Message!");
 
@@ -176,6 +179,7 @@ void getpserver(jia_msg_t *req) {
     int homei;
     jia_msg_t *rep;
 
+    int jia_pid = system_setting.jia_pid;
     assert((req->op == GETP) && (req->topid == jia_pid),
            "Incorrect GETP Message!");
 

@@ -45,15 +45,16 @@
 #include "syn.h"
 #include "tools.h"
 #include <time.h>
+#include "setting.h"
+#include "stat.h"
 
 extern void asendmsg(jia_msg_t *msg);
 
-extern int jia_pid;
-extern int hostc;
+// extern int system_setting.jia_pid;
+// extern int system_setting.hostc;
 extern jiastack_t lockstack[Maxstacksize];
 extern int totalhome;
-extern host_t hosts[Maxhosts];
-extern char argv0[Wordsize];
+// extern host_t hosts[Maxhosts];
 extern jiapage_t page[Maxmempages];
 extern jiahome_t home[Homepages + 1];
 extern unsigned long globaladdr;
@@ -96,7 +97,7 @@ void inittools() {
 void assert0(int cond, char *format, ...) {
     if (!cond) {
         // print error message
-        fprintf(stderr, "Assert0 error from host %d ---\n", jia_pid);
+        fprintf(stderr, "Assert0 error from host %d ---\n", system_setting.jia_pid);
         va_list args;
         va_start(args, format);
         vfprintf(stderr, format, args);
@@ -127,17 +128,17 @@ void assert(int cond, char *format, ...) {
         sprintf((char *)assertmsg.data, format, args);
         va_end(args);
         assertmsg.op = JIAEXIT;
-        assertmsg.frompid = jia_pid;
+        assertmsg.frompid = system_setting.jia_pid;
         assertmsg.size = strlen((char *)assertmsg.data) + 1;
 
         // asend message
-        for (hosti = 0; hosti < hostc; hosti++) {
-            if (hosti != jia_pid) {
+        for (hosti = 0; hosti < system_setting.hostc; hosti++) {
+            if (hosti != system_setting.jia_pid) {
                 assertmsg.topid = hosti;
                 asendmsg(&assertmsg);
             }
         }
-        assertmsg.topid = jia_pid; // self send JIAEXIT msg in the last
+        assertmsg.topid = system_setting.jia_pid; // self send JIAEXIT msg in the last
         asendmsg(&assertmsg);
     }
 }
@@ -712,7 +713,7 @@ void jia_config(int dest, int value) {
         if ((W_VEC == OFF) &&
             (value == ON)) { /*  change optimization 'write vector' to value */
             for (i = 0; i <= Homepages; i++) {
-                home[i].wtvect = (wtvect_t *)malloc(hostc * sizeof(wtvect_t));
+                home[i].wtvect = (wtvect_t *)malloc(system_setting.hostc * sizeof(wtvect_t));
                 setwtvect(i, WVFULL);
             }
         } else if ((W_VEC == ON) && (value == OFF)) {

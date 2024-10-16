@@ -43,9 +43,11 @@
 #include "syn.h"
 #include "tools.h"
 #include "utils.h"
+#include "setting.h"
+#include "stat.h"
 
 /* syn */
-extern jiapage_t page[Maxmempages + 1];
+extern jiapage_t page[Maxmempages];
 // lock array, according to the hosts allocate lock(eg.
 // host0: 0, 2,... 62; host1 = 1, 3, ..., 63)
 extern jialock_t locks[Maxlocks + 1];
@@ -149,8 +151,8 @@ void sendwtnts(int operation) {
     VERBOSE_LOG(3, "Enter sendwtnts!\n");
     req = newmsg();
 
-    req->frompid = jia_pid;
-    req->topid = top.lockid % hostc;
+    req->frompid = system_setting.jia_pid;
+    req->topid = top.lockid % system_setting.hostc;
     req->size = 0;
     req->scope = (operation == REL) ? locks[hidelock].myscope
                                     : locks[top.lockid].myscope;
@@ -161,7 +163,7 @@ void sendwtnts(int operation) {
     wnptr = top.wtntp;
     wnptr = appendstackwtnts(req, wnptr);
 
-    VERBOSE_LOG(3, "req message frompid = %d, topid = %d\n", jia_pid,
+    VERBOSE_LOG(3, "req message frompid = %d, topid = %d\n", system_setting.jia_pid,
                 req->topid);
     VERBOSE_LOG(3, "req size is %d, req data is %s\n", req->size, req->data);
     VERBOSE_LOG(3, "wnptr == WNULL is %d\n", wnptr == WNULL ? 1 : 0);

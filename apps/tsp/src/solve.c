@@ -52,7 +52,7 @@ void recursive_solve(int index)
     }
 
     if (_CurDist == 0 || debugPrioQ) {
-	sprintf(_tour_str, "\t%d: Tour %d is ", jia_pid, index);
+	sprintf(_tour_str, "\t%d: Tour %d is ", jiapid, index);
 	j = strlen(_tour_str);
 	for (i = 0; i < _PathLen-1; i++) {
 	    sprintf((_tour_str + j), "%1d - ", (int)_Path[i]);
@@ -62,7 +62,7 @@ void recursive_solve(int index)
 	sprintf((_tour_str + j), "%1d\n", (int)_Path[i]);
 	j = strlen(_tour_str);
 	sprintf((_tour_str+j), "\t%d: Cur: %d, Min %d, Len: %d, Sz: %d.\n",
-		jia_pid, _CurDist, glob->MinTourLen, _PathLen-1, TspSize);
+		jiapid, _CurDist, glob->MinTourLen, _PathLen-1, TspSize);
     }
 
     visit_nodes(_Path[_PathLen-1]);

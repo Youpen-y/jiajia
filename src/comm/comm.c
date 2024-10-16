@@ -35,11 +35,17 @@
  * =================================================================== *
  **********************************************************************/
 
-#include "utils.h"
 #ifndef NULL_LIB
-#include "comm.h"
-#include "mem.h"
-#include "tools.h"
+#include "utils.h"
+#include "comm.h"       // statgrantserver, 
+#include "mem.h"        // diffserver, getserver, diffgrantserver, getpgrantserver
+#include "tools.h"      // jiaexitserver, enable_sigio, disable_sigio, jia_current_time, newmsg, printmsg, get_usecs, emptyprintf
+#include "setting.h"
+#include "syn.h"        // acqserver, inverver, relserver, wtntserver, barrserver, barrgrantserver, acqgrantserver
+                        // waitgrantserver, waitserver, setcvserver, resetcvserver, waitcvserver, cvgrantserver,
+#include "load.h"       // loadserver, loadgrantserver,
+#include "msg.h"        // msgrecvserver
+#include "stat.h"       // statserver
 
 #define BEGINCS                                                                \
     {                                                                          \
@@ -65,16 +71,17 @@
 // #endif  /* JIA_DEBUG */
 // #define msgprint 1
 
-/*----------------------------------------------------------*/
-/* following definitions are defined by Hu */
-extern host_t hosts[Maxhosts];
-extern int jia_pid;
-extern int hostc;
+
+// external variables
 extern char errstr[Linesize];
 extern int msgbusy[Maxmsgs];
 extern jia_msg_t msgarray[Maxmsgs];
 extern int msgcnt;
+extern sigset_t oldset;
 
+
+// global variables
+/* request/reply communication manager*/
 CommManager commreq, commrep;
 
 /* head msg, tail msg, msg count in out queue */
@@ -84,84 +91,19 @@ volatile int outhead, outtail, outcount;
 // inqueue used to store in-msg, outqueue used to store out-msg
 jia_msg_t inqueue[Maxqueue], outqueue[Maxqueue];
 
-/* servers used by asynchronous */
-extern void diffserver(jia_msg_t *);
-extern void getpserver(jia_msg_t *);
-extern void acqserver(jia_msg_t *);
-extern void invserver(jia_msg_t *);
-extern void relserver(jia_msg_t *);
-extern void jiaexitserver(jia_msg_t *);
-extern void wtntserver(jia_msg_t *);
-extern void barrserver(jia_msg_t *);
-extern void barrgrantserver(jia_msg_t *);
-extern void acqgrantserver(jia_msg_t *);
-extern void waitgrantserver(jia_msg_t *);
-extern void waitserver(jia_msg_t *);
-extern void diffgrantserver(jia_msg_t *);
-extern void getpgrantserver(jia_msg_t *);
-extern void loadserver(jia_msg_t *);
-extern void loadgrantserver(jia_msg_t *);
-extern void emptyprintf();
-
-extern void setcvserver(jia_msg_t *);
-extern void resetcvserver(jia_msg_t *);
-extern void waitcvserver(jia_msg_t *);
-extern void cvgrantserver(jia_msg_t *);
-
-/* external function from msg.c*/
-extern void msgrecvserver(jia_msg_t *);
-
-extern void statserver(jia_msg_t *);
-extern void statgrantserver(jia_msg_t *);
-
-extern unsigned int get_usecs();
-
-extern void printmsg(jia_msg_t *, int);
-extern jia_msg_t *newmsg();
-
-#ifdef DOSTAT
-extern int statflag;
-extern jiastat_t jiastat;
-unsigned int interruptflag = 0;
-#endif
-
 /* following definitions are defined by Shi */
-unsigned long reqports[Maxhosts]
-                      [Maxhosts]; // every host has Maxhosts request ports
-unsigned long repports[Maxhosts]
-                      [Maxhosts]; // every host has Maxhosts reply ports
+unsigned short reqports[Maxhosts][Maxhosts]; // every host has Maxhosts request ports
+unsigned short repports[Maxhosts][Maxhosts]; // every host has Maxhosts reply ports
 // commreq used to send and recv request, commrep used to send and
 // recv reply
+
 unsigned long timeout_time;
 static struct timeval zerotime = {0, 0};
-long Startport;
-
-// void    initcomm();
-// int     req_fdcreate(int, int);
-// int     rep_fdcreate(int, int);
-// #if defined SOLARIS || defined IRIX62
-// void    sigio_handler(int sig, siginfo_t *sip, ucontext_t *uap);
-// #endif /* SOLARIS */
-// #ifdef LINUX
-// void    sigio_handler();
-// #endif
-// #ifdef AIX41
-// void    sigio_handler();
-// #endif /* AIX41 */
-// void    sigint_handler();
-// void    asendmsg(jia_msg_t *);
-// void    msgserver();
-// void    outsend();
-// void bcastserver(jia_msg_t *msg);
-
-extern unsigned long jia_current_time();
-extern void disable_sigio();
-extern void enable_sigio();
-
-extern sigset_t oldset;
+unsigned short Startport;
 int oldsigiomask;
 
-/*---------------------------------------------------------*/
+
+// function definitions
 
 /**
  * @brief inqrecv() -- recv msg (update incount&&intail)
@@ -246,7 +188,7 @@ int req_fdcreate(int i, int flag) {
 #endif
     addr.sin_family = AF_INET;
     addr.sin_addr.s_addr = htonl(INADDR_ANY);
-    addr.sin_port = (flag) ? htons(0) : htons(reqports[jia_pid][i]);
+    addr.sin_port = (flag) ? htons(0) : htons(reqports[system_setting.jia_pid][i]);
 
     res = bind(fd, (struct sockaddr *)&addr, sizeof(addr));
     assert0((res == 0), "req_fdcreate()-->bind()");
@@ -285,7 +227,7 @@ int rep_fdcreate(int i, int flag) {
 
     addr.sin_family = AF_INET;
     addr.sin_addr.s_addr = htonl(INADDR_ANY);
-    addr.sin_port = (flag) ? htons(0) : htons(repports[jia_pid][i]);
+    addr.sin_port = (flag) ? htons(0) : htons(repports[system_setting.jia_pid][i]);
 
     res = bind(fd, (struct sockaddr *)&addr, sizeof(addr));
     assert0((res == 0), "rep_fdcreate()-->bind()");
@@ -309,11 +251,11 @@ int rep_fdcreate(int i, int flag) {
 void initcomm() {
     int i, j, fd;
 
-    if (jia_pid == 0) {
+    if (system_setting.jia_pid == 0) {
         VERBOSE_LOG(3, "************Initialize Communication!*******\n");
     }
-    VERBOSE_LOG(3, "current jia_pid = %d\n", jia_pid);
-    VERBOSE_LOG(3, " Startport = %d \n", Startport);
+    VERBOSE_LOG(3, "current jia_pid = %d\n", system_setting.jia_pid);
+    VERBOSE_LOG(3, " Startport = %u \n", Startport);
 
     msgcnt = 0;
     for (i = 0; i < Maxmsgs; i++) {
@@ -383,20 +325,11 @@ void initcomm() {
     /***********Initialize comm ports********************/
 
     for (i = 0; i < Maxhosts; i++) {
-        for (j = 0; j < Maxhosts; j++) {
+       for (j = 0; j < Maxhosts; j++) {
             reqports[i][j] = Startport + i * Maxhosts + j;
             repports[i][j] = Startport + Maxhosts * Maxhosts + i * Maxhosts + j;
         }
-    }
-
-    /* output comm ports */
-    // VERBOSE_LOG(3, "reqports\t repports\n");
-    //   for(i = 0; i < Maxhosts; i++){
-    //     for(j = 0; j < Maxhosts; j++){
-    //       VERBOSE_LOG(3, "reqports[%d][%d] = %d\t", i, j, reqports[i][j]);
-    //       VERBOSE_LOG(3, "repports[%d][%d] = %d\n", i, j, repports[i][j]);
-    //     }
-    //   }
+    } 
 
 #ifdef JIA_DEBUG
     for (i = 0; i < Maxhosts; i++)
@@ -623,8 +556,8 @@ void sigio_handler(int sig, siginfo_t *sip, ucontext_t *uap)
     res = select(commreq.rcv_maxfd, &readfds, NULL, NULL, &zerotime);
     while (res > 0) {
         // handle ready fd(from other hosts)
-        for (i = 0; i < hostc; i++) {
-            if ((i != jia_pid) && FD_ISSET(commreq.rcv_fds[i], &readfds)) {
+        for (i = 0; i < system_setting.hostc; i++) {
+            if ((i != system_setting.jia_pid) && FD_ISSET(commreq.rcv_fds[i], &readfds)) {
 
                 /* step 1: receive data from host i and store it into
                  * inqueue[intail]*/
@@ -639,8 +572,7 @@ void sigio_handler(int sig, siginfo_t *sip, ucontext_t *uap)
                 /* must send ack before inqrecv update intail(ack use intail)
                  */
                 to.sin_family = AF_INET;
-                memcpy(&to.sin_addr, hosts[inqt.frompid].addr,
-                       hosts[inqt.frompid].addrlen);
+                to.sin_addr.s_addr = inet_addr(system_setting.hosts[i].ip);
                 to.sin_port = htons(repports[inqt.frompid][inqt.topid]);
                 res = sendto(commrep.snd_fds[i], (char *)&(inqt.seqno),
                              sizeof(inqt.seqno), 0, (struct sockaddr *)&to,
@@ -808,10 +740,8 @@ void outsend() {
         }
 #endif
         to.sin_family = AF_INET;
-        VERBOSE_LOG(3, "toproc IP address is %s, addrlen is %d\n",
-                    inet_ntoa(*(struct in_addr *)hosts[toproc].addr),
-                    hosts[toproc].addrlen);
-        memcpy(&to.sin_addr, hosts[toproc].addr, hosts[toproc].addrlen);
+        VERBOSE_LOG(3, "toproc IP address is %s\n", system_setting.hosts[toproc].ip);
+        to.sin_addr.s_addr = inet_addr(system_setting.hosts[toproc].ip);
         to.sin_port = htons(reqports[toproc][fromproc]);
 
         VERBOSE_LOG(3, "reqports[toproc][fromproc] = %u\n",
@@ -869,7 +799,7 @@ void outsend() {
             VERBOSE_LOG(3,
                         "I am host %d, hostname = %s, I am running outsend() "
                         "function\n",
-                        jia_pid, hosts[jia_pid].name);
+                        system_setting.jia_pid, system_setting.hosts[system_setting.jia_pid].username);
             sprintf(errstr, "I Can't asend message(%d,%d) to host %d!",
                     outqh.op, outqh.seqno, toproc);
             VERBOSE_LOG(3, "BUFFER SIZE %d (%d)\n", outqh.size, msgsize);
@@ -890,12 +820,12 @@ void bsendmsg(jia_msg_t *msg) {
 
     msg->op += BCAST; // op >= BCAST, always call bcastserver
 
-    root = jia_pid; // current host as root
+    root = system_setting.jia_pid; // current host as root
 
-    if (hostc == 1) { // single machine
+    if (system_setting.hostc == 1) { // single machine
         level = 1;
     } else {
-        for (level = 0; (1 << level) < hostc; level++)
+        for (level = 0; (1 << level) < system_setting.hostc; level++)
             ; // TODO: some problem here (hostc==2, level equals 1 too)
     }
 
@@ -912,6 +842,9 @@ void bsendmsg(jia_msg_t *msg) {
 void bcastserver(jia_msg_t *msg) {
     int mypid, child1, child2;
     int rootlevel, root, level;
+
+    int jia_pid = system_setting.jia_pid;
+    int hostc = system_setting.hostc;
 
     rootlevel = msg->temp;
     root = (rootlevel >> 16) & 0xffff;

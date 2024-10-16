@@ -56,4 +56,7 @@
 #define MAX_DOUBLE       21
 #define MIN_DOUBLE       22
 
+void msgrecvserver(jia_msg_t *req);
+
+
 #endif /*JIAMSG_H*/

@@ -43,7 +43,8 @@
 #include "mem.h"
 #include "msg.h"
 #include "syn.h"
-
+#include "setting.h"
+#include "stat.h"
 
 extern jia_msg_t *newmsg();
 extern void freemsg(jia_msg_t *);
@@ -58,7 +59,7 @@ extern void enable_sigio();
 extern void bsendmsg(jia_msg_t *);
 
 void jia_send(char *buf, int len, int toproc, int tag);
-void msgrecvserver(jia_msg_t *req);
+
 int nextpacket(int fromproc, int tag);
 int nextmsg(char *buf, int len, int fromproc, int tag);
 int jia_recv(char *buf, int len, int fromproc, int tag);
@@ -67,8 +68,8 @@ void reduce(char *dest, char *source, int count, int op);
 void jia_reduce(char *sendbuf, char *recvbuf, int count, int op, int root);
 
 extern char errstr[Linesize];
-extern int jia_pid;
-extern int hostc;
+// extern int jia_pid;
+// extern int system_setting.hostc;
 
 volatile int recvwait, endofmsg;
 jia_msg_t msgbuf[Maxmsgbufs]; /* message buffer */
@@ -111,14 +112,14 @@ void jia_send(char *buf, int len, int toproc, int tag) {
     int msgsize;
     char *msgptr;
 
-    assert(((toproc < hostc) && (toproc >= 0)),
+    assert(((toproc < system_setting.hostc) && (toproc >= 0)),
            "Incorrect message destination");
 
     msgsize = len;
     msgptr = buf;
 
     req = newmsg();
-    req->frompid = jia_pid;
+    req->frompid = system_setting.jia_pid;
     req->topid = toproc;
     req->scope = tag;
 
@@ -365,7 +366,7 @@ void jia_reduce(char *sendbuf, char *recvbuf, int count, int op, int root) {
     int mypid, fromproc, toproc;
     char *tempbuf;
 
-    assert((root < hostc) && (root >= 0), "Incorrect root in reduce");
+    assert((root < system_setting.hostc) && (root >= 0), "Incorrect root in reduce");
 
     len = count * thesizeof(op);
 
@@ -373,16 +374,16 @@ void jia_reduce(char *sendbuf, char *recvbuf, int count, int op, int root) {
     tempbuf = malloc(len);
 
     mypid =
-        ((jia_pid - root) >= 0) ? (jia_pid - root) : (jia_pid - root + hostc);
+        ((system_setting.jia_pid - root) >= 0) ? (system_setting.jia_pid - root) : (system_setting.jia_pid - root + system_setting.hostc);
 
-    for (j = 0; (1 << j) < hostc; j++) {
+    for (j = 0; (1 << j) < system_setting.hostc; j++) {
         if (mypid % (1 << j) == 0) {
 
             if ((mypid % (1 << (j + 1))) != 0) {
-                toproc = (mypid - (1 << j) + root) % hostc;
+                toproc = (mypid - (1 << j) + root) % system_setting.hostc;
                 jia_send(recvbuf, len, toproc, REDUCE_TAG);
-            } else if ((mypid + (1 << j)) < hostc) {
-                fromproc = (mypid + (1 << j) + root) % hostc;
+            } else if ((mypid + (1 << j)) < system_setting.hostc) {
+                fromproc = (mypid + (1 << j) + root) % system_setting.hostc;
                 recvlen = jia_recv(tempbuf, len, fromproc, REDUCE_TAG);
                 assert((len == recvlen), "Unmatched length in jia_reduce");
 
@@ -398,13 +399,13 @@ void jia_bcast(char *buf, int len, int root) {
     int msgsize;
     char *msgptr;
 
-    if (jia_pid == root) {
+    if (system_setting.jia_pid == root) {
         msgsize = len;
         msgptr = buf;
 
         req = newmsg();
-        req->frompid = jia_pid;
-        req->topid = jia_pid;
+        req->frompid = system_setting.jia_pid;
+        req->topid = system_setting.jia_pid;
         req->scope = BCAST_TAG;
 
         while (msgsize > Maxmsgsize) {

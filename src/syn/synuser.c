@@ -44,6 +44,8 @@
 #include "syn.h"
 #include "tools.h"
 #include "utils.h"
+#include "setting.h"
+#include "stat.h"
 
 #ifdef DOSTAT
 extern int statflag;
@@ -77,7 +79,7 @@ void jia_lock(int lock) {
     }
 #endif
 
-    if (hostc == 1)
+    if (system_setting.hostc == 1)
         return; // single host no need to use lock
 
     if (LOAD_BAL == ON) {
@@ -124,7 +126,7 @@ void jia_unlock(int lock) {
         jiastat.kernelflag = 1;
     }
 #endif
-    if (hostc == 1)
+    if (system_setting.hostc == 1)
         return;
 
     if (LOAD_BAL == ON) {
@@ -171,7 +173,7 @@ void jia_barrier() {
         jiastat.kernelflag = 1;
     }
 #endif
-    if (hostc == 1)
+    if (system_setting.hostc == 1)
         return; // single machine
 
     if (LOAD_BAL == ON) {
@@ -222,7 +224,7 @@ void jia_barrier() {
 void jia_wait() {
     jia_msg_t *req;
 
-    if (hostc == 1)
+    if (system_setting.hostc == 1)
         return;
 
     if (LOAD_BAL == ON) {
@@ -231,7 +233,7 @@ void jia_wait() {
     }
 
     req = newmsg();
-    req->frompid = jia_pid;
+    req->frompid = system_setting.jia_pid;
     req->topid = 0;
     req->op = WAIT;
     req->size = 0;
@@ -252,7 +254,7 @@ void jia_wait() {
 void jia_setcv(int cvnum) {
     jia_msg_t *req;
 
-    if (hostc == 1)
+    if (system_setting.hostc == 1)
         return;
 
     assert(((cvnum >= 0) && (cvnum < Maxcvs)),
@@ -260,8 +262,8 @@ void jia_setcv(int cvnum) {
 
     req = newmsg();
     req->op = SETCV;
-    req->frompid = jia_pid;
-    req->topid = cvnum % hostc;
+    req->frompid = system_setting.jia_pid;
+    req->topid = cvnum % system_setting.hostc;
     req->size = 0;
     appendmsg(req, ltos(cvnum), Intbytes);
 
@@ -273,7 +275,7 @@ void jia_setcv(int cvnum) {
 void jia_resetcv(int cvnum) {
     jia_msg_t *req;
 
-    if (hostc == 1)
+    if (system_setting.hostc == 1)
         return;
 
     assert(((cvnum >= 0) && (cvnum < Maxcvs)),
@@ -281,8 +283,8 @@ void jia_resetcv(int cvnum) {
 
     req = newmsg();
     req->op = RESETCV;
-    req->frompid = jia_pid;
-    req->topid = cvnum % hostc;
+    req->frompid = system_setting.jia_pid;
+    req->topid = cvnum % system_setting.hostc;
     req->size = 0;
     appendmsg(req, ltos(cvnum), Intbytes);
 
@@ -295,7 +297,7 @@ void jia_waitcv(int cvnum) {
     jia_msg_t *req;
     int lockid;
 
-    if (hostc == 1)
+    if (system_setting.hostc == 1)
         return;
 
     assert(((cvnum >= 0) && (cvnum < Maxcvs)),
@@ -303,8 +305,8 @@ void jia_waitcv(int cvnum) {
 
     req = newmsg();
     req->op = WAITCV;
-    req->frompid = jia_pid;
-    req->topid = cvnum % hostc;
+    req->frompid = system_setting.jia_pid;
+    req->topid = cvnum % system_setting.hostc;
     req->size = 0;
     appendmsg(req, ltos(cvnum), Intbytes);
 

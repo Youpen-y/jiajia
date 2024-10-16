@@ -41,12 +41,13 @@
 #include "syn.h"
 #include "tools.h"
 #include "utils.h"
-
+#include "setting.h"
+#include "stat.h"
 
 /* user */
-extern jiahome_t home[Homepages + 1];    /* host owned page */
-extern jiacache_t cache[Cachepages + 1]; /* host cached page */
-extern jiapage_t page[Maxmempages];      /* global page space */
+extern jiahome_t home[Homepages];    /* host owned page */
+extern jiacache_t cache[Cachepages]; /* host cached page */
+extern jiapage_t page[Maxmempages];  /* global page space */
 extern unsigned long globaladdr;
 
 /* server */
@@ -82,7 +83,7 @@ static void savediff(int cachei);
 void flushpage(int cachei) {
     memunmap((void *)cache[cachei].addr, Pagesize);
 
-    page[((unsigned long)cache[cachei].addr - Startaddr) / Pagesize].cachei =
+    page[((unsigned long)cache[cachei].addr - system_setting.global_start_addr) / Pagesize].cachei =
         Cachepages; // normal cachi range: [0, Cachepages)
 
     if (cache[cachei].state == RW) { // cache's state equals RW means that there
@@ -105,11 +106,11 @@ void getpage(address_t addr, int flag) {
     jia_msg_t *req;
 
     homeid = homehost(addr);
-    assert((homeid != jia_pid), "This should not have happened 2!");
+    assert((homeid != system_setting.jia_pid), "This should not have happened 2!");
     req = newmsg();
 
     req->op = GETP;
-    req->frompid = jia_pid;
+    req->frompid = system_setting.jia_pid;
     req->topid = homeid;
     req->temp = flag; /*0:read request, 1:write request*/
     req->size = 0;
@@ -204,7 +205,7 @@ int findposition(address_t addr) {
         }
 #endif
     }
-    cachepage(addr) = (unsigned short)(cachei + seti);
+    page[((unsigned long)(addr)-system_setting.global_start_addr) / Pagesize].cachei =  (unsigned short)(cachei + seti);
     return (cachei + seti);
 }
 
@@ -271,7 +272,7 @@ void sigsegv_handler(int signo, siginfo_t *sip, ucontext_t *uap)
     VERBOSE_LOG(3,
                 "Shared memory out of range from %p to %p!, faultaddr=%p, "
                 "writefault=%d\n",
-                (void *)Startaddr, (void *)(Startaddr + globaladdr), faultaddr,
+                (void *)system_setting.global_start_addr, (void *)(system_setting.global_start_addr + globaladdr), faultaddr,
                 writefault);
 
     VERBOSE_LOG(3, "sig info structure siginfo_t\n");
@@ -281,14 +282,14 @@ void sigsegv_handler(int signo, siginfo_t *sip, ucontext_t *uap)
                 "\t    si_addr: %p\n",
                 sip->si_errno, sip->si_code, sip->si_addr);
 
-    assert((((unsigned long)faultaddr < (Startaddr + globaladdr)) &&
-            ((unsigned long)faultaddr >= Startaddr)),
+    assert((((unsigned long)faultaddr < (system_setting.global_start_addr + globaladdr)) &&
+            ((unsigned long)faultaddr >= system_setting.global_start_addr)),
            "Access shared memory out of range from 0x%x to 0x%x!, "
            "faultaddr=0x%x, writefault=0x%x",
-           Startaddr, Startaddr + globaladdr, faultaddr, writefault);
+           system_setting.global_start_addr, system_setting.global_start_addr + globaladdr, faultaddr, writefault);
 
     // page's home is current host (si_code = 2)
-    if (homehost(faultaddr) == jia_pid) {
+    if (homehost(faultaddr) == system_setting.jia_pid) {
         memprotect((caddr_t)faultaddr, Pagesize,
                    PROT_READ | PROT_WRITE); // grant write right
         homei = homepage(faultaddr);
@@ -306,7 +307,7 @@ void sigsegv_handler(int signo, siginfo_t *sip, ucontext_t *uap)
         // page on other host, page must be get before other operations
         writefault = (writefault == 0) ? 0 : 1;
         cachei =
-            (int)page[((unsigned long)faultaddr - Startaddr) / Pagesize].cachei;
+            (int)page[((unsigned long)faultaddr - system_setting.global_start_addr) / Pagesize].cachei;
 
         /**
          * cachei == Cachepages: page's cache has exist
@@ -456,7 +457,7 @@ void savediff(int cachei) {
     if (diffmsg[hosti] == DIFFNULL) { // hosti host's diffmsg is NULL
         diffmsg[hosti] = newmsg();
         diffmsg[hosti]->op = DIFF;
-        diffmsg[hosti]->frompid = jia_pid;
+        diffmsg[hosti]->frompid = system_setting.jia_pid;
         diffmsg[hosti]->topid = hosti;
         diffmsg[hosti]->size = 0;
     }
@@ -482,7 +483,7 @@ void savediff(int cachei) {
 void senddiffs() {
     int hosti;
 
-    for (hosti = 0; hosti < hostc; hosti++) {
+    for (hosti = 0; hosti < system_setting.hostc; hosti++) {
         if (diffmsg[hosti] != DIFFNULL) {   // hosti's diff msgs is non-NULL
             if (diffmsg[hosti]->size > 0) { // diff data size > 0
                 diffwait++;

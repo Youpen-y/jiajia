@@ -39,15 +39,12 @@
 #include "comm.h"
 #include "tools.h"
 #include "utils.h"
-
-/* jiajia */
-extern int jia_pid;
-extern host_t hosts[Maxhosts];
-extern int hostc;
+#include "setting.h"
+#include "stat.h"
 
 /* user */
-extern jiahome_t home[Homepages + 1];    /* host owned page */
-extern jiacache_t cache[Cachepages + 1]; /* host cached page */
+extern jiahome_t home[Homepages];       /* host owned page */
+extern jiacache_t cache[Cachepages];     /* host cached page */
 extern jiapage_t page[Maxmempages];      /* global page space */
 extern unsigned long globaladdr;         /* [0, Maxmemsize)*/
 
@@ -60,6 +57,20 @@ extern jia_msg_t *diffmsg[Maxhosts]; /* store every host's diff msgs */
 extern long jiamapfd; /* file descriptor of the file that mapped to process's virtual
                   address space */
 extern int repcnt[Setnum]; /* record the last replacement index of every set */
+
+
+int homehost(address_t addr){
+    return page[((unsigned long)(addr)-system_setting.global_start_addr) / Pagesize].homepid;
+}
+
+unsigned int homepage(address_t addr){
+    return page[((unsigned long)(addr)-system_setting.global_start_addr) / Pagesize].homei;
+}
+
+unsigned int cachepage(address_t addr){
+    return page[((unsigned long)(addr)-system_setting.global_start_addr) / Pagesize].cachei;
+}
+
 
 /**
  * @brief initmem - initialize memory setting (wait for SIGSEGV signal)
@@ -86,11 +97,11 @@ void initmem() {
     diffwait = 0;
     getpwait = 0;
 
-    for (i = 0; i <= hostc; i++) { // step2: set every host's homesize to 0
-        hosts[i].homesize = 0;
+    for (i = 0; i <= system_setting.hostc; i++) { // step2: set every host's homesize to 0
+        system_setting.hosts[i].homesize = 0;
     }
 
-    for (i = 0; i <= Homepages; i++) {
+    for (i = 0; i < Homepages; i++) {
         home[i].wtnt = 0;
         home[i].rdnt = 0;
         home[i].addr = (address_t)0;
@@ -103,7 +114,7 @@ void initmem() {
         page[i].homepid = (unsigned short)Maxhosts;
     }
 
-    for (i = 0; i <= Cachepages; i++) {
+    for (i = 0; i < Cachepages; i++) {
         cache[i].state = UNMAP; /* initial cached page state is UNMAP */
         cache[i].addr = 0;
         cache[i].twin = NULL;
@@ -232,7 +243,7 @@ void addwtvect(int homei, wtvect_t wv, int from) {
     int i;
 
     home[homei].wvfull = 1;
-    for (i = 0; i < hostc; i++) {
+    for (i = 0; i < system_setting.hostc; i++) {
         if (i != from)
             home[homei].wtvect[i] |= wv;
 
@@ -252,7 +263,7 @@ void setwtvect(int homei, wtvect_t wv) {
     int i;
 
     home[homei].wvfull = 1;
-    for (i = 0; i < hostc; i++) {
+    for (i = 0; i < system_setting.hostc; i++) {
         home[homei].wtvect[i] = wv;
         if (home[homei].wtvect[i] != WVFULL)
             home[homei].wvfull = 0;

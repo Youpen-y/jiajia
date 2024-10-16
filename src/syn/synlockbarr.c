@@ -43,6 +43,8 @@
 #include "syn.h"
 #include "tools.h"
 #include "utils.h"
+#include "setting.h"
+#include "stat.h"
 
 /* syn */
 extern jialock_t locks[Maxlocks + 1];
@@ -58,7 +60,7 @@ extern int B_CAST;
 void clearlocks() {
     int i;
 
-    for (i = jia_pid; i < Maxlocks; i += hostc) {
+    for (i = system_setting.jia_pid; i < Maxlocks; i += system_setting.hostc) {
         freewtntspace(locks[i].wtntp);
     }
 }
@@ -76,8 +78,8 @@ void acquire(int lock) {
     req = newmsg();
 
     req->op = ACQ;
-    req->frompid = jia_pid;
-    req->topid = lock % hostc; // it seems that lock was divided circularly
+    req->frompid = system_setting.jia_pid;
+    req->topid = lock % system_setting.hostc; // it seems that lock was divided circularly
     req->scope = locks[lock].myscope;
     req->size = 0;
     appendmsg(req, ltos(lock), Intbytes);
@@ -104,7 +106,7 @@ void grantlock(int lock, int toproc, int acqscope) {
 
     grant = newmsg();
 
-    grant->frompid = jia_pid;
+    grant->frompid = system_setting.jia_pid;
     grant->topid = toproc;
     grant->scope = locks[lock].scope;
     grant->size = 0;
@@ -143,8 +145,8 @@ void grantbarr(int lock) {
 
     grant = newmsg();
 
-    grant->frompid = jia_pid;
-    grant->topid = jia_pid;
+    grant->frompid = system_setting.jia_pid;
+    grant->topid = system_setting.jia_pid;
     grant->scope = locks[lock].scope;
     grant->size = 0;
 
@@ -174,7 +176,7 @@ void broadcast(jia_msg_t *msg) {
     int hosti;
 
     if (B_CAST == OFF) {
-        for (hosti = 0; hosti < hostc; hosti++) {
+        for (hosti = 0; hosti < system_setting.hostc; hosti++) {
             msg->topid = hosti;
             asendmsg(msg);
         }

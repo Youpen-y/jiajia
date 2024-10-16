@@ -35,7 +35,8 @@
 #include "init.h"
 #include "mem.h"
 #include "syn.h"
-
+#include "setting.h"
+#include "stat.h"
 
 extern void assert(int cond, char *errstr);
 extern jia_msg_t *newmsg();
@@ -45,8 +46,8 @@ extern void broadcast(jia_msg_t *msg);
 extern float jia_clock();
 extern void appendmsg(jia_msg_t *, unsigned char *, int);
 
-extern int jia_pid;
-extern int hostc;
+// extern int jia_pid;
+// extern int hostc;
 extern int LOAD_BAL;
 
 float caltime, starttime, endtime;
@@ -69,7 +70,7 @@ void jia_loadbalance() {
     jia_msg_t *req;
 
     req = newmsg();
-    req->frompid = jia_pid;
+    req->frompid = system_setting.jia_pid;
     req->topid = 0;
     req->op = LOADREQ;
     req->size = 0;
@@ -91,23 +92,23 @@ void jia_newload() {
 
     ex2 = 0.0;
     ex = 0.0;
-    for (i = 0; i < hostc; i++) {
+    for (i = 0; i < system_setting.hostc; i++) {
         ex += loadstat[i].time;
         ex2 += loadstat[i].time * loadstat[i].time;
     }
 
-    ex = ex / hostc;
-    ex2 = ex2 / hostc;
+    ex = ex / system_setting.hostc;
+    ex2 = ex2 / system_setting.hostc;
     sigma = ex2 - ex * ex;
 
     if (sigma / (ex * ex) < (Delta * Delta)) {
     } else {
         Ptotal = 0.0;
-        for (i = 0; i < hostc; i++) {
+        for (i = 0; i < system_setting.hostc; i++) {
             loadstat[i].power /= loadstat[i].time;
             Ptotal += loadstat[i].power;
         }
-        for (i = 0; i < hostc; i++) {
+        for (i = 0; i < system_setting.hostc; i++) {
             loadstat[i].power /= Ptotal;
             VERBOSE_LOG(3, " loadstat[%d].power = %.2f\n", i, loadstat[i].power);
         }
@@ -126,21 +127,20 @@ void loadserver(jia_msg_t *req) {
 
     loadcnt++;
 
-    if (loadcnt == hostc) {
+    if (loadcnt == system_setting.hostc) {
         loadcnt = 0;
         jia_newload();
         grant = newmsg();
-        grant->frompid = jia_pid;
+        grant->frompid = system_setting.jia_pid;
         grant->op = LOADGRANT;
         grant->size = 0;
 
-        for (hosti = 0; hosti < hostc; hosti++) {
+        for (hosti = 0; hosti < system_setting.hostc; hosti++) {
             appendmsg(grant, (unsigned char *)(&(loadstat[hosti].power)),
                       sizeof(loadstat[hosti].power));
         }
 
         broadcast(grant);
-
         freemsg(grant);
     }
 }
@@ -152,7 +152,7 @@ void loadgrantserver(jia_msg_t *grant) {
     assert((grant->op == LOADGRANT), "Incorrect LOADGRANT msg");
 
     datai = 0;
-    for (i = 0; i < hostc; i++) {
+    for (i = 0; i < system_setting.hostc; i++) {
         loadstat[i].power = *((float *)(grant->data + datai));
         datai += sizeof(loadstat[i].power);
     }
@@ -183,6 +183,8 @@ void jia_divtask(int *begin, int *end) {
     int i;
     int iternum;
 
+    int jia_pid = system_setting.jia_pid;
+    int hostc = system_setting.hostc;
     if (hostc == 1)
         return;
 
