@@ -145,7 +145,7 @@ void diffserver(jia_msg_t *req) {
     STATOP(jiastat.dedifftime += get_usecs() - begin; jiastat.diffcnt++;)
 #endif
 
-    rep = newmsg();
+    rep = (jia_msg_t *)newmsg();
     rep->op = DIFFGRANT;
     rep->frompid = jia_pid;
     rep->topid = req->frompid;
@@ -204,7 +204,7 @@ void getpserver(jia_msg_t *req) {
 
         home[homei].rdnt = 1;
     }
-    rep = newmsg();
+    rep = (jia_msg_t *)newmsg();
     rep->op = GETPGRANT;
     rep->frompid = jia_pid;
     rep->topid = req->frompid;

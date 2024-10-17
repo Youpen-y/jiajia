@@ -184,7 +184,7 @@ void freetwin(address_t *twin) {
  *
  * @return jia_msg_t* the first free space address in msgarray that available
  */
-unsigned char *newmsg() {
+void *newmsg() {
     int i, j;
 
 
@@ -201,7 +201,7 @@ unsigned char *newmsg() {
         VERBOSE_LOG(3, "%d ", msgbusy[j]);
     VERBOSE_LOG(3, "  msgcnt=%d\n", msgcnt);
 #endif
-    return ((unsigned char *)&(msgarray[i]));
+    return (&(msgarray[i]));
 }
 
 /**

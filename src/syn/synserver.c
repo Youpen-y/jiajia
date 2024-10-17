@@ -156,7 +156,7 @@ void waitserver(jia_msg_t *req) {
     waitcounter++;
 
     if (waitcounter == system_setting.hostc) {
-        grant = newmsg();
+        grant = (jia_msg_t *)newmsg();
         waitcounter = 0;
         grant->frompid = system_setting.jia_pid;
         grant->size = 0;

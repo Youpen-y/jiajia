@@ -39,7 +39,7 @@
 #include "stat.h"
 
 extern void assert(int cond, char *errstr);
-extern jia_msg_t *newmsg();
+extern void *newmsg();
 extern void freemsg(jia_msg_t *);
 extern void asendmsg(jia_msg_t *msg);
 extern void broadcast(jia_msg_t *msg);
@@ -69,7 +69,7 @@ void initload() {
 void jia_loadbalance() {
     jia_msg_t *req;
 
-    req = newmsg();
+    req = (jia_msg_t *)newmsg();
     req->frompid = system_setting.jia_pid;
     req->topid = 0;
     req->op = LOADREQ;
@@ -130,7 +130,7 @@ void loadserver(jia_msg_t *req) {
     if (loadcnt == system_setting.hostc) {
         loadcnt = 0;
         jia_newload();
-        grant = newmsg();
+        grant = (jia_msg_t *)newmsg();
         grant->frompid = system_setting.jia_pid;
         grant->op = LOADGRANT;
         grant->size = 0;

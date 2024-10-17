@@ -118,7 +118,7 @@ void jia_send(char *buf, int len, int toproc, int tag) {
     msgsize = len;
     msgptr = buf;
 
-    req = newmsg();
+    req = (jia_msg_t *)newmsg();
     req->frompid = system_setting.jia_pid;
     req->topid = toproc;
     req->scope = tag;
@@ -403,7 +403,7 @@ void jia_bcast(char *buf, int len, int root) {
         msgsize = len;
         msgptr = buf;
 
-        req = newmsg();
+        req = (jia_msg_t *)newmsg();
         req->frompid = system_setting.jia_pid;
         req->topid = system_setting.jia_pid;
         req->scope = BCAST_TAG;

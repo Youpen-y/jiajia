@@ -107,7 +107,7 @@ void getpage(address_t addr, int flag) {
 
     homeid = homehost(addr);
     assert((homeid != system_setting.jia_pid), "This should not have happened 2!");
-    req = newmsg();
+    req = (jia_msg_t *)newmsg();
 
     req->op = GETP;
     req->frompid = system_setting.jia_pid;
@@ -455,7 +455,7 @@ void savediff(int cachei) {
         cache[cachei]
             .addr); // according to cachei addr get the page's home host index
     if (diffmsg[hosti] == DIFFNULL) { // hosti host's diffmsg is NULL
-        diffmsg[hosti] = newmsg();
+        diffmsg[hosti] = (jia_msg_t *)newmsg();
         diffmsg[hosti]->op = DIFF;
         diffmsg[hosti]->frompid = system_setting.jia_pid;
         diffmsg[hosti]->topid = hosti;

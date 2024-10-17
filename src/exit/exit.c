@@ -71,7 +71,7 @@ void jia_exit()
          Pagesize, Maxmemsize/Pagesize, globaladdr/Pagesize);
  if (hostc > 1) {
 
-    reply = newmsg();
+    reply = (jia_msg_t *)newmsg();
     reply->frompid = system_setting.jia_pid;
     reply->topid = 0;
     reply->size = 0;
