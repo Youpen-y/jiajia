@@ -44,6 +44,7 @@
 #include "setting.h"
 #include "tools.h"      // newmsg, freemsg, appendmsg
 #include "stat.h"       // clearstat
+#include "utils.h"
 
 extern unsigned long globaladdr;
 extern volatile int incount;
