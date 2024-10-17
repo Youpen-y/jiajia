@@ -111,12 +111,12 @@ int oldsigiomask;
  * @return iff incount==1
  */
 static inline int inqrecv(int fromproc) {
+    printmsg(&inqt, 1);
     assert0((incount < Maxqueue), "outsend(): Inqueue exceeded!");
     incount++;
     intail = (intail + 1) % Maxqueue;
     // update seqno from host fromproc
     commreq.rcv_seq[fromproc] = inqt.seqno;
-    printmsg(&inqt, 1);
     VERBOSE_LOG(3, "incount: %d\n", incount);
     return (incount == 1);
 };
