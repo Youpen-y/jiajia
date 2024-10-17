@@ -91,6 +91,7 @@ void statserver(jia_msg_t *rep)
     printf("point 2 to inspect\n");
     grant->frompid = system_setting.jia_pid;
     grant->size = 0;
+    printf("point 22222 to inspect\n");
     grant->op=STATGRANT;
     for(i=0; i<system_setting.hostc; i++) {
        grant->topid = i;
@@ -102,7 +103,6 @@ void statserver(jia_msg_t *rep)
  }
 }
 
-#ifdef DOSTAT
 void clearstat() // initialized jiastat with 0
 {
     memset((char *)&jiastat, 0, sizeof(jiastat));
@@ -114,7 +114,7 @@ void statgrantserver(jia_msg_t *req)
 
  waitstat = 0;
 }
-#endif
+
 
 
 #else  /* NULL_LIB */

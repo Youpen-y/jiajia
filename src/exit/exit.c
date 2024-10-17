@@ -88,7 +88,6 @@ printf("Print stats\n");
 fflush(stdout);
 #endif
 
-   fclose(logfile);
    /*Follow used by Shi*/
     if (system_setting.jia_pid == 0) {
        memset((char*)&total, 0, sizeof(total)); 
