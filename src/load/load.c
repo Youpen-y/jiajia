@@ -39,7 +39,6 @@
 #include "stat.h"
 #include "tools.h"
 
-extern void assert(int cond, char *errstr);
 extern void freemsg(jia_msg_t *);
 extern void asendmsg(jia_msg_t *msg);
 extern void broadcast(jia_msg_t *msg);
