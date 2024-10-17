@@ -203,7 +203,6 @@ jia_msg_t *newmsg() {
 #endif
 
     jia_msg_t *msg = &(msgarray[i]);
-    printf("Returning address: %p\n", (void*)msg);
     return msg;
 }
 

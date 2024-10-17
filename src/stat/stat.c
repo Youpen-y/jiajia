@@ -86,29 +86,20 @@ void statserver(jia_msg_t *rep)
 
 
  if (statcnt == system_setting.hostc) {
-    printf("All stats received!\n");
     statcnt = 0;
     clearstat();
     int k = free_msg_index();
     grant = &msgarray[k];
     msgcnt++;
     msgbusy[k] = 1;
-    printf("grant's address is %p\n", grant);
-
-    printf("print msg array address\n");
-    for(int i = 0; i < Maxmsgs; i++){
-      printf("msg[%d] address is %p, status is %d\n", i, &msgarray[i], msgbusy[i]);
-    }
 
     grant->frompid = system_setting.jia_pid;
     grant->size = 0;
     grant->op=STATGRANT;
     for(i=0; i<system_setting.hostc; i++) {
        grant->topid = i;
-       printf("point 3 to inspect\n");
        asendmsg(grant);
     }
-    printf("point 4 to inspect\n");
     freemsg(grant);
  }
 }
