@@ -10,7 +10,8 @@ int statflag;
 unsigned int interruptflag = 0;
 int statcnt=0;
 volatile int waitstat;
-
+extern jia_msg_t msgarray[Maxmsgs]; 
+extern volatile int msgbusy[Maxmsgs]; 
 
 /**
  * @brief statserver -- stat msg server
@@ -90,6 +91,12 @@ void statserver(jia_msg_t *rep)
     grant = newmsg();
     printf("point 2 to inspect\n");
     printf("grant's address is %p\n", grant);
+
+   printf("print msg array address\n");
+   for(int i = 0; i < Maxmsgs; i++){
+      printf("msg[%d] address is %p, status is %d\n", i, &msgarray[i], msgbusy[i]);
+   }
+
     grant->frompid = system_setting.jia_pid;
     grant->size = 0;
     grant->op=STATGRANT;

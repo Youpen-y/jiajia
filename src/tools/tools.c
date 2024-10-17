@@ -187,11 +187,13 @@ void freetwin(address_t *twin) {
 jia_msg_t *newmsg() {
     int i, j;
 
-    msgcnt++;
+
     for (i = 0; (i < Maxmsgs) && (msgbusy[i] != 0); i++)
         ;
     assert0((i < Maxmsgs), "Cannot allocate message space!");
     msgbusy[i] = 1;
+
+    msgcnt++;
 
 #ifdef JIA_DEBUG
     for (j = 0; j < Maxmsgs; j++)
