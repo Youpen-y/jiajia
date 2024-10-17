@@ -201,7 +201,10 @@ jia_msg_t *newmsg() {
         VERBOSE_LOG(3, "%d ", msgbusy[j]);
     VERBOSE_LOG(3, "  msgcnt=%d\n", msgcnt);
 #endif
-    return (&(msgarray[i]));
+
+    jia_msg_t *msg = &(msgarray[i]);
+    printf("Returning address: %p\n", (void*)msg);
+    return msg;
 }
 
 /**
