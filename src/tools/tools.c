@@ -184,15 +184,16 @@ void freetwin(address_t *twin) {
  *
  * @return jia_msg_t* the first free space address in msgarray that available
  */
-jia_msg_t *newmsg() {
+unsigned char *newmsg() {
     int i, j;
 
 
     for (i = 0; (i < Maxmsgs) && (msgbusy[i] != 0); i++)
         ;
+    
+    // here we got a free space in msgarray with index i
     assert0((i < Maxmsgs), "Cannot allocate message space!");
     msgbusy[i] = 1;
-
     msgcnt++;
 
 #ifdef JIA_DEBUG
@@ -200,7 +201,7 @@ jia_msg_t *newmsg() {
         VERBOSE_LOG(3, "%d ", msgbusy[j]);
     VERBOSE_LOG(3, "  msgcnt=%d\n", msgcnt);
 #endif
-    return (&(msgarray[i]));
+    return ((unsigned char *)&(msgarray[i]));
 }
 
 /**
