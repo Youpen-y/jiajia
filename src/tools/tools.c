@@ -207,6 +207,13 @@ jia_msg_t *newmsg() {
     return msg;
 }
 
+int free_msg_index() {
+    int i;
+    for (i = 0; (i < Maxmsgs) && (msgbusy[i]!= 0); i++)
+        ;
+    return i;
+}
+
 /**
  * @brief freemsg() -- free the space that msg occupied, (only change its busy
  * status and message count, the space can be used by overwritting)

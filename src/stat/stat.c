@@ -87,7 +87,7 @@ void statserver(jia_msg_t *rep)
     printf("All stats received!\n");
     statcnt = 0;
     clearstat();
-    grant = newmsg();
+    grant = &msgarray[free_msg_index()];
     printf("grant's address is %p\n", grant);
 
     printf("print msg array address\n");
