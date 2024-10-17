@@ -4,14 +4,12 @@
 #include "comm.h"
 #include "setting.h"
 
-#ifdef DOSTAT
 jiastat_t jiastat;
 jiastat_t allstats[Maxhosts];
 int statflag;
 unsigned int interruptflag = 0;
 int statcnt=0;
 volatile int waitstat;
-#endif
 
 
 /**
@@ -84,6 +82,7 @@ void statserver(jia_msg_t *rep)
 
 
  if (statcnt == system_setting.hostc) {
+   printf("All stats received!");
     statcnt = 0;
     clearstat();
     grant = newmsg();
