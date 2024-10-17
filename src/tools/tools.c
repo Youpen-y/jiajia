@@ -528,9 +528,33 @@ void printmsg(jia_msg_t *msg, int right) {
             break;
         case STAT:
             VERBOSE_LOG(3, "msg.op      = STAT     \n");
+            SPACE(right);
+            VERBOSE_LOG(3, "msg.frompid = %d\n", msg->frompid);
+            SPACE(right);
+            VERBOSE_LOG(3, "msg.topid   = %d\n", msg->topid);
+            SPACE(right);
+            VERBOSE_LOG(3, "msg.temp     =%d\n", msg->temp);
+            SPACE(right);
+            VERBOSE_LOG(3, "msg.seqno   = %d\n", msg->seqno);
+            SPACE(right);
+            VERBOSE_LOG(3, "msg.index   = %d\n", msg->index);
+            SPACE(right);
+            VERBOSE_LOG(3, "msg.size    = %d\n", msg->size);
             break;
         case STATGRANT:
             VERBOSE_LOG(3, "msg.op      = STATGRANT\n");
+            SPACE(right);
+            VERBOSE_LOG(3, "msg.frompid = %d\n", msg->frompid);
+            SPACE(right);
+            VERBOSE_LOG(3, "msg.topid   = %d\n", msg->topid);
+            SPACE(right);
+            VERBOSE_LOG(3, "msg.temp     =%d\n", msg->temp);
+            SPACE(right);
+            VERBOSE_LOG(3, "msg.seqno   = %d\n", msg->seqno);
+            SPACE(right);
+            VERBOSE_LOG(3, "msg.index   = %d\n", msg->index);
+            SPACE(right);
+            VERBOSE_LOG(3, "msg.size    = %d\n", msg->size);
             break;
         case JIAEXIT:
             VERBOSE_LOG(3, "msg.op      = JIAEXIT  \n");

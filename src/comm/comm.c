@@ -460,7 +460,12 @@ void msgserver() {
     case WAITGRANT:
         waitgrantserver(&inqh);
         break;
-
+    case STAT:
+        statserver(&inqh);
+        break;
+    case STATGRANT:
+        statgrantserver(&inqh);
+        break;
     case SETCV:
         setcvserver(&inqh);
         break;
@@ -483,14 +488,6 @@ void msgserver() {
     case LOADGRANT:
         loadgrantserver(&inqh);
         break;
-#ifdef DOSTAT
-    case STAT:
-        statserver(&inqh);
-        break;
-    case STATGRANT:
-        statgrantserver(&inqh);
-        break;
-#endif
 
     default:
         if (inqh.op >= BCAST) {
@@ -653,7 +650,7 @@ void asendmsg(jia_msg_t *msg) {
 
     VERBOSE_LOG(3, "Enter asendmsg!");
 
-    // printmsg(msg, 1);
+    printmsg(msg, 1);
 
     /* step 1: memcpy to outqt && update outqueue */
     BEGINCS;

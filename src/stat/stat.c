@@ -79,9 +79,9 @@ void statserver(jia_msg_t *rep)
 /*End Shi*/
 
  statcnt++;
-#if DEBUG
-printf("Stats received from %d[%d]\n", rep->frompid, statcnt);
-#endif
+
+ printf("Stats received from %d[%d]\n", rep->frompid, statcnt);
+
 
  if (statcnt == system_setting.hostc) {
     statcnt = 0;
