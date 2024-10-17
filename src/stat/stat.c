@@ -89,9 +89,9 @@ void statserver(jia_msg_t *rep)
     printf("point 1 to inspect\n");
     grant = newmsg();
     printf("point 2 to inspect\n");
+    printf("grant's address is %p\n", grant);
     grant->frompid = system_setting.jia_pid;
     grant->size = 0;
-    printf("point 22222 to inspect\n");
     grant->op=STATGRANT;
     for(i=0; i<system_setting.hostc; i++) {
        grant->topid = i;
