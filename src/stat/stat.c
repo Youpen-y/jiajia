@@ -82,10 +82,13 @@ void statserver(jia_msg_t *rep)
 
 
  if (statcnt == system_setting.hostc) {
-   printf("All stats received!");
+   printf("All stats received!\n");
     statcnt = 0;
     clearstat();
+
+    printf("point 1 to inspect\n");
     grant = newmsg();
+    printf("point 2 to inspect\n");
     grant->frompid = system_setting.jia_pid;
     grant->size = 0;
     grant->op=STATGRANT;
@@ -93,6 +96,7 @@ void statserver(jia_msg_t *rep)
        grant->topid = i;
        asendmsg(grant);
     }
+    printf("point 3 to inspect\n");
     freemsg(grant);
  }
 }
