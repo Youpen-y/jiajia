@@ -57,4 +57,9 @@
 #define   ALPHA         20
 #define   BETA          20
 
+
+
+// function prototypes
+void redirect_slave_io(int argc, char **argv);
+
 #endif /*JIACREAT_H*/

@@ -4,7 +4,16 @@
 #include <stdio.h>
 #include <string.h>
 
-extern FILE* config;
+FILE *logfile;
+
+int open_logfile(char *filename) {
+    logfile = fopen(filename, "w");
+    if (logfile == NULL) {
+        printf("Cannot open logfile %s\n", filename);
+        return -1;
+    }
+    return 0;
+}
 
 
 // int my_getline(int *wordc, char wordv[Maxwords][Wordsize]) {

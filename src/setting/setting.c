@@ -1,5 +1,6 @@
 #include "setting.h"
 #include "errno.h"
+#include "utils.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -204,6 +205,8 @@ int init_setting(setting_t *setting){
 }
 
 void print_setting(const setting_t *setting){
+    printf("=====================================\n");
+    printf("system setting info on host %d\n", system_setting.jia_pid);
     printf("system_mode: %d\n", setting->system_mode);
     printf("comm_type: %d\n", setting->comm_type);
     printf("global_start_addr: %llu\n", setting->global_start_addr);
@@ -216,4 +219,5 @@ void print_setting(const setting_t *setting){
     for(int i = 0; i < setting->optionc; i++) {
         printf("option %d: %s = %s\n", i, setting->options[i].key, setting->options[i].value);
     }
+    printf("====================================\n");
 }

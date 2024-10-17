@@ -56,7 +56,7 @@ extern jiastack_t lockstack[Maxstacksize];
 extern int totalhome;
 // extern host_t hosts[Maxhosts];
 extern jiapage_t page[Maxmempages];
-extern jiahome_t home[Homepages + 1];
+extern jiahome_t home[Homepages];
 extern unsigned long globaladdr;
 extern int firsttime;
 extern float caltime;
@@ -712,12 +712,12 @@ void jia_config(int dest, int value) {
     case WVEC:
         if ((W_VEC == OFF) &&
             (value == ON)) { /*  change optimization 'write vector' to value */
-            for (i = 0; i <= Homepages; i++) {
+            for (i = 0; i < Homepages; i++) {
                 home[i].wtvect = (wtvect_t *)malloc(system_setting.hostc * sizeof(wtvect_t));
                 setwtvect(i, WVFULL);
             }
         } else if ((W_VEC == ON) && (value == OFF)) {
-            for (i = 0; i <= Homepages; i++) {
+            for (i = 0; i < Homepages; i++) {
                 free(home[i].wtvect);
             }
         }

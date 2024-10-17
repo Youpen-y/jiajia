@@ -64,18 +64,14 @@ void copyfiles(int argc, char **argv);
 int startprocs(int argc, char **argv);
 void jiacreat(int argc, char **argv);
 void barrier0();
-void redirstdio(int argc, char **argv);
+
 void jia_init(int argc, char **argv);
 void clearstat();
 
 extern char errstr[Linesize];
 extern long Startport;
 
-FILE *config, *fopen();
-FILE *logfile;
-// int jia_pid;                /* node number */
-// host_t hosts[Maxhosts + 1]; /* host array */
-// int hostc;                  /* host counter */
+
 sigset_t startup_mask;      /* used by Shi. */
 int jia_lock_index;
 
@@ -335,22 +331,11 @@ int startprocs(int argc, char **argv) {
  * @param argv
  */
 void jiacreat(int argc, char **argv) {
-    logfile = fopen("./jiajia.log", "w");
+    if (system_setting.hostc == 0) {
+        VERBOSE_LOG(3, "  No hosts specified!\n");
+        exit(0);
+    }
 
-    // // step 1: get hosts info
-    // gethosts();
-    // if (hostc == 0) {
-    //     VERBOSE_LOG(3, "  No hosts specified!\n");
-    //     exit(0);
-    // }
-
-    // // step 2: get current host's jia_pid
-    // jia_pid = mypid();
-    // if (jia_pid == 0) { // master does, slave doesn't
-    //     VERBOSE_LOG(3, "*********Total of %d hosts found!**********\n\n",
-    //                 hostc);
-
-        // step 3: copy files to remote
     if (system_setting.jia_pid == 0) {
         // master does
         VERBOSE_LOG(3, "*********Total of %d hosts found!**********\n\n",
@@ -412,7 +397,7 @@ void barrier0() {
  * @note redirstdio makes effects on slaves only
  */
 
-void redirstdio(int argc, char **argv) {
+void redirect_slave_io(int argc, char **argv) {
     char outfile[Wordsize];
 
     if (system_setting.jia_pid != 0) { // slaves does
@@ -430,18 +415,19 @@ void redirstdio(int argc, char **argv) {
         sprintf(outfile, "%s.err\0", argv[0]);
 #endif                                 /* NFS */
         freopen(outfile, "w", stderr); // redirect stderr to file outfile
-        setbuf(stderr, NULL);          //
+        setbuf(stderr, NULL);          
     }
 }
 
 /**
  * @brief jia_init -- init jiajia basic setting
  *
- * @param argc
- * @param argv
+ * @param argc same as main
+ * @param argv same as main
  */
 void jia_init(int argc, char **argv) {
     init_setting(&system_setting);
+    open_logfile("jiajia.log");
     print_setting(&system_setting);
 
     unsigned long timel, time1;
@@ -466,7 +452,7 @@ void jia_init(int argc, char **argv) {
     setrlimit(RLIMIT_DATA,
               &rl); /* set maximum size of process's data segment */
 
-    redirstdio(argc, argv); /*redirect slave's output*/
+    redirect_slave_io(argc, argv); /*redirect slave's output*/
 
     initmem();
     initsyn();
