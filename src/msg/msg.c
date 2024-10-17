@@ -45,8 +45,8 @@
 #include "syn.h"
 #include "setting.h"
 #include "stat.h"
+#include "tools.h"
 
-extern void *newmsg();
 extern void freemsg(jia_msg_t *);
 extern void printmsg(jia_msg_t *msg, int right);
 extern void asendmsg(jia_msg_t *msg);
