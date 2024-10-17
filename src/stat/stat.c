@@ -12,6 +12,8 @@ int statcnt=0;
 volatile int waitstat;
 extern jia_msg_t msgarray[Maxmsgs]; 
 extern volatile int msgbusy[Maxmsgs]; 
+extern int msgcnt;
+
 
 /**
  * @brief statserver -- stat msg server
