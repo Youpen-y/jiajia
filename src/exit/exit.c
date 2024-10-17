@@ -46,6 +46,8 @@
 #include "stat.h"       // clearstat
 
 extern unsigned long globaladdr;
+extern volatile int incount;
+extern volatile int outcount;
 
 /**
  * @brief jia_exit -- if defined DOSTAT, print statistic; else do nothing
