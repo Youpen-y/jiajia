@@ -46,7 +46,7 @@
 #include "setting.h"
 #include "stat.h"
 
-extern jia_msg_t *newmsg();
+extern void *newmsg();
 extern void freemsg(jia_msg_t *);
 extern void printmsg(jia_msg_t *msg, int right);
 extern void asendmsg(jia_msg_t *msg);
