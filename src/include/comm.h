@@ -51,35 +51,37 @@
     32 /* size of input and output queue for communication (>= 2*maxhosts)*/
 
 /* msg operation (type) */
-#define DIFF 0
-#define DIFFGRANT 1
-#define GETP 2
-#define GETPGRANT 3
-#define ACQ 4
-#define ACQGRANT 5
-#define INVLD 6
-#define BARR 7
-#define BARRGRANT 8
-#define REL 9
-#define WTNT 10
-#define JIAEXIT 11
-#define WAIT 12
-#define WAITGRANT 13
-#define STAT 14
-#define STATGRANT 15
-#define ERRMSG 16
+#define DIFF        0
+#define DIFFGRANT   1
+#define GETP        2
+#define GETPGRANT   3
+#define ACQ         4
+#define ACQGRANT    5
+#define INVLD       6
+#define BARR        7
+#define BARRGRANT   8
+#define REL         9
+#define WTNT        10
+#define JIAEXIT     11
+#define WAIT        12
+#define WAITGRANT   13
+#define STAT        14
+#define STATGRANT   15
+#define ERRMSG      16
 
-#define SETCV 17
-#define RESETCV 18
-#define WAITCV 19
-#define CVGRANT 20
-#define MSGBODY 21
-#define MSGTAIL 22
-#define LOADREQ 23
-#define LOADGRANT 24
+#define SETCV       17
+#define RESETCV     18
+#define WAITCV      19
+#define CVGRANT     20
+#define MSGBODY     21
+#define MSGTAIL     22
+#define LOADREQ     23
+#define LOADGRANT   24
 
-#define BCAST 100
-typedef struct Jia_Msg {
+#define BCAST       100
+
+
+typedef struct jia_msg {
     unsigned int op;      /* operation type */
     unsigned int frompid; /* from pid */
     unsigned int topid;   /* to pid */
@@ -114,12 +116,53 @@ typedef struct CommManager {
 
 #define STATOP(op) if(statflag){op};
 
-/* function declaration*/
+/* function declaration  */
 
+/**
+ * @brief initcomm -- initialize communication setting
+ *
+ * step1: initialize msg array and correpsonding flag to indicate busy or free
+ *
+ * step2: initialize pointer that indicate head, tail and count of inqueue and
+ * outqueue
+ *
+ * step3: register signal handler (SIGIO, SIGINT)
+ *
+ * step4: initialize comm ports (reqports, repports)
+ *
+ * step5: initialize comm manager (commreq, commrep)
+ */
 void initcomm();
-int req_fdcreate(int, int);
-int rep_fdcreate(int, int);
 
+/**
+ * @brief req_fdcreate -- creat socket file descriptor used to send and recv
+ * request
+ *
+ * @param i the index of host
+ * @param flag 1 means sin_port = 0, random port; others means specified
+ * sin_port = reqports[jia_pid][i]
+ * @return int socket file descriptor
+ * creat socket file descriptor(fd) used to send and recv request and bind it to
+ * an address (ip/port combination)
+ */
+int req_fdcreate(int i, int flag);
+
+/**
+ * @brief rep_fdcreate -- create socket file descriptor(fd) used to send and
+ * recv reply
+ *
+ * @param i the index of host [0, hostc)
+ * @param flag equals to 1 means fd with random port, 0 means fd with specified
+ * port(repports[jia_pid][i])
+ * @return int socket file descriptor(fd)
+ */
+int rep_fdcreate(int i, int flag);
+
+
+/**
+ * @brief sigio_handler -- IO signal handler
+ * 
+ */
 #if defined SOLARIS || defined IRIX62
 void sigio_handler(int sig, siginfo_t *sip, ucontext_t *uap);
 #endif /* SOLARIS */
@@ -130,12 +173,39 @@ void sigio_handler();
 void sigio_handler();
 #endif /* AIX41 */
 
+/**
+ * @brief sigint_handler -- interrupt signal handler
+ * 
+ */
 void sigint_handler();
+
+/**
+ * @brief asendmsg() -- send msg to outqueue[outtail], and call outsend()
+ *
+ * @param msg msg that will be sent
+ */
 void asendmsg(jia_msg_t *msg);
+
+/**
+ * @brief msgserver -- according to inqueue head msg.op choose different server
+ *
+ */
 void msgserver();
+
+/**
+ * @brief outsend -- outsend the outqueue[outhead] msg
+ *
+ */
 void outsend();
+
+/**
+ * @brief bsendmsg -- broadcast msg
+ *
+ * @param msg 
+ */
 void bsendmsg(jia_msg_t *msg);
+
 void bcastserver(jia_msg_t *msg);
-void statgrantserver(jia_msg_t *);
+
 
 #endif /* JIACOMM_H */

@@ -56,6 +56,13 @@
 #define MAX_DOUBLE       21
 #define MIN_DOUBLE       22
 
+
+// typedef struct msg_array{
+//     jia_msg_t *msg;
+//     int msg_cnt;
+//     int *msg_busy;
+// } msg_array_t;
+
 void msgrecvserver(jia_msg_t *req);
 
 

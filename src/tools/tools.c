@@ -48,13 +48,8 @@
 #include "setting.h"
 #include "stat.h"
 
-extern void asendmsg(jia_msg_t *msg);
-
-// extern int system_setting.jia_pid;
-// extern int system_setting.hostc;
 extern jiastack_t lockstack[Maxstacksize];
 extern int totalhome;
-// extern host_t hosts[Maxhosts];
 extern jiapage_t page[Maxmempages];
 extern jiahome_t home[Homepages];
 extern unsigned long globaladdr;
@@ -63,8 +58,7 @@ extern float caltime;
 
 char errstr[Linesize];       /* buffer for error info */
 jia_msg_t msgarray[Maxmsgs]; /* message array */
-volatile int
-    msgbusy[Maxmsgs]; /* msgbusy[i] == 0 means msgarray[i] is abailable */
+volatile int msgbusy[Maxmsgs]; /* msgbusy[i] == 0 means msgarray[i] is abailable */
 int msgcnt;
 jia_msg_t assertmsg;
 
@@ -143,6 +137,8 @@ void assert(int cond, char *format, ...) {
     }
 }
 
+
+
 /**
  * @brief jiaexitserver -- output error message and exit
  *
@@ -186,7 +182,6 @@ void freetwin(address_t *twin) {
  */
 jia_msg_t *newmsg() {
     int i, j;
-
 
     for (i = 0; (i < Maxmsgs) && (msgbusy[i] != 0); i++)
         ;

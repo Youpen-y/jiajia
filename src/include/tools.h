@@ -6,6 +6,11 @@
 #include "syn.h"
 #include <comm.h>
 
+
+/* */
+extern char errstr[Linesize];
+
+
 /* Function Declaration */
 void inittools();
 void assert0(int, char *, ...);
@@ -29,7 +34,11 @@ void emptyprintf();
 unsigned int get_usecs();
 
 
-
+/**
+ * @brief free_msg_index -- find a free msg index in msgarray
+ * 
+ * @return int index of free msg
+ */
 int free_msg_index();
 
 #endif  /* TOOLS_H */

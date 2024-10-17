@@ -104,18 +104,16 @@ void statserver(jia_msg_t *rep)
  }
 }
 
-void clearstat() // initialized jiastat with 0
+void clearstat()
 {
-    memset((char *)&jiastat, 0, sizeof(jiastat));
+   memset((char *)&jiastat, 0, sizeof(jiastat));
 }
 
 void statgrantserver(jia_msg_t *req)
 {
- assert((req->op==STATGRANT)&&(req->topid==system_setting.jia_pid),"Incorrect STATGRANT Message!");
-
- waitstat = 0;
+   assert((req->op==STATGRANT)&&(req->topid==system_setting.jia_pid),"Incorrect STATGRANT Message!");
+   waitstat = 0;
 }
-
 
 
 #else  /* NULL_LIB */

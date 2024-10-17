@@ -73,7 +73,6 @@
 
 
 // external variables
-extern char errstr[Linesize];
 extern int msgbusy[Maxmsgs];
 extern jia_msg_t msgarray[Maxmsgs];
 extern int msgcnt;
@@ -88,17 +87,14 @@ CommManager commreq, commrep;
 volatile int inhead, intail, incount;
 volatile int outhead, outtail, outcount;
 
-// inqueue used to store in-msg, outqueue used to store out-msg
+/* inqueue used to store in-msg, outqueue used to store out-msg */
 jia_msg_t inqueue[Maxqueue], outqueue[Maxqueue];
 
-/* following definitions are defined by Shi */
+
+/* commreq used to send and recv request, commrep used to send and recv reply */
 unsigned short reqports[Maxhosts][Maxhosts]; // every host has Maxhosts request ports
 unsigned short repports[Maxhosts][Maxhosts]; // every host has Maxhosts reply ports
-// commreq used to send and recv request, commrep used to send and
-// recv reply
 
-unsigned long timeout_time;
-static struct timeval zerotime = {0, 0};
 unsigned short Startport;
 int oldsigiomask;
 
@@ -530,6 +526,7 @@ void sigio_handler(int sig, siginfo_t *sip, ucontext_t *uap)
     struct sockaddr_in from, to;
     sigset_t set, oldset;
     int servemsg = 0;
+    struct timeval zerotime = {0, 0};
 
     // begin segvio time
 #ifdef DOSTAT
@@ -693,6 +690,7 @@ void outsend() {
     int sendsuccess, arrived;
     fd_set readfds;
     int servemsg;
+    struct timeval zerotime = {0, 0};
 #ifdef DOSTAT
     register unsigned int begin;
 #endif

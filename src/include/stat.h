@@ -59,17 +59,33 @@ typedef struct Stats {
 } jiastat_t;
 
 
-
 extern jiastat_t jiastat;
 extern jiastat_t allstats[Maxhosts];
 extern int statflag;
 extern unsigned int interruptflag;
 extern volatile int waitstat;
 
+
+/* function declarations */
+
+/**
+ * @brief statserver -- stat msg server
+ * 
+ * @param rep msg of type STAT
+ */
 void statserver(jia_msg_t *rep);
 
+/**
+ * @brief statgrantserver -- grant stat msg server
+ * 
+ * @param req 
+ */
 void statgrantserver(jia_msg_t *req);
 
+/**
+ * @brief clearstat -- clear stat
+ * 
+ */
 void clearstat();
 
 #endif //!defined(STAT_H)
