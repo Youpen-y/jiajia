@@ -4,7 +4,7 @@
 #include "init.h"
 #include <stdio.h>
 
-static int verbose_log = 1;
+static int verbose_log = 4;
 static int verbose_out = 3;
 extern FILE* logfile;
 
