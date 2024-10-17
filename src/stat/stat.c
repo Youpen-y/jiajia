@@ -21,7 +21,7 @@ extern volatile int msgbusy[Maxmsgs];
 void statserver(jia_msg_t *rep)
 { 
    int i;
-   jia_msg_t *grant;
+   jia_msg_t *grant = newmsg();
    jiastat_t *stat;
    unsigned int temp;
 
@@ -89,7 +89,6 @@ void statserver(jia_msg_t *rep)
     clearstat();
 
     printf("point 1 to inspect\n");
-    grant = newmsg();
     printf("point 2 to inspect\n");
     printf("grant's address is %p\n", grant);
 
