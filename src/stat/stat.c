@@ -94,9 +94,10 @@ void statserver(jia_msg_t *rep)
     grant->op=STATGRANT;
     for(i=0; i<system_setting.hostc; i++) {
        grant->topid = i;
+       printf("point 3 to inspect\n");
        asendmsg(grant);
     }
-    printf("point 3 to inspect\n");
+    printf("point 4 to inspect\n");
     freemsg(grant);
  }
 }
