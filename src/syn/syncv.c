@@ -55,7 +55,7 @@
 void grantcondv(int condv, int toproc) {
     jia_msg_t *grant;
 
-    grant = (jia_msg_t *)newmsg();
+    grant = newmsg();
     grant->op = CVGRANT;
     grant->frompid = system_setting.jia_pid;
     grant->topid = toproc;

@@ -232,7 +232,7 @@ void jia_wait() {
         caltime += (endtime - starttime);
     }
 
-    req = (jia_msg_t *)newmsg();
+    req = newmsg();
     req->frompid = system_setting.jia_pid;
     req->topid = 0;
     req->op = WAIT;
@@ -260,7 +260,7 @@ void jia_setcv(int cvnum) {
     assert(((cvnum >= 0) && (cvnum < Maxcvs)),
            "condv %d should range from 0 to %d", cvnum, Maxcvs - 1);
 
-    req = (jia_msg_t *)newmsg();
+    req = newmsg();
     req->op = SETCV;
     req->frompid = system_setting.jia_pid;
     req->topid = cvnum % system_setting.hostc;
@@ -281,7 +281,7 @@ void jia_resetcv(int cvnum) {
     assert(((cvnum >= 0) && (cvnum < Maxcvs)),
            "condv %d should range from 0 to %d", cvnum, Maxcvs - 1);
 
-    req = (jia_msg_t *)newmsg();
+    req = newmsg();
     req->op = RESETCV;
     req->frompid = system_setting.jia_pid;
     req->topid = cvnum % system_setting.hostc;
@@ -303,7 +303,7 @@ void jia_waitcv(int cvnum) {
     assert(((cvnum >= 0) && (cvnum < Maxcvs)),
            "condv %d should range from 0 to %d", cvnum, Maxcvs - 1);
 
-    req = (jia_msg_t *)newmsg();
+    req = newmsg();
     req->op = WAITCV;
     req->frompid = system_setting.jia_pid;
     req->topid = cvnum % system_setting.hostc;

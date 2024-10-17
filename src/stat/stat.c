@@ -89,7 +89,7 @@ void statserver(jia_msg_t *rep)
     clearstat();
 
     printf("point 1 to inspect\n");
-    grant = (jia_msg_t *)newmsg();
+    grant = newmsg();
     printf("point 2 to inspect\n");
     printf("grant's address is %p\n", grant);
 

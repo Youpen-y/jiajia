@@ -11,7 +11,7 @@ void inittools();
 void assert0(int, char *, ...);
 void assert(int cond, char *format, ...);
 void jiaexitserver(jia_msg_t *req);
-void *newmsg();
+jia_msg_t *newmsg();
 void freemsg(jia_msg_t *msg);
 void appendmsg(jia_msg_t *msg, unsigned char *str, int len);
 void printmsg(jia_msg_t *msg, int right);

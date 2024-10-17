@@ -75,7 +75,7 @@ void clearlocks() {
 void acquire(int lock) {
     jia_msg_t *req;
 
-    req = (jia_msg_t *)newmsg();
+    req = newmsg();
 
     req->op = ACQ;
     req->frompid = system_setting.jia_pid;
@@ -104,7 +104,7 @@ void grantlock(int lock, int toproc, int acqscope) {
     jia_msg_t *grant;
     wtnt_t *wnptr;
 
-    grant = (jia_msg_t *)newmsg();
+    grant = newmsg();
 
     grant->frompid = system_setting.jia_pid;
     grant->topid = toproc;
@@ -143,7 +143,7 @@ void grantbarr(int lock) {
     wtnt_t *wnptr;
     int hosti;
 
-    grant = (jia_msg_t *)newmsg();
+    grant = newmsg();
 
     grant->frompid = system_setting.jia_pid;
     grant->topid = system_setting.jia_pid;

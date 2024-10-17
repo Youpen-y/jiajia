@@ -184,7 +184,7 @@ void freetwin(address_t *twin) {
  *
  * @return jia_msg_t* the first free space address in msgarray that available
  */
-void *newmsg() {
+jia_msg_t *newmsg() {
     int i, j;
 
 

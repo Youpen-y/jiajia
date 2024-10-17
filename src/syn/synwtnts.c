@@ -149,7 +149,7 @@ void sendwtnts(int operation) {
     jia_msg_t *req;
     wtnt_t *wnptr; // write notice pointer
     VERBOSE_LOG(3, "Enter sendwtnts!\n");
-    req = (jia_msg_t *)newmsg();
+    req = newmsg();
 
     req->frompid = system_setting.jia_pid;
     req->topid = top.lockid % system_setting.hostc;
