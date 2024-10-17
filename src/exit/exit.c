@@ -53,6 +53,7 @@ extern unsigned long globaladdr;
  */
 void jia_exit()
 {
+   while(outcount > 0 || incount > 0);
    int jia_pid = system_setting.jia_pid;
    int hostc = system_setting.hostc;
 #ifdef DOSTAT
