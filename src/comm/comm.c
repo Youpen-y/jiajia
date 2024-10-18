@@ -76,7 +76,6 @@
 extern int msgbusy[Maxmsgs];
 extern jia_msg_t msgarray[Maxmsgs];
 extern int msgcnt;
-extern sigset_t oldset;
 
 
 // global variables

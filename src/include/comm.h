@@ -80,7 +80,6 @@
 
 #define BCAST       100
 
-
 typedef struct jia_msg {
     unsigned int op;      /* operation type */
     unsigned int frompid; /* from pid */
