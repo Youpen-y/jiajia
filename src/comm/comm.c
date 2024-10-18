@@ -502,7 +502,7 @@ void msgserver() {
  *
  */
 void sigint_handler() {
-    assert(0, "Exit by user!!\n");
+    jia_assert(0, "Exit by user!!\n");
 }
 
 /*----------------------------------------------------------*/
