@@ -102,7 +102,7 @@ void copyfiles(int argc, char **argv) {
         strcat(cmd, system_setting.hosts[hosti].ip);
         strcat(cmd, ":");
         rcpyes = system(cmd);
-        assert0((rcpyes == 0), "Cannot scp .jiahosts to %s!\n",
+        local_assert((rcpyes == 0), "Cannot scp .jiahosts to %s!\n",
                 system_setting.hosts[hosti].ip);
 
         /* copy system.conf to slaves */
@@ -113,7 +113,7 @@ void copyfiles(int argc, char **argv) {
         strcat(cmd, system_setting.hosts[hosti].ip);
         strcat(cmd, ":");
         rcpyes = system(cmd);
-        assert0((rcpyes == 0), "Cannot scp system.conf to %s!\n",
+        local_assert((rcpyes == 0), "Cannot scp system.conf to %s!\n",
                 system_setting.hosts[hosti].ip);
 
         /* copy program to slaves */
@@ -126,7 +126,7 @@ void copyfiles(int argc, char **argv) {
         strcat(cmd, system_setting.hosts[hosti].ip);
         strcat(cmd, ":");
         rcpyes = system(cmd);
-        assert0((rcpyes == 0), "Cannot scp %s to %s!\n", argv[0],
+        local_assert((rcpyes == 0), "Cannot scp %s to %s!\n", argv[0],
                 system_setting.hosts[hosti].ip);
     }
     VERBOSE_LOG(3, "Remote copy succeed!\n\n");
@@ -153,12 +153,12 @@ int startprocs(int argc, char **argv) {
 #ifdef NFS
     sprintf(errstr, "Failed to get current working directory");
     pwd = getenv("PWD");
-    assert0((pwd != NULL), errstr);
+    local_assert((pwd != NULL), errstr);
 #endif /* NFS */
 
     /* produce a random Startport from [10000, 29999]*/
     Startport = getpid();
-    assert0((Startport != -1), "getpid() error");
+    local_assert((Startport != -1), "getpid() error");
     Startport = 10000 + (Startport * Maxhosts * Maxhosts * 4) % 20000;
 
 #ifdef LINUX
@@ -202,7 +202,7 @@ int startprocs(int argc, char **argv) {
 
         VERBOSE_LOG(3,"Starting CMD %s on host %s\n", cmd, system_setting.hosts[hosti].ip);
         sp = getservbyname("exec", "tcp");
-        assert0((sp != NULL), "exec/tcp: unknown service!");
+        local_assert((sp != NULL), "exec/tcp: unknown service!");
         hostname = system_setting.hosts[hosti].username;
 
 #ifdef NFS
@@ -216,49 +216,12 @@ int startprocs(int argc, char **argv) {
                                      // across the network)
 #endif /* NFS */
 #endif /* LINUX */
-        assert0((system_setting.hosts[hosti].riofd != -1), "Fail to start process on %s!",
+        local_assert((system_setting.hosts[hosti].riofd != -1), "Fail to start process on %s!",
                 system_setting.hosts[hosti].username);
     }
 
     return 0;
 }
-
-// /**
-//  * @brief mypid -- get host id [0, hostc)
-//  *
-//  * @return int id number
-//  */
-// int mypid() {
-//     char hostname[Wordsize];
-//     struct hostent *hostp;
-//     int i = 0;
-
-//     // get hostname && check if hostp is valid
-//     assert0((gethostname(hostname, Wordsize) == 0), "Cannot get host name!");
-//     hostp = gethostbyname(hostname);
-//     assert0((hostp != NULL), "Cannot get host address!");
-
-//     // get user info
-//     uid_t uid = getuid();
-//     struct passwd *userp = getpwuid(uid);
-//     assert0((userp != NULL), "Cannot get user name!");
-
-//     // check host(hostname && username) && return host's seq
-//     strtok(hostname, ".");
-//     VERBOSE_LOG(3, "hostc = %d\nhostname = %s\n", hostc, hostname);
-//     while ((i < hostc) &&
-// #ifdef NFS
-//            (!(strncmp(hosts[i].name, hostname, strlen(hostname)) == 0)))
-// #else /* NFS */
-//            (!((strncmp(hosts[i].name, hostname, strlen(hostname)) == 0) &&
-//               (strcmp(hosts[i].user, userp->pw_name) == 0))))
-// #endif
-//         i++;
-//     VERBOSE_LOG(3, "hosts[%d].name = %s\n", i, hosts[i].name);
-
-//     assert0((i < hostc), "Get Process id incorrect");
-//     return (i);
-// }
 
 /**
  * @brief jiacreat --

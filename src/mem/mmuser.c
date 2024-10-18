@@ -72,7 +72,7 @@ unsigned long jia_alloc3(int size, int block, int starthost) {
     int homei, pagei, i;
     int protect;
 
-    assert(((globaladdr + size) <= Maxmemsize),
+    jia_assert(((globaladdr + size) <= Maxmemsize),
            "Insufficient shared space! --> Max=0x%x Left=0x%lx Need=0x%x\n",
            Maxmemsize, Maxmemsize - globaladdr, size);
 
@@ -88,7 +88,7 @@ unsigned long jia_alloc3(int size, int block, int starthost) {
     while (allocsize > 0) {
         // only when current host pid == homepid, use mmap alloc space
         if (system_setting.jia_pid == homepid) {
-            assert((system_setting.hosts[homepid].homesize + mapsize) < (Homepages * Pagesize),
+            jia_assert((system_setting.hosts[homepid].homesize + mapsize) < (Homepages * Pagesize),
                    "Too many home pages");
             protect = (system_setting.hostc == 1) ? PROT_READ | PROT_WRITE : PROT_READ;
             memmap((void *)(system_setting.global_start_addr + globaladdr), (size_t)mapsize, protect);
@@ -138,7 +138,7 @@ unsigned long jia_alloc3b(int size, int *block, int starthost) {
     int blocki;
     int protect;
 
-    assert(((globaladdr + size) <= Maxmemsize),
+    jia_assert(((globaladdr + size) <= Maxmemsize),
            "Insufficient shared space! --> Max=0x%x Left=0x%lx Need=0x%x\n",
            Maxmemsize, Maxmemsize - globaladdr, size);
 
@@ -153,7 +153,7 @@ unsigned long jia_alloc3b(int size, int *block, int starthost) {
                       ? (block[blocki])
                       : ((block[blocki] / Pagesize + 1) * Pagesize);
         if (system_setting.jia_pid == homepid) {
-            assert((system_setting.hosts[homepid].homesize + mapsize) < (Homepages * Pagesize),
+            jia_assert((system_setting.hosts[homepid].homesize + mapsize) < (Homepages * Pagesize),
                    "Too many home pages");
 
             protect = (system_setting.hostc == 1) ? PROT_READ | PROT_WRITE : PROT_READ;

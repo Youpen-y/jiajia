@@ -28,7 +28,7 @@ void statserver(jia_msg_t *rep)
    unsigned int temp;
 
 
- assert((rep->op==STAT)&&(rep->topid==0),"Incorrect STAT Message!");
+ jia_assert((rep->op==STAT)&&(rep->topid==0),"Incorrect STAT Message!");
 
  stat = (jiastat_t*)rep->data;
  allstats[rep->frompid].msgsndbytes  = stat->msgsndbytes;
@@ -111,7 +111,7 @@ void clearstat()
 
 void statgrantserver(jia_msg_t *req)
 {
-   assert((req->op==STATGRANT)&&(req->topid==system_setting.jia_pid),"Incorrect STATGRANT Message!");
+   jia_assert((req->op==STATGRANT)&&(req->topid==system_setting.jia_pid),"Incorrect STATGRANT Message!");
    waitstat = 0;
 }
 

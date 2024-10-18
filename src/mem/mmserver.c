@@ -85,7 +85,7 @@ void diffserver(jia_msg_t *req) {
 #endif
 
     int jia_pid = system_setting.jia_pid;
-    assert((req->op == DIFF) && (req->topid == jia_pid),
+    jia_assert((req->op == DIFF) && (req->topid == jia_pid),
            "Incorrect DIFF Message!");
 
     datai = 0;
@@ -162,7 +162,7 @@ void diffserver(jia_msg_t *req) {
  * @param rep
  */
 void diffgrantserver(jia_msg_t *rep) {
-    assert((rep->op == DIFFGRANT) && (rep->size == 0),
+    jia_assert((rep->op == DIFFGRANT) && (rep->size == 0),
            "Incorrect returned message!");
 
     diffwait--;
@@ -180,7 +180,7 @@ void getpserver(jia_msg_t *req) {
     jia_msg_t *rep;
 
     int jia_pid = system_setting.jia_pid;
-    assert((req->op == GETP) && (req->topid == jia_pid),
+    jia_assert((req->op == GETP) && (req->topid == jia_pid),
            "Incorrect GETP Message!");
 
     paddr = (address_t)stol(req->data); // getp message data is the page's addr
@@ -192,7 +192,7 @@ void getpserver(jia_msg_t *req) {
           not be updated, but the page has already been here
           the rdnt item of new home is set to 1 in migpage()*/
     } else {
-        assert((homehost(paddr) == jia_pid),
+        jia_assert((homehost(paddr) == jia_pid),
                "This should have not been happened!");
         homei = homepage(paddr);
 
@@ -252,7 +252,7 @@ void getpgrantserver(jia_msg_t *rep) {
     unsigned long wv;
     int i;
 
-    assert((rep->op == GETPGRANT), "Incorrect returned message!");
+    jia_assert((rep->op == GETPGRANT), "Incorrect returned message!");
 
     wv = rep->temp;
 

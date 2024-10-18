@@ -134,7 +134,7 @@ void initmem() {
         sigemptyset(&act.sa_mask);
         act.sa_flags = SA_SIGINFO;
         if (sigaction(SIGSEGV, &act, NULL))
-            assert0(0, "segv sigaction problem");
+            local_assert(0, "segv sigaction problem");
     }
 #endif
 
@@ -151,7 +151,7 @@ void initmem() {
         // act.sa_flags = SA_NODEFER;  /* SA_NOMASK is obsolete */
         act.sa_flags = SA_NODEFER | SA_SIGINFO;
         if (sigaction(SIGSEGV, &act, NULL))
-            assert0(0, "segv sigaction problem");
+            local_assert(0, "segv sigaction problem");
     }
 #endif
 
@@ -182,7 +182,7 @@ void memprotect(void *addr, size_t len, int prot) {
     int protyes;
 
     protyes = mprotect(addr, len, prot);
-    assert(!protyes, "mprotect failed! addr=0x%lx, errno=%d",
+    jia_assert(!protyes, "mprotect failed! addr=0x%lx, errno=%d",
            (unsigned long)addr, errno);
 }
 
@@ -209,7 +209,7 @@ void memmap(void *addr, size_t len, int prot) {
 #endif
 
     if (mapad != addr) {
-        assert(0, "mmap failed! addr=0x%lx, errno=%d", (unsigned long)(addr),
+        jia_assert(0, "mmap failed! addr=0x%lx, errno=%d", (unsigned long)(addr),
                errno);
     }
 }
@@ -227,7 +227,7 @@ void memunmap(void *addr, size_t len) {
 
     unmapyes = munmap(addr, len);
     if (unmapyes != 0) {
-        assert(0, "munmap failed! addr=0x%lx, errno=%d", (unsigned long)addr,
+        jia_assert(0, "munmap failed! addr=0x%lx, errno=%d", (unsigned long)addr,
                errno);
     }
 }

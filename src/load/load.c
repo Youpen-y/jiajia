@@ -118,7 +118,7 @@ void loadserver(jia_msg_t *req) {
     int datai, hosti;
     jia_msg_t *grant;
 
-    assert((req->op == LOADREQ), "Incorrect LOADREQ msg");
+    jia_assert((req->op == LOADREQ), "Incorrect LOADREQ msg");
 
     datai = 0;
     hosti = req->frompid;
@@ -148,7 +148,7 @@ void loadgrantserver(jia_msg_t *grant) {
     int datai;
     int i;
 
-    assert((grant->op == LOADGRANT), "Incorrect LOADGRANT msg");
+    jia_assert((grant->op == LOADGRANT), "Incorrect LOADGRANT msg");
 
     datai = 0;
     for (i = 0; i < system_setting.hostc; i++) {

@@ -107,7 +107,7 @@ int oldsigiomask;
  */
 static inline int inqrecv(int fromproc) {
     printmsg(&inqt, 1);
-    assert0((incount < Maxqueue), "outsend(): Inqueue exceeded!");
+    local_assert((incount < Maxqueue), "outsend(): Inqueue exceeded!");
     incount++;
     intail = (intail + 1) % Maxqueue;
     // update seqno from host fromproc
@@ -135,7 +135,7 @@ static inline int inqcomp() {
  * @return iff outcount==1
  */
 static inline int outqsend(int toproc) {
-    assert0((outcount < Maxqueue), "asendmsg(): Outqueue exceeded!");
+    local_assert((outcount < Maxqueue), "asendmsg(): Outqueue exceeded!");
     commreq.snd_seq[toproc]++;
     outqt.seqno = commreq.snd_seq[toproc];
     outcount++;
@@ -170,23 +170,23 @@ int req_fdcreate(int i, int flag) {
     struct sockaddr_in addr;
 
     fd = socket(AF_INET, SOCK_DGRAM, 0);
-    assert0((fd != -1), "req_fdcreate()-->socket()");
+    local_assert((fd != -1), "req_fdcreate()-->socket()");
 
 #ifdef SOLARIS
     size = Maxmsgsize + Msgheadsize + 128;
     res = setsockopt(fd, SOL_SOCKET, SO_RCVBUF, (char *)&size, sizeof(size));
-    assert0((res == 0), "req_fdcreate()-->setsockopt():SO_RCVBUF");
+    local_assert((res == 0), "req_fdcreate()-->setsockopt():SO_RCVBUF");
 
     size = Maxmsgsize + Msgheadsize + 128;
     res = setsockopt(fd, SOL_SOCKET, SO_SNDBUF, (char *)&size, sizeof(size));
-    assert0((res == 0), "req_fdcreate()-->setsockopt():SO_SNDBUF");
+    local_assert((res == 0), "req_fdcreate()-->setsockopt():SO_SNDBUF");
 #endif
     addr.sin_family = AF_INET;
     addr.sin_addr.s_addr = htonl(INADDR_ANY);
     addr.sin_port = (flag) ? htons(0) : htons(reqports[system_setting.jia_pid][i]);
 
     res = bind(fd, (struct sockaddr *)&addr, sizeof(addr));
-    assert0((res == 0), "req_fdcreate()-->bind()");
+    local_assert((res == 0), "req_fdcreate()-->bind()");
 
     return fd;
 }
@@ -208,16 +208,16 @@ int rep_fdcreate(int i, int flag) {
     struct sockaddr_in addr;
 
     fd = socket(AF_INET, SOCK_DGRAM, 0);
-    assert0((fd != -1), "rep_fdcreate()-->socket()");
+    local_assert((fd != -1), "rep_fdcreate()-->socket()");
 
 #ifdef SOLARIS
     size = Intbytes;
     res = setsockopt(fd, SOL_SOCKET, SO_RCVBUF, (char *)&size, sizeof(size));
-    assert0((res == 0), "rep_fdcreate()-->setsockopt():SO_RCVBUF");
+    local_assert((res == 0), "rep_fdcreate()-->setsockopt():SO_RCVBUF");
 
     size = Intbytes;
     res = setsockopt(fd, SOL_SOCKET, SO_SNDBUF, (char *)&size, sizeof(size));
-    assert0((res == 0), "rep_fdcreate()-->setsockopt():SO_SNDBUF");
+    local_assert((res == 0), "rep_fdcreate()-->setsockopt():SO_SNDBUF");
 #endif /* SOLARIS */
 
     addr.sin_family = AF_INET;
@@ -225,7 +225,7 @@ int rep_fdcreate(int i, int flag) {
     addr.sin_port = (flag) ? htons(0) : htons(repports[system_setting.jia_pid][i]);
 
     res = bind(fd, (struct sockaddr *)&addr, sizeof(addr));
-    assert0((res == 0), "rep_fdcreate()-->bind()");
+    local_assert((res == 0), "rep_fdcreate()-->bind()");
     return fd;
 }
 
@@ -273,13 +273,13 @@ void initcomm() {
         sigemptyset(&act.sa_mask);
         act.sa_flags = SA_NODEFER | SA_SIGINFO;
         if (sigaction(SIGIO, &act, NULL))
-            assert0(0, "initcomm()-->sigaction()");
+            local_assert(0, "initcomm()-->sigaction()");
 
         act.sa_handler = (void_func_handler)sigint_handler;
         sigemptyset(&act.sa_mask);
         act.sa_flags = SA_SIGINFO;
         if (sigaction(SIGINT, &act, NULL)) {
-            assert0(0, "segv sigaction problem");
+            local_assert(0, "segv sigaction problem");
         }
     }
 #endif
@@ -292,14 +292,14 @@ void initcomm() {
         sigemptyset(&act.sa_mask);
         act.sa_flags = SA_NODEFER | SA_RESTART;
         if (sigaction(SIGIO, &act, NULL))
-            assert0(0, "initcomm()-->sigaction()");
+            local_assert(0, "initcomm()-->sigaction()");
 
         // sigint's action: sigint_handler
         act.sa_handler = (void_func_handler)sigint_handler;
         sigemptyset(&act.sa_mask);
         act.sa_flags = SA_NODEFER;
         if (sigaction(SIGINT, &act, NULL)) {
-            assert0(0, "segv sigaction problem");
+            local_assert(0, "segv sigaction problem");
         }
     }
 #endif
@@ -365,11 +365,11 @@ void initcomm() {
 
         if (0 > fcntl(commreq.rcv_fds[i], F_SETOWN,
                       getpid())) // set current process to receive SIGIO signal
-            assert0(0, "initcomm()-->fcntl(..F_SETOWN..)");
+            local_assert(0, "initcomm()-->fcntl(..F_SETOWN..)");
 
         // if (0 > fcntl(commreq.rcv_fds[i], F_SETFL, FASYNC|FNDELAY))
         if (0 > fcntl(commreq.rcv_fds[i], F_SETFL, O_ASYNC | O_NONBLOCK))
-            assert0(0, "initcomm()-->fcntl(..F_SETFL..)");
+            local_assert(0, "initcomm()-->fcntl(..F_SETFL..)");
 
         fd = req_fdcreate(i, 1);
         commreq.snd_fds[i] = fd; // snd_fds socket fd with random port
@@ -489,7 +489,7 @@ void msgserver() {
             bcastserver(&inqh);
         } else {
             printmsg(&inqh, 1);
-            assert0(0, "msgserver(): Incorrect Message!");
+            local_assert(0, "msgserver(): Incorrect Message!");
         }
         break;
     }
@@ -558,7 +558,7 @@ void sigio_handler(int sig, siginfo_t *sip, ucontext_t *uap)
                 res = recvfrom(commreq.rcv_fds[i], (char *)&(inqt),
                                Maxmsgsize + Msgheadsize, 0,
                                (struct sockaddr *)&from, &s);
-                assert0((res >= 0), "sigio_handler()-->recvfrom()");
+                local_assert((res >= 0), "sigio_handler()-->recvfrom()");
 
                 /* step 2: init socket to && send ack(actually
                  * seqno(4bytes)) to host i */
@@ -570,7 +570,7 @@ void sigio_handler(int sig, siginfo_t *sip, ucontext_t *uap)
                 res = sendto(commrep.snd_fds[i], (char *)&(inqt.seqno),
                              sizeof(inqt.seqno), 0, (struct sockaddr *)&to,
                              sizeof(to));
-                assert0((res != -1), "sigio_handler()-->sendto() ACK");
+                local_assert((res != -1), "sigio_handler()-->sendto() ACK");
 
                 /* step 3: recv msg iff new msg's seqno is greater than the
                    former's from the same host, instead print resend  */
@@ -753,7 +753,7 @@ void outsend() {
             BEGINCS;
             res = sendto(commreq.snd_fds[toproc], (char *)&(outqh), msgsize, 0,
                          (struct sockaddr *)&to, sizeof(to));
-            assert0((res != -1), "outsend()-->sendto()");
+            local_assert((res != -1), "outsend()-->sendto()");
             ENDCS;
 
             arrived = 0;
@@ -797,7 +797,7 @@ void outsend() {
             sprintf(errstr, "I Can't asend message(%d,%d) to host %d!",
                     outqh.op, outqh.seqno, toproc);
             VERBOSE_LOG(3, "BUFFER SIZE %d (%d)\n", outqh.size, msgsize);
-            assert0((sendsuccess == 1), errstr);
+            local_assert((sendsuccess == 1), errstr);
         }
     }
 

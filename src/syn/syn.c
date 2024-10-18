@@ -203,7 +203,7 @@ void startinterval(int synop) {
                 break;
             case 1: /*001, this is impossible*/
             case 5: /*101, this is impossible*/
-                assert(0, "This should not have happened! WTDT");
+                jia_assert(0, "This should not have happened! WTDT");
                 break;
             case 2: /*010, written by only home host in last barr itvl, the page
                        is RO*/

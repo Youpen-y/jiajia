@@ -82,13 +82,13 @@ void inittools() {
 }
 
 /**
- * @brief assert0 -- assert the condition, if cond is false, print the amsg and
+ * @brief local_assert -- assert the condition locally, if cond is false, print the amsg and
  * exit
  *
  * @param cond condition
  * @param amsg assert message
  */
-void assert0(int cond, char *format, ...) {
+void local_assert(int cond, char *format, ...) {
     if (!cond) {
         // print error message
         fprintf(stderr, "Assert0 error from host %d ---\n", system_setting.jia_pid);
@@ -106,12 +106,12 @@ void assert0(int cond, char *format, ...) {
 }
 
 /**
- * @brief assert -- judge the cond condition and send assert message
+ * @brief jia_assert -- judge the cond condition and send assert message
  *
  * @param cond conditons
  * @param amsg assert error message
  */
-void assert(int cond, char *format, ...) {
+void jia_assert(int cond, char *format, ...) {
     int hosti;
 
     if (!cond) { // if condition is false then send JIAEXIT msg to all hosts
@@ -160,7 +160,7 @@ void jiaexitserver(jia_msg_t *req) {
 void newtwin(address_t *twin) {
     if (*twin == ((address_t)NULL))
         *twin = (address_t)valloc(Pagesize);
-    assert(((*twin) != (address_t)NULL), "Cannot allocate twin space!");
+    jia_assert(((*twin) != (address_t)NULL), "Cannot allocate twin space!");
 }
 
 /**
@@ -187,7 +187,7 @@ jia_msg_t *newmsg() {
         ;
     
     // here we got a free space in msgarray with index i
-    assert0((i < Maxmsgs), "Cannot allocate message space!");
+    jia_assert((i < Maxmsgs), "Cannot allocate message space!");
     msgbusy[i] = 1;
     msgcnt++;
 
@@ -231,7 +231,7 @@ void freemsg(jia_msg_t *msg) {
  *
  */
 void appendmsg(jia_msg_t *msg, unsigned char *str, int len) {
-    assert(((msg->size + len) <= Maxmsgsize), "Message too large");
+    jia_assert(((msg->size + len) <= Maxmsgsize), "Message too large");
     memcpy(msg->data + msg->size, str, len);
     msg->size += len;
 }
@@ -251,7 +251,7 @@ wtnt_t *newwtnt() {
 #else  /* SOLARIS */
     wnptr = valloc((size_t)sizeof(wtnt_t));
 #endif /* SOLARIS */
-    assert((wnptr != WNULL), "Can not allocate space for write notices!");
+    jia_assert((wnptr != WNULL), "Can not allocate space for write notices!");
     wnptr->more = WNULL;
     wnptr->wtntc = 0;
     return (wnptr);
@@ -708,7 +708,7 @@ void jia_error(char *str, ...) {
     va_start(ap, str);
     vsprintf(errstr, str, ap);
     va_end(ap);
-    assert(0, errstr);
+    jia_assert(0, errstr);
 }
 
 extern void setwtvect(int homei, wtvect_t wv);

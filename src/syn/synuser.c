@@ -87,11 +87,11 @@ void jia_lock(int lock) {
         caltime += (endtime - starttime);
     }
 
-    assert(((lock >= 0) && (lock < Maxlocks)),
+    jia_assert(((lock >= 0) && (lock < Maxlocks)),
            "lock %d should range from 0 to %d", lock, Maxlocks - 1);
 
     for (i = 0; i <= stackptr; i++)
-        assert((lockstack[i].lockid != lock),
+        jia_assert((lockstack[i].lockid != lock),
                "Embeding of the same lock is not allowed!");
 
     endinterval(ACQ);
@@ -134,10 +134,10 @@ void jia_unlock(int lock) {
         caltime += (endtime - starttime);
     }
 
-    assert(((lock >= 0) && (lock < Maxlocks)),
+    jia_assert(((lock >= 0) && (lock < Maxlocks)),
            "lock %d should range from 0 to %d", lock, Maxlocks - 1);
 
-    assert((lock == top.lockid), "lock and unlock should be used in pair!");
+    jia_assert((lock == top.lockid), "lock and unlock should be used in pair!");
 
     endinterval(REL);
 
@@ -181,7 +181,7 @@ void jia_barrier() {
         caltime += (endtime - starttime);
     }
 
-    assert((stackptr == 0), "barrier can not be used in CS!");
+   jia_assert((stackptr == 0), "barrier can not be used in CS!");
 
     VERBOSE_LOG(3, "\nEnter jia barrier\n");
     endinterval(BARR);
@@ -257,7 +257,7 @@ void jia_setcv(int cvnum) {
     if (system_setting.hostc == 1)
         return;
 
-    assert(((cvnum >= 0) && (cvnum < Maxcvs)),
+    jia_assert(((cvnum >= 0) && (cvnum < Maxcvs)),
            "condv %d should range from 0 to %d", cvnum, Maxcvs - 1);
 
     req = newmsg();
@@ -278,7 +278,7 @@ void jia_resetcv(int cvnum) {
     if (system_setting.hostc == 1)
         return;
 
-    assert(((cvnum >= 0) && (cvnum < Maxcvs)),
+    jia_assert(((cvnum >= 0) && (cvnum < Maxcvs)),
            "condv %d should range from 0 to %d", cvnum, Maxcvs - 1);
 
     req = newmsg();
@@ -300,7 +300,7 @@ void jia_waitcv(int cvnum) {
     if (system_setting.hostc == 1)
         return;
 
-    assert(((cvnum >= 0) && (cvnum < Maxcvs)),
+    jia_assert(((cvnum >= 0) && (cvnum < Maxcvs)),
            "condv %d should range from 0 to %d", cvnum, Maxcvs - 1);
 
     req = newmsg();
@@ -326,7 +326,7 @@ void jia_waitcv(int cvnum) {
  */
 void pushstack(int lock) {
     stackptr++;
-    assert((stackptr < Maxstacksize), "Too many continuous ACQUIRES!");
+    jia_assert((stackptr < Maxstacksize), "Too many continuous ACQUIRES!");
 
     top.lockid = lock;
 }
@@ -343,7 +343,7 @@ void popstack() {
     wtnt_t *wnptr;
 
     stackptr--;
-    assert((stackptr >= -1), "More unlocks than locks!");
+    jia_assert((stackptr >= -1), "More unlocks than locks!");
 
     if (stackptr >= 0) {
         wnptr = lockstack[stackptr + 1].wtntp;

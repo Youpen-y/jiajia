@@ -106,7 +106,7 @@ void getpage(address_t addr, int flag) {
     jia_msg_t *req;
 
     homeid = homehost(addr);
-    assert((homeid != system_setting.jia_pid), "This should not have happened 2!");
+    jia_assert((homeid != system_setting.jia_pid), "This should not have happened 2!");
     req = newmsg();
 
     req->op = GETP;
@@ -282,7 +282,7 @@ void sigsegv_handler(int signo, siginfo_t *sip, ucontext_t *uap)
                 "\t    si_addr: %p\n",
                 sip->si_errno, sip->si_code, sip->si_addr);
 
-    assert((((unsigned long)faultaddr < (system_setting.global_start_addr + globaladdr)) &&
+    jia_assert((((unsigned long)faultaddr < (system_setting.global_start_addr + globaladdr)) &&
             ((unsigned long)faultaddr >= system_setting.global_start_addr)),
            "Access shared memory out of range from 0x%x to 0x%x!, "
            "faultaddr=0x%x, writefault=0x%x",
