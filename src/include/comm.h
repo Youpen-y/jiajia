@@ -149,6 +149,13 @@ void init_msg_buffer();
 
 
 /**
+ * @brief free_msg_buffer -- free msg array and corresponding flag that indicate busy or free
+ * 
+ */
+void free_msg_buffer();
+
+
+/**
  * @brief req_fdcreate -- creat socket file descriptor used to send and recv
  * request
  *

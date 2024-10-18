@@ -99,6 +99,7 @@ void local_assert(int cond, char *format, ...) {
         perror("Unix Error");
         fflush(stderr);
         fflush(stdout);
+        free_system_resources();
         exit(-1);
     }
 }
@@ -147,6 +148,7 @@ void jiaexitserver(jia_msg_t *req) {
            (char *)req->data);
     fflush(stderr);
     fflush(stdout);
+    free_system_resources();
     exit(-1);
 }
 
@@ -820,4 +822,11 @@ retry:
     return ((time.tv_sec - base.tv_sec) * 1000000 +
             (time.tv_usec - base.tv_usec));
 #endif /* AIX41 */
+}
+
+
+void free_system_resources() {
+    free_msg_buffer();    // free msg buffer
+    free_setting(&system_setting);    // free system setting
+    // ...
 }

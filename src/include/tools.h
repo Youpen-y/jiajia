@@ -41,4 +41,11 @@ unsigned int get_usecs();
  */
 int free_msg_index();
 
+
+/**
+ * @brief free_system_resources -- free system resources
+ * 
+ */
+void free_system_resources();
+
 #endif  /* TOOLS_H */

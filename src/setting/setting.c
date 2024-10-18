@@ -206,6 +206,13 @@ int init_setting(setting_t *setting){
     return 0;
 }
 
+void free_setting(setting_t *setting){
+    free(setting->hosts);
+    
+    // ...
+}
+
+
 void print_setting(const setting_t *setting){
     printf("===============================================\n");
     printf("system setting info on host [%d]\n", system_setting.jia_pid);

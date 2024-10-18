@@ -277,6 +277,10 @@ void init_msg_buffer(){
     }
 }
 
+void free_msg_buffer(){
+    free(msg_buffer.msgarray);
+    free(msg_buffer.msgbusy);
+}
 
 /**
  * @brief inqrecv() -- recv msg (update incount&&intail)

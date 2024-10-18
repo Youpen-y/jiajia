@@ -123,4 +123,12 @@ int get_id(setting_t *setting);
  */
 void print_setting(const setting_t *setting);
 
+
+/**
+ * @brief free_setting -- free the setting resources
+ * 
+ * @param setting 
+ */
+void free_setting(setting_t *setting);
+
 #endif /* SETTING_H */

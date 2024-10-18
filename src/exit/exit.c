@@ -67,7 +67,7 @@ void jia_exit()
 
  jia_wait();
 
- printf("\nShared Memory (%d-byte pages) : %d (total) %d (used)\n", 
+ VERBOSE_OUT(3,"\nShared Memory (%d-byte pages) : %d (total) %d (used)\n", 
          Pagesize, Maxmemsize/Pagesize, globaladdr/Pagesize);
  if (hostc > 1) {
 

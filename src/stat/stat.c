@@ -3,6 +3,7 @@
 #include "stat.h"
 #include "comm.h"
 #include "setting.h"
+#include "utils.h"
 
 jiastat_t jiastat;
 jiastat_t allstats[Maxhosts];
@@ -79,8 +80,7 @@ void statserver(jia_msg_t *rep)
 
  statcnt++;
 
- printf("Stats received from %d[%d]\n", rep->frompid, statcnt);
-
+ VERBOSE_LOG(3, "Stats received from %d[%d]\n", rep->frompid, statcnt);
 
  if (statcnt == system_setting.hostc) {
     statcnt = 0;
