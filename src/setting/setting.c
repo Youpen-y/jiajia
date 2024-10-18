@@ -205,19 +205,16 @@ int init_setting(setting_t *setting){
 }
 
 void print_setting(const setting_t *setting){
-    printf("=====================================\n");
-    printf("system setting info on host %d\n", system_setting.jia_pid);
-    printf("system_mode: %d\n", setting->system_mode);
-    printf("comm_type: %d\n", setting->comm_type);
-    printf("global_start_addr: %llu\n", setting->global_start_addr);
-    printf("jia_pid: %d\n", setting->jia_pid);
-    printf("hostc: %d\n", setting->hostc);
+    printf("===============================================\n");
+    printf("system setting info on host [%d]\n", system_setting.jia_pid);
+    printf("jia_pid (current host id) : %d\n", setting->jia_pid);
+    printf("hostc   (total host count): %d\n", setting->hostc);
     for(int i = 0; i < setting->hostc; i++) {
-        printf("host %d: %s %s %s\n", i, setting->hosts[i].ip, setting->hosts[i].username, setting->hosts[i].password);
+        printf("host %d: %s %s \t***\n", i, setting->hosts[i].ip, setting->hosts[i].username);
     }
     printf("optionc: %d\n", setting->optionc);
     for(int i = 0; i < setting->optionc; i++) {
         printf("option %d: %s = %s\n", i, setting->options[i].key, setting->options[i].value);
     }
-    printf("====================================\n");
+    printf("===============================================\n");
 }
