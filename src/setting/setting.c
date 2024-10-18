@@ -15,7 +15,7 @@
 #define HOST_CONF_FILE ".jiahosts"
 #define ptr_from_int64(p) (void *)(unsigned long long)(p)
 
-setting_t system_setting = {0};
+setting_t system_setting = {0};     // there, we can set default system configuration
 
 void trim(char* str) {
     char* start = str;
@@ -79,7 +79,7 @@ int get_options(setting_t *setting){
             } else {
                 printf("unknown system mode: %s\n", setting->options[i].value);
             }
-        } else if(strcmp(setting->options[i].key, "comm_type") == 0) {
+        } else if(strcmp(setting->options[i].key, "comm_type") == 0){
             if(strcmp(setting->options[i].value, "tcp") == 0){
                 setting->comm_type = tcp;
             } else if(strcmp(setting->options[i].value, "udp") == 0){
@@ -89,8 +89,10 @@ int get_options(setting_t *setting){
             }
         } else if(strcmp(setting->options[i].key, "global_start_addr") == 0){
             setting->global_start_addr = strtoull(setting->options[i].value, NULL, 0);
+        } else if(strcmp(setting->options[i].key, "msg_buffer_size") == 0) {
+            setting->msg_buffer_size = atoi(setting->options[i].value);
         } else {
-            printf("unknown config option: %s = %s\n", setting->options[i].key, setting->options[i].value);
+            printf("Unknown config option: %s = %s\n", setting->options[i].key, setting->options[i].value);
             setting->optionc--;
         }
     }

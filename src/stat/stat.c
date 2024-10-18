@@ -10,9 +10,6 @@ int statflag;
 unsigned int interruptflag = 0;
 int statcnt=0;
 volatile int waitstat;
-extern jia_msg_t msgarray[Maxmsgs]; 
-extern volatile int msgbusy[Maxmsgs]; 
-extern int msgcnt;
 
 
 /**
@@ -89,9 +86,8 @@ void statserver(jia_msg_t *rep)
     statcnt = 0;
     clearstat();
     int k = free_msg_index();
-    grant = &msgarray[k];
-    msgcnt++;
-    msgbusy[k] = 1;
+    grant = &msg_buffer.msgarray[k];
+    msg_buffer.msgbusy[k] = 1;
 
     grant->frompid = system_setting.jia_pid;
     grant->size = 0;

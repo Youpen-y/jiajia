@@ -54,6 +54,8 @@ typedef struct setting {
     enum system_mode    system_mode;             // system mode
     enum comm_type      comm_type;               // communication mode
     unsigned long long  global_start_addr;       // global start address
+
+    int msg_buffer_size;    // message buffer size
     
     int jia_pid;      // current host id
     host_t *hosts;    // host array  

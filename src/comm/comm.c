@@ -71,12 +71,7 @@
 // #endif  /* JIA_DEBUG */
 // #define msgprint 1
 
-
-// external variables
-extern int msgbusy[Maxmsgs];
-extern jia_msg_t msgarray[Maxmsgs];
-extern int msgcnt;
-
+msg_buffer_t msg_buffer = {0};
 
 // global variables
 /* request/reply communication manager*/
@@ -101,135 +96,6 @@ int oldsigiomask;
 // function definitions
 
 /**
- * @brief inqrecv() -- recv msg (update incount&&intail)
- *
- * @return iff incount==1
- */
-static inline int inqrecv(int fromproc) {
-    printmsg(&inqt, 1);
-    local_assert((incount < Maxqueue), "outsend(): Inqueue exceeded!");
-    incount++;
-    intail = (intail + 1) % Maxqueue;
-    // update seqno from host fromproc
-    commreq.rcv_seq[fromproc] = inqt.seqno;
-    VERBOSE_LOG(3, "incount: %d\n", incount);
-    return (incount == 1);
-};
-
-/**
- * @brief inqcomp() -- complete msg (update incount&&inhead)
- *
- * @return iff incount > 0
- */
-static inline int inqcomp() {
-    inqh.op = ERRMSG;
-    inhead = (inhead + 1) % Maxqueue;
-    incount--;
-    VERBOSE_LOG(3, "incount: %d\n", incount);
-    return (incount > 0);
-};
-
-/**
- * @brief inqrecv() -- send msg (update outcount&&outtail)
- *
- * @return iff outcount==1
- */
-static inline int outqsend(int toproc) {
-    local_assert((outcount < Maxqueue), "asendmsg(): Outqueue exceeded!");
-    commreq.snd_seq[toproc]++;
-    outqt.seqno = commreq.snd_seq[toproc];
-    outcount++;
-    outtail = (outtail + 1) % Maxqueue;
-    return (outcount == 1);
-};
-
-/**
- * @brief outqcomp() -- complete msg (update outcount&&outhead)
- *
- * @return iff outcount > 0
- */
-static inline int outqcomp() {
-    outhead = (outhead + 1) % Maxqueue;
-    outcount--;
-    return (outcount > 0);
-};
-
-/**
- * @brief req_fdcreate -- creat socket file descriptor used to send and recv
- * request
- *
- * @param i the index of host
- * @param flag 1 means sin_port = 0, random port; others means specified
- * sin_port = reqports[jia_pid][i]
- * @return int socket file descriptor
- * creat socket file descriptor(fd) used to send and recv request and bind it to
- * an address (ip/port combination)
- */
-int req_fdcreate(int i, int flag) {
-    int fd, res;
-    struct sockaddr_in addr;
-
-    fd = socket(AF_INET, SOCK_DGRAM, 0);
-    local_assert((fd != -1), "req_fdcreate()-->socket()");
-
-#ifdef SOLARIS
-    size = Maxmsgsize + Msgheadsize + 128;
-    res = setsockopt(fd, SOL_SOCKET, SO_RCVBUF, (char *)&size, sizeof(size));
-    local_assert((res == 0), "req_fdcreate()-->setsockopt():SO_RCVBUF");
-
-    size = Maxmsgsize + Msgheadsize + 128;
-    res = setsockopt(fd, SOL_SOCKET, SO_SNDBUF, (char *)&size, sizeof(size));
-    local_assert((res == 0), "req_fdcreate()-->setsockopt():SO_SNDBUF");
-#endif
-    addr.sin_family = AF_INET;
-    addr.sin_addr.s_addr = htonl(INADDR_ANY);
-    addr.sin_port = (flag) ? htons(0) : htons(reqports[system_setting.jia_pid][i]);
-
-    res = bind(fd, (struct sockaddr *)&addr, sizeof(addr));
-    local_assert((res == 0), "req_fdcreate()-->bind()");
-
-    return fd;
-}
-
-/**
- * @brief rep_fdcreate -- create socket file descriptor(fd) used to send and
- * recv reply
- *
- * @param i the index of host [0, hostc)
- * @param flag equals to 1 means fd with random port, 0 means fd with specified
- * port(repports[jia_pid][i])
- * @return int socket file descriptor(fd)
- */
-int rep_fdcreate(int i, int flag) {
-    int fd, res;
-#ifdef SOLARIS
-    int size;
-#endif /* SOLARIS */
-    struct sockaddr_in addr;
-
-    fd = socket(AF_INET, SOCK_DGRAM, 0);
-    local_assert((fd != -1), "rep_fdcreate()-->socket()");
-
-#ifdef SOLARIS
-    size = Intbytes;
-    res = setsockopt(fd, SOL_SOCKET, SO_RCVBUF, (char *)&size, sizeof(size));
-    local_assert((res == 0), "rep_fdcreate()-->setsockopt():SO_RCVBUF");
-
-    size = Intbytes;
-    res = setsockopt(fd, SOL_SOCKET, SO_SNDBUF, (char *)&size, sizeof(size));
-    local_assert((res == 0), "rep_fdcreate()-->setsockopt():SO_SNDBUF");
-#endif /* SOLARIS */
-
-    addr.sin_family = AF_INET;
-    addr.sin_addr.s_addr = htonl(INADDR_ANY);
-    addr.sin_port = (flag) ? htons(0) : htons(repports[system_setting.jia_pid][i]);
-
-    res = bind(fd, (struct sockaddr *)&addr, sizeof(addr));
-    local_assert((res == 0), "rep_fdcreate()-->bind()");
-    return fd;
-}
-
-/**
  * @brief initcomm -- initialize communication setting
  *
  * step1: initialize msg array and correpsonding flag to indicate busy or free
@@ -252,11 +118,7 @@ void initcomm() {
     VERBOSE_LOG(3, "current jia_pid = %d\n", system_setting.jia_pid);
     VERBOSE_LOG(3, " Startport = %u \n", Startport);
 
-    msgcnt = 0;
-    for (i = 0; i < Maxmsgs; i++) {
-        msgbusy[i] = 0;
-        msgarray[i].index = i;
-    }
+    init_msg_buffer();  // initialize msg array and corresponding flag that indicate busy or free
 
     inhead = 0;
     intail = 0;
@@ -403,6 +265,148 @@ void initcomm() {
         commrep.snd_maxfd = MAX(fd + 1, commrep.snd_maxfd);
     }
 }
+
+void init_msg_buffer(){
+    msg_buffer.size     = system_setting.msg_buffer_size;
+    msg_buffer.msgarray = (jia_msg_t*)malloc(sizeof(jia_msg_t) * msg_buffer.size);
+    msg_buffer.msgbusy  = (int*)malloc(sizeof(int) * msg_buffer.size);
+
+    for(int i = 0; i < msg_buffer.size; i++){
+        msg_buffer.msgarray[i].index = i;
+        msg_buffer.msgbusy[i] = 0;
+    }
+}
+
+
+/**
+ * @brief inqrecv() -- recv msg (update incount&&intail)
+ *
+ * @return iff incount==1
+ */
+static inline int inqrecv(int fromproc) {
+    printmsg(&inqt, 1);
+    local_assert((incount < Maxqueue), "outsend(): Inqueue exceeded!");
+    incount++;
+    intail = (intail + 1) % Maxqueue;
+    // update seqno from host fromproc
+    commreq.rcv_seq[fromproc] = inqt.seqno;
+    VERBOSE_LOG(3, "incount: %d\n", incount);
+    return (incount == 1);
+};
+
+/**
+ * @brief inqcomp() -- complete msg (update incount&&inhead)
+ *
+ * @return iff incount > 0
+ */
+static inline int inqcomp() {
+    inqh.op = ERRMSG;
+    inhead = (inhead + 1) % Maxqueue;
+    incount--;
+    VERBOSE_LOG(3, "incount: %d\n", incount);
+    return (incount > 0);
+};
+
+/**
+ * @brief inqrecv() -- send msg (update outcount&&outtail)
+ *
+ * @return iff outcount==1
+ */
+static inline int outqsend(int toproc) {
+    local_assert((outcount < Maxqueue), "asendmsg(): Outqueue exceeded!");
+    commreq.snd_seq[toproc]++;
+    outqt.seqno = commreq.snd_seq[toproc];
+    outcount++;
+    outtail = (outtail + 1) % Maxqueue;
+    return (outcount == 1);
+};
+
+/**
+ * @brief outqcomp() -- complete msg (update outcount&&outhead)
+ *
+ * @return iff outcount > 0
+ */
+static inline int outqcomp() {
+    outhead = (outhead + 1) % Maxqueue;
+    outcount--;
+    return (outcount > 0);
+};
+
+/**
+ * @brief req_fdcreate -- creat socket file descriptor used to send and recv
+ * request
+ *
+ * @param i the index of host
+ * @param flag 1 means sin_port = 0, random port; others means specified
+ * sin_port = reqports[jia_pid][i]
+ * @return int socket file descriptor
+ * creat socket file descriptor(fd) used to send and recv request and bind it to
+ * an address (ip/port combination)
+ */
+int req_fdcreate(int i, int flag) {
+    int fd, res;
+    struct sockaddr_in addr;
+
+    fd = socket(AF_INET, SOCK_DGRAM, 0);
+    local_assert((fd != -1), "req_fdcreate()-->socket()");
+
+#ifdef SOLARIS
+    size = Maxmsgsize + Msgheadsize + 128;
+    res = setsockopt(fd, SOL_SOCKET, SO_RCVBUF, (char *)&size, sizeof(size));
+    local_assert((res == 0), "req_fdcreate()-->setsockopt():SO_RCVBUF");
+
+    size = Maxmsgsize + Msgheadsize + 128;
+    res = setsockopt(fd, SOL_SOCKET, SO_SNDBUF, (char *)&size, sizeof(size));
+    local_assert((res == 0), "req_fdcreate()-->setsockopt():SO_SNDBUF");
+#endif
+    addr.sin_family = AF_INET;
+    addr.sin_addr.s_addr = htonl(INADDR_ANY);
+    addr.sin_port = (flag) ? htons(0) : htons(reqports[system_setting.jia_pid][i]);
+
+    res = bind(fd, (struct sockaddr *)&addr, sizeof(addr));
+    local_assert((res == 0), "req_fdcreate()-->bind()");
+
+    return fd;
+}
+
+/**
+ * @brief rep_fdcreate -- create socket file descriptor(fd) used to send and
+ * recv reply
+ *
+ * @param i the index of host [0, hostc)
+ * @param flag equals to 1 means fd with random port, 0 means fd with specified
+ * port(repports[jia_pid][i])
+ * @return int socket file descriptor(fd)
+ */
+int rep_fdcreate(int i, int flag) {
+    int fd, res;
+#ifdef SOLARIS
+    int size;
+#endif /* SOLARIS */
+    struct sockaddr_in addr;
+
+    fd = socket(AF_INET, SOCK_DGRAM, 0);
+    local_assert((fd != -1), "rep_fdcreate()-->socket()");
+
+#ifdef SOLARIS
+    size = Intbytes;
+    res = setsockopt(fd, SOL_SOCKET, SO_RCVBUF, (char *)&size, sizeof(size));
+    local_assert((res == 0), "rep_fdcreate()-->setsockopt():SO_RCVBUF");
+
+    size = Intbytes;
+    res = setsockopt(fd, SOL_SOCKET, SO_SNDBUF, (char *)&size, sizeof(size));
+    local_assert((res == 0), "rep_fdcreate()-->setsockopt():SO_SNDBUF");
+#endif /* SOLARIS */
+
+    addr.sin_family = AF_INET;
+    addr.sin_addr.s_addr = htonl(INADDR_ANY);
+    addr.sin_port = (flag) ? htons(0) : htons(repports[system_setting.jia_pid][i]);
+
+    res = bind(fd, (struct sockaddr *)&addr, sizeof(addr));
+    local_assert((res == 0), "rep_fdcreate()-->bind()");
+    return fd;
+}
+
 
 /**
  * @brief msgserver -- according to inqueue head msg.op choose different server

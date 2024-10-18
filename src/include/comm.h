@@ -46,7 +46,6 @@
 
 #define Msgheadsize 32                   /* fixed header of msg */
 #define Maxmsgsize (40960 - Msgheadsize) /* data size of msg */
-#define Maxmsgs 8                        /* */
 #define Maxqueue                                                               \
     32 /* size of input and output queue for communication (>= 2*maxhosts)*/
 
@@ -77,7 +76,6 @@
 #define MSGTAIL     22
 #define LOADREQ     23
 #define LOADGRANT   24
-
 #define BCAST       100
 
 typedef struct jia_msg {
@@ -97,22 +95,31 @@ typedef struct jia_msg {
 typedef jia_msg_t *msgp_t;
 
 typedef struct CommManager {
-    int snd_fds[Maxhosts];      // send file descriptor
-    fd_set snd_set;             // send fd_set, use with `select`
-    int snd_maxfd;              // max_fd, use with `select`
-    unsigned snd_seq[Maxhosts]; // sequence number that used to acknowledge
+    int         snd_fds[Maxhosts];      // send file descriptor
+    fd_set      snd_set;             // send fd_set, use with `select`
+    int         snd_maxfd;              // max_fd, use with `select`
+    unsigned    snd_seq[Maxhosts]; // sequence number that used to acknowledge
 
-    int rcv_fds[Maxhosts];      // read file descriptor
-    fd_set rcv_set;             // read fd_set
-    int rcv_maxfd;              // max_fd, use with `select`
-    unsigned rcv_seq[Maxhosts]; // sequence number
+    int         rcv_fds[Maxhosts];      // read file descriptor
+    fd_set      rcv_set;             // read fd_set
+    int         rcv_maxfd;              // max_fd, use with `select`
+    unsigned    rcv_seq[Maxhosts]; // sequence number
 } CommManager;
+
+typedef struct {
+    jia_msg_t *msgarray;
+    int       *msgbusy;
+    int        size;
+} msg_buffer_t;
+
+// extern variables
+extern msg_buffer_t msg_buffer;
+
 
 #define inqh inqueue[inhead]    // inqueue msg head
 #define inqt inqueue[intail]    // inqueue msg tail
 #define outqh outqueue[outhead] // outqueue msg head
 #define outqt outqueue[outtail] // outqueue msg tail
-
 #define STATOP(op) if(statflag){op};
 
 /* function declaration  */
@@ -132,6 +139,14 @@ typedef struct CommManager {
  * step5: initialize comm manager (commreq, commrep)
  */
 void initcomm();
+
+
+/**
+ * @brief init_msg_buffer -- initialize msg array and corresponding flag that indicate busy or free
+ * 
+ */
+void init_msg_buffer();
+
 
 /**
  * @brief req_fdcreate -- creat socket file descriptor used to send and recv
