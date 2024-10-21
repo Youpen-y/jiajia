@@ -57,9 +57,7 @@ extern int firsttime;
 extern float caltime;
 
 char errstr[Linesize];       /* buffer for error info */
-jia_msg_t msgarray[Maxmsgs]; /* message array */
-volatile int msgbusy[Maxmsgs]; /* msgbusy[i] == 0 means msgarray[i] is abailable */
-int msgcnt;
+
 jia_msg_t assertmsg;
 
 /* optimization techniques flag */
@@ -82,13 +80,13 @@ void inittools() {
 }
 
 /**
- * @brief assert0 -- assert the condition, if cond is false, print the amsg and
+ * @brief local_assert -- assert the condition locally, if cond is false, print the amsg and
  * exit
  *
  * @param cond condition
  * @param amsg assert message
  */
-void assert0(int cond, char *format, ...) {
+void local_assert(int cond, char *format, ...) {
     if (!cond) {
         // print error message
         fprintf(stderr, "Assert0 error from host %d ---\n", system_setting.jia_pid);
@@ -101,17 +99,18 @@ void assert0(int cond, char *format, ...) {
         perror("Unix Error");
         fflush(stderr);
         fflush(stdout);
+        free_system_resources();
         exit(-1);
     }
 }
 
 /**
- * @brief assert -- judge the cond condition and send assert message
+ * @brief jia_assert -- judge the cond condition and send assert message
  *
  * @param cond conditons
  * @param amsg assert error message
  */
-void assert(int cond, char *format, ...) {
+void jia_assert(int cond, char *format, ...) {
     int hosti;
 
     if (!cond) { // if condition is false then send JIAEXIT msg to all hosts
@@ -149,6 +148,7 @@ void jiaexitserver(jia_msg_t *req) {
            (char *)req->data);
     fflush(stderr);
     fflush(stdout);
+    free_system_resources();
     exit(-1);
 }
 
@@ -160,7 +160,7 @@ void jiaexitserver(jia_msg_t *req) {
 void newtwin(address_t *twin) {
     if (*twin == ((address_t)NULL))
         *twin = (address_t)valloc(Pagesize);
-    assert(((*twin) != (address_t)NULL), "Cannot allocate twin space!");
+    jia_assert(((*twin) != (address_t)NULL), "Cannot allocate twin space!");
 }
 
 /**
@@ -176,34 +176,32 @@ void freetwin(address_t *twin) {
 }
 
 /**
- * @brief newmsg() -- find an available msg space in msgarray
+ * @brief newmsg() -- find an available msg space in msg_buffer.msgarray
  *
- * @return jia_msg_t* the first free space address in msgarray that available
+ * @return jia_msg_t* the first free space address in msg_buffer.msgarray that available
  */
 jia_msg_t *newmsg() {
     int i, j;
 
-    for (i = 0; (i < Maxmsgs) && (msgbusy[i] != 0); i++)
+    for (i = 0; (i < msg_buffer.size) && (msg_buffer.msgbusy[i] != 0); i++)
         ;
     
     // here we got a free space in msgarray with index i
-    assert0((i < Maxmsgs), "Cannot allocate message space!");
-    msgbusy[i] = 1;
-    msgcnt++;
+    jia_assert((i < msg_buffer.size), "Cannot allocate message space!");
+    msg_buffer.msgbusy[i] = 1;
 
 #ifdef JIA_DEBUG
-    for (j = 0; j < Maxmsgs; j++)
-        VERBOSE_LOG(3, "%d ", msgbusy[j]);
-    VERBOSE_LOG(3, "  msgcnt=%d\n", msgcnt);
+    for (j = 0; j < msg_buffer.size; j++)
+        VERBOSE_LOG(3, "%d ", msg_buffer.msgbusy[j]);
 #endif
 
-    jia_msg_t *msg = &(msgarray[i]);
+    jia_msg_t *msg = &(msg_buffer.msgarray[i]);
     return msg;
 }
 
 int free_msg_index() {
     int i;
-    for (i = 0; (i < Maxmsgs) && (msgbusy[i]!= 0); i++)
+    for (i = 0; (i < msg_buffer.size) && (msg_buffer.msgbusy[i]!= 0); i++)
         ;
     return i;
 }
@@ -217,8 +215,7 @@ int free_msg_index() {
 void freemsg(jia_msg_t *msg) {
     int i;
     disable_sigio();
-    msgbusy[msg->index] = 0;
-    msgcnt--;
+    msg_buffer.msgbusy[msg->index] = 0;
     enable_sigio();
 }
 
@@ -231,7 +228,7 @@ void freemsg(jia_msg_t *msg) {
  *
  */
 void appendmsg(jia_msg_t *msg, unsigned char *str, int len) {
-    assert(((msg->size + len) <= Maxmsgsize), "Message too large");
+    jia_assert(((msg->size + len) <= Maxmsgsize), "Message too large");
     memcpy(msg->data + msg->size, str, len);
     msg->size += len;
 }
@@ -251,7 +248,7 @@ wtnt_t *newwtnt() {
 #else  /* SOLARIS */
     wnptr = valloc((size_t)sizeof(wtnt_t));
 #endif /* SOLARIS */
-    assert((wnptr != WNULL), "Can not allocate space for write notices!");
+    jia_assert((wnptr != WNULL), "Can not allocate space for write notices!");
     wnptr->more = WNULL;
     wnptr->wtntc = 0;
     return (wnptr);
@@ -708,7 +705,7 @@ void jia_error(char *str, ...) {
     va_start(ap, str);
     vsprintf(errstr, str, ap);
     va_end(ap);
-    assert(0, errstr);
+    jia_assert(0, errstr);
 }
 
 extern void setwtvect(int homei, wtvect_t wv);
@@ -825,4 +822,11 @@ retry:
     return ((time.tv_sec - base.tv_sec) * 1000000 +
             (time.tv_usec - base.tv_usec));
 #endif /* AIX41 */
+}
+
+
+void free_system_resources() {
+    free_msg_buffer();    // free msg buffer
+    free_setting(&system_setting);    // free system setting
+    // ...
 }

@@ -3,6 +3,7 @@
 #include "stat.h"
 #include "comm.h"
 #include "setting.h"
+#include "utils.h"
 
 jiastat_t jiastat;
 jiastat_t allstats[Maxhosts];
@@ -10,9 +11,6 @@ int statflag;
 unsigned int interruptflag = 0;
 int statcnt=0;
 volatile int waitstat;
-extern jia_msg_t msgarray[Maxmsgs]; 
-extern volatile int msgbusy[Maxmsgs]; 
-extern int msgcnt;
 
 
 /**
@@ -28,7 +26,7 @@ void statserver(jia_msg_t *rep)
    unsigned int temp;
 
 
- assert((rep->op==STAT)&&(rep->topid==0),"Incorrect STAT Message!");
+ jia_assert((rep->op==STAT)&&(rep->topid==0),"Incorrect STAT Message!");
 
  stat = (jiastat_t*)rep->data;
  allstats[rep->frompid].msgsndbytes  = stat->msgsndbytes;
@@ -82,16 +80,14 @@ void statserver(jia_msg_t *rep)
 
  statcnt++;
 
- printf("Stats received from %d[%d]\n", rep->frompid, statcnt);
-
+ VERBOSE_LOG(3, "Stats received from %d[%d]\n", rep->frompid, statcnt);
 
  if (statcnt == system_setting.hostc) {
     statcnt = 0;
     clearstat();
     int k = free_msg_index();
-    grant = &msgarray[k];
-    msgcnt++;
-    msgbusy[k] = 1;
+    grant = &msg_buffer.msgarray[k];
+    msg_buffer.msgbusy[k] = 1;
 
     grant->frompid = system_setting.jia_pid;
     grant->size = 0;
@@ -111,7 +107,7 @@ void clearstat()
 
 void statgrantserver(jia_msg_t *req)
 {
-   assert((req->op==STATGRANT)&&(req->topid==system_setting.jia_pid),"Incorrect STATGRANT Message!");
+   jia_assert((req->op==STATGRANT)&&(req->topid==system_setting.jia_pid),"Incorrect STATGRANT Message!");
    waitstat = 0;
 }
 

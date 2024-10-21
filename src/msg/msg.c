@@ -112,7 +112,7 @@ void jia_send(char *buf, int len, int toproc, int tag) {
     int msgsize;
     char *msgptr;
 
-    assert(((toproc < system_setting.hostc) && (toproc >= 0)),
+    jia_assert(((toproc < system_setting.hostc) && (toproc >= 0)),
            "Incorrect message destination");
 
     msgsize = len;
@@ -165,7 +165,7 @@ void msgrecvserver(jia_msg_t *req) {
         memcpy(msgbuf[i].data, req->data, req->size);
         recvwait = 0;
     } else {
-        assert0(0, "Message Buffer Overflow!");
+        local_assert(0, "Message Buffer Overflow!");
     }
 }
 
@@ -290,7 +290,7 @@ int thesizeof(int op) {
         len = sizeof(double);
         break;
     default:
-        assert(0, "Incorrect operation in jia_reduce");
+        jia_assert(0, "Incorrect operation in jia_reduce");
     }
     return (len);
 }
@@ -356,7 +356,7 @@ void reduce(char *dest, char *source, int count, int op) {
         break;
 
     default:
-        assert(0, "Incorrect operation in jia_reduce");
+        jia_assert(0, "Incorrect operation in jia_reduce");
     }
 }
 
@@ -366,7 +366,7 @@ void jia_reduce(char *sendbuf, char *recvbuf, int count, int op, int root) {
     int mypid, fromproc, toproc;
     char *tempbuf;
 
-    assert((root < system_setting.hostc) && (root >= 0), "Incorrect root in reduce");
+    jia_assert((root < system_setting.hostc) && (root >= 0), "Incorrect root in reduce");
 
     len = count * thesizeof(op);
 
@@ -385,7 +385,7 @@ void jia_reduce(char *sendbuf, char *recvbuf, int count, int op, int root) {
             } else if ((mypid + (1 << j)) < system_setting.hostc) {
                 fromproc = (mypid + (1 << j) + root) % system_setting.hostc;
                 recvlen = jia_recv(tempbuf, len, fromproc, REDUCE_TAG);
-                assert((len == recvlen), "Unmatched length in jia_reduce");
+                jia_assert((len == recvlen), "Unmatched length in jia_reduce");
 
                 reduce(recvbuf, tempbuf, count, op);
             }

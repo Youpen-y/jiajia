@@ -54,6 +54,8 @@ typedef struct setting {
     enum system_mode    system_mode;             // system mode
     enum comm_type      comm_type;               // communication mode
     unsigned long long  global_start_addr;       // global start address
+
+    int msg_buffer_size;    // message buffer size
     
     int jia_pid;      // current host id
     host_t *hosts;    // host array  
@@ -120,5 +122,13 @@ int get_id(setting_t *setting);
  * @param setting system setting object
  */
 void print_setting(const setting_t *setting);
+
+
+/**
+ * @brief free_setting -- free the setting resources
+ * 
+ * @param setting 
+ */
+void free_setting(setting_t *setting);
 
 #endif /* SETTING_H */

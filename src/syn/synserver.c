@@ -68,11 +68,11 @@ void setcvserver(jia_msg_t *req) {
     int condv;
     int i;
 
-    assert((req->op == SETCV) && (req->topid == system_setting.jia_pid),
+    jia_assert((req->op == SETCV) && (req->topid == system_setting.jia_pid),
            "Incorrect SETCV Message!");
 
     condv = (int)stol(req->data);
-    assert((condv % system_setting.hostc == system_setting.jia_pid), "Incorrect home of condv!");
+    jia_assert((condv % system_setting.hostc == system_setting.jia_pid), "Incorrect home of condv!");
 
     condvars[condv].value = 1;
 
@@ -91,7 +91,7 @@ void setcvserver(jia_msg_t *req) {
 void resetcvserver(jia_msg_t *req) {
     int condv;
 
-    assert((req->op == RESETCV) && (req->topid == system_setting.jia_pid),
+    jia_assert((req->op == RESETCV) && (req->topid == system_setting.jia_pid),
            "Incorrect RESETCV Message!");
     condv = (int)stol(req->data); // get the condition variable
     condvars[condv].value = 0;
@@ -106,7 +106,7 @@ void waitcvserver(jia_msg_t *req) {
     int condv;
     int i;
 
-    assert((req->op == WAITCV) && (req->topid == system_setting.jia_pid),
+    jia_assert((req->op == WAITCV) && (req->topid == system_setting.jia_pid),
            "Incorrect WAITCV Message!");
 
     condv = (int)stol(req->data);
@@ -130,7 +130,7 @@ void waitcvserver(jia_msg_t *req) {
 void cvgrantserver(jia_msg_t *req) {
     int condv;
 
-    assert((req->op == CVGRANT) && (req->topid == system_setting.jia_pid),
+    jia_assert((req->op == CVGRANT) && (req->topid == system_setting.jia_pid),
            "Incorrect CVGRANT Message!");
     condv = (int)stol(req->data);
 
@@ -150,7 +150,7 @@ void waitserver(jia_msg_t *req) {
     jia_msg_t *grant;
     int i;
 
-    assert((req->op == WAIT) && (req->topid == system_setting.jia_pid),
+    jia_assert((req->op == WAIT) && (req->topid == system_setting.jia_pid),
            "Incorrect WAIT Message!");
 
     waitcounter++;
@@ -172,7 +172,7 @@ void waitserver(jia_msg_t *req) {
  * @param req WAITGRANT msg request
  */
 void waitgrantserver(jia_msg_t *req) {
-    assert((req->op == WAITGRANT) && (req->topid == system_setting.jia_pid),
+    jia_assert((req->op == WAITGRANT) && (req->topid == system_setting.jia_pid),
            "Incorrect WAITGRANT Message!");
 
     waitwait = 0;
@@ -186,7 +186,7 @@ void waitgrantserver(jia_msg_t *req) {
  * @param req INVID msg
  */
 void invserver(jia_msg_t *req) {
-    assert((req->op == INVLD) && (req->topid == system_setting.jia_pid),
+    jia_assert((req->op == INVLD) && (req->topid == system_setting.jia_pid),
            "Incorrect INVLD Message!");
 
     invalidate(req);
@@ -203,11 +203,11 @@ void acqserver(jia_msg_t *req) {
     int lock;
     int wtnti;
 
-    assert((req->op == ACQ) && (req->topid == system_setting.jia_pid),
+    jia_assert((req->op == ACQ) && (req->topid == system_setting.jia_pid),
            "Incorrect ACQ message!");
 
     lock = (int)stol(req->data); // get the lock
-    assert((lock % system_setting.hostc == system_setting.jia_pid), "Incorrect home of lock!");
+    jia_assert((lock % system_setting.hostc == system_setting.jia_pid), "Incorrect home of lock!");
 
     locks[lock].acqs[locks[lock].acqc] = req->frompid;
     locks[lock].acqscope[locks[lock].acqc] = req->scope;
@@ -228,12 +228,12 @@ void relserver(jia_msg_t *req) {
     int lock;
     int acqi;
 
-    assert((req->op == REL) && (req->topid == system_setting.jia_pid),
+    jia_assert((req->op == REL) && (req->topid == system_setting.jia_pid),
            "Incorrect REL Message!");
 
     lock = (int)stol(req->data); // get the lock
-    assert((lock % system_setting.hostc == system_setting.jia_pid), "Incorrect home of lock!");
-    assert((req->frompid == locks[lock].acqs[0]),
+    jia_assert((lock % system_setting.hostc == system_setting.jia_pid), "Incorrect home of lock!");
+    jia_assert((req->frompid == locks[lock].acqs[0]),
            "This should not have happened! 6");
 
     if (req->scope > locks[hidelock].myscope)
@@ -260,7 +260,7 @@ void relserver(jia_msg_t *req) {
 void acqgrantserver(jia_msg_t *req) {
     int lock;
 
-    assert((req->op == ACQGRANT) && (req->topid == system_setting.jia_pid),
+    jia_assert((req->op == ACQGRANT) && (req->topid == system_setting.jia_pid),
            "Incorrect ACQGRANT Message!");
     invalidate(req);
 
@@ -282,13 +282,13 @@ void barrserver(jia_msg_t *req) {
     VERBOSE_LOG(3, "host %d is running in barrserver\n", jiapid);
     int lock;
 
-    assert((req->op == BARR) && (req->topid == system_setting.jia_pid),
+    jia_assert((req->op == BARR) && (req->topid == system_setting.jia_pid),
            "Incorrect BARR Message!");
 
     lock = (int)stol(req->data);
 
-    assert((lock % system_setting.hostc == system_setting.jia_pid), "Incorrect home of lock!");
-    assert((lock == hidelock), "This should not have happened! 8");
+    jia_assert((lock % system_setting.hostc == system_setting.jia_pid), "Incorrect home of lock!");
+    jia_assert((lock == hidelock), "This should not have happened! 8");
 
     recordwtnts(req); // record write notices in msg barr's data
 
@@ -315,7 +315,7 @@ void barrserver(jia_msg_t *req) {
 void barrgrantserver(jia_msg_t *req) {
     int lock;
 
-    assert((req->op == BARRGRANT) && (req->topid == system_setting.jia_pid),
+    jia_assert((req->op == BARRGRANT) && (req->topid == system_setting.jia_pid),
            "Incorrect BARRGRANT Message!");
 
     if (noclearlocks == 0)
@@ -345,11 +345,11 @@ void barrgrantserver(jia_msg_t *req) {
 void wtntserver(jia_msg_t *req) {
     int lock;
 
-    assert((req->op == WTNT) && (req->topid == system_setting.jia_pid),
+    jia_assert((req->op == WTNT) && (req->topid == system_setting.jia_pid),
            "Incorrect WTNT Message!");
 
     lock = (int)stol(req->data);
-    assert((lock % system_setting.hostc == system_setting.jia_pid), "Incorrect home of lock!");
+    jia_assert((lock % system_setting.hostc == system_setting.jia_pid), "Incorrect home of lock!");
 
     recordwtnts(req);
 }

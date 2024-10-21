@@ -148,7 +148,7 @@ void migpage(unsigned long addr, int frompid, int topid) {
                 setwtvect(homei, WVFULL);
             page[pagei].homei = homei;
         } else {
-            assert(0, "Home exceed in home migration");
+            jia_assert(0, "Home exceed in home migration");
         }
 
         if (cachei < Cachepages) { /*Old Cache*/
@@ -160,7 +160,7 @@ void migpage(unsigned long addr, int frompid, int topid) {
             cache[cachei].wtnt = 0;
             cache[cachei].addr = 0;
         } else {
-            assert(0, "This should not have happened---MIG");
+            jia_assert(0, "This should not have happened---MIG");
         }
 #ifdef DOSTAT
         if (statflag == 1) {
@@ -169,7 +169,7 @@ void migpage(unsigned long addr, int frompid, int topid) {
 #endif
     } else if (frompid == system_setting.jia_pid) { /*Old Home*/
         homei = homepage(addr);
-        assert((unsigned long)home[homei].addr == addr, "MIG ERROR");
+        jia_assert((unsigned long)home[homei].addr == addr, "MIG ERROR");
 
         for (cachei = 0;
              ((cachei < Cachepages) && (cache[cachei].state != UNMAP) &&
