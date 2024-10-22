@@ -3,7 +3,7 @@
 #*********************************************************
 
 CPPFLAGS += -I../../../src/include -O0 -g
-
+CFLAGS = -g
 OBJS 	= sor.o
 VPATH = ../src 
 JIALIB = ../../../lib/$(ARCH)

@@ -3,7 +3,7 @@
 #*********************************************************
 
 CPPFLAGS = -I../../../src/include -O2
-
+CFLAGS = -g
 OBJS 	= water.o bndry.o cnstnt.o cshift.o initia.o interf.o intraf.o kineti.o poteng.o predcor.o redsync.o syscns.o 
 VPATH = ../src 
 JIALIB = ../../../lib/$(ARCH)

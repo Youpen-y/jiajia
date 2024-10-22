@@ -4,8 +4,8 @@
 
 CC	= gcc
 CPPFLAGS = -I../../../src/include
+CFLAGS = -g
 OBJS 	= lu.o
-
 VPATH = ../src 
 JIALIB = ../../../lib/$(ARCH)
 
