@@ -92,19 +92,83 @@ typedef struct jia_msg {
     unsigned char data[Maxmsgsize];
 } jia_msg_t;
 
-typedef jia_msg_t *msgp_t;
+typedef struct msg_queue_slot {
+    jia_msg_t msg;
+    pthread_mutext_t lock;
+} msg_queue_slot_t;
 
-typedef struct CommManager {
-    int         snd_fds[Maxhosts];      // send file descriptor
-    fd_set      snd_set;             // send fd_set, use with `select`
-    int         snd_maxfd;              // max_fd, use with `select`
-    unsigned    snd_seq[Maxhosts]; // sequence number that used to acknowledge
+typedef struct msg_queue {
+    msg_queue_slot_t *queue;
+    int               head;
+    int               tail;
+    int               size;
+    sem_t             busy_count;
+    sem_t             free_count;
+} msg_queue_t;
 
-    int         rcv_fds[Maxhosts];      // read file descriptor
-    fd_set      rcv_set;             // read fd_set
-    int         rcv_maxfd;              // max_fd, use with `select`
-    unsigned    rcv_seq[Maxhosts]; // sequence number
-} CommManager;
+extern msg_queue_t inqueue;
+extern msg_queue_t outqueue;
+
+/**
+ * @brief 
+ * 
+ * @param queue 
+ * @param size
+ * @return int 
+ */
+int init_queue(msg_queue_t *queue, int size);
+
+
+/**
+ * @brief 
+ * 
+ * @param queue 
+ * @param msg 
+ * @return int 
+ */
+int enqueue(msg_queue_t *queue, jia_msg_t *msg);
+
+/**
+ * @brief 
+ * 
+ * @param queue 
+ * @return jia_msg_t* 
+ */
+jia_msg_t *dequeue(msg_queue_t *queue);
+
+/**
+ * @brief free_queue - free queue
+ * 
+ * @param queue
+ */
+void free_queue(msg_queue_t *queue);
+
+
+// typedef struct CommManager {
+//     int         snd_fds[Maxhosts];      // send file descriptor
+//     fd_set      snd_set;             // send fd_set, use with `select`
+//     int         snd_maxfd;              // max_fd, use with `select`
+//     unsigned    snd_seq[Maxhosts]; // sequence number that used to acknowledge
+
+//     int         rcv_fds[Maxhosts];      // read file descriptor
+//     fd_set      rcv_set;             // read fd_set
+//     int         rcv_maxfd;              // max_fd, use with `select`
+//     unsigned    rcv_seq[Maxhosts]; // sequence number
+// } CommManager;
+
+typedef struct comm_manager {
+    int         snd_fds[Maxhosts];  // send file descriptor
+    unsigned    snd_seq[Maxhosts];  // sequence number that used to acknowledge
+    unsigned short snd_ports[Maxhosts];
+
+    int         rcv_fds[Maxhosts];  // read file descriptor
+    unsigned    rcv_seq[Maxhosts];  // sequence number
+    unsigned short rcv_ports[Maxhosts];
+} comm_manager_t;
+
+extern comm_manager_t req_manager;
+extern comm_manager_t rep_manager;
+
 
 typedef struct {
     jia_msg_t *msgarray;
@@ -116,10 +180,10 @@ typedef struct {
 extern msg_buffer_t msg_buffer;
 
 
-#define inqh inqueue[inhead]    // inqueue msg head
-#define inqt inqueue[intail]    // inqueue msg tail
-#define outqh outqueue[outhead] // outqueue msg head
-#define outqt outqueue[outtail] // outqueue msg tail
+// #define inqh inqueue[inhead]    // inqueue msg head
+// #define inqt inqueue[intail]    // inqueue msg tail
+// #define outqh outqueue[outhead] // outqueue msg head
+// #define outqt outqueue[outtail] // outqueue msg tail
 #define STATOP(op) if(statflag){op};
 
 /* function declaration  */
@@ -227,6 +291,9 @@ void outsend();
 void bsendmsg(jia_msg_t *msg);
 
 void bcastserver(jia_msg_t *msg);
+
+
+int init_comm_manager();
 
 
 #endif /* JIACOMM_H */

@@ -69,7 +69,7 @@ void jia_init(int argc, char **argv);
 void clearstat();
 
 extern char errstr[Linesize];
-extern long Startport;
+extern long start_port;
 
 
 sigset_t startup_mask;      /* used by Shi. */
@@ -156,10 +156,10 @@ int startprocs(int argc, char **argv) {
     local_assert((pwd != NULL), errstr);
 #endif /* NFS */
 
-    /* produce a random Startport from [10000, 29999]*/
-    Startport = getpid();
-    local_assert((Startport != -1), "getpid() error");
-    Startport = 10000 + (Startport * Maxhosts * Maxhosts * 4) % 20000;
+    /* produce a random start_port from [10000, 29999]*/
+    start_port = getpid();
+    local_assert((start_port != -1), "getpid() error");
+    start_port = 10000 + (start_port * Maxhosts * Maxhosts * 4) % 20000;
 
 #ifdef LINUX
     // cmd on every host
@@ -179,7 +179,7 @@ int startprocs(int argc, char **argv) {
             sprintf(cmd, "%s %s ", cmd, argv[i]);
 
         strcat(cmd, "-P");
-        sprintf(cmd, "%s %ld", cmd, Startport);
+        sprintf(cmd, "%s %ld", cmd, start_port);
         strcat(cmd, " &");
         VERBOSE_LOG(3, "Starting CMD %s on host %s\n", cmd, hostname);
         system(cmd);
@@ -198,7 +198,7 @@ int startprocs(int argc, char **argv) {
             strcat(cmd, " ");
         }
         strcat(cmd, "-P");
-        sprintf(cmd, "%s%d ", cmd, Startport);
+        sprintf(cmd, "%s%d ", cmd, start_port);
 
         VERBOSE_LOG(3,"Starting CMD %s on host %s\n", cmd, system_setting.hosts[hosti].ip);
         sp = getservbyname("exec", "tcp");
@@ -254,7 +254,7 @@ void jiacreat(int argc, char **argv) {
         while ((c = getopt(argc, argv, "P:")) != -1) {
             switch (c) {
             case 'P': {
-                Startport = atol(optarg);
+                start_port = atol(optarg);
                 break;
             }
             }

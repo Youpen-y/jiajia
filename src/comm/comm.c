@@ -75,21 +75,22 @@ msg_buffer_t msg_buffer = {0};
 
 // global variables
 /* request/reply communication manager*/
-CommManager commreq, commrep;
+// CommManager commreq, commrep;
+comm_manager_t req_manager;
+comm_manager_t rep_manager;
 
-/* head msg, tail msg, msg count in out queue */
-volatile int inhead, intail, incount;
-volatile int outhead, outtail, outcount;
+msg_queue_t inqueue;
+msg_queue_t outqueue;
 
-/* inqueue used to store in-msg, outqueue used to store out-msg */
-jia_msg_t inqueue[Maxqueue], outqueue[Maxqueue];
-
+// /* head msg, tail msg, msg count in out queue */
+// volatile int inhead, intail, incount;
+// volatile int outhead, outtail, outcount;
 
 /* commreq used to send and recv request, commrep used to send and recv reply */
-unsigned short reqports[Maxhosts][Maxhosts]; // every host has Maxhosts request ports
-unsigned short repports[Maxhosts][Maxhosts]; // every host has Maxhosts reply ports
+// unsigned short reqports[Maxhosts][Maxhosts]; // every host has Maxhosts request ports
+// unsigned short repports[Maxhosts][Maxhosts]; // every host has Maxhosts reply ports
 
-unsigned short Startport;
+unsigned short start_port;
 int oldsigiomask;
 
 
@@ -116,16 +117,12 @@ void initcomm() {
         VERBOSE_LOG(3, "************Initialize Communication!*******\n");
     }
     VERBOSE_LOG(3, "current jia_pid = %d\n", system_setting.jia_pid);
-    VERBOSE_LOG(3, " Startport = %u \n", Startport);
+    VERBOSE_LOG(3, " start_port = %u \n", start_port);
 
     init_msg_buffer();  // initialize msg array and corresponding flag that indicate busy or free
 
-    inhead = 0;
-    intail = 0;
-    incount = 0;
-    outhead = 0;
-    outtail = 0;
-    outcount = 0;
+    init_queue(&inqueue, system_setting.inqueue_size);  // init input msg queue
+    init_queue(&outqueue, system_setting.outqueue_size); // init output msg queue
 
 #if defined SOLARIS || defined IRIX62
     {
@@ -181,12 +178,7 @@ void initcomm() {
 
     /***********Initialize comm ports********************/
 
-    for (i = 0; i < Maxhosts; i++) {
-       for (j = 0; j < Maxhosts; j++) {
-            reqports[i][j] = Startport + i * Maxhosts + j;
-            repports[i][j] = Startport + Maxhosts * Maxhosts + i * Maxhosts + j;
-        }
-    } 
+
 
 #ifdef JIA_DEBUG
     for (i = 0; i < Maxhosts; i++)
@@ -212,18 +204,18 @@ void initcomm() {
 
     /***********Initialize commreq ********************/
 
-    commreq.rcv_maxfd = 0;
-    commreq.snd_maxfd = 0;
-    FD_ZERO(&(commreq.snd_set));
-    FD_ZERO(&(commreq.rcv_set));
+    // commreq.rcv_maxfd = 0;
+    // commreq.snd_maxfd = 0;
+    // FD_ZERO(&(commreq.snd_set));
+    // FD_ZERO(&(commreq.rcv_set));
     for (i = 0; i < Maxhosts; i++) {
         fd = req_fdcreate(i, 0); // create socket and bind it to [INADDR_ANY,
                                  // reqports[jia_pid][i]]
         commreq.rcv_fds[i] =
             fd; // request from (host i) is will be receive from
                 // commreq.rcv_fds[i] (whose port = reqports[jia_pid][i]])
-        FD_SET(fd, &commreq.rcv_set);
-        commreq.rcv_maxfd = MAX(fd + 1, commreq.rcv_maxfd);
+        // FD_SET(fd, &commreq.rcv_set);
+        // commreq.rcv_maxfd = MAX(fd + 1, commreq.rcv_maxfd);
 
         if (0 > fcntl(commreq.rcv_fds[i], F_SETOWN,
                       getpid())) // set current process to receive SIGIO signal
@@ -264,6 +256,11 @@ void initcomm() {
         FD_SET(fd, &commrep.snd_set);
         commrep.snd_maxfd = MAX(fd + 1, commrep.snd_maxfd);
     }
+
+    pthread_create(&client_tid, NULL, client_thread, NULL);   // create a new thread to listen to commreq
+    pthread_create(&server_tid, NULL, server_thread, NULL);   // create a new thread to listen to commrep
+
+
 }
 
 void init_msg_buffer(){
@@ -871,6 +868,54 @@ void bcastserver(jia_msg_t *msg) {
 
     msg->topid = (child1 + root) % hostc;
     asendmsg(msg);
+}
+
+
+
+int init_queue(msg_queue_t *msg_queue, int size)
+{
+    msg_queue->queue = (msg_queue_slot_t *)malloc(sizeof(msg_queue_slot_t) * size);
+    msg_queue->head = 0;
+    msg_queue->tail = 0;
+    msg_queue->size = size;
+    sem_init(&msg_queue->busy_count, 0, 0);
+    sem_init(&msg_queue->free_count, 0, size);
+    return 0;
+}
+
+int enqueue(msg_queue_t *queue, jia_msg_t *msg)
+{
+    sem_wait(&queue->free_count);
+    memcpy(&(queue->queue[queue->tail]), msg, sizeof(jia_msg_t));
+    queue->tail = (queue->tail + 1) % queue->size;
+    sem_post(&queue->busy_count);
+    return 0;
+}
+
+jia_msg_t *dequeue(msg_queue_t *msg_queue)
+{
+    sem_wait(&msg_queue->busy_count);
+    jia_msg_t *msg = &(msg_queue->queue[queue->head]);
+    msg_queue->head = (msg_queue->head + 1) % msg_queue->size;
+    sem_post(&msg_queue->free_count);
+    return msg;
+}
+
+void free_queue(msg_queue_t *msg_queue)
+{
+    free(msg_queue->queue);
+}
+
+
+int init_comm_manager(){
+    for (int i = 0; i < Maxhosts; i++) {
+       for (int j = 0; j < Maxhosts; j++) {
+            req_manager.snd_ports
+            reqports[i][j] = start_port + i * Maxhosts + j;
+            repports[i][j] = start_port + Maxhosts * Maxhosts + i * Maxhosts + j;
+        }
+    } 
+
 }
 
 #else  /* NULL_LIB */

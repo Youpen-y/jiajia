@@ -56,6 +56,8 @@ typedef struct setting {
     unsigned long long  global_start_addr;       // global start address
 
     int msg_buffer_size;    // message buffer size
+    int msg_inqueue_size;   // messsage inqueue size
+    int msg_outqueue_size;  // message outqueue size
     
     int jia_pid;      // current host id
     host_t *hosts;    // host array  

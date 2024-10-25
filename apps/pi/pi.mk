@@ -1,9 +1,8 @@
 #*********************************************************
 # Application specific rules and defines...
 #*********************************************************
-
-CFLAGS += -I../../../src/include -O2 -g
-CFLAGS = -g
+CPPFLAGS = -I../../../src/include
+CFLAGS = -O2 -g
 OBJS 	= pi.o
 VPATH = ../src 
 JIALIB = ../../../lib/$(ARCH)
