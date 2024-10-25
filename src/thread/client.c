@@ -1,18 +1,17 @@
 #include "thread.h"
+pthread_t client_tid;
 
 void *client_thread(void *args) {
-    int i;
-    jia_msg_t *msg;
-    int fd;
+    // int i;
+    // jia_msg_t *msg;
+    // int fd;
 
-    while (1) {
-        msg = dequeue(&inqueue);
-        STATOP(printf("client: dequeue msg, msg->type = %d\n", msg->type));
-        fd = req_fdcreate(msg->dest, 0);
-
+    // while (1) {
+    //     msg = dequeue(&inqueue);
+    //     STATOP(printf("client: dequeue msg, msg->type = %d\n", msg->type));
+    //     fd = req_fdcreate(msg->dest, 0);
+    return 0;
 
         
 
 }
-
-pthread_t client_tid;

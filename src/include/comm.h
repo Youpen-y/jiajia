@@ -40,6 +40,7 @@
 
 #include "global.h"
 #include "init.h"
+#include "semaphore.h"
 
 #define TIMEOUT 1000   /* used to wait for ack */
 #define MAX_RETRIES 64 /* number of retransmissions */
@@ -94,7 +95,7 @@ typedef struct jia_msg {
 
 typedef struct msg_queue_slot {
     jia_msg_t msg;
-    pthread_mutext_t lock;
+    pthread_mutex_t lock;
 } msg_queue_slot_t;
 
 typedef struct msg_queue {
@@ -180,7 +181,7 @@ typedef struct {
 extern msg_buffer_t msg_buffer;
 
 
-// #define inqh inqueue[inhead]    // inqueue msg head
+// #define inqueue[inhead] inqueue[inhead]    // inqueue msg head
 // #define inqt inqueue[intail]    // inqueue msg tail
 // #define outqh outqueue[outhead] // outqueue msg head
 // #define outqt outqueue[outtail] // outqueue msg tail
