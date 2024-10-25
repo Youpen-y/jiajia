@@ -1,5 +1,6 @@
 #include "thread.h"
 #include "comm.h"
+pthread_t client_tid;
 
 pthread_t client_tid;
 void *client_thread(void *args) {
