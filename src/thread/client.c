@@ -10,8 +10,5 @@ void *client_thread(void *args) {
     //     msg = dequeue(&inqueue);
     //     STATOP(printf("client: dequeue msg, msg->type = %d\n", msg->type));
     //     fd = req_fdcreate(msg->dest, 0);
-    return 0;
-
-        
-
+    return NULL;
 }
