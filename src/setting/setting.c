@@ -24,9 +24,8 @@ setting_t system_setting = {
    .system_mode = MEMORY_MODE,
    .comm_type = udp,
    .global_start_addr = 0,
-   .msg_buffer_size = 0,
-   .msg_inqueue_size = 32,
-   .msg_outqueue_size = 32,
+   .msg_buffer_size = 48,
+   .msg_queue_size = 32,
 };     // there, we can set default system configuration
 
 void trim(char* str) {
@@ -103,10 +102,8 @@ int get_options(setting_t *setting){
             setting->global_start_addr = strtoull(setting->options[i].value, NULL, 0);
         } else if(strcmp(setting->options[i].key, "msg_buffer_size") == 0) {
             setting->msg_buffer_size = atoi(setting->options[i].value);
-        } else if(strcmp(setting->options[i].key, "msg_inqueue_size") == 0) {
-            setting->msg_inqueue_size = atoi(setting->options[i].value);
-        } else if(strcmp(setting->options[i].key, "msg_outqueue_size") == 0) {
-            setting->msg_outqueue_size = atoi(setting->options[i].value);
+        } else if(strcmp(setting->options[i].key, "msg_queue_size") == 0) {
+            setting->msg_queue_size = atoi(setting->options[i].value);
         } else {
             printf("Unknown config option: %s = %s\n", setting->options[i].key, setting->options[i].value);
             setting->optionc--;

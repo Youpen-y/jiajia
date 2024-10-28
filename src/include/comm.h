@@ -49,99 +49,68 @@
 #define Maxqueue                                                               \
     32 /* size of input and output queue for communication (>= 2*maxhosts)*/
 
-/* msg operation (type) */
-#define DIFF        0
-#define DIFFGRANT   1
-#define GETP        2
-#define GETPGRANT   3
-#define ACQ         4
-#define ACQGRANT    5
-#define INVLD       6
-#define BARR        7
-#define BARRGRANT   8
-#define REL         9
-#define WTNT        10
-#define JIAEXIT     11
-#define WAIT        12
-#define WAITGRANT   13
-#define STAT        14
-#define STATGRANT   15
-#define ERRMSG      16
-
-#define SETCV       17
-#define RESETCV     18
-#define WAITCV      19
-#define CVGRANT     20
-#define MSGBODY     21
-#define MSGTAIL     22
-#define LOADREQ     23
-#define LOADGRANT   24
-#define BCAST       100
-
-typedef struct jia_msg {
-    unsigned int op;      /* operation type */
-    unsigned int frompid; /* from pid */
-    unsigned int topid;   /* to pid */
-    unsigned int temp;    /* Useless (flag to indicate read or write request)*/
-    unsigned int seqno;   /* sequence number */
-    unsigned int index;   /* msg index in msg array */
-    unsigned int scope;   /* Inca. no.  used as tag in msg. passing */
-    unsigned int size;    /* data size */
-    /* header is 32 bytes */
-
-    unsigned char data[Maxmsgsize];
-} jia_msg_t;
+typedef enum {
+    SLOT_FREE = 0,  // slot is free
+    SLOT_BUSY = 1,  // slot is busy
+} slot_state_t;
 
 typedef struct msg_queue_slot {
-    jia_msg_t msg;
-    pthread_mutext_t lock;
+    jia_msg_t msg;               // msg
+    volatile slot_state_t state; // state of slot
+    pthread_mutext_t lock;       // mutex lock for each slot
+    pthread_cond_t cond;         // condition variable
 } msg_queue_slot_t;
 
 typedef struct msg_queue {
-    msg_queue_slot_t *queue;
-    int               head;
-    int               tail;
-    int               size;
-    sem_t             busy_count;
-    sem_t             free_count;
+    msg_queue_slot_t *queue;    // msg queue
+    int               size;     // size of queue
+
+    pthread_mutex_t   head_lock;    // lock for head
+    pthread_mutex_t   tail_lock;    // lock for tail
+    int               head;         // head
+    int               tail;         // tail
+
+    sem_t             busy_count;   // busy slot count
+    sem_t             free_count;   // free slot count
 } msg_queue_t;
 
 extern msg_queue_t inqueue;
 extern msg_queue_t outqueue;
 
 /**
- * @brief 
+ * @brief init_msg_queue - initialize msg queue with specified size
  * 
- * @param queue 
- * @param size
- * @return int 
+ * @param queue msg queue
+ * @param size if size < 0, use default size (i.e. system_setting.msg_queue_size)
+ * @return int 0 if success, -1 if failed
  */
-int init_queue(msg_queue_t *queue, int size);
+int init_msg_queue(msg_queue_t *queue, int size);
 
 
 /**
- * @brief 
+ * @brief enqueue - enqueue msg
  * 
- * @param queue 
- * @param msg 
- * @return int 
+ * @param queue msg queue
+ * @param msg msg
+ * @return int 0 if success, -1 if failed 
  */
 int enqueue(msg_queue_t *queue, jia_msg_t *msg);
 
 /**
- * @brief 
+ * @brief dequeue - dequeue msg
  * 
- * @param queue 
- * @return jia_msg_t* 
+ * @param queue msg queue
+ * @param msg msg
+ * @return 0 if success, -1 if failed
  */
-jia_msg_t *dequeue(msg_queue_t *queue);
+int dequeue(msg_queue_t *queue, jia_msg_t *msg);
 
 /**
  * @brief free_queue - free queue
  * 
- * @param queue
+ * @param queue msg queue
  */
-void free_queue(msg_queue_t *queue);
+void free_msg_queue(msg_queue_t *queue);
 
 
 // typedef struct CommManager {
@@ -170,21 +139,7 @@ extern comm_manager_t req_manager;
 extern comm_manager_t rep_manager;
 
 
-typedef struct {
-    jia_msg_t *msgarray;
-    int       *msgbusy;
-    int        size;
-} msg_buffer_t;
 
-// extern variables
-extern msg_buffer_t msg_buffer;
-
-
-// #define inqh inqueue[inhead]    // inqueue msg head
-// #define inqt inqueue[intail]    // inqueue msg tail
-// #define outqh outqueue[outhead] // outqueue msg head
-// #define outqt outqueue[outtail] // outqueue msg tail
-#define STATOP(op) if(statflag){op};
 
 /* function declaration  */
 
@@ -203,21 +158,6 @@ extern msg_buffer_t msg_buffer;
  * step5: initialize comm manager (commreq, commrep)
  */
 void initcomm();
-
-
-/**
- * @brief init_msg_buffer -- initialize msg array and corresponding flag that indicate busy or free
- * 
- */
-void init_msg_buffer();
-
-
-/**
- * @brief free_msg_buffer -- free msg array and corresponding flag that indicate busy or free
- * 
- */
-void free_msg_buffer();
-
 
 /**
  * @brief req_fdcreate -- creat socket file descriptor used to send and recv

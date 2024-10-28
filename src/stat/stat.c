@@ -4,6 +4,8 @@
 #include "comm.h"
 #include "setting.h"
 #include "utils.h"
+#include "msg.h"
+
 
 jiastat_t jiastat;
 jiastat_t allstats[Maxhosts];
@@ -85,18 +87,18 @@ void statserver(jia_msg_t *rep)
  if (statcnt == system_setting.hostc) {
     statcnt = 0;
     clearstat();
-    int k = free_msg_index();
-    grant = &msg_buffer.msgarray[k];
-    msg_buffer.msgbusy[k] = 1;
-
+    int index = free_msg_index_lock(&msg_buffer);
+    grant = &(msg_buffer.buffer[index].msg);
     grant->frompid = system_setting.jia_pid;
     grant->size = 0;
     grant->op=STATGRANT;
     for(i=0; i<system_setting.hostc; i++) {
        grant->topid = i;
-       asendmsg(grant);
+      //  asendmsg(grant);
+      move_msg_to_outqueue(&msg_buffer, index, &outqueue);
     }
-    freemsg(grant);
+   //  freemsg(grant);
+   free_msg_index_unlock(&msg_buffer, index);
  }
 }
 

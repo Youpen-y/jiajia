@@ -45,6 +45,7 @@
 #include "utils.h"
 #include "setting.h"
 #include "stat.h"
+#include "msg.h"
 
 /* syn */
 extern jialock_t locks[Maxlocks + 1];
@@ -74,9 +75,10 @@ void clearlocks() {
  */
 void acquire(int lock) {
     jia_msg_t *req;
+    int index;
 
-    req = newmsg();
-
+    // req = newmsg();
+    req = &msg_buffer.buffer[index].msg;
     req->op = ACQ;
     req->frompid = system_setting.jia_pid;
     req->topid = lock % system_setting.hostc; // it seems that lock was divided circularly
@@ -84,9 +86,11 @@ void acquire(int lock) {
     req->size = 0;
     appendmsg(req, ltos(lock), Intbytes);
 
-    asendmsg(req); // send the ACQ msg the lock owner
+    // asendmsg(req); // send the ACQ msg the lock owner
+    // freemsg(req);
 
-    freemsg(req);
+    move_msg_to_outqueue(&msg_buffer, index, &msg_buffer.outqueue);
+    free_msg_index_unlock(&msg_buffer, index);
     while (acqwait)
         ;
 }
@@ -103,9 +107,10 @@ void acquire(int lock) {
 void grantlock(int lock, int toproc, int acqscope) {
     jia_msg_t *grant;
     wtnt_t *wnptr;
+    int index;
 
-    grant = newmsg();
-
+    // grant = newmsg();
+    grant = &msg_buffer.buffer[index].msg;
     grant->frompid = system_setting.jia_pid;
     grant->topid = toproc;
     grant->scope = locks[lock].scope;
@@ -117,15 +122,18 @@ void grantlock(int lock, int toproc, int acqscope) {
     wnptr = appendlockwtnts(grant, wnptr, acqscope);
     while (wnptr != WNULL) { // current msg is full, but still wtnts  left
         grant->op = INVLD;
-        asendmsg(grant);
+        // asendmsg(grant);
+        move_msg_to_outqueue(&msg_buffer, index, &msg_buffer.outqueue);
         grant->size = Intbytes;
         wnptr = appendlockwtnts(grant, wnptr, acqscope);
     }
 
     grant->op = ACQGRANT;
-    asendmsg(grant);
 
-    freemsg(grant);
+    // asendmsg(grant);
+    // freemsg(grant);
+    move_msg_to_outqueue(&msg_buffer, index, &msg_buffer.outqueue);
+    free_msg_index_unlock(&msg_buffer, index);
 }
 
 
@@ -141,9 +149,10 @@ void grantlock(int lock, int toproc, int acqscope) {
 void grantbarr(int lock) {
     jia_msg_t *grant;
     wtnt_t *wnptr;
-    int hosti;
+    int hosti, index;
 
-    grant = newmsg();
+    // grant = newmsg();
+    grant = &msg_buffer.buffer[index].msg;
 
     grant->frompid = system_setting.jia_pid;
     grant->topid = system_setting.jia_pid;
@@ -158,29 +167,32 @@ void grantbarr(int lock) {
                                     // from) to msg if possible
     while (wnptr != WNULL) {
         grant->op = INVLD;
-        broadcast(grant);
+        broadcast(grant, index);
         grant->size = Intbytes; // lock
         wnptr = appendbarrwtnts(grant, wnptr);
     }
     grant->op = BARRGRANT;
-    broadcast(grant);
-    freemsg(grant);
+    broadcast(grant, index);
+    // freemsg(grant);
+    free_msg_index_unlock(&msg_buffer, index);
 }
 
 /**
  * @brief broadcast -- broadcast msg to all hosts
  *
  * @param msg msg that will be broadcast
+ * @param index index of msg in msg_buffer
  */
-void broadcast(jia_msg_t *msg) {
+void broadcast(jia_msg_t *msg, int index) {
     int hosti;
 
     if (B_CAST == OFF) {
         for (hosti = 0; hosti < system_setting.hostc; hosti++) {
             msg->topid = hosti;
-            asendmsg(msg);
+            // asendmsg(msg);
+            move_msg_to_outqueue(&msg_buffer, index, &msg_buffer.outqueue);
         }
     } else {
-        bsendmsg(msg);
+        bsendmsg(msg); // TODO: 
     }
 }

@@ -43,6 +43,7 @@
 #include "utils.h"
 #include "setting.h"
 #include "stat.h"
+#include "msg.h"
 
 /* user */
 extern jiahome_t home[Homepages];    /* host owned page */
@@ -107,7 +108,10 @@ void getpage(address_t addr, int flag) {
 
     homeid = homehost(addr);
     jia_assert((homeid != system_setting.jia_pid), "This should not have happened 2!");
-    req = newmsg();
+    // req = newmsg();
+
+    int index = free_msg_index_lock(&jia_msg_buffer);
+    req = &jia_msg_buffer.buffer[index].msg;
 
     req->op = GETP;
     req->frompid = system_setting.jia_pid;
@@ -116,12 +120,14 @@ void getpage(address_t addr, int flag) {
     req->size = 0;
     // appendmsg(req,ltos(addr),Intbytes);
     appendmsg(req, ltos(addr), sizeof(unsigned char *));
-    getpwait = 1;
-    asendmsg(req);
+    // getpwait = 1;
+    // asendmsg(req);
+    // freemsg(req);
+    // while (getpwait)
+    //     ;
+    move_msg_to_outqueue(&msg_buffer, index, &outqueue);
+    free_msg_index_unlock(&msg_buffer, index);
 
-    freemsg(req);
-    while (getpwait)
-        ;
 #ifdef DOSTAT
     if (statflag == 1) {
         jiastat.getpcnt++;
@@ -449,13 +455,15 @@ void savepage(int cachei) {
 void savediff(int cachei) {
     unsigned char diff[Maxmsgsize]; // msg data array to store diff
     int diffsize;
-    int hosti;
+    int hosti, index;
 
     hosti = homehost(
         cache[cachei]
             .addr); // according to cachei addr get the page's home host index
     if (diffmsg[hosti] == DIFFNULL) { // hosti host's diffmsg is NULL
-        diffmsg[hosti] = newmsg();
+        index = free_msg_index_lock(&msg_buffer);
+        // diffmsg[hosti] = newmsg();
+        diffmsg[hosti] = &msg_buffer.buffer[index].msg;
         diffmsg[hosti]->op = DIFF;
         diffmsg[hosti]->frompid = system_setting.jia_pid;
         diffmsg[hosti]->topid = hosti;
@@ -466,11 +474,14 @@ void savediff(int cachei) {
                        // its twin into diff [] and return size
     if ((diffmsg[hosti]->size + diffsize) > Maxmsgsize) {
         diffwait++;
-        asendmsg(diffmsg[hosti]);
+        // asendmsg(diffmsg[hosti]);
+        move_msg_to_outqueue(&msg_buffer, index, &outqueue);
+        free_msg_index_unlock(&msg_buffer, index);
         diffmsg[hosti]->size = 0;
         appendmsg(diffmsg[hosti], diff, diffsize);
-        while (diffwait)
-            ;
+        // while (diffwait)
+        //     ;
+        // TODO: wait condition variable
     } else {
         appendmsg(diffmsg[hosti], diff, diffsize);
     }

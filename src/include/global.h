@@ -129,5 +129,7 @@ typedef void (* void_func_handler)();
 #define SPACE(right) {if ((right)==1) \
                        printf("\t\t\t"); \
                      }
+                     
+#define STATOP(op) if(statflag){op};
 
 #endif /* JIAGLOBAL_H */

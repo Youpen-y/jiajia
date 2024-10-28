@@ -41,6 +41,7 @@
 #include "comm.h"
 #include "setting.h"
 #include "stat.h"
+#include "msg.h"
 
 /* jiajia */
 // extern int jia_pid;
@@ -145,14 +146,18 @@ void diffserver(jia_msg_t *req) {
     STATOP(jiastat.dedifftime += get_usecs() - begin; jiastat.diffcnt++;)
 #endif
 
-    rep = newmsg();
+    // rep = newmsg();
+    int index = free_msg_index_lock(&msg_buffer);
+    rep = &msg_buffer.buffer[index].msg;
     rep->op = DIFFGRANT;
     rep->frompid = jia_pid;
     rep->topid = req->frompid;
     rep->size = 0;
 
-    asendmsg(rep);
-    freemsg(rep);
+    // asendmsg(rep);
+    // freemsg(rep);
+    move_msg_to_outqueue(&msg_buffer, index, &msg_buffer.outqueue);
+    free_msg_index_unlock(&msg_buffer, index);
 }
 
 
@@ -204,7 +209,9 @@ void getpserver(jia_msg_t *req) {
 
         home[homei].rdnt = 1;
     }
-    rep = newmsg();
+    // rep = newmsg();
+    int index = free_msg_index_lock(&msg_buffer);
+    rep = &msg_buffer.buffer[index].msg;
     rep->op = GETPGRANT;
     rep->frompid = jia_pid;
     rep->topid = req->frompid;
@@ -236,8 +243,10 @@ void getpserver(jia_msg_t *req) {
         */
     }
 
-    asendmsg(rep);
-    freemsg(rep);
+    // asendmsg(rep);
+    // freemsg(rep);
+    move_msg_to_outqueue(&msg_buffer, index, &msg_buffer.outqueue);
+    free_msg_index_unlock(&msg_buffer, index);
 }
 
 

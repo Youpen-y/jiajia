@@ -45,6 +45,7 @@
 #include "utils.h"
 #include "setting.h"
 #include "stat.h"
+#include "msg.h"
 
 /* syn */
 extern jiacv_t condvars[Maxcvs];
@@ -148,7 +149,7 @@ void cvgrantserver(jia_msg_t *req) {
  */
 void waitserver(jia_msg_t *req) {
     jia_msg_t *grant;
-    int i;
+    int index;
 
     jia_assert((req->op == WAIT) && (req->topid == system_setting.jia_pid),
            "Incorrect WAIT Message!");
@@ -156,13 +157,16 @@ void waitserver(jia_msg_t *req) {
     waitcounter++;
 
     if (waitcounter == system_setting.hostc) {
-        grant = newmsg();
+        // grant = newmsg();
+        index = free_msg_index_lock(&msg_buffer);
+        grant = &msg_buffer.buffer[index].msg;
         waitcounter = 0;
         grant->frompid = system_setting.jia_pid;
         grant->size = 0;
         grant->op = WAITGRANT;
-        broadcast(grant);
-        freemsg(grant);
+        broadcast(grant, index);
+        // freemsg(grant);
+        free_msg_index_unlock(&msg_buffer, index);
     }
 }
 

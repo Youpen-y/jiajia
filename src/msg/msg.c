@@ -50,7 +50,7 @@
 extern void freemsg(jia_msg_t *);
 extern void printmsg(jia_msg_t *msg, int right);
 extern void asendmsg(jia_msg_t *msg);
-extern void broadcast(jia_msg_t *msg);
+extern void broadcast(jia_msg_t *msg, int index);
 extern float jia_clock();
 
 extern void appendmsg(jia_msg_t *msg, unsigned char *str, int len);
@@ -68,18 +68,23 @@ void reduce(char *dest, char *source, int count, int op);
 void jia_reduce(char *sendbuf, char *recvbuf, int count, int op, int root);
 
 extern char errstr[Linesize];
-// extern int jia_pid;
-// extern int system_setting.hostc;
+
 
 volatile int recvwait, endofmsg;
 jia_msg_t msgbuf[Maxmsgbufs]; /* message buffer */
 unsigned long msgseqno;
+
+
+msg_buffer_t msg_buffer = {0};
 
 /**
  * @brief initmsg -- initialize msgbuf and global vars
  *
  */
 void initmsg() {
+
+    init_msg_buffer(&msg_buffer, system_setting.msg_buffer_size);
+
     int i;
 
     endofmsg = 0;
@@ -97,6 +102,130 @@ void initmsg() {
     }
 }
 
+
+
+void init_msg_buffer(msg_buffer_t *msg_buffer, int size)
+{
+    if (size <= 0) {
+        size = system_setting.msg_buffer_size;
+    }
+
+    msg_buffer->buffer = (buffer_slot_t *)malloc(sizeof(buffer_slot_t) * size);
+    if (msg_buffer->buffer == NULL) {
+        perror("msg_buffer malloc");
+        return -1;
+    }
+
+    // initialize buffer size
+    msg_buffer->size = size;
+
+    // initialize semaphores
+    if (sem_init(&(msg_buffer->busy_count), 0, 0)!= 0 \
+        || sem_init(&(msg_buffer->free_count), 0, size)!= 0) {
+        perror("msg_buffer sem init");
+        free(msg_buffer->buffer);
+        return -1;
+    }
+
+    // initialize buffer slot
+    for (int i = 0; i < size; i++) {
+        msg_buffer->buffer[i].msg = (jia_msg_t) {0};
+        msg_buffer->buffer[i].msg.op = ERRMSG;
+        msg_buffer->buffer[i].state = SLOT_FREE;
+        if(pthread_mutex_init(&(msg_buffer->buffer[i].mutex), NULL)!= 0 \
+            || pthread_cond_init(&(msg_buffer->buffer[i].cond), NULL)!= 0) {
+            perror("msg_buffer mutex/cond init");
+            for(int j = 0; j < i; j++) {
+                pthread_mutex_destroy(&(msg_buffer->buffer[j].mutex));
+                pthread_cond_destroy(&(msg_buffer->buffer[j].cond));
+            }
+            sem_destroy(&(msg_buffer->busy_count));
+            sem_destroy(&(msg_buffer->free_count));
+            free(msg_buffer->buffer);
+            return -1;
+        }
+    }
+
+    return 0;
+}
+
+void free_msg_buffer(msg_buffer_t *msg_buffer)
+{
+    for (int i = 0; i < msg_buffer->size; i++) {
+        buffer_slot_t *slot = &msg_buffer->buffer[i];
+        pthread_mutex_destroy(&slot->lock);
+        pthread_cond_destroy(&slot->cond);
+    }
+    sem_destroy(&msg_buffer->busy_count);
+    sem_destroy(&msg_buffer->free_count);
+    free(msg_buffer->buffer);
+}
+
+int commit_msg_to_buffer(msg_buffer_t *buffer, jia_msg_t *msg)
+{
+    if (sem_wait(&msg_buffer->free_count) != 0) {
+        return -1;
+    }
+
+    for (int i = 0; i < msg_buffer->size; i++) {
+        buffer_slot_t *slot = &msg_buffer->buffer[i];
+        pthread_mutex_lock(&slot->lock);
+        if (slot->state == SLOT_FREE) {
+            slot->msg = *msg;
+            slot->state = SLOT_BUSY;
+            pthread_mutex_unlock(&slot->lock);
+            break;
+        }else{
+            pthread_mutex_unlock(&slot->lock);
+        }
+    }
+
+    sem_post(&msg_buffer->busy_count);
+    return 0;
+}
+
+int free_msg_index_lock(msg_buffer_t *buffer)
+{
+    sem_wait(&msg_buffer->free_count);
+
+    for (int i = 0; i < msg_buffer->size; i++) {
+        buffer_slot_t *slot = &msg_buffer->buffer[i];
+        pthread_mutex_lock(&slot->lock);
+        if (slot->state == SLOT_FREE) {
+            return i;
+        } else {
+            pthread_mutex_unlock(&slot->lock);
+        }
+    }
+    return -1;
+}
+
+void free_msg_index_unlock(msg_buffer_t *buffer, int index)
+{
+    buffer_slot_t *slot = &msg_buffer->buffer[index];
+    slot->state = SLOT_BUSY;
+    pthread_mutex_unlock(&slot->lock);
+    sem_post(&msg_buffer->busy_count);
+}
+
+int move_msg_to_outqueue(msg_buffer_t *buffer, int index, msg_queue_t *outqueue)
+{
+    int ret;
+
+    sem_wait(&outqueue->free_count);
+    buffer_slot_t *slot = &msg_buffer->buffer[index];
+    pthread_mutex_lock(&slot->lock);
+    ret = enqueue(outqueue, &slot->msg);
+    if (ret == -1) {
+        perror("enqueue");
+        return ret;
+    }
+    slot->state = SLOT_FREE;
+    pthread_mutex_unlock(&slot->lock);
+    sem_post(&buffer->free_count);
+    return 0;
+}
+
 /******************** Message Passing Part*****************/
 
 /**
@@ -111,6 +240,7 @@ void jia_send(char *buf, int len, int toproc, int tag) {
     jia_msg_t *req;
     int msgsize;
     char *msgptr;
+    int index;
 
     jia_assert(((toproc < system_setting.hostc) && (toproc >= 0)),
            "Incorrect message destination");
@@ -118,7 +248,9 @@ void jia_send(char *buf, int len, int toproc, int tag) {
     msgsize = len;
     msgptr = buf;
 
-    req = newmsg();
+    // req = newmsg();
+    index = free_msg_index_lock(&msg_buffer);
+    req = &msg_buffer->buffer[index].msg;
     req->frompid = system_setting.jia_pid;
     req->topid = toproc;
     req->scope = tag;
@@ -127,7 +259,8 @@ void jia_send(char *buf, int len, int toproc, int tag) {
         req->op = MSGBODY;
         req->size = 0;
         appendmsg(req, msgptr, Maxmsgsize);
-        asendmsg(req);
+        // asendmsg(req);
+        move_msg_to_outqueue(&msg_buffer, index, &msg_queue);
         msgptr += Maxmsgsize;
         msgsize -= Maxmsgsize;
     }
@@ -135,9 +268,10 @@ void jia_send(char *buf, int len, int toproc, int tag) {
     req->op = MSGTAIL;
     req->size = 0;
     appendmsg(req, msgptr, msgsize);
-    asendmsg(req);
-
-    freemsg(req);
+    // asendmsg(req);
+    // freemsg(req);
+    move_msg_to_outqueue(&msg_buffer, index, &msg_queue);
+    free_msg_index_unlock(&msg_buffer, index);
 }
 
 /**
@@ -169,16 +303,15 @@ void msgrecvserver(jia_msg_t *req) {
     }
 }
 
+
 /**
- * @brief nextpacket -- find next packet in the msgbuf that meet fromproc and
- * tag condition
- *
- * @param fromproc
- * @param tag
- * @return int
+ * @brief nextpacket - find next packet in the buf that meet fromproc and tag condition
+ * 
+ * @param fromproc 
+ * @param tag 
+ * @return int 
  */
 int nextpacket(int fromproc, int tag)
-/*Find next packet in the buf that meet fromproc and tag condition*/
 {
     int i, index;
     unsigned long next;
@@ -197,14 +330,15 @@ int nextpacket(int fromproc, int tag)
     return (index);
 }
 
+
 /**
- * @brief nextmsg -- find
- *
- * @param buf
- * @param len
- * @param fromproc
- * @param tag
- * @return int
+ * @brief nextmsg - get a msg from msgbuf and put it into buf
+ * 
+ * @param buf 
+ * @param len 
+ * @param fromproc 
+ * @param tag 
+ * @return int 
  */
 int nextmsg(char *buf, int len, int fromproc, int tag) {
     int i;
@@ -234,7 +368,7 @@ int nextmsg(char *buf, int len, int fromproc, int tag) {
 }
 
 /**
- * @brief jia_recv -- s
+ * @brief jia_recv -- 
  *
  * @param buf
  * @param len
@@ -398,12 +532,15 @@ void jia_bcast(char *buf, int len, int root) {
     jia_msg_t *req;
     int msgsize;
     char *msgptr;
+    int index;
 
     if (system_setting.jia_pid == root) {
         msgsize = len;
         msgptr = buf;
 
-        req = newmsg();
+        // req = newmsg();
+        index = free_msg_index_lock(&msg_buffer);
+        req = &msg_buffer->buffer[index].msg;
         req->frompid = system_setting.jia_pid;
         req->topid = system_setting.jia_pid;
         req->scope = BCAST_TAG;

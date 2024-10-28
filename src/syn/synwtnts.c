@@ -45,6 +45,7 @@
 #include "utils.h"
 #include "setting.h"
 #include "stat.h"
+#include "msg.h"
 
 /* syn */
 extern jiapage_t page[Maxmempages];
@@ -145,12 +146,15 @@ void recordwtnts(jia_msg_t *req) {
  * BARR or REL message's data : | top.lockid(4bytes) | addr1 | ... | addrn |
  */
 void sendwtnts(int operation) {
-    int wtnti;
+    int wtnti, index;
     jia_msg_t *req;
     wtnt_t *wnptr; // write notice pointer
-    VERBOSE_LOG(3, "Enter sendwtnts!\n");
-    req = newmsg();
 
+    VERBOSE_LOG(3, "Enter sendwtnts!\n");
+
+    // req = newmsg();
+    index = free_msg_index_lock(&msg_buffer);
+    req = &(msg_buffer.buffer[index].msg);
     req->frompid = system_setting.jia_pid;
     req->topid = top.lockid % system_setting.hostc;
     req->size = 0;
@@ -169,14 +173,18 @@ void sendwtnts(int operation) {
     VERBOSE_LOG(3, "wnptr == WNULL is %d\n", wnptr == WNULL ? 1 : 0);
     while (wnptr != WNULL) {
         req->op = WTNT;
-        asendmsg(req);
+        // asendmsg(req);
+        move_msg_to_outqueue(&msg_buffer, index);
         req->size = Intbytes; // TODO: Need to check
         wnptr = appendstackwtnts(req, wnptr);
     }
     req->op = operation;
     VERBOSE_LOG(3, "my pid is %d\n", jiapid);
-    asendmsg(req);
-    freemsg(req);
+    // asendmsg(req);
+    // freemsg(req);
+    move_msg_to_outqueue(&msg_buffer, index, &outqueue);
+    free_msg_index_unlock(&msg_buffer, index);
+
     VERBOSE_LOG(3, "\nOut of sendwtnts!\n\n");
 }
 
