@@ -35,17 +35,20 @@
  * =================================================================== *
  **********************************************************************/
 
+#include <pthread.h>
 #ifndef NULL_LIB
-#include "utils.h"
-#include "comm.h"       // statgrantserver, 
-#include "mem.h"        // diffserver, getserver, diffgrantserver, getpgrantserver
-#include "tools.h"      // jiaexitserver, enable_sigio, disable_sigio, jia_current_time, newmsg, printmsg, get_usecs, emptyprintf
+#include "comm.h" // statgrantserver,
+#include "mem.h"  // diffserver, getserver, diffgrantserver, getpgrantserver
 #include "setting.h"
-#include "syn.h"        // acqserver, inverver, relserver, wtntserver, barrserver, barrgrantserver, acqgrantserver
-                        // waitgrantserver, waitserver, setcvserver, resetcvserver, waitcvserver, cvgrantserver,
-#include "load.h"       // loadserver, loadgrantserver,
-#include "msg.h"        // msgrecvserver
-#include "stat.h"       // statserver
+#include "syn.h" // acqserver, inverver, relserver, wtntserver, barrserver, barrgrantserver, acqgrantserver
+#include "tools.h" // jiaexitserver, enable_sigio, disable_sigio, jia_current_time, newmsg, printmsg, get_usecs, emptyprintf
+#include "utils.h"
+// waitgrantserver, waitserver, setcvserver, resetcvserver, waitcvserver,
+// cvgrantserver,
+#include "load.h" // loadserver, loadgrantserver,
+#include "msg.h"  // msgrecvserver
+#include "stat.h" // statserver
+#include "thread.h"
 
 #define BEGINCS                                                                \
     {                                                                          \
@@ -74,8 +77,7 @@
 // global variables
 /* request/reply communication manager*/
 // CommManager commreq, commrep;
-comm_manager_t req_manager;
-comm_manager_t rep_manager;
+comm_manager_t comm_manager;
 
 msg_queue_t inqueue;
 msg_queue_t outqueue;
@@ -85,12 +87,12 @@ msg_queue_t outqueue;
 // volatile int outhead, outtail, outcount;
 
 /* commreq used to send and recv request, commrep used to send and recv reply */
-// unsigned short reqports[Maxhosts][Maxhosts]; // every host has Maxhosts request ports
-// unsigned short repports[Maxhosts][Maxhosts]; // every host has Maxhosts reply ports
+// unsigned short reqports[Maxhosts][Maxhosts]; // every host has Maxhosts
+// request ports unsigned short repports[Maxhosts][Maxhosts]; // every host has
+// Maxhosts reply ports
 
 unsigned short start_port;
 int oldsigiomask;
-
 
 // function definitions
 
@@ -117,10 +119,12 @@ void initcomm() {
     VERBOSE_LOG(3, "current jia_pid = %d\n", system_setting.jia_pid);
     VERBOSE_LOG(3, " start_port = %u \n", start_port);
 
-    init_msg_buffer();  // initialize msg array and corresponding flag that indicate busy or free
+    init_msg_buffer(); // initialize msg array and corresponding flag that
+                       // indicate busy or free
 
-    init_queue(&inqueue, system_setting.inqueue_size);  // init input msg queue
-    init_queue(&outqueue, system_setting.outqueue_size); // init output msg queue
+    init_queue(&inqueue, system_setting.inqueue_size); // init input msg queue
+    init_queue(&outqueue,
+               system_setting.outqueue_size); // init output msg queue
 
 #if defined SOLARIS || defined IRIX62
     {
@@ -175,6 +179,7 @@ void initcomm() {
 #endif
 
     /***********Initialize comm ports********************/
+
 #ifdef JIA_DEBUG
     for (i = 0; i < Maxhosts; i++)
         for (j = 0; j < Maxhosts; j++) {
@@ -203,115 +208,153 @@ void initcomm() {
     // commreq.snd_maxfd = 0;
     // FD_ZERO(&(commreq.snd_set));
     // FD_ZERO(&(commreq.rcv_set));
-    for (i = 0; i < Maxhosts; i++) {
-        fd = req_fdcreate(i, 0); // create socket and bind it to [INADDR_ANY,
-                                 // reqports[jia_pid][i]]
-        commreq.rcv_fds[i] =
-            fd; // request from (host i) is will be receive from
-                // commreq.rcv_fds[i] (whose port = reqports[jia_pid][i]])
-        // FD_SET(fd, &commreq.rcv_set);
-        // commreq.rcv_maxfd = MAX(fd + 1, commreq.rcv_maxfd);
+    // for (i = 0; i < Maxhosts; i++) {
+    //     fd = req_fdcreate(i, 0); // create socket and bind it to [INADDR_ANY,
+    //                              // reqports[jia_pid][i]]
+    //     commreq.rcv_fds[i] =
+    //         fd; // request from (host i) is will be receive from
+    //             // commreq.rcv_fds[i] (whose port = reqports[jia_pid][i]])
+    //     // FD_SET(fd, &commreq.rcv_set);
+    //     // commreq.rcv_maxfd = MAX(fd + 1, commreq.rcv_maxfd);
 
-        if (0 > fcntl(commreq.rcv_fds[i], F_SETOWN,
-                      getpid())) // set current process to receive SIGIO signal
-            local_assert(0, "initcomm()-->fcntl(..F_SETOWN..)");
+    //     if (0 > fcntl(commreq.rcv_fds[i], F_SETOWN,
+    //                   getpid())) // set current process to receive SIGIO
+    //                   signal
+    //         local_assert(0, "initcomm()-->fcntl(..F_SETOWN..)");
 
-        // if (0 > fcntl(commreq.rcv_fds[i], F_SETFL, FASYNC|FNDELAY))
-        if (0 > fcntl(commreq.rcv_fds[i], F_SETFL, O_ASYNC | O_NONBLOCK))
-            local_assert(0, "initcomm()-->fcntl(..F_SETFL..)");
+    //     // if (0 > fcntl(commreq.rcv_fds[i], F_SETFL, FASYNC|FNDELAY))
+    //     if (0 > fcntl(commreq.rcv_fds[i], F_SETFL, O_ASYNC | O_NONBLOCK))
+    //         local_assert(0, "initcomm()-->fcntl(..F_SETFL..)");
 
-        fd = req_fdcreate(i, 1);
-        commreq.snd_fds[i] = fd; // snd_fds socket fd with random port
-        FD_SET(fd, &commreq.snd_set);
-        commreq.snd_maxfd = MAX(fd + 1, commreq.snd_maxfd);
-    }
-    for (i = 0; i < Maxhosts; i++) {
-        commreq.snd_seq[i] = 0;
-        commreq.rcv_seq[i] = 0;
-    }
+    //     fd = req_fdcreate(i, 1);
+    //     commreq.snd_fds[i] = fd; // snd_fds socket fd with random port
+    //     FD_SET(fd, &commreq.snd_set);
+    //     commreq.snd_maxfd = MAX(fd + 1, commreq.snd_maxfd);
+    // }
+    // for (i = 0; i < Maxhosts; i++) {
+    //     commreq.snd_seq[i] = 0;
+    //     commreq.rcv_seq[i] = 0;
+    // }
 
     /***********Initialize commrep ********************/
 
-    commrep.rcv_maxfd = 0;
-    commrep.snd_maxfd = 0;
-    FD_ZERO(&(commrep.snd_set));
-    FD_ZERO(&(commrep.rcv_set));
+    // commrep.rcv_maxfd = 0;
+    // commrep.snd_maxfd = 0;
+    // FD_ZERO(&(commrep.snd_set));
+    // FD_ZERO(&(commrep.rcv_set));
 
+    // for (i = 0; i < Maxhosts; i++) {
+    //     fd = rep_fdcreate(i, 0);
+    //     commrep.rcv_fds[i] =
+    //         fd; // reply from (host i) will be received from
+    //         commrep.rcv_fds[i]
+    //             // (ports = repports[jiapid][i])
+    //     FD_SET(fd, &(commrep.rcv_set));
+    //     commrep.rcv_maxfd = MAX(fd + 1, commrep.rcv_maxfd);
+
+    //     fd = rep_fdcreate(i, 1); // fd with random port
+    //     commrep.snd_fds[i] = fd; // the reply to (host i) will be sended to
+    //                              // snd_fds[i] (whose port is random)
+    //     FD_SET(fd, &commrep.snd_set);
+    //     commrep.snd_maxfd = MAX(fd + 1, commrep.snd_maxfd);
+    // }
     for (i = 0; i < Maxhosts; i++) {
-        fd = rep_fdcreate(i, 0);
-        commrep.rcv_fds[i] =
-            fd; // reply from (host i) will be received from commrep.rcv_fds[i]
-                // (ports = repports[jiapid][i])
-        FD_SET(fd, &(commrep.rcv_set));
-        commrep.rcv_maxfd = MAX(fd + 1, commrep.rcv_maxfd);
 
-        fd = rep_fdcreate(i, 1); // fd with random port
-        commrep.snd_fds[i] = fd; // the reply to (host i) will be sended to
-                                 // snd_fds[i] (whose port is random)
-        FD_SET(fd, &commrep.snd_set);
-        commrep.snd_maxfd = MAX(fd + 1, commrep.snd_maxfd);
+        // create socket and bind it to [INADDR_ANY, comm_manager.rcv_ports[i]
+        // request from (host i) is will be receive from commreq.rcv_fds[i] (whose port = comm_manager.rcv_ports[i])
+        comm_manager.rcv_fds[i] = req_fdcreate(i, 0);
+
+        if (0 > fcntl(comm_manager.rcv_fds[i], F_SETOWN,
+                      getpid())) // set current process to receive SIGIO signal
+            local_assert(0, "initcomm()-->fcntl(..F_SETOWN..)");
+
+        if (0 > fcntl(comm_manager.rcv_fds[i], F_SETFL, O_ASYNC | O_NONBLOCK))
+            local_assert(0, "initcomm()-->fcntl(..F_SETFL..)");
+
+        // snd_fds socket fd with random port
+        comm_manager.snd_fds[i] = req_fdcreate(i, 1); 
+    }
+    for (i = 0; i < Maxhosts; i++) {
+        comm_manager.snd_seq[i] = 0;
+        comm_manager.rcv_seq[i] = 0;
     }
 
-    pthread_create(&client_tid, NULL, client_thread, NULL);   // create a new thread to listen to commreq
-    pthread_create(&server_tid, NULL, server_thread, NULL);   // create a new thread to listen to commrep
-
-
+    pthread_create(&client_tid, NULL, client_thread,
+                   NULL); // create a new thread to listen to commreq
+    pthread_create(&server_tid, NULL, server_thread,
+                   NULL); // create a new thread to listen to commrep
 }
 
+void init_msg_buffer() {
+    msg_buffer.size = system_setting.msg_buffer_size;
+    msg_buffer.msgarray =
+        (jia_msg_t *)malloc(sizeof(jia_msg_t) * msg_buffer.size);
+    msg_buffer.msgbusy = (int *)malloc(sizeof(int) * msg_buffer.size);
 
-/**
- * @brief inqrecv() -- recv msg (update incount&&intail)
- *
- * @return iff incount==1
- */
-static inline int inqrecv(int fromproc) {
-    printmsg(&inqt, 1);
-    local_assert((incount < Maxqueue), "outsend(): Inqueue exceeded!");
-    incount++;
-    intail = (intail + 1) % Maxqueue;
-    // update seqno from host fromproc
-    commreq.rcv_seq[fromproc] = inqt.seqno;
-    VERBOSE_LOG(3, "incount: %d\n", incount);
-    return (incount == 1);
-};
+    for (int i = 0; i < msg_buffer.size; i++) {
+        msg_buffer.msgarray[i].index = i;
+        msg_buffer.msgbusy[i] = 0;
+    }
+}
 
-/**
- * @brief inqcomp() -- complete msg (update incount&&inhead)
- *
- * @return iff incount > 0
- */
-static inline int inqcomp() {
-    inqh.op = ERRMSG;
-    inhead = (inhead + 1) % Maxqueue;
-    incount--;
-    VERBOSE_LOG(3, "incount: %d\n", incount);
-    return (incount > 0);
-};
+void free_msg_buffer() {
+    free(msg_buffer.msgarray);
+    free(msg_buffer.msgbusy);
+}
+
+// /**
+//  * @brief inqrecv() -- recv msg (update incount&&intail)
+//  *
+//  * @return iff incount==1
+//  */
+// static inline int inqrecv(int fromproc) {
+//     printmsg(&inqt, 1);
+//     local_assert((incount < Maxqueue), "outsend(): Inqueue exceeded!");
+//     incount++;
+//     intail = (intail + 1) % Maxqueue;
+//     // update seqno from host fromproc
+//     commreq.rcv_seq[fromproc] = inqt.seqno;
+//     VERBOSE_LOG(3, "incount: %d\n", incount);
+//     return (incount == 1);
+// };
+
+// /**
+//  * @brief inqcomp() -- complete msg (update incount&&inhead)
+//  *
+//  * @return iff incount > 0
+//  */
+// static inline int inqcomp() {
+//     inqueue[inhead].op = ERRMSG;
+//     inhead = (inhead + 1) % Maxqueue;
+//     incount--;
+//     VERBOSE_LOG(3, "incount: %d\n", incount);
+//     return (incount > 0);
+// };
 
 /**
  * @brief inqrecv() -- send msg (update outcount&&outtail)
  *
  * @return iff outcount==1
  */
-static inline int outqsend(int toproc) {
-    local_assert((outcount < Maxqueue), "asendmsg(): Outqueue exceeded!");
-    commreq.snd_seq[toproc]++;
-    outqt.seqno = commreq.snd_seq[toproc];
-    outcount++;
-    outtail = (outtail + 1) % Maxqueue;
-    return (outcount == 1);
-};
+// static inline int outqsend(int toproc) {
+//     local_assert((outcount < Maxqueue), "asendmsg(): Outqueue exceeded!");
+//     commreq.snd_seq[toproc]++;
+//     outqt.seqno = commreq.snd_seq[toproc];
+//     outcount++;
+//     outtail = (outtail + 1) % Maxqueue;
+//     return (outcount == 1);
+// };
 
-/**
- * @brief outqcomp() -- complete msg (update outcount&&outhead)
- *
- * @return iff outcount > 0
- */
-static inline int outqcomp() {
-    outhead = (outhead + 1) % Maxqueue;
-    outcount--;
-    return (outcount > 0);
-};
+// /**
+//  * @brief outqcomp() -- complete msg (update outcount&&outhead)
+//  *
+//  * @return iff outcount > 0
+//  */
+// static inline int outqcomp() {
+//     outhead = (outhead + 1) % Maxqueue;
+//     outcount--;
+//     return (outcount > 0);
+// };
 
 /**
  * @brief req_fdcreate -- creat socket file descriptor used to send and recv
@@ -342,7 +385,8 @@ int req_fdcreate(int i, int flag) {
 #endif
     addr.sin_family = AF_INET;
     addr.sin_addr.s_addr = htonl(INADDR_ANY);
-    addr.sin_port = (flag) ? htons(0) : htons(reqports[system_setting.jia_pid][i]);
+    addr.sin_port =
+        (flag) ? htons(0) : htons(comm_manager.rcv_ports[i]);
 
     res = bind(fd, (struct sockaddr *)&addr, sizeof(addr));
     local_assert((res == 0), "req_fdcreate()-->bind()");
@@ -359,35 +403,35 @@ int req_fdcreate(int i, int flag) {
  * port(repports[jia_pid][i])
  * @return int socket file descriptor(fd)
  */
-int rep_fdcreate(int i, int flag) {
-    int fd, res;
-#ifdef SOLARIS
-    int size;
-#endif /* SOLARIS */
-    struct sockaddr_in addr;
+// int rep_fdcreate(int i, int flag) {
+//     int fd, res;
+// #ifdef SOLARIS
+//     int size;
+// #endif /* SOLARIS */
+//     struct sockaddr_in addr;
 
-    fd = socket(AF_INET, SOCK_DGRAM, 0);
-    local_assert((fd != -1), "rep_fdcreate()-->socket()");
+//     fd = socket(AF_INET, SOCK_DGRAM, 0);
+//     local_assert((fd != -1), "rep_fdcreate()-->socket()");
 
-#ifdef SOLARIS
-    size = Intbytes;
-    res = setsockopt(fd, SOL_SOCKET, SO_RCVBUF, (char *)&size, sizeof(size));
-    local_assert((res == 0), "rep_fdcreate()-->setsockopt():SO_RCVBUF");
+// #ifdef SOLARIS
+//     size = Intbytes;
+//     res = setsockopt(fd, SOL_SOCKET, SO_RCVBUF, (char *)&size, sizeof(size));
+//     local_assert((res == 0), "rep_fdcreate()-->setsockopt():SO_RCVBUF");
 
-    size = Intbytes;
-    res = setsockopt(fd, SOL_SOCKET, SO_SNDBUF, (char *)&size, sizeof(size));
-    local_assert((res == 0), "rep_fdcreate()-->setsockopt():SO_SNDBUF");
-#endif /* SOLARIS */
+//     size = Intbytes;
+//     res = setsockopt(fd, SOL_SOCKET, SO_SNDBUF, (char *)&size, sizeof(size));
+//     local_assert((res == 0), "rep_fdcreate()-->setsockopt():SO_SNDBUF");
+// #endif /* SOLARIS */
 
-    addr.sin_family = AF_INET;
-    addr.sin_addr.s_addr = htonl(INADDR_ANY);
-    addr.sin_port = (flag) ? htons(0) : htons(repports[system_setting.jia_pid][i]);
+//     addr.sin_family = AF_INET;
+//     addr.sin_addr.s_addr = htonl(INADDR_ANY);
+//     addr.sin_port =
+//         (flag) ? htons(0) : htons(repports[system_setting.jia_pid][i]);
 
-    res = bind(fd, (struct sockaddr *)&addr, sizeof(addr));
-    local_assert((res == 0), "rep_fdcreate()-->bind()");
-    return fd;
-}
-
+//     res = bind(fd, (struct sockaddr *)&addr, sizeof(addr));
+//     local_assert((res == 0), "rep_fdcreate()-->bind()");
+//     return fd;
+// }
 
 /**
  * @brief msgserver -- according to inqueue head msg.op choose different server
@@ -396,84 +440,84 @@ int rep_fdcreate(int i, int flag) {
 void msgserver() {
     SPACE(1);
     VERBOSE_LOG(3, "Enterserver msg[%d], incount=%d, inhead=%d, intail=%d!\n",
-                inqh.op, incount, inhead, intail);
-    switch (inqh.op) {
+                inqueue.queue[inqueue.head].msg.op, inqueue.busy_count, inqueue.head, inqueue.tail);
+    switch (inqueue.queue[inqueue.head].msg.op) {
     case DIFF:
-        diffserver(&inqh);
+        diffserver(&(inqueue.queue[inqueue.head].msg));
         break;
     case DIFFGRANT:
-        diffgrantserver(&inqh);
+        diffgrantserver(&(inqueue.queue[inqueue.head].msg));
         break;
     case GETP:
-        getpserver(&inqh);
+        getpserver(&(inqueue.queue[inqueue.head].msg));
         break;
     case GETPGRANT:
-        getpgrantserver(&inqh);
+        getpgrantserver(&(inqueue.queue[inqueue.head].msg));
         break;
     case ACQ:
-        acqserver(&inqh);
+        acqserver(&(inqueue.queue[inqueue.head].msg));
         break;
     case ACQGRANT:
-        acqgrantserver(&inqh);
+        acqgrantserver(&(inqueue.queue[inqueue.head].msg));
         break;
     case INVLD:
-        invserver(&inqh);
+        invserver(&(inqueue.queue[inqueue.head].msg));
         break;
     case BARR:
-        barrserver(&inqh);
+        barrserver(&(inqueue.queue[inqueue.head].msg));
         break;
     case BARRGRANT:
-        barrgrantserver(&inqh);
+        barrgrantserver(&(inqueue.queue[inqueue.head].msg));
         break;
     case REL:
-        relserver(&inqh);
+        relserver(&(inqueue.queue[inqueue.head].msg));
         break;
     case WTNT:
-        wtntserver(&inqh);
+        wtntserver(&(inqueue.queue[inqueue.head].msg));
         break;
     case JIAEXIT:
-        jiaexitserver(&inqh);
+        jiaexitserver(&(inqueue.queue[inqueue.head].msg));
         break;
     case WAIT:
-        waitserver(&inqh);
+        waitserver(&(inqueue.queue[inqueue.head].msg));
         break;
     case WAITGRANT:
-        waitgrantserver(&inqh);
+        waitgrantserver(&(inqueue.queue[inqueue.head].msg));
         break;
     case STAT:
-        statserver(&inqh);
+        statserver(&(inqueue.queue[inqueue.head].msg));
         break;
     case STATGRANT:
-        statgrantserver(&inqh);
+        statgrantserver(&(inqueue.queue[inqueue.head].msg));
         break;
     case SETCV:
-        setcvserver(&inqh);
+        setcvserver(&(inqueue.queue[inqueue.head].msg));
         break;
     case RESETCV:
-        resetcvserver(&inqh);
+        resetcvserver(&(inqueue.queue[inqueue.head].msg));
         break;
     case WAITCV:
-        waitcvserver(&inqh);
+        waitcvserver(&(inqueue.queue[inqueue.head].msg));
         break;
     case CVGRANT:
-        cvgrantserver(&inqh);
+        cvgrantserver(&(inqueue.queue[inqueue.head].msg));
         break;
     case MSGBODY:
     case MSGTAIL:
-        msgrecvserver(&inqh);
+        msgrecvserver(&(inqueue.queue[inqueue.head].msg));
         break;
     case LOADREQ:
-        loadserver(&inqh);
+        loadserver(&(inqueue.queue[inqueue.head].msg));
         break;
     case LOADGRANT:
-        loadgrantserver(&inqh);
+        loadgrantserver(&(inqueue.queue[inqueue.head].msg));
         break;
 
     default:
-        if (inqh.op >= BCAST) {
-            bcastserver(&inqh);
+        if (inqueue[inhead].op >= BCAST) {
+            bcastserver(&(inqueue.queue[inqueue.head].msg));
         } else {
-            printmsg(&inqh, 1);
+            printmsg(&(inqueue.queue[inqueue.head].msg), 1);
             local_assert(0, "msgserver(): Incorrect Message!");
         }
         break;
@@ -530,12 +574,13 @@ void sigio_handler(int sig, siginfo_t *sip, ucontext_t *uap)
     VERBOSE_LOG(3, "\nEnter sigio_handler!\n");
 
     // whether there is a requested from other hosts
-    readfds = commreq.rcv_set;
+    readfds = comm_.rcv_set;
     res = select(commreq.rcv_maxfd, &readfds, NULL, NULL, &zerotime);
     while (res > 0) {
         // handle ready fd(from other hosts)
         for (i = 0; i < system_setting.hostc; i++) {
-            if ((i != system_setting.jia_pid) && FD_ISSET(commreq.rcv_fds[i], &readfds)) {
+            if ((i != system_setting.jia_pid) &&
+                FD_ISSET(commreq.rcv_fds[i], &readfds)) {
 
                 /* step 1: receive data from host i and store it into
                  * inqueue[intail]*/
@@ -719,7 +764,8 @@ void outsend() {
         }
 #endif
         to.sin_family = AF_INET;
-        VERBOSE_LOG(3, "toproc IP address is %s\n", system_setting.hosts[toproc].ip);
+        VERBOSE_LOG(3, "toproc IP address is %s\n",
+                    system_setting.hosts[toproc].ip);
         to.sin_addr.s_addr = inet_addr(system_setting.hosts[toproc].ip);
         to.sin_port = htons(reqports[toproc][fromproc]);
 
@@ -778,7 +824,8 @@ void outsend() {
             VERBOSE_LOG(3,
                         "I am host %d, hostname = %s, I am running outsend() "
                         "function\n",
-                        system_setting.jia_pid, system_setting.hosts[system_setting.jia_pid].username);
+                        system_setting.jia_pid,
+                        system_setting.hosts[system_setting.jia_pid].username);
             sprintf(errstr, "I Can't asend message(%d,%d) to host %d!",
                     outqh.op, outqh.seqno, toproc);
             VERBOSE_LOG(3, "BUFFER SIZE %d (%d)\n", outqh.size, msgsize);
@@ -999,11 +1046,21 @@ void free_msg_queue(msg_queue_t *msg_queue)
     free(msg_queue->queue);
 }
 
+int init_comm_manager() {
+    // for (int i = 0; i < Maxhosts; i++) {
+    //    for (int j = 0; j < Maxhosts; j++) {
+    //         reqports[i][j] = start_port + i * Maxhosts + j;
+    //         repports[i][j] = start_port + Maxhosts * Maxhosts + i * Maxhosts
+    //         + j;
+    //     }
+    // }
 
-int init_comm_manager(){
+    // snd port: Port monitored by peer host i
+    // rcv port: Port monitored by local host that will be used by peer host i
     for (int i = 0; i < Maxhosts; i++) {
-
-    } 
+        comm_manager.snd_ports[i] = start_port + system_setting.jia_pid;
+        comm_manager.rcv_ports[i] = start_port + i;
+    }
 }
 
 #else  /* NULL_LIB */

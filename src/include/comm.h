@@ -40,6 +40,7 @@
 
 #include "global.h"
 #include "init.h"
+#include "semaphore.h"
 
 #define TIMEOUT 1000   /* used to wait for ack */
 #define MAX_RETRIES 64 /* number of retransmissions */
