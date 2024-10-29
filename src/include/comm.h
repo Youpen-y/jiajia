@@ -56,6 +56,12 @@ enum FDCR_MODE{
     FDCR_ACK
 };
 
+typedef struct {
+    unsigned int seqno;     // sequence number
+    int          sid;       // the ack is returned by the host sid
+} ack_t;
+
+
 /**
  * @brief init_msg_queue - initialize msg queue with specified size
  * 
@@ -107,10 +113,10 @@ void free_msg_queue(msg_queue_t *queue);
 typedef struct comm_manager {
     int         snd_fds[Maxhosts];  // send file descriptor
     unsigned    snd_seq[Maxhosts];  // sequence number that used to acknowledge
-    unsigned short snd_server_port;
+    unsigned short snd_server_port; // snd server port is destination host's port
 
     int ack_fds;
-    unsigned ack_seq;
+    unsigned ack_seq; // TODO: consider using ack seq array
     unsigned short ack_port;
 
     int         rcv_fds[Maxhosts];  // read file descriptor
@@ -141,7 +147,7 @@ extern comm_manager_t comm_manager;
 void initcomm();
 
 /**
- * @brief req_fdcreate -- creat socket file descriptor used to send and recv
+ * @brief fd_create -- creat socket file descriptor used to send and recv
  * request
  *
  * @param i the index of host
@@ -151,18 +157,7 @@ void initcomm();
  * creat socket file descriptor(fd) used to send and recv request and bind it to
  * an address (ip/port combination)
  */
-static int fd_create(int i, int flag);
-
-/**
- * @brief rep_fdcreate -- create socket file descriptor(fd) used to send and
- * recv reply
- *
- * @param i the index of host [0, hostc)
- * @param flag equals to 1 means fd with random port, 0 means fd with specified
- * port(repports[jia_pid][i])
- * @return int socket file descriptor(fd)
- */
-int rep_fdcreate(int i, int flag);
+static int fd_create(int i, enum FDCR_MODE flag);
 
 
 /**
@@ -214,8 +209,19 @@ void bsendmsg(jia_msg_t *msg);
 void bcastserver(jia_msg_t *msg);
 
 
+/**
+ * @brief init_comm_manager - initialize comm_manager
+ * 
+ * @return int 
+ */
 static int init_comm_manager();
 
+
+/**
+ * @brief set_nonblocking - set socket to nonblocking mode
+ *
+ * @param sockfd
+ */
 static void set_nonblocking(int sockfd);
 
 

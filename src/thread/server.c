@@ -5,11 +5,11 @@
 pthread_t server_tid;
 void *server_thread(void *args)
 {
-    msg_queue_t *msg_queue = (msg_queue_t *)args;
+    msg_queue_t *inqueue = (msg_queue_t *)args;
     jia_msg_t msg;
 
     while (1) {
-        if (dequeue(msg_queue, &msg) == -1) {
+        if (dequeue(inqueue, &msg) == -1) {
             perror("msg_queue dequeue");
             continue;
         } else {

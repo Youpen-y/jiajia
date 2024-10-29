@@ -21,6 +21,20 @@ void *client_thread(void *args) {
 }
 
 void *client_listen(void *args) {
+    struct sockaddr_in from;
+    int s = sizeof(from);
+
+    while (1) {
+        ack_t ack;
+
+        int ret = recvfrom(comm_manager.ack_fds, (char *)&ack, sizeof(ack), 0,
+                           (struct sockaddr *)&from, (socklen_t *)&s);
+        if (ret == -1) {
+            perror("recvfrom");
+            continue;
+        }
+
+
     int seq;
     struct sockaddr_in from;
     int s = sizeof(from);
@@ -63,7 +77,7 @@ int outsend(jia_msg_t *msg) {
     to_id = msg->topid;
     from_id = msg->frompid;
 
-    int sockfd = comm_manager.snd_fds[to_id];
+    int sockfd = comm_manager.snd_fds[0];
     struct sockaddr_in to_addr;
 
     if (to_id == from_id) {
@@ -78,7 +92,7 @@ int outsend(jia_msg_t *msg) {
         }
 #endif
 
-        /* step 1: send msg to ip */
+        /* step 1: send msg to destination host with ip */
         to_addr.sin_family = AF_INET;
         to_addr.sin_port = htons(comm_manager.snd_server_port);
         to_addr.sin_addr.s_addr = inet_addr(system_setting.hosts[to_id].ip);

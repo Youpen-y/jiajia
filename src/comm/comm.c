@@ -204,18 +204,19 @@ void initcomm() {
 #endif /* JIA_DEBUG */
 
     init_comm_manager();
+    pthread_create(&client_tid, NULL, client_thread,
+                   NULL); // create a new thread to send msg from outqueue
+    pthread_create(&server_tid, NULL, server_thread,
+                   NULL); // create a new thread to serve msg from inqueue 
 }
 
 /**
- * @brief req_fdcreate -- creat socket file descriptor used to send and recv
- * request
+ * @brief fd_create -- creat socket file descriptor used to send and recv
+ * msg and acknowledgement msg
  *
  * @param i the index of host
- * @param flag 1 means sin_port = 0, random port; others means specified
- * sin_port = reqports[jia_pid][i]
+ * @param flag enum FDCR_MODE
  * @return int socket file descriptor
- * creat socket file descriptor(fd) used to send and recv request and bind it to
- * an address (ip/port combination)
  */
 int fd_create(int i, enum FDCR_MODE flag) {
     int fd, res;
@@ -224,7 +225,7 @@ int fd_create(int i, enum FDCR_MODE flag) {
     fd = socket(AF_INET, SOCK_DGRAM, 0);
     local_assert((fd != -1), "req_fdcreate()-->socket()");
 
-#ifdef SOLARIS
+    // there, change the socket send and recv buffer size mannually
     size = Maxmsgsize + Msgheadsize + 128;
     res = setsockopt(fd, SOL_SOCKET, SO_RCVBUF, (char *)&size, sizeof(size));
     local_assert((res == 0), "req_fdcreate()-->setsockopt():SO_RCVBUF");
@@ -232,7 +233,7 @@ int fd_create(int i, enum FDCR_MODE flag) {
     size = Maxmsgsize + Msgheadsize + 128;
     res = setsockopt(fd, SOL_SOCKET, SO_SNDBUF, (char *)&size, sizeof(size));
     local_assert((res == 0), "req_fdcreate()-->setsockopt():SO_SNDBUF");
-#endif
+
     addr.sin_family = AF_INET;
     addr.sin_addr.s_addr = htonl(INADDR_ANY);
     switch (flag) {
@@ -253,44 +254,6 @@ int fd_create(int i, enum FDCR_MODE flag) {
     return fd;
 }
 
-/**
- * @brief rep_fdcreate -- create socket file descriptor(fd) used to send and
- * recv reply
- *
- * @param i the index of host [0, hostc)
- * @param flag equals to 1 means fd with random port, 0 means fd with specified
- * port(repports[jia_pid][i])
- * @return int socket file descriptor(fd)
- */
-// int rep_fdcreate(int i, int flag) {
-//     int fd, res;
-// #ifdef SOLARIS
-//     int size;
-// #endif /* SOLARIS */
-//     struct sockaddr_in addr;
-
-//     fd = socket(AF_INET, SOCK_DGRAM, 0);
-//     local_assert((fd != -1), "rep_fdcreate()-->socket()");
-
-// #ifdef SOLARIS
-//     size = Intbytes;
-//     res = setsockopt(fd, SOL_SOCKET, SO_RCVBUF, (char *)&size, sizeof(size));
-//     local_assert((res == 0), "rep_fdcreate()-->setsockopt():SO_RCVBUF");
-
-//     size = Intbytes;
-//     res = setsockopt(fd, SOL_SOCKET, SO_SNDBUF, (char *)&size, sizeof(size));
-//     local_assert((res == 0), "rep_fdcreate()-->setsockopt():SO_SNDBUF");
-// #endif /* SOLARIS */
-
-//     addr.sin_family = AF_INET;
-//     addr.sin_addr.s_addr = htonl(INADDR_ANY);
-//     addr.sin_port =
-//         (flag) ? htons(0) : htons(repports[system_setting.jia_pid][i]);
-
-//     res = bind(fd, (struct sockaddr *)&addr, sizeof(addr));
-//     local_assert((res == 0), "rep_fdcreate()-->bind()");
-//     return fd;
-// }
 
 /**
  * @brief msgserver -- according to inqueue head msg.op choose different server
@@ -888,6 +851,8 @@ int init_comm_manager() {
         comm_manager.snd_server_port = start_port + system_setting.jia_pid;
         comm_manager.snd_ack_port = start_port + Maxhosts;
         comm_manager.rcv_ports[i] = start_port + i;
+        comm_manager.snd_seq[i] = 0;
+        comm_manager.rcv_seq[i] = 0;
     }
 
     for (i = 0; i < Maxhosts; i++) {
@@ -896,7 +861,6 @@ int init_comm_manager() {
         // request from (host i) is will be receive from commreq.rcv_fds[i]
         // (whose port = comm_manager.rcv_ports[i])
         comm_manager.rcv_fds[i] = fd_create(i, FDCR_RECV);
-
         set_nonblocking(comm_manager.rcv_fds[i]);
     }
     // snd_fds socket fd with random port
@@ -910,11 +874,6 @@ int init_comm_manager() {
         comm_manager.snd_seq[i] = 0;
         comm_manager.rcv_seq[i] = 0;
     }
-
-    pthread_create(&client_tid, NULL, client_thread,
-                   NULL); // create a new thread to listen to commreq
-    pthread_create(&server_tid, NULL, server_thread,
-                   NULL); // create a new thread to listen to commrep
 }
 
 void set_nonblocking(int sockfd) {
