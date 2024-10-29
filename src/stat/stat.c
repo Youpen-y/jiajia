@@ -87,7 +87,7 @@ void statserver(jia_msg_t *rep)
  if (statcnt == system_setting.hostc) {
     statcnt = 0;
     clearstat();
-    int index = free_msg_index_lock(&msg_buffer);
+    int index = freemsg_lock(&msg_buffer);
     grant = &(msg_buffer.buffer[index].msg);
     grant->frompid = system_setting.jia_pid;
     grant->size = 0;
@@ -98,7 +98,7 @@ void statserver(jia_msg_t *rep)
       move_msg_to_outqueue(&msg_buffer, index, &outqueue);
     }
    //  freemsg(grant);
-   free_msg_index_unlock(&msg_buffer, index);
+   freemsg_unlock(&msg_buffer, index);
  }
 }
 

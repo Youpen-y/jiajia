@@ -111,29 +111,19 @@ typedef enum {
     SLOT_BUSY = 1,  // slot is busy
 } slot_state_t;
 
-typedef struct buffer_slot {
+typedef struct slot {
     jia_msg_t msg;
     volatile slot_state_t state;
     pthread_mutex_t lock;
-    pthread_cond_t  cond;
-} buffer_slot_t;
+} slot_t;
 typedef struct {
-    buffer_slot_t *buffer;
+    slot_t *buffer;
     int        size;
-
-    sem_t      busy_count;
-    sem_t      free_count;
+    sem_t      count;
 } msg_buffer_t;
 
-typedef struct msg_queue_slot {
-    jia_msg_t msg;               // msg
-    volatile slot_state_t state; // state of slot
-    pthread_mutex_t lock;       // mutex lock for each slot
-    pthread_cond_t cond;         // condition variable
-} msg_queue_slot_t;
-
 typedef struct msg_queue {
-    msg_queue_slot_t *queue;    // msg queue
+    slot_t *queue;    // msg queue
     int               size;     // size of queue
 
     pthread_mutex_t   head_lock;    // lock for head
@@ -167,31 +157,31 @@ int init_msg_buffer(msg_buffer_t *msg_buffer, int size);
 void free_msg_buffer(msg_buffer_t *msg_buffer);
 
 /**
- * @brief commit_msg_to_buffer - commit msg to msg buffer
+ * @brief copy_msg_to_buffer - commit msg to msg buffer
  * 
  * @param buffer msg buffer
  * @param msg msg that will be sent (sent to buffer first)
  * @return int 0 if success, -1 if failed
  */
-int commit_msg_to_buffer(msg_buffer_t *buffer, jia_msg_t *msg);
+int copy_msg_to_buffer(msg_buffer_t *buffer, jia_msg_t *msg);
 
 
 /**
- * @brief free_msg_index_lock - get a free msg index from msg buffer and lock it
+ * @brief freemsg_lock - get a free msg index from msg buffer and lock it
  * 
  * @param buffer msg buffer
  * @return int i represent the index of msg that is locked if success, -1 if failed
  */
-int free_msg_index_lock(msg_buffer_t *buffer);
+int freemsg_lock(msg_buffer_t *buffer);
 
 
 /**
- * @brief free_msg_index_unlock - unlock msg index and return it to msg buffer
+ * @brief freemsg_unlock - unlock msg index and return it to msg buffer
  *
  * @param buffer msg buffer
  * @param index index of occupied msg slot of msg buffer
  */
-void free_msg_index_unlock(msg_buffer_t *buffer, int index);
+void freemsg_unlock(msg_buffer_t *buffer, int index);
 
 
 /**

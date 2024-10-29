@@ -37,6 +37,7 @@
 
 #include "tools.h"
 #include <pthread.h>
+#include <string.h>
 #ifndef NULL_LIB
 #include "comm.h"
 #include "global.h"
@@ -111,7 +112,7 @@ int init_msg_buffer(msg_buffer_t *msg_buffer, int size)
         size = system_setting.msg_buffer_size;
     }
 
-    msg_buffer->buffer = (buffer_slot_t *)malloc(sizeof(buffer_slot_t) * size);
+    msg_buffer->buffer = (slot_t *)malloc(sizeof(slot_t) * size);
     if (msg_buffer->buffer == NULL) {
         perror("msg_buffer malloc");
         return -1;
@@ -121,8 +122,7 @@ int init_msg_buffer(msg_buffer_t *msg_buffer, int size)
     msg_buffer->size = size;
 
     // initialize semaphores
-    if (sem_init(&(msg_buffer->busy_count), 0, 0)!= 0 \
-        || sem_init(&(msg_buffer->free_count), 0, size)!= 0) {
+    if (sem_init(&(msg_buffer->count), 0, 0)!= 0) {
         perror("msg_buffer sem init");
         free(msg_buffer->buffer);
         return -1;
@@ -133,15 +133,12 @@ int init_msg_buffer(msg_buffer_t *msg_buffer, int size)
         msg_buffer->buffer[i].msg = (jia_msg_t) {0};
         msg_buffer->buffer[i].msg.op = ERRMSG;
         msg_buffer->buffer[i].state = SLOT_FREE;
-        if(pthread_mutex_init(&(msg_buffer->buffer[i].lock), NULL)!= 0 \
-            || pthread_cond_init(&(msg_buffer->buffer[i].cond), NULL)!= 0) {
+        if(pthread_mutex_init(&(msg_buffer->buffer[i].lock), NULL)!= 0) {
             perror("msg_buffer mutex/cond init");
             for(int j = 0; j < i; j++) {
                 pthread_mutex_destroy(&(msg_buffer->buffer[j].lock));
-                pthread_cond_destroy(&(msg_buffer->buffer[j].cond));
             }
-            sem_destroy(&(msg_buffer->busy_count));
-            sem_destroy(&(msg_buffer->free_count));
+            sem_destroy(&(msg_buffer->count));
             free(msg_buffer->buffer);
             return -1;
         }
@@ -153,77 +150,66 @@ int init_msg_buffer(msg_buffer_t *msg_buffer, int size)
 void free_msg_buffer(msg_buffer_t *msg_buffer)
 {
     for (int i = 0; i < msg_buffer->size; i++) {
-        buffer_slot_t *slot = &msg_buffer->buffer[i];
+        slot_t *slot = &msg_buffer->buffer[i];
         pthread_mutex_destroy(&slot->lock);
-        pthread_cond_destroy(&slot->cond);
     }
-    sem_destroy(&msg_buffer->busy_count);
-    sem_destroy(&msg_buffer->free_count);
+    sem_destroy(&msg_buffer->count);
     free(msg_buffer->buffer);
 }
 
-int commit_msg_to_buffer(msg_buffer_t *buffer, jia_msg_t *msg)
+int copy_msg_to_buffer(msg_buffer_t *buffer, jia_msg_t *msg)
 {
-    if (sem_wait(&msg_buffer.free_count) != 0) {
+    if (sem_wait(&msg_buffer.count) != 0) {
         return -1;
     }
 
     for (int i = 0; i < msg_buffer.size; i++) {
-        buffer_slot_t *slot = &msg_buffer.buffer[i];
-        pthread_mutex_lock(&slot->lock);
-        if (slot->state == SLOT_FREE) {
-            slot->msg = *msg;
+        slot_t *slot = &msg_buffer.buffer[i];
+        if(!pthread_mutex_trylock(&slot->lock)){
             slot->state = SLOT_BUSY;
-            pthread_mutex_unlock(&slot->lock);
-            break;
-        }else{
-            pthread_mutex_unlock(&slot->lock);
+            memcpy((void *)&slot->msg, (void *)msg, sizeof(jia_msg_t));
+            slot->state = SLOT_FREE;
+            return i;
         }
     }
 
-    sem_post(&msg_buffer.busy_count);
+    sem_post(&msg_buffer.count);
     return 0;
 }
 
-int free_msg_index_lock(msg_buffer_t *buffer)
+int freemsg_lock(msg_buffer_t *buffer)
 {
-    sem_wait(&msg_buffer.free_count);
+    if (sem_wait(&msg_buffer.count) != 0) {
+        return -1;
+    }
 
     for (int i = 0; i < msg_buffer.size; i++) {
-        buffer_slot_t *slot = &msg_buffer.buffer[i];
-        pthread_mutex_lock(&slot->lock);
-        if (slot->state == SLOT_FREE) {
+        slot_t *slot = &msg_buffer.buffer[i];
+        if(!pthread_mutex_trylock(&slot->lock)){
+            slot->state = SLOT_BUSY;
             return i;
-        } else {
-            pthread_mutex_unlock(&slot->lock);
         }
     }
     return -1;
 }
 
-void free_msg_index_unlock(msg_buffer_t *buffer, int index)
+void freemsg_unlock(msg_buffer_t *buffer, int index)
 {
-    buffer_slot_t *slot = &msg_buffer.buffer[index];
-    slot->state = SLOT_BUSY;
+    slot_t *slot = &msg_buffer.buffer[index];
+    slot->state = SLOT_FREE;
     pthread_mutex_unlock(&slot->lock);
-    sem_post(&msg_buffer.busy_count);
+    
+    sem_post(&msg_buffer.count);
 }
 
 int move_msg_to_outqueue(msg_buffer_t *buffer, int index, msg_queue_t *outqueue)
 {
-    int ret;
-
-    sem_wait(&outqueue->free_count);
-    buffer_slot_t *slot = &msg_buffer.buffer[index];
-    pthread_mutex_lock(&slot->lock);
-    ret = enqueue(outqueue, &slot->msg);
+    slot_t *slot = &msg_buffer.buffer[index];
+    int ret = enqueue(outqueue, &slot->msg);
     if (ret == -1) {
         perror("enqueue");
         return ret;
     }
-    slot->state = SLOT_FREE;
-    pthread_mutex_unlock(&slot->lock);
-    sem_post(&buffer->free_count);
     return 0;
 }
 
@@ -250,7 +236,7 @@ void jia_send(char *buf, int len, int toproc, int tag) {
     msgptr = buf;
 
     // req = newmsg();
-    index = free_msg_index_lock(&msg_buffer);
+    index = freemsg_lock(&msg_buffer);
     req = &msg_buffer.buffer[index].msg;
     req->frompid = system_setting.jia_pid;
     req->topid = toproc;
@@ -272,7 +258,7 @@ void jia_send(char *buf, int len, int toproc, int tag) {
     // asendmsg(req);
     // freemsg(req);
     move_msg_to_outqueue(&msg_buffer, index, &outqueue);
-    free_msg_index_unlock(&msg_buffer, index);
+    freemsg_unlock(&msg_buffer, index);
 }
 
 /**
@@ -540,7 +526,7 @@ void jia_bcast(char *buf, int len, int root) {
         msgptr = buf;
 
         // req = newmsg();
-        index = free_msg_index_lock(&msg_buffer);
+        index = freemsg_lock(&msg_buffer);
         req = &msg_buffer.buffer[index].msg;
         req->frompid = system_setting.jia_pid;
         req->topid = system_setting.jia_pid;
