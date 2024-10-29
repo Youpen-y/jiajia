@@ -36,6 +36,7 @@
  **********************************************************************/
 
 #include "tools.h"
+#include <pthread.h>
 #ifndef NULL_LIB
 #include "comm.h"
 #include "global.h"
@@ -104,7 +105,7 @@ void initmsg() {
 
 
 
-void init_msg_buffer(msg_buffer_t *msg_buffer, int size)
+int init_msg_buffer(msg_buffer_t *msg_buffer, int size)
 {
     if (size <= 0) {
         size = system_setting.msg_buffer_size;
@@ -132,11 +133,11 @@ void init_msg_buffer(msg_buffer_t *msg_buffer, int size)
         msg_buffer->buffer[i].msg = (jia_msg_t) {0};
         msg_buffer->buffer[i].msg.op = ERRMSG;
         msg_buffer->buffer[i].state = SLOT_FREE;
-        if(pthread_mutex_init(&(msg_buffer->buffer[i].mutex), NULL)!= 0 \
+        if(pthread_mutex_init(&(msg_buffer->buffer[i].lock), NULL)!= 0 \
             || pthread_cond_init(&(msg_buffer->buffer[i].cond), NULL)!= 0) {
             perror("msg_buffer mutex/cond init");
             for(int j = 0; j < i; j++) {
-                pthread_mutex_destroy(&(msg_buffer->buffer[j].mutex));
+                pthread_mutex_destroy(&(msg_buffer->buffer[j].lock));
                 pthread_cond_destroy(&(msg_buffer->buffer[j].cond));
             }
             sem_destroy(&(msg_buffer->busy_count));
@@ -163,12 +164,12 @@ void free_msg_buffer(msg_buffer_t *msg_buffer)
 
 int commit_msg_to_buffer(msg_buffer_t *buffer, jia_msg_t *msg)
 {
-    if (sem_wait(&msg_buffer->free_count) != 0) {
+    if (sem_wait(&msg_buffer.free_count) != 0) {
         return -1;
     }
 
-    for (int i = 0; i < msg_buffer->size; i++) {
-        buffer_slot_t *slot = &msg_buffer->buffer[i];
+    for (int i = 0; i < msg_buffer.size; i++) {
+        buffer_slot_t *slot = &msg_buffer.buffer[i];
         pthread_mutex_lock(&slot->lock);
         if (slot->state == SLOT_FREE) {
             slot->msg = *msg;
@@ -180,16 +181,16 @@ int commit_msg_to_buffer(msg_buffer_t *buffer, jia_msg_t *msg)
         }
     }
 
-    sem_post(&msg_buffer->busy_count);
+    sem_post(&msg_buffer.busy_count);
     return 0;
 }
 
 int free_msg_index_lock(msg_buffer_t *buffer)
 {
-    sem_wait(&msg_buffer->free_count);
+    sem_wait(&msg_buffer.free_count);
 
-    for (int i = 0; i < msg_buffer->size; i++) {
-        buffer_slot_t *slot = &msg_buffer->buffer[i];
+    for (int i = 0; i < msg_buffer.size; i++) {
+        buffer_slot_t *slot = &msg_buffer.buffer[i];
         pthread_mutex_lock(&slot->lock);
         if (slot->state == SLOT_FREE) {
             return i;
@@ -202,10 +203,10 @@ int free_msg_index_lock(msg_buffer_t *buffer)
 
 void free_msg_index_unlock(msg_buffer_t *buffer, int index)
 {
-    buffer_slot_t *slot = &msg_buffer->buffer[index];
+    buffer_slot_t *slot = &msg_buffer.buffer[index];
     slot->state = SLOT_BUSY;
     pthread_mutex_unlock(&slot->lock);
-    sem_post(&msg_buffer->busy_count);
+    sem_post(&msg_buffer.busy_count);
 }
 
 int move_msg_to_outqueue(msg_buffer_t *buffer, int index, msg_queue_t *outqueue)
@@ -213,7 +214,7 @@ int move_msg_to_outqueue(msg_buffer_t *buffer, int index, msg_queue_t *outqueue)
     int ret;
 
     sem_wait(&outqueue->free_count);
-    buffer_slot_t *slot = &msg_buffer->buffer[index];
+    buffer_slot_t *slot = &msg_buffer.buffer[index];
     pthread_mutex_lock(&slot->lock);
     ret = enqueue(outqueue, &slot->msg);
     if (ret == -1) {
@@ -250,7 +251,7 @@ void jia_send(char *buf, int len, int toproc, int tag) {
 
     // req = newmsg();
     index = free_msg_index_lock(&msg_buffer);
-    req = &msg_buffer->buffer[index].msg;
+    req = &msg_buffer.buffer[index].msg;
     req->frompid = system_setting.jia_pid;
     req->topid = toproc;
     req->scope = tag;
@@ -258,19 +259,19 @@ void jia_send(char *buf, int len, int toproc, int tag) {
     while (msgsize > Maxmsgsize) {
         req->op = MSGBODY;
         req->size = 0;
-        appendmsg(req, msgptr, Maxmsgsize);
+        appendmsg(req, (unsigned char *)msgptr, Maxmsgsize);
         // asendmsg(req);
-        move_msg_to_outqueue(&msg_buffer, index, &msg_queue);
+        move_msg_to_outqueue(&msg_buffer, index, &outqueue);
         msgptr += Maxmsgsize;
         msgsize -= Maxmsgsize;
     }
 
     req->op = MSGTAIL;
     req->size = 0;
-    appendmsg(req, msgptr, msgsize);
+    appendmsg(req, (unsigned char *)msgptr, msgsize);
     // asendmsg(req);
     // freemsg(req);
-    move_msg_to_outqueue(&msg_buffer, index, &msg_queue);
+    move_msg_to_outqueue(&msg_buffer, index, &outqueue);
     free_msg_index_unlock(&msg_buffer, index);
 }
 
@@ -540,7 +541,7 @@ void jia_bcast(char *buf, int len, int root) {
 
         // req = newmsg();
         index = free_msg_index_lock(&msg_buffer);
-        req = &msg_buffer->buffer[index].msg;
+        req = &msg_buffer.buffer[index].msg;
         req->frompid = system_setting.jia_pid;
         req->topid = system_setting.jia_pid;
         req->scope = BCAST_TAG;
@@ -548,7 +549,7 @@ void jia_bcast(char *buf, int len, int root) {
         while (msgsize > Maxmsgsize) {
             req->op = MSGBODY;
             req->size = 0;
-            appendmsg(req, msgptr, Maxmsgsize);
+            appendmsg(req, (unsigned char *)msgptr, Maxmsgsize);
             bsendmsg(req);
             msgptr += Maxmsgsize;
             msgsize -= Maxmsgsize;
@@ -556,7 +557,7 @@ void jia_bcast(char *buf, int len, int root) {
 
         req->op = MSGTAIL;
         req->size = 0;
-        appendmsg(req, msgptr, msgsize);
+        appendmsg(req, (unsigned char *)msgptr, msgsize);
         bsendmsg(req);
 
         freemsg(req);

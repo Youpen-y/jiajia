@@ -39,6 +39,7 @@
 #define JIAMSG_H
 
 #include "global.h"
+#include "semaphore.h"
 #define Maxmsgbufs     48
 #define Maxmsgno       0x40000000
 #define MSG_TAG_ALL    (-1)
@@ -56,6 +57,10 @@
 #define MAX_DOUBLE       21
 #define MIN_DOUBLE       22
 
+#define Msgheadsize 32                   /* fixed header of msg */
+#define Maxmsgsize (40960 - Msgheadsize) /* data size of msg */
+#define Maxqueue                                                               \
+    32 /* size of input and output queue for communication (>= 2*maxhosts)*/
 
 typedef enum {
     DIFF,
@@ -119,6 +124,26 @@ typedef struct {
     sem_t      busy_count;
     sem_t      free_count;
 } msg_buffer_t;
+
+typedef struct msg_queue_slot {
+    jia_msg_t msg;               // msg
+    volatile slot_state_t state; // state of slot
+    pthread_mutex_t lock;       // mutex lock for each slot
+    pthread_cond_t cond;         // condition variable
+} msg_queue_slot_t;
+
+typedef struct msg_queue {
+    msg_queue_slot_t *queue;    // msg queue
+    int               size;     // size of queue
+
+    pthread_mutex_t   head_lock;    // lock for head
+    pthread_mutex_t   tail_lock;    // lock for tail
+    int               head;         // head
+    int               tail;         // tail
+
+    sem_t             busy_count;   // busy slot count
+    sem_t             free_count;   // free slot count
+} msg_queue_t;
 
 // extern variables
 extern msg_buffer_t msg_buffer;

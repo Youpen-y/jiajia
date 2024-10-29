@@ -122,9 +122,9 @@ void initcomm() {
     init_msg_buffer(); // initialize msg array and corresponding flag that
                        // indicate busy or free
 
-    init_queue(&inqueue, system_setting.inqueue_size); // init input msg queue
-    init_queue(&outqueue,
-               system_setting.outqueue_size); // init output msg queue
+    init_msg_queue(&inqueue, system_setting.msg_queue_size); // init input msg queue
+    init_msg_queue(&outqueue,
+               system_setting.msg_queue_size); // init output msg queue
 
 #if defined SOLARIS || defined IRIX62
     {
@@ -202,159 +202,8 @@ void initcomm() {
         }
 #endif /* JIA_DEBUG */
 
-    /***********Initialize commreq ********************/
-
-    // commreq.rcv_maxfd = 0;
-    // commreq.snd_maxfd = 0;
-    // FD_ZERO(&(commreq.snd_set));
-    // FD_ZERO(&(commreq.rcv_set));
-    // for (i = 0; i < Maxhosts; i++) {
-    //     fd = req_fdcreate(i, 0); // create socket and bind it to [INADDR_ANY,
-    //                              // reqports[jia_pid][i]]
-    //     commreq.rcv_fds[i] =
-    //         fd; // request from (host i) is will be receive from
-    //             // commreq.rcv_fds[i] (whose port = reqports[jia_pid][i]])
-    //     // FD_SET(fd, &commreq.rcv_set);
-    //     // commreq.rcv_maxfd = MAX(fd + 1, commreq.rcv_maxfd);
-
-    //     if (0 > fcntl(commreq.rcv_fds[i], F_SETOWN,
-    //                   getpid())) // set current process to receive SIGIO
-    //                   signal
-    //         local_assert(0, "initcomm()-->fcntl(..F_SETOWN..)");
-
-    //     // if (0 > fcntl(commreq.rcv_fds[i], F_SETFL, FASYNC|FNDELAY))
-    //     if (0 > fcntl(commreq.rcv_fds[i], F_SETFL, O_ASYNC | O_NONBLOCK))
-    //         local_assert(0, "initcomm()-->fcntl(..F_SETFL..)");
-
-    //     fd = req_fdcreate(i, 1);
-    //     commreq.snd_fds[i] = fd; // snd_fds socket fd with random port
-    //     FD_SET(fd, &commreq.snd_set);
-    //     commreq.snd_maxfd = MAX(fd + 1, commreq.snd_maxfd);
-    // }
-    // for (i = 0; i < Maxhosts; i++) {
-    //     commreq.snd_seq[i] = 0;
-    //     commreq.rcv_seq[i] = 0;
-    // }
-
-    /***********Initialize commrep ********************/
-
-    // commrep.rcv_maxfd = 0;
-    // commrep.snd_maxfd = 0;
-    // FD_ZERO(&(commrep.snd_set));
-    // FD_ZERO(&(commrep.rcv_set));
-
-    // for (i = 0; i < Maxhosts; i++) {
-    //     fd = rep_fdcreate(i, 0);
-    //     commrep.rcv_fds[i] =
-    //         fd; // reply from (host i) will be received from
-    //         commrep.rcv_fds[i]
-    //             // (ports = repports[jiapid][i])
-    //     FD_SET(fd, &(commrep.rcv_set));
-    //     commrep.rcv_maxfd = MAX(fd + 1, commrep.rcv_maxfd);
-
-    //     fd = rep_fdcreate(i, 1); // fd with random port
-    //     commrep.snd_fds[i] = fd; // the reply to (host i) will be sended to
-    //                              // snd_fds[i] (whose port is random)
-    //     FD_SET(fd, &commrep.snd_set);
-    //     commrep.snd_maxfd = MAX(fd + 1, commrep.snd_maxfd);
-    // }
-    for (i = 0; i < Maxhosts; i++) {
-
-        // create socket and bind it to [INADDR_ANY, comm_manager.rcv_ports[i]
-        // request from (host i) is will be receive from commreq.rcv_fds[i] (whose port = comm_manager.rcv_ports[i])
-        comm_manager.rcv_fds[i] = req_fdcreate(i, 0);
-
-        if (0 > fcntl(comm_manager.rcv_fds[i], F_SETOWN,
-                      getpid())) // set current process to receive SIGIO signal
-            local_assert(0, "initcomm()-->fcntl(..F_SETOWN..)");
-
-        if (0 > fcntl(comm_manager.rcv_fds[i], F_SETFL, O_ASYNC | O_NONBLOCK))
-            local_assert(0, "initcomm()-->fcntl(..F_SETFL..)");
-
-        // snd_fds socket fd with random port
-        comm_manager.snd_fds[i] = req_fdcreate(i, 1); 
-    }
-    for (i = 0; i < Maxhosts; i++) {
-        comm_manager.snd_seq[i] = 0;
-        comm_manager.rcv_seq[i] = 0;
-    }
-
-    pthread_create(&client_tid, NULL, client_thread,
-                   NULL); // create a new thread to listen to commreq
-    pthread_create(&server_tid, NULL, server_thread,
-                   NULL); // create a new thread to listen to commrep
+    init_comm_manager();
 }
-
-void init_msg_buffer() {
-    msg_buffer.size = system_setting.msg_buffer_size;
-    msg_buffer.msgarray =
-        (jia_msg_t *)malloc(sizeof(jia_msg_t) * msg_buffer.size);
-    msg_buffer.msgbusy = (int *)malloc(sizeof(int) * msg_buffer.size);
-
-    for (int i = 0; i < msg_buffer.size; i++) {
-        msg_buffer.msgarray[i].index = i;
-        msg_buffer.msgbusy[i] = 0;
-    }
-}
-
-void free_msg_buffer() {
-    free(msg_buffer.msgarray);
-    free(msg_buffer.msgbusy);
-}
-
-// /**
-//  * @brief inqrecv() -- recv msg (update incount&&intail)
-//  *
-//  * @return iff incount==1
-//  */
-// static inline int inqrecv(int fromproc) {
-//     printmsg(&inqt, 1);
-//     local_assert((incount < Maxqueue), "outsend(): Inqueue exceeded!");
-//     incount++;
-//     intail = (intail + 1) % Maxqueue;
-//     // update seqno from host fromproc
-//     commreq.rcv_seq[fromproc] = inqt.seqno;
-//     VERBOSE_LOG(3, "incount: %d\n", incount);
-//     return (incount == 1);
-// };
-
-// /**
-//  * @brief inqcomp() -- complete msg (update incount&&inhead)
-//  *
-//  * @return iff incount > 0
-//  */
-// static inline int inqcomp() {
-//     inqueue[inhead].op = ERRMSG;
-//     inhead = (inhead + 1) % Maxqueue;
-//     incount--;
-//     VERBOSE_LOG(3, "incount: %d\n", incount);
-//     return (incount > 0);
-// };
-
-/**
- * @brief inqrecv() -- send msg (update outcount&&outtail)
- *
- * @return iff outcount==1
- */
-// static inline int outqsend(int toproc) {
-//     local_assert((outcount < Maxqueue), "asendmsg(): Outqueue exceeded!");
-//     commreq.snd_seq[toproc]++;
-//     outqt.seqno = commreq.snd_seq[toproc];
-//     outcount++;
-//     outtail = (outtail + 1) % Maxqueue;
-//     return (outcount == 1);
-// };
-
-// /**
-//  * @brief outqcomp() -- complete msg (update outcount&&outhead)
-//  *
-//  * @return iff outcount > 0
-//  */
-// static inline int outqcomp() {
-//     outhead = (outhead + 1) % Maxqueue;
-//     outcount--;
-//     return (outcount > 0);
-// };
 
 /**
  * @brief req_fdcreate -- creat socket file descriptor used to send and recv
@@ -367,7 +216,7 @@ void free_msg_buffer() {
  * creat socket file descriptor(fd) used to send and recv request and bind it to
  * an address (ip/port combination)
  */
-int req_fdcreate(int i, int flag) {
+int fd_create(int i, int flag) {
     int fd, res;
     struct sockaddr_in addr;
 
@@ -1047,20 +896,38 @@ void free_msg_queue(msg_queue_t *msg_queue)
 }
 
 int init_comm_manager() {
-    // for (int i = 0; i < Maxhosts; i++) {
-    //    for (int j = 0; j < Maxhosts; j++) {
-    //         reqports[i][j] = start_port + i * Maxhosts + j;
-    //         repports[i][j] = start_port + Maxhosts * Maxhosts + i * Maxhosts
-    //         + j;
-    //     }
-    // }
-
     // snd port: Port monitored by peer host i
     // rcv port: Port monitored by local host that will be used by peer host i
     for (int i = 0; i < Maxhosts; i++) {
         comm_manager.snd_ports[i] = start_port + system_setting.jia_pid;
         comm_manager.rcv_ports[i] = start_port + i;
     }
+
+    for (i = 0; i < Maxhosts; i++) {
+
+        // create socket and bind it to [INADDR_ANY, comm_manager.rcv_ports[i]
+        // request from (host i) is will be receive from commreq.rcv_fds[i] (whose port = comm_manager.rcv_ports[i])
+        comm_manager.rcv_fds[i] = fd_create(i, 0);
+
+        if (0 > fcntl(comm_manager.rcv_fds[i], F_SETOWN,
+                      getpid())) // set current process to receive SIGIO signal
+            local_assert(0, "initcomm()-->fcntl(..F_SETOWN..)");
+
+        if (0 > fcntl(comm_manager.rcv_fds[i], F_SETFL, O_ASYNC | O_NONBLOCK))
+            local_assert(0, "initcomm()-->fcntl(..F_SETFL..)");
+
+        // snd_fds socket fd with random port
+        comm_manager.snd_fds[i] = fd_create(i, 1); 
+    }
+    for (i = 0; i < Maxhosts; i++) {
+        comm_manager.snd_seq[i] = 0;
+        comm_manager.rcv_seq[i] = 0;
+    }
+
+    pthread_create(&client_tid, NULL, client_thread,
+                   NULL); // create a new thread to listen to commreq
+    pthread_create(&server_tid, NULL, server_thread,
+                   NULL); // create a new thread to listen to commrep
 }
 
 #else  /* NULL_LIB */
