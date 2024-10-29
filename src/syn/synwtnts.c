@@ -153,7 +153,7 @@ void sendwtnts(int operation) {
     VERBOSE_LOG(3, "Enter sendwtnts!\n");
 
     // req = newmsg();
-    index = free_msg_index_lock(&msg_buffer);
+    index = freemsg_lock(&msg_buffer);
     req = &(msg_buffer.buffer[index].msg);
     req->frompid = system_setting.jia_pid;
     req->topid = top.lockid % system_setting.hostc;
@@ -183,7 +183,7 @@ void sendwtnts(int operation) {
     // asendmsg(req);
     // freemsg(req);
     move_msg_to_outqueue(&msg_buffer, index, &outqueue);
-    free_msg_index_unlock(&msg_buffer, index);
+    freemsg_unlock(&msg_buffer, index);
 
     VERBOSE_LOG(3, "\nOut of sendwtnts!\n\n");
 }

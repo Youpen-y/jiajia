@@ -158,7 +158,7 @@ void waitserver(jia_msg_t *req) {
 
     if (waitcounter == system_setting.hostc) {
         // grant = newmsg();
-        index = free_msg_index_lock(&msg_buffer);
+        index = freemsg_lock(&msg_buffer);
         grant = &msg_buffer.buffer[index].msg;
         waitcounter = 0;
         grant->frompid = system_setting.jia_pid;
@@ -166,7 +166,7 @@ void waitserver(jia_msg_t *req) {
         grant->op = WAITGRANT;
         broadcast(grant, index);
         // freemsg(grant);
-        free_msg_index_unlock(&msg_buffer, index);
+        freemsg_unlock(&msg_buffer, index);
     }
 }
 

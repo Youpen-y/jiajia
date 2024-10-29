@@ -22,7 +22,7 @@ void *client_thread(void *args) {
 //     sem_wait(&msg_buffer->busy_count);
 //     sem_wait(&outqueue->free_count);
 //     for(int i = 0; i < msg_buffer->size; i++) {
-//         buffer_slot_t *slot = &msg_buffer->buffer[i];
+//         slot_t *slot = &msg_buffer->buffer[i];
 //         pthread_mutex_lock(&slot->lock);
 //         if(slot->state == SLOT_BUSY) {
 //             ret = enqueue(outqueue, &slot->msg);

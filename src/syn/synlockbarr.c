@@ -90,7 +90,7 @@ void acquire(int lock) {
     // freemsg(req);
 
     move_msg_to_outqueue(&msg_buffer, index, &msg_buffer.outqueue);
-    free_msg_index_unlock(&msg_buffer, index);
+    freemsg_unlock(&msg_buffer, index);
     while (acqwait)
         ;
 }
@@ -133,7 +133,7 @@ void grantlock(int lock, int toproc, int acqscope) {
     // asendmsg(grant);
     // freemsg(grant);
     move_msg_to_outqueue(&msg_buffer, index, &msg_buffer.outqueue);
-    free_msg_index_unlock(&msg_buffer, index);
+    freemsg_unlock(&msg_buffer, index);
 }
 
 
@@ -174,7 +174,7 @@ void grantbarr(int lock) {
     grant->op = BARRGRANT;
     broadcast(grant, index);
     // freemsg(grant);
-    free_msg_index_unlock(&msg_buffer, index);
+    freemsg_unlock(&msg_buffer, index);
 }
 
 /**

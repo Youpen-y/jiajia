@@ -110,7 +110,7 @@ void getpage(address_t addr, int flag) {
     jia_assert((homeid != system_setting.jia_pid), "This should not have happened 2!");
     // req = newmsg();
 
-    int index = free_msg_index_lock(&jia_msg_buffer);
+    int index = freemsg_lock(&jia_msg_buffer);
     req = &jia_msg_buffer.buffer[index].msg;
 
     req->op = GETP;
@@ -126,7 +126,7 @@ void getpage(address_t addr, int flag) {
     // while (getpwait)
     //     ;
     move_msg_to_outqueue(&msg_buffer, index, &outqueue);
-    free_msg_index_unlock(&msg_buffer, index);
+    freemsg_unlock(&msg_buffer, index);
 
 #ifdef DOSTAT
     if (statflag == 1) {
@@ -461,7 +461,7 @@ void savediff(int cachei) {
         cache[cachei]
             .addr); // according to cachei addr get the page's home host index
     if (diffmsg[hosti] == DIFFNULL) { // hosti host's diffmsg is NULL
-        index = free_msg_index_lock(&msg_buffer);
+        index = freemsg_lock(&msg_buffer);
         // diffmsg[hosti] = newmsg();
         diffmsg[hosti] = &msg_buffer.buffer[index].msg;
         diffmsg[hosti]->op = DIFF;
@@ -476,7 +476,7 @@ void savediff(int cachei) {
         diffwait++;
         // asendmsg(diffmsg[hosti]);
         move_msg_to_outqueue(&msg_buffer, index, &outqueue);
-        free_msg_index_unlock(&msg_buffer, index);
+        freemsg_unlock(&msg_buffer, index);
         diffmsg[hosti]->size = 0;
         appendmsg(diffmsg[hosti], diff, diffsize);
         // while (diffwait)

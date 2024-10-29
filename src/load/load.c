@@ -69,7 +69,7 @@ void initload() {
 void jia_loadbalance() {
     jia_msg_t *req;
 
-    int index = free_msg_index_lock(&msg_buffer);
+    int index = freemsg_lock(&msg_buffer);
     req = &(msg_buffer.buffer[index].msg);
     // req = newmsg();
     req->frompid = system_setting.jia_pid;
@@ -84,7 +84,7 @@ void jia_loadbalance() {
     //     ;
 
     move_msg_to_outqueue(&msg_buffer, index, &outqueue);
-    free_msg_index_unlock(&msg_buffer, index);
+    freemsg_unlock(&msg_buffer, index);
 
     // TODO: get an acknowledgement from topid 0
     
@@ -136,7 +136,7 @@ void loadserver(jia_msg_t *req) {
         loadcnt = 0;
         jia_newload();
         // grant = newmsg();
-        index = free_msg_index_lock(&msg_buffer);
+        index = freemsg_lock(&msg_buffer);
         grant = &(msg_buffer.buffer[index].msg);
         grant->frompid = system_setting.jia_pid;
         grant->op = LOADGRANT;
@@ -150,7 +150,7 @@ void loadserver(jia_msg_t *req) {
         broadcast(grant, index);
 
         // freemsg(grant);
-        free_msg_index_unlock(&msg_buffer, index);
+        freemsg_unlock(&msg_buffer, index);
     }
 }
 

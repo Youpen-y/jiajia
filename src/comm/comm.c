@@ -753,7 +753,7 @@ int init_msg_queue(msg_queue_t *msg_queue, int size)
         size = system_setting.msg_queue_size;
     }
 
-    msg_queue->queue = (msg_queue_slot_t *)malloc(sizeof(msg_queue_slot_t) * size);
+    msg_queue->queue = (slot_t *)malloc(sizeof(slot_t) * size);
     if (msg_queue->queue == NULL) {
         perror("msg_queue malloc");
         return -1;
@@ -783,12 +783,10 @@ int init_msg_queue(msg_queue_t *msg_queue, int size)
     
     // initialize slot mutex and condition variable
     for (int i = 0; i < size; i++) {
-        if(pthread_mutex_init(&(msg_queue->queue[i].mutex), NULL) != 0 \
-            || pthread_cond_init(&(msg_queue->queue[i].cond), NULL)!= 0) {
+        if(pthread_mutex_init(&(msg_queue->queue[i].mutex), NULL) != 0) {
             perror("msg_queue slot mutex init");
             for(int j = 0; j < i; j++) {
                 pthread_mutex_destroy(&(msg_queue->queue[j].mutex));
-                pthread_cond_destroy(&(msg_queue->queue[j].cond));
             }
             sem_destroy(&(msg_queue->busy_count));
             sem_destroy(&(msg_queue->free_count));
@@ -822,17 +820,9 @@ int enqueue(msg_queue_t *msg_queue, jia_msg_t *msg)
     pthread_mutex_unlock(&(msg_queue->tail_mutex));
 
     queue_slot_t *slot = &(msg_queue->queue[slot_index]);
-    // lock target slot 
-    pthread_mutex_lock(&slot->mutex);
-    while (slot->state != SLOT_FREE) {  // wait for slot to be free
-        pthread_cond_wait(&(slot->cond), &(slot->mutex));
-    }
     memcpy(&(slot->msg), msg, sizeof(jia_msg_t));   // copy msg to slot
     slot->state = SLOT_BUSY;    // set slot state to busy
 
-    // signal another thread waiting for this slot
-    pthread_cond_signal(&(slot->cond));
-    pthread_mutex_unlock(&(slot->mutex));
     sem_post(&(msg_queue->busy_count));
     return 0;
 }
@@ -855,19 +845,10 @@ int dequeue(msg_queue_t *msg_queue, jia_msg_t *msg)
     msg_queue->head = (msg_queue->head + 1) % msg_queue->size;
     pthread_mutex_unlock(&(msg_queue->head_mutex));
 
-    queue_slot_t *slot = &(msg_queue->queue[slot_index]);
-    // lock target slot
-    pthread_mutex_lock(&slot->mutex);
-    while (slot->state!= SLOT_BUSY) {  // wait for slot to be busy
-        pthread_cond_wait(&(slot->cond), &(slot->mutex));
-    }
-
+    slot_t *slot = &(msg_queue->queue[slot_index]);
     memcpy(msg, &(slot->msg), sizeof(jia_msg_t));   // copy msg from slot
     slot->state = SLOT_FREE;    // set slot state to free
 
-    // signal another thread waiting for this slot
-    pthread_cond_signal(&(slot->cond));
-    pthread_mutex_unlock(&(slot->mutex));
     sem_post(&(msg_queue->free_count));
     return 0;
 }
@@ -881,7 +862,6 @@ void free_msg_queue(msg_queue_t *msg_queue)
     // destory slot mutex and condition variable
     for (int i = 0; i < msg_queue->size; i++) {
         pthread_mutex_destroy(&(msg_queue->queue[i].mutex));
-        pthread_cond_destroy(&(msg_queue->queue[i].cond));
     }
 
     // destory semaphores

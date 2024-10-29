@@ -235,7 +235,7 @@ void jia_wait() {
     }
 
     // req = newmsg();
-    index = free_msg_index_lock(&msg_buffer);
+    index = freemsg_lock(&msg_buffer);
     req = &(msg_buffer.buffer[index].msg);
     req->frompid = system_setting.jia_pid;
     req->topid = 0;
@@ -246,7 +246,7 @@ void jia_wait() {
     // asendmsg(req);
     // freemsg(req);
     move_msg_to_outqueue(&msg_buffer, index, &outqueue);
-    free_msg_index_unlock(&msg_buffer, index);
+    freemsg_unlock(&msg_buffer, index);
     while (waitwait)
         ;
 
@@ -268,7 +268,7 @@ void jia_setcv(int cvnum) {
            "condv %d should range from 0 to %d", cvnum, Maxcvs - 1);
 
     // req = newmsg();
-    index = free_msg_index_lock(&msg_buffer);
+    index = freemsg_lock(&msg_buffer);
     req = &(msg_buffer.buffer[index].msg);
     req->op = SETCV;
     req->frompid = system_setting.jia_pid;
@@ -279,7 +279,7 @@ void jia_setcv(int cvnum) {
     // asendmsg(req);
     // freemsg(req);
     move_msg_to_outqueue(&msg_buffer, index, &outqueue);
-    free_msg_index_unlock(&msg_buffer, index);
+    freemsg_unlock(&msg_buffer, index);
 }
 
 void jia_resetcv(int cvnum) {
@@ -293,7 +293,7 @@ void jia_resetcv(int cvnum) {
            "condv %d should range from 0 to %d", cvnum, Maxcvs - 1);
 
     // req = newmsg();
-    index = free_msg_index_lock(&msg_buffer);
+    index = freemsg_lock(&msg_buffer);
     req = &(msg_buffer.buffer[index].msg);
     req->op = RESETCV;
     req->frompid = system_setting.jia_pid;
@@ -304,7 +304,7 @@ void jia_resetcv(int cvnum) {
     // asendmsg(req);
     // freemsg(req);
     move_msg_to_outqueue(&msg_buffer, index, &outqueue);
-    free_msg_index_unlock(&msg_buffer, index);
+    freemsg_unlock(&msg_buffer, index);
 }
 
 void jia_waitcv(int cvnum) {
@@ -318,7 +318,7 @@ void jia_waitcv(int cvnum) {
            "condv %d should range from 0 to %d", cvnum, Maxcvs - 1);
 
     // req = newmsg();
-    index = free_msg_index_lock(&msg_buffer);
+    index = freemsg_lock(&msg_buffer);
     req = &(msg_buffer.buffer[index].msg);
     req->op = WAITCV;
     req->frompid = system_setting.jia_pid;
@@ -331,7 +331,7 @@ void jia_waitcv(int cvnum) {
     // asendmsg(req);
     // freemsg(req);
     move_msg_to_outqueue(&msg_buffer, index, &outqueue);
-    free_msg_index_unlock(&msg_buffer, index);
+    freemsg_unlock(&msg_buffer, index);
     while (cvwait)
         ;
 }
