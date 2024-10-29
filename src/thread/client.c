@@ -3,8 +3,16 @@
 
 pthread_t client_tid;
 void *client_thread(void *args) {
+    msg_queue_t *outqueue = (msg_queue_t *)args;
+    jia_msg_t msg;
     while (1) {
-        outsend();
+        if (dequeue(&outqueue, &msg) == -1) {
+            perror("outqueue dequeue");
+            continue;
+        } else {
+            outsend(&msg);
+        }
+        
     }
 }
 
@@ -32,5 +40,18 @@ void *client_thread(void *args) {
 //     return 0;
 // }
 
-int outsend()
-{}
+int outsend(jia_msg_t *msg)
+{
+    if (msg == NULL) {
+        perror("msg is NULL");
+        return -1;
+    }
+
+    int to_id, from_id;
+    to_id = msg->to_id;
+    from_id = msg->from_id;
+
+    if (to_id == from_id) {
+        enqueue(&inqueue, msg);
+    }
+}
