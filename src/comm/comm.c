@@ -122,9 +122,10 @@ void initcomm() {
     init_msg_buffer(); // initialize msg array and corresponding flag that
                        // indicate busy or free
 
-    init_msg_queue(&inqueue, system_setting.msg_queue_size); // init input msg queue
+    init_msg_queue(&inqueue,
+                   system_setting.msg_queue_size); // init input msg queue
     init_msg_queue(&outqueue,
-               system_setting.msg_queue_size); // init output msg queue
+                   system_setting.msg_queue_size); // init output msg queue
 
 #if defined SOLARIS || defined IRIX62
     {
@@ -216,7 +217,7 @@ void initcomm() {
  * creat socket file descriptor(fd) used to send and recv request and bind it to
  * an address (ip/port combination)
  */
-int fd_create(int i, int flag) {
+int fd_create(int i, enum FDCR_MODE flag) {
     int fd, res;
     struct sockaddr_in addr;
 
@@ -234,8 +235,17 @@ int fd_create(int i, int flag) {
 #endif
     addr.sin_family = AF_INET;
     addr.sin_addr.s_addr = htonl(INADDR_ANY);
-    addr.sin_port =
-        (flag) ? htons(0) : htons(comm_manager.rcv_ports[i]);
+    switch (flag) {
+    case FDCR_ACK:
+        addr.sin_port = htons(comm_manager.ack_port);
+        break;
+    case FDCR_RECV:
+        addr.sin_port = htons(comm_manager.rcv_ports[i]);
+        break;
+    case FDCR_SEND:
+        addr.sin_port = htons(0);
+        break;
+    }
 
     res = bind(fd, (struct sockaddr *)&addr, sizeof(addr));
     local_assert((res == 0), "req_fdcreate()-->bind()");
@@ -289,7 +299,8 @@ int fd_create(int i, int flag) {
 void msgserver() {
     SPACE(1);
     VERBOSE_LOG(3, "Enterserver msg[%d], incount=%d, inhead=%d, intail=%d!\n",
-                inqueue.queue[inqueue.head].msg.op, inqueue.busy_count, inqueue.head, inqueue.tail);
+                inqueue.queue[inqueue.head].msg.op, inqueue.busy_count,
+                inqueue.head, inqueue.tail);
     switch (inqueue.queue[inqueue.head].msg.op) {
     case DIFF:
         diffserver(&(inqueue.queue[inqueue.head].msg));
@@ -746,9 +757,7 @@ void bcastserver(jia_msg_t *msg) {
     asendmsg(msg);
 }
 
-
-int init_msg_queue(msg_queue_t *msg_queue, int size)
-{
+int init_msg_queue(msg_queue_t *msg_queue, int size) {
     if (size <= 0) {
         size = system_setting.msg_queue_size;
     }
@@ -764,28 +773,28 @@ int init_msg_queue(msg_queue_t *msg_queue, int size)
     msg_queue->tail = 0;
 
     // initialize head mutex and tail mutex
-    if(pthread_mutex_init(&(msg_queue->head_mutex), NULL)!= 0 \
-        || pthread_mutex_init(&(msg_queue->tail_mutex), NULL)!= 0) {
+    if (pthread_mutex_init(&(msg_queue->head_mutex), NULL) != 0 ||
+        pthread_mutex_init(&(msg_queue->tail_mutex), NULL) != 0) {
         perror("msg_queue mutex init");
         free(msg_queue->queue);
         return -1;
     }
 
     // initialize semaphores
-    if (sem_init(&(msg_queue->busy_count), 0, 0)!= 0 \
-        || sem_init(&(msg_queue->free_count), 0, size)!= 0) {
+    if (sem_init(&(msg_queue->busy_count), 0, 0) != 0 ||
+        sem_init(&(msg_queue->free_count), 0, size) != 0) {
         perror("msg_queue sem init");
         pthread_mutex_destroy(&(msg_queue->head_mutex));
         pthread_mutex_destroy(&(msg_queue->tail_mutex));
         free(msg_queue->queue);
         return -1;
     }
-    
+
     // initialize slot mutex and condition variable
     for (int i = 0; i < size; i++) {
-        if(pthread_mutex_init(&(msg_queue->queue[i].mutex), NULL) != 0) {
+        if (pthread_mutex_init(&(msg_queue->queue[i].mutex), NULL) != 0) {
             perror("msg_queue slot mutex init");
-            for(int j = 0; j < i; j++) {
+            for (int j = 0; j < i; j++) {
                 pthread_mutex_destroy(&(msg_queue->queue[j].mutex));
             }
             sem_destroy(&(msg_queue->busy_count));
@@ -801,14 +810,13 @@ int init_msg_queue(msg_queue_t *msg_queue, int size)
     return 0;
 }
 
-int enqueue(msg_queue_t *msg_queue, jia_msg_t *msg)
-{
+int enqueue(msg_queue_t *msg_queue, jia_msg_t *msg) {
     if (msg_queue == NULL || msg == NULL) {
         return -1;
     }
 
     // wait for free slot
-    if (sem_wait(&msg_queue->free_count)!= 0) {
+    if (sem_wait(&msg_queue->free_count) != 0) {
         return -1;
     }
 
@@ -820,21 +828,20 @@ int enqueue(msg_queue_t *msg_queue, jia_msg_t *msg)
     pthread_mutex_unlock(&(msg_queue->tail_mutex));
 
     queue_slot_t *slot = &(msg_queue->queue[slot_index]);
-    memcpy(&(slot->msg), msg, sizeof(jia_msg_t));   // copy msg to slot
-    slot->state = SLOT_BUSY;    // set slot state to busy
+    memcpy(&(slot->msg), msg, sizeof(jia_msg_t)); // copy msg to slot
+    slot->state = SLOT_BUSY;                      // set slot state to busy
 
     sem_post(&(msg_queue->busy_count));
     return 0;
 }
 
-int dequeue(msg_queue_t *msg_queue, jia_msg_t *msg)
-{
+int dequeue(msg_queue_t *msg_queue, jia_msg_t *msg) {
     if (msg_queue == NULL || msg == NULL) {
         return -1;
     }
 
     // wait for busy slot
-    if (sem_wait(&msg_queue->busy_count)!= 0) {
+    if (sem_wait(&msg_queue->busy_count) != 0) {
         return -1;
     }
 
@@ -846,15 +853,14 @@ int dequeue(msg_queue_t *msg_queue, jia_msg_t *msg)
     pthread_mutex_unlock(&(msg_queue->head_mutex));
 
     slot_t *slot = &(msg_queue->queue[slot_index]);
-    memcpy(msg, &(slot->msg), sizeof(jia_msg_t));   // copy msg from slot
-    slot->state = SLOT_FREE;    // set slot state to free
+    memcpy(msg, &(slot->msg), sizeof(jia_msg_t)); // copy msg from slot
+    slot->state = SLOT_FREE;                      // set slot state to free
 
     sem_post(&(msg_queue->free_count));
     return 0;
 }
 
-void free_msg_queue(msg_queue_t *msg_queue)
-{
+void free_msg_queue(msg_queue_t *msg_queue) {
     if (msg_queue == NULL) {
         return;
     }
@@ -879,20 +885,27 @@ int init_comm_manager() {
     // snd port: Port monitored by peer host i
     // rcv port: Port monitored by local host that will be used by peer host i
     for (int i = 0; i < Maxhosts; i++) {
-        comm_manager.snd_ports[i] = start_port + system_setting.jia_pid;
+        comm_manager.snd_server_port = start_port + system_setting.jia_pid;
+        comm_manager.snd_ack_port = start_port + Maxhosts;
         comm_manager.rcv_ports[i] = start_port + i;
     }
 
     for (i = 0; i < Maxhosts; i++) {
 
         // create socket and bind it to [INADDR_ANY, comm_manager.rcv_ports[i]
-        // request from (host i) is will be receive from commreq.rcv_fds[i] (whose port = comm_manager.rcv_ports[i])
-        comm_manager.rcv_fds[i] = fd_create(i, 0);
-        
+        // request from (host i) is will be receive from commreq.rcv_fds[i]
+        // (whose port = comm_manager.rcv_ports[i])
+        comm_manager.rcv_fds[i] = fd_create(i, FDCR_RECV);
+
         set_nonblocking(comm_manager.rcv_fds[i]);
-        // snd_fds socket fd with random port
-        comm_manager.snd_fds[i] = fd_create(i, 1); 
     }
+    // snd_fds socket fd with random port
+    for(i = 0; i < 1; i++){
+        comm_manager.snd_fds[i] = fd_create(i, FDCR_SEND);
+    }
+    // snd_fds socket fd with ack port
+    comm_manager.ack_fds = fd_create(i, FDCR_ACK);
+    
     for (i = 0; i < Maxhosts; i++) {
         comm_manager.snd_seq[i] = 0;
         comm_manager.rcv_seq[i] = 0;
@@ -904,12 +917,10 @@ int init_comm_manager() {
                    NULL); // create a new thread to listen to commrep
 }
 
-
 void set_nonblocking(int sockfd) {
     int flags = fcntl(sockfd, F_GETFL, 0);
     fcntl(sockfd, F_SETFL, flags | O_NONBLOCK);
 }
-
 
 #else  /* NULL_LIB */
 #endif /* NULL_LIB */

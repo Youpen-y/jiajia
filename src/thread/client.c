@@ -1,5 +1,10 @@
-#include "thread.h"
 #include "comm.h"
+#include "msg.h"
+#include "setting.h"
+#include "stat.h"
+#include "thread.h"
+#include "utils.h"
+#include <unistd.h>
 
 pthread_t client_tid;
 void *client_thread(void *args) {
@@ -12,8 +17,16 @@ void *client_thread(void *args) {
         } else {
             outsend(&msg);
         }
-        
     }
+}
+
+void *client_listen(void *args) {
+    int seq;
+    struct sockaddr_in from;
+    int s = sizeof(from);
+    comm_manager.ack_seq =
+        recvfrom(comm_manager.ack_port, (char *)&seq, Intbytes, 0,
+                 (struct sockaddr *)&from, (socklen_t *)&s);
 }
 
 // int move_msg_to_outqueue(msg_buffer_t *msg_buffer, msg_queue_t *outqueue)
@@ -40,27 +53,40 @@ void *client_thread(void *args) {
 //     return 0;
 // }
 
-int outsend(jia_msg_t *msg)
-{
+int outsend(jia_msg_t *msg) {
     if (msg == NULL) {
         perror("msg is NULL");
         return -1;
     }
 
     int to_id, from_id;
-    to_id = msg->to_id;
-    from_id = msg->from_id;
-
+    to_id = msg->topid;
+    from_id = msg->frompid;
 
     int sockfd = comm_manager.snd_fds[to_id];
-    struct sockaddr_in *to_addr;
-    to_addr.sin_family = AF_INET;
-    to_addr.sin_port = htons(comm_manager.snd_ports[to_id]);
-    to_addr.sin_addr.s_addr = inet_addr(system_setting.hosts[to_id].ip);
-    
+    struct sockaddr_in to_addr;
+
     if (to_id == from_id) {
         enqueue(&inqueue, msg);
     } else {
-        sendto(sockfd, msg, sizeof(jia_msg_t), 0, (struct sockaddr *)to_addr, sizeof(struct sockaddr));
+
+#ifdef DOSTAT
+        if (statflag == 1) {
+            jiastat.msgsndcnt++;
+            jiastat.msgsndbytes +=
+                (outqueue.queue[outqueue.head].msg.size + Msgheadsize);
+        }
+#endif
+
+        /* step 1: send msg to ip */
+        to_addr.sin_family = AF_INET;
+        to_addr.sin_port = htons(comm_manager.snd_server_port);
+        to_addr.sin_addr.s_addr = inet_addr(system_setting.hosts[to_id].ip);
+        VERBOSE_LOG(3, "toproc IP address is %u, IP port is %u\n",
+                    to_addr.sin_addr.s_addr, to_addr.sin_port);
+        sendto(sockfd, msg, sizeof(jia_msg_t), 0, (struct sockaddr *)&to_addr,
+               sizeof(struct sockaddr));
+
+        /* step 2: send msg to ip */
     }
 }

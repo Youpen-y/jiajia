@@ -50,6 +50,12 @@
 extern msg_queue_t inqueue;
 extern msg_queue_t outqueue;
 
+enum FDCR_MODE{
+    FDCR_SEND,
+    FDCR_RECV,
+    FDCR_ACK
+};
+
 /**
  * @brief init_msg_queue - initialize msg queue with specified size
  * 
@@ -101,13 +107,18 @@ void free_msg_queue(msg_queue_t *queue);
 typedef struct comm_manager {
     int         snd_fds[Maxhosts];  // send file descriptor
     unsigned    snd_seq[Maxhosts];  // sequence number that used to acknowledge
-    unsigned short snd_ports[Maxhosts];
+    unsigned short snd_server_port;
+
+    int ack_fds;
+    unsigned ack_seq;
+    unsigned short ack_port;
 
     int         rcv_fds[Maxhosts];  // read file descriptor
     unsigned    rcv_seq[Maxhosts];  // sequence number
     unsigned short rcv_ports[Maxhosts];
 } comm_manager_t;
 
+extern comm_manager_t comm_manager;
 
 
 
