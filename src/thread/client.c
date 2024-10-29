@@ -51,12 +51,16 @@ int outsend(jia_msg_t *msg)
     to_id = msg->to_id;
     from_id = msg->from_id;
 
+
+    int sockfd = comm_manager.snd_fds[to_id];
+    struct sockaddr_in *to_addr;
+    to_addr.sin_family = AF_INET;
+    to_addr.sin_port = htons(comm_manager.snd_ports[to_id]);
+    to_addr.sin_addr.s_addr = inet_addr(system_setting.hosts[to_id].ip);
     
-
-
     if (to_id == from_id) {
         enqueue(&inqueue, msg);
     } else {
-        
+        sendto(sockfd, msg, sizeof(jia_msg_t), 0, (struct sockaddr *)to_addr, sizeof(struct sockaddr));
     }
 }

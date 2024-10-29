@@ -199,27 +199,6 @@ void freetwin(address_t *twin) {
 //     return msg;
 // }
 
-int free_msg_index() {
-    int i;
-    for (i = 0; (i < msg_buffer.size) && (msg_buffer.msgbusy[i]!= 0); i++)
-        ;
-    return i;
-}
-
-
-/**
- * @brief freemsg() -- free the space that msg occupied, (only change its busy
- * status and message count, the space can be used by overwritting)
- *
- * @param msg message to be deleted
- */
-void freemsg(jia_msg_t *msg) {
-    int i;
-    disable_sigio();
-    msg_buffer.msgbusy[msg->index] = 0;
-    enable_sigio();
-}
-
 /**
  * @brief apppendmsg() -- append message with len bytes from str
  *

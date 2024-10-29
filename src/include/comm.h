@@ -37,43 +37,15 @@
 
 #ifndef JIACOMM_H
 #define JIACOMM_H
+#pragma once
 
 #include "global.h"
 #include "init.h"
+#include "msg.h"
 #include "semaphore.h"
 
 #define TIMEOUT 1000   /* used to wait for ack */
 #define MAX_RETRIES 64 /* number of retransmissions */
-
-#define Msgheadsize 32                   /* fixed header of msg */
-#define Maxmsgsize (40960 - Msgheadsize) /* data size of msg */
-#define Maxqueue                                                               \
-    32 /* size of input and output queue for communication (>= 2*maxhosts)*/
-
-typedef enum {
-    SLOT_FREE = 0,  // slot is free
-    SLOT_BUSY = 1,  // slot is busy
-} slot_state_t;
-
-typedef struct msg_queue_slot {
-    jia_msg_t msg;               // msg
-    volatile slot_state_t state; // state of slot
-    pthread_mutext_t lock;       // mutex lock for each slot
-    pthread_cond_t cond;         // condition variable
-} msg_queue_slot_t;
-
-typedef struct msg_queue {
-    msg_queue_slot_t *queue;    // msg queue
-    int               size;     // size of queue
-
-    pthread_mutex_t   head_lock;    // lock for head
-    pthread_mutex_t   tail_lock;    // lock for tail
-    int               head;         // head
-    int               tail;         // tail
-
-    sem_t             busy_count;   // busy slot count
-    sem_t             free_count;   // free slot count
-} msg_queue_t;
 
 extern msg_queue_t inqueue;
 extern msg_queue_t outqueue;
@@ -136,9 +108,6 @@ typedef struct comm_manager {
     unsigned short rcv_ports[Maxhosts];
 } comm_manager_t;
 
-extern comm_manager_t req_manager;
-extern comm_manager_t rep_manager;
-
 
 
 
@@ -171,7 +140,7 @@ void initcomm();
  * creat socket file descriptor(fd) used to send and recv request and bind it to
  * an address (ip/port combination)
  */
-int req_fdcreate(int i, int flag);
+static int fd_create(int i, int flag);
 
 /**
  * @brief rep_fdcreate -- create socket file descriptor(fd) used to send and
@@ -234,7 +203,9 @@ void bsendmsg(jia_msg_t *msg);
 void bcastserver(jia_msg_t *msg);
 
 
-int init_comm_manager();
+static int init_comm_manager();
+
+static void set_nonblocking(int sockfd);
 
 
 #endif /* JIACOMM_H */

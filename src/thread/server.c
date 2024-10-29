@@ -2,6 +2,7 @@
 #include "global.h"
 #include "comm.h"
 
+pthread_t server_tid;
 void *server_thread(void *args)
 {
     msg_queue_t *msg_queue = (msg_queue_t *)args;
@@ -105,6 +106,3 @@ void msg_handle(jia_msg_t *msg) {
     SPACE(1);
     VERBOSE_LOG(3, "Out servermsg!\n");
 }
-
-
-pthread_t server_tid;
