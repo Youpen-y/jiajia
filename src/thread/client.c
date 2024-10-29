@@ -1,6 +1,7 @@
 #include "thread.h"
 #include "comm.h"
 
+pthread_t client_tid;
 void *client_thread(void *args) {
     while (1) {
         outsend();
@@ -33,5 +34,3 @@ void *client_thread(void *args) {
 
 int outsend()
 {}
-
-pthread_t client_tid;
