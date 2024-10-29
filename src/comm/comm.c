@@ -1061,7 +1061,11 @@ int init_comm_manager() {
         comm_manager.snd_ports[i] = start_port + system_setting.jia_pid;
         comm_manager.rcv_ports[i] = start_port + i;
     }
+
+
+
 }
+
 
 #else  /* NULL_LIB */
 #endif /* NULL_LIB */

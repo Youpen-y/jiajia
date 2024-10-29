@@ -51,7 +51,12 @@ int outsend(jia_msg_t *msg)
     to_id = msg->to_id;
     from_id = msg->from_id;
 
+    
+
+
     if (to_id == from_id) {
         enqueue(&inqueue, msg);
+    } else {
+        
     }
 }
