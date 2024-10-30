@@ -116,7 +116,7 @@ typedef struct comm_manager {
     unsigned short snd_server_port; // snd server port is destination host's port
 
     int ack_fds;
-    unsigned ack_seq; // TODO: consider using ack seq array
+    unsigned ack_seq[Maxhosts]; // TODO: consider using ack seq array
     unsigned short ack_port;
 
     int         rcv_fds[Maxhosts];  // read file descriptor

@@ -21,26 +21,19 @@ void *client_thread(void *args) {
 }
 
 void *client_listen(void *args) {
-    struct sockaddr_in from;
-    int s = sizeof(from);
+    ack_t ack;
 
     while (1) {
-        ack_t ack;
-
         int ret = recvfrom(comm_manager.ack_fds, (char *)&ack, sizeof(ack), 0,
-                           (struct sockaddr *)&from, (socklen_t *)&s);
+                           NULL, NULL);
         if (ret == -1) {
             perror("recvfrom");
             continue;
         }
-
-
-    int seq;
-    struct sockaddr_in from;
-    int s = sizeof(from);
-    comm_manager.ack_seq =
-        recvfrom(comm_manager.ack_port, (char *)&seq, Intbytes, 0,
-                 (struct sockaddr *)&from, (socklen_t *)&s);
+        if (ack.seqno == comm_manager.ack_seq[ack.sid] + 1) { // new ack
+            comm_manager.ack_seq[ack.sid] = ack.seqno;
+        }
+    }
 }
 
 // int move_msg_to_outqueue(msg_buffer_t *msg_buffer, msg_queue_t *outqueue)
@@ -101,6 +94,10 @@ int outsend(jia_msg_t *msg) {
         sendto(sockfd, msg, sizeof(jia_msg_t), 0, (struct sockaddr *)&to_addr,
                sizeof(struct sockaddr));
 
-        /* step 2: send msg to ip */
+        /* step 2: wait ack */
+        while (comm_manager.ack_seq[to_id] != comm_manager.snd_seq[to_id] + 1);
+    
+        /* step 3: update snd_seq */
+        comm_manager.snd_seq[to_id]++;
     }
 }

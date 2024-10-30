@@ -851,12 +851,9 @@ int init_comm_manager() {
         comm_manager.snd_server_port = start_port + system_setting.jia_pid;
         comm_manager.snd_ack_port = start_port + Maxhosts;
         comm_manager.rcv_ports[i] = start_port + i;
-        comm_manager.snd_seq[i] = 0;
-        comm_manager.rcv_seq[i] = 0;
     }
 
     for (i = 0; i < Maxhosts; i++) {
-
         // create socket and bind it to [INADDR_ANY, comm_manager.rcv_ports[i]
         // request from (host i) is will be receive from commreq.rcv_fds[i]
         // (whose port = comm_manager.rcv_ports[i])
@@ -867,11 +864,12 @@ int init_comm_manager() {
     for(i = 0; i < 1; i++){
         comm_manager.snd_fds[i] = fd_create(i, FDCR_SEND);
     }
-    // snd_fds socket fd with ack port
+    // ack_fds socket fd with ack port
     comm_manager.ack_fds = fd_create(i, FDCR_ACK);
     
     for (i = 0; i < Maxhosts; i++) {
         comm_manager.snd_seq[i] = 0;
+        comm_manager.ack_seq[i] = 0;
         comm_manager.rcv_seq[i] = 0;
     }
 }
