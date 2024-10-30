@@ -1,3 +1,4 @@
+#include <stdbool.h>
 #if !defined(THREAD_H)
 #define THREAD_H
 
@@ -63,7 +64,7 @@ void *listen_thread(void *args);
  * @param one_shot EPOLLONESHOT or not
  * @param trigger_mode trigger mode, 1 for edge trigger, 0 for level trigger
  */
-void addfd(int epollfd, int fd, bool one_shot, int trigger_mode)
+void addfd(int epollfd, int fd, bool one_shot, int trigger_mode);
 
 extern pthread_t client_tid;
 extern pthread_t server_tid;

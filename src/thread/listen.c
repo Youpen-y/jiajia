@@ -23,7 +23,7 @@ void *listen_thread(void *args)
         addfd(epollfd, comm_manager.rcv_fds[i], false, 0);
     }
 
-    epoll_event events[Maxhosts];
+    struct epoll_event events[Maxhosts];
 
     while (1)
     {
@@ -53,12 +53,12 @@ void *listen_thread(void *args)
                 unsigned seqno = msg.seqno + 1;
 
                 // construct an ack msg
-                ackt_t ack;
+                ack_t ack;
                 ack.seqno = seqno;
-                ack.sid = msg.from_id;
+                ack.sid = msg.frompid;
 
                 // return an ack
-                int to_id = msg.from_id;
+                int to_id = msg.frompid;
                 ack_addr.sin_family = AF_INET;
                 ack_addr.sin_port = htons(comm_manager.ack_port);
                 ack_addr.sin_addr.s_addr = inet_addr(system_setting.hosts[to_id].ip);
