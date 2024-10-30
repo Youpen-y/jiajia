@@ -82,5 +82,6 @@ void addfd(int epollfd, int fd, bool one_shot, int trigger_mode);
 
 extern pthread_t client_tid;
 extern pthread_t server_tid;
+extern pthread_t listen_tid;
 
 #endif // THREAD_H

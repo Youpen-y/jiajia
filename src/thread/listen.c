@@ -26,7 +26,7 @@ void *listen_thread(void *args)
         addfd(epollfd, comm_manager.rcv_fds[i], false, 0);
     }
 
-    struct struct epoll_event events[Maxhosts];
+    struct epoll_event events[Maxhosts];
 
     while (1)
     {

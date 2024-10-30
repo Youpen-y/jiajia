@@ -36,6 +36,7 @@
  **********************************************************************/
 
 #include <pthread.h>
+#include <sys/socket.h>
 #ifndef NULL_LIB
 #include "comm.h" // statgrantserver,
 #include "mem.h"  // diffserver, getserver, diffgrantserver, getpgrantserver
@@ -122,7 +123,7 @@ void initcomm() {
                    &outqueue); // create a new thread to send msg from outqueue
     pthread_create(&server_tid, NULL, server_thread, 
                    &inqueue); // create a new thread to serve msg from inqueue
-
+    pthread_create(&listen_tid, NULL, listen_thread, NULL);
 
 
 // #ifdef LINUX

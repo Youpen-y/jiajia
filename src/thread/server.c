@@ -103,7 +103,7 @@ void msg_handle(jia_msg_t *msg) {
         break;
 
     default:
-        if (msg.op >= BCAST) {
+        if (msg->op >= BCAST) {
             bcastserver(msg);
         } else {
             printmsg(msg, 1);

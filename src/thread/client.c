@@ -11,8 +11,8 @@ void *client_thread(void *args) {
     msg_queue_t *outqueue = (msg_queue_t *)args;
     jia_msg_t msg;
     while (1) {
-        if (dequeue(outqueue, &msg) == -1) {
-            perror("outqueue dequeue");
+        if (dequeue(outqueue, &msg) != 0) {
+            VERBOSE_LOG(3, "outqueue is null");
             continue;
         } else {
             outsend(&msg);
