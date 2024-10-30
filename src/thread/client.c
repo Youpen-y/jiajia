@@ -12,16 +12,15 @@
 
 #define RETRYNUM 4
 static bool success = false;
-
+static jia_msg_t msg;
 pthread_t client_tid;
+
 void *client_thread(void *args) {
     msg_queue_t *outqueue = (msg_queue_t *)args;
-    jia_msg_t msg;
-    int ret;
 
     while (1) {
-        if (dequeue(outqueue, &msg) != 0) {
-            VERBOSE_LOG(3, "outqueue is null");
+        if (dequeue(outqueue, &msg)) {
+            log_info(3, "outqueue is null");
             continue;
         } else {
             /* step 1: give seqno */
@@ -89,14 +88,15 @@ int outsend(jia_msg_t *msg) {
                            NULL, NULL);
         }
 
-        /* step 3: ack success&&error manager*/
+        /* step 3: ack success && error manager*/
         if (ret != -1 && (ack.seqno == msg->seqno)) {
             return 0;
         }
         if (ret == -1) {
-            log_info(3, "TIMEOUT! ret resend");
+            log_info(3, "TIMEOUT! try resend");
             return -1;
         }
+        // this cond may not happen
         if (ack.seqno != msg->seqno) {
             log_info(3, "ERROR: seqno not match[ack.seqno: %d msg.seqno: %d]",
                      ack.seqno, msg->seqno);
@@ -104,5 +104,5 @@ int outsend(jia_msg_t *msg) {
         }
     }
 
-    return 0;
+    return -1;
 }
