@@ -19,7 +19,7 @@ void jiaexitserver(jia_msg_t *req);
 jia_msg_t *newmsg();
 void freemsg(jia_msg_t *msg);
 void appendmsg(jia_msg_t *msg, unsigned char *str, int len);
-void printmsg(jia_msg_t *msg, int right);
+void printmsg(jia_msg_t *msg);
 void printstack(int ptr);
 unsigned long jia_current_time();
 float jia_clock();

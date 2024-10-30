@@ -51,7 +51,6 @@
 #include "stat.h" // statserver
 #include "thread.h"
 
-
 int oldsigiomask;
 #define BEGINCS                                                                \
     {                                                                          \
@@ -112,16 +111,19 @@ void initcomm() {
     VERBOSE_LOG(3, "current jia_pid = %d\n", system_setting.jia_pid);
     VERBOSE_LOG(3, " start_port = %u \n", start_port);
 
-    init_msg_buffer(&msg_buffer, system_setting.msg_buffer_size); // init msg buffer
+    init_msg_buffer(&msg_buffer,
+                    system_setting.msg_buffer_size); // init msg buffer
 
-    init_msg_queue(&inqueue, system_setting.msg_queue_size); // init input msg queue
-    init_msg_queue(&outqueue, system_setting.msg_queue_size); // init output msg queue
+    init_msg_queue(&inqueue,
+                   system_setting.msg_queue_size); // init input msg queue
+    init_msg_queue(&outqueue,
+                   system_setting.msg_queue_size); // init output msg queue
 
     init_comm_manager();
-    
+
     pthread_create(&client_tid, NULL, client_thread,
                    &outqueue); // create a new thread to send msg from outqueue
-    pthread_create(&server_tid, NULL, server_thread, 
+    pthread_create(&server_tid, NULL, server_thread,
                    &inqueue); // create a new thread to serve msg from inqueue
     pthread_create(&listen_tid, NULL, listen_thread, NULL);
 
@@ -130,22 +132,22 @@ void initcomm() {
 //     {
 //         struct sigaction act;
 
-//         // sigio's action: sigio_handler
-//         act.sa_handler = (void_func_handler)sigio_handler;
-//         sigemptyset(&act.sa_mask);
-//         act.sa_flags = SA_NODEFER | SA_RESTART;
-//         if (sigaction(SIGIO, &act, NULL))
-//             local_assert(0, "initcomm()-->sigaction()");
+    //         // sigio's action: sigio_handler
+    //         act.sa_handler = (void_func_handler)sigio_handler;
+    //         sigemptyset(&act.sa_mask);
+    //         act.sa_flags = SA_NODEFER | SA_RESTART;
+    //         if (sigaction(SIGIO, &act, NULL))
+    //             local_assert(0, "initcomm()-->sigaction()");
 
-//         // sigint's action: sigint_handler
-//         act.sa_handler = (void_func_handler)sigint_handler;
-//         sigemptyset(&act.sa_mask);
-//         act.sa_flags = SA_NODEFER;
-//         if (sigaction(SIGINT, &act, NULL)) {
-//             local_assert(0, "segv sigaction problem");
-//         }
-//     }
-// #endif
+    //         // sigint's action: sigint_handler
+    //         act.sa_handler = (void_func_handler)sigint_handler;
+    //         sigemptyset(&act.sa_mask);
+    //         act.sa_flags = SA_NODEFER;
+    //         if (sigaction(SIGINT, &act, NULL)) {
+    //             local_assert(0, "segv sigaction problem");
+    //         }
+    //     }
+    // #endif
 }
 
 /**
@@ -618,11 +620,14 @@ int init_msg_queue(msg_queue_t *msg_queue, int size) {
 
 int enqueue(msg_queue_t *msg_queue, jia_msg_t *msg) {
     if (msg_queue == NULL || msg == NULL) {
+        log_err("msg_queue or msg is NULL[msg_queue: %lx msg: %lx]",
+                msg_queue, msg);
         return -1;
     }
 
     // wait for free slot
     if (sem_wait(&msg_queue->free_count) != 0) {
+        log_err("sem_wait error");
         return -1;
     }
 
@@ -704,12 +709,11 @@ int init_comm_manager() {
         set_nonblocking(comm_manager.rcv_fds[i]);
     }
     // snd_fds socket fd with random port
-    for(i = 0; i < 1; i++){
-        comm_manager.snd_fds[i] = fd_create(i, FDCR_SEND);
-    }
+    comm_manager.snd_fds = fd_create(0, FDCR_SEND);
     // ack_fds socket fd with ack port
-    comm_manager.ack_fds = fd_create(i, FDCR_ACK);
-    
+    comm_manager.ack_fds = fd_create(0, FDCR_ACK);
+    set_nonblocking(comm_manager.ack_fds);
+
     for (i = 0; i < Maxhosts; i++) {
         comm_manager.snd_seq[i] = 0;
         comm_manager.ack_seq[i] = 0;

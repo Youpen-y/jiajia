@@ -111,7 +111,7 @@ void free_msg_queue(msg_queue_t *queue);
 // } CommManager;
 
 typedef struct comm_manager {
-    int         snd_fds[Maxhosts];  // send file descriptor
+    int         snd_fds;  // send file descriptor
     unsigned    snd_seq[Maxhosts];  // sequence number that used to acknowledge
     unsigned short snd_server_port; // snd server port is destination host's port
 
