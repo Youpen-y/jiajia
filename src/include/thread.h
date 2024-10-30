@@ -2,7 +2,9 @@
 #if !defined(THREAD_H)
 #define THREAD_H
 
+#include "msg.h"
 #include <pthread.h>
+#include <stdbool.h>
 
 /**
  * @brief client_thread - client thread that move msg from msgbuffer to outqueue
@@ -14,6 +16,13 @@ void *client_thread(void *);
 
 
 
+/**
+ * @brief outsend - send msg to destination host
+ *
+ * @param msg msg to send
+ * @return int
+ */
+int outsend(jia_msg_t *msg);
 
 
 /**
@@ -22,8 +31,6 @@ void *client_thread(void *);
  * @return void* 
  */
 void *client_listen(void *);
-
-
 
 
 
@@ -44,6 +51,13 @@ void *client_listen(void *);
  */
 void *server_thread(void *args);
 
+/**
+ * @brief msg_handle - handle msg
+ * 
+ * @param msg 
+ * @note msg_handle called by server_thread
+ */
+void msg_handle(jia_msg_t *msg);
 
 /**
  * @brief listen_thread - listen thread that listening on recv_fds

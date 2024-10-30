@@ -1,5 +1,8 @@
 #include "thread.h"
 #include "comm.h"
+#include "setting.h"
+#include "tools.h"
+#include "utils.h"
 #include <stdlib.h>
 #include <sys/epoll.h>
 #include <stdbool.h>
@@ -23,7 +26,7 @@ void *listen_thread(void *args)
         addfd(epollfd, comm_manager.rcv_fds[i], false, 0);
     }
 
-    struct epoll_event events[Maxhosts];
+    struct struct epoll_event events[Maxhosts];
 
     while (1)
     {
@@ -64,7 +67,7 @@ void *listen_thread(void *args)
                 ack_addr.sin_addr.s_addr = inet_addr(system_setting.hosts[to_id].ip);
 
                 ret = sendto(comm_manager.snd_fds[1], &ack, sizeof(ack), 0, (struct sockaddr *)&ack_addr, sizeof(ack_addr));
-                local_assert((res != -1), "ack sendto failed");
+                local_assert((ret != -1), "ack sendto failed");
 
                 if (seqno == comm_manager.rcv_seq[to_id] + 1)
                 { // new msg

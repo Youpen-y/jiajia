@@ -1,6 +1,13 @@
 #include "thread.h"
 #include "global.h"
 #include "comm.h"
+#include "utils.h"
+#include "mem.h"
+#include "syn.h"
+#include "load.h"
+#include "tools.h"
+#include "global.h"
+#include "stat.h"
 
 pthread_t server_tid;
 void *server_thread(void *args)
@@ -13,6 +20,7 @@ void *server_thread(void *args)
             perror("msg_queue dequeue");
             continue;
         } else {
+            // there, should have a condition (msg.seqno == comm_manager.rcv_seq[msg.frompid]
             msg_handle(&msg);
         }
     }

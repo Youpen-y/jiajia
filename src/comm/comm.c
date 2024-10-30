@@ -50,6 +50,8 @@
 #include "stat.h" // statserver
 #include "thread.h"
 
+
+int oldsigiomask;
 #define BEGINCS                                                                \
     {                                                                          \
         sigset_t newmask, oldmask;                                             \
@@ -75,24 +77,14 @@
 // #define msgprint 1
 
 // global variables
-/* request/reply communication manager*/
-// CommManager commreq, commrep;
+/* communication manager*/
 comm_manager_t comm_manager;
 
+/* in/out queue */
 msg_queue_t inqueue;
 msg_queue_t outqueue;
 
-// /* head msg, tail msg, msg count in out queue */
-// volatile int inhead, intail, incount;
-// volatile int outhead, outtail, outcount;
-
-/* commreq used to send and recv request, commrep used to send and recv reply */
-// unsigned short reqports[Maxhosts][Maxhosts]; // every host has Maxhosts
-// request ports unsigned short repports[Maxhosts][Maxhosts]; // every host has
-// Maxhosts reply ports
-
 unsigned short start_port;
-int oldsigiomask;
 
 // function definitions
 
@@ -119,95 +111,40 @@ void initcomm() {
     VERBOSE_LOG(3, "current jia_pid = %d\n", system_setting.jia_pid);
     VERBOSE_LOG(3, " start_port = %u \n", start_port);
 
-    init_msg_buffer(); // initialize msg array and corresponding flag that
-                       // indicate busy or free
+    init_msg_buffer(&msg_buffer, system_setting.msg_buffer_size); // init msg buffer
 
-    init_msg_queue(&inqueue,
-                   system_setting.msg_queue_size); // init input msg queue
-    init_msg_queue(&outqueue,
-                   system_setting.msg_queue_size); // init output msg queue
-
-#if defined SOLARIS || defined IRIX62
-    {
-        struct sigaction act;
-
-        act.sa_handler = (void_func_handler)sigio_handler;
-        sigemptyset(&act.sa_mask);
-        act.sa_flags = SA_NODEFER | SA_SIGINFO;
-        if (sigaction(SIGIO, &act, NULL))
-            local_assert(0, "initcomm()-->sigaction()");
-
-        act.sa_handler = (void_func_handler)sigint_handler;
-        sigemptyset(&act.sa_mask);
-        act.sa_flags = SA_SIGINFO;
-        if (sigaction(SIGINT, &act, NULL)) {
-            local_assert(0, "segv sigaction problem");
-        }
-    }
-#endif
-#ifdef LINUX
-    {
-        struct sigaction act;
-
-        // sigio's action: sigio_handler
-        act.sa_handler = (void_func_handler)sigio_handler;
-        sigemptyset(&act.sa_mask);
-        act.sa_flags = SA_NODEFER | SA_RESTART;
-        if (sigaction(SIGIO, &act, NULL))
-            local_assert(0, "initcomm()-->sigaction()");
-
-        // sigint's action: sigint_handler
-        act.sa_handler = (void_func_handler)sigint_handler;
-        sigemptyset(&act.sa_mask);
-        act.sa_flags = SA_NODEFER;
-        if (sigaction(SIGINT, &act, NULL)) {
-            local_assert(0, "segv sigaction problem");
-        }
-    }
-#endif
-#ifdef AIX41
-    {
-        struct sigvec vec;
-
-        vec.sv_handler = (void_func_handler)sigio_handler;
-        vec.sv_flags = SV_INTERRUPT;
-        sigvec(SIGIO, &vec, NULL);
-
-        vec.sv_handler = (void_func_handler)sigint_handler;
-        vec.sv_flags = 0;
-        sigvec(SIGINT, &vec, NULL);
-    }
-#endif
-
-    /***********Initialize comm ports********************/
-
-#ifdef JIA_DEBUG
-    for (i = 0; i < Maxhosts; i++)
-        for (j = 0; j < Maxhosts; j++) {
-            if (j == 0)
-                VERBOSE_LOG(3, "\nREQ[%02d][] = ", i);
-            else if (j % 5)
-                VERBOSE_LOG(3, "%d  ", reqports[i][j]);
-            else
-                VERBOSE_LOG(3, "%d  \n            ", reqports[i][j]);
-        }
-
-    for (i = 0; i < Maxhosts; i++)
-        for (j = 0; j < Maxhosts; j++) {
-            if (j == 0)
-                VERBOSE_LOG(3, "\nREP[%02d][] = ", i);
-            else if (j % 5)
-                VERBOSE_LOG(3, "%d  ", repports[i][j]);
-            else
-                VERBOSE_LOG(3, "%d  \n            ", reqports[i][j]);
-        }
-#endif /* JIA_DEBUG */
+    init_msg_queue(&inqueue, system_setting.msg_queue_size); // init input msg queue
+    init_msg_queue(&outqueue, system_setting.msg_queue_size); // init output msg queue
 
     init_comm_manager();
+    
     pthread_create(&client_tid, NULL, client_thread,
-                   NULL); // create a new thread to send msg from outqueue
-    pthread_create(&server_tid, NULL, server_thread,
-                   NULL); // create a new thread to serve msg from inqueue 
+                   &outqueue); // create a new thread to send msg from outqueue
+    pthread_create(&server_tid, NULL, server_thread, 
+                   &inqueue); // create a new thread to serve msg from inqueue
+
+
+
+// #ifdef LINUX
+//     {
+//         struct sigaction act;
+
+//         // sigio's action: sigio_handler
+//         act.sa_handler = (void_func_handler)sigio_handler;
+//         sigemptyset(&act.sa_mask);
+//         act.sa_flags = SA_NODEFER | SA_RESTART;
+//         if (sigaction(SIGIO, &act, NULL))
+//             local_assert(0, "initcomm()-->sigaction()");
+
+//         // sigint's action: sigint_handler
+//         act.sa_handler = (void_func_handler)sigint_handler;
+//         sigemptyset(&act.sa_mask);
+//         act.sa_flags = SA_NODEFER;
+//         if (sigaction(SIGINT, &act, NULL)) {
+//             local_assert(0, "segv sigaction problem");
+//         }
+//     }
+// #endif
 }
 
 /**
@@ -219,7 +156,7 @@ void initcomm() {
  * @return int socket file descriptor
  */
 int fd_create(int i, enum FDCR_MODE flag) {
-    int fd, res;
+    int fd, res, size;
     struct sockaddr_in addr;
 
     fd = socket(AF_INET, SOCK_DGRAM, 0);
@@ -252,101 +189,6 @@ int fd_create(int i, enum FDCR_MODE flag) {
     local_assert((res == 0), "req_fdcreate()-->bind()");
 
     return fd;
-}
-
-
-/**
- * @brief msgserver -- according to inqueue head msg.op choose different server
- *
- */
-void msgserver() {
-    SPACE(1);
-    VERBOSE_LOG(3, "Enterserver msg[%d], incount=%d, inhead=%d, intail=%d!\n",
-                inqueue.queue[inqueue.head].msg.op, inqueue.busy_count,
-                inqueue.head, inqueue.tail);
-    switch (inqueue.queue[inqueue.head].msg.op) {
-    case DIFF:
-        diffserver(&(inqueue.queue[inqueue.head].msg));
-        break;
-    case DIFFGRANT:
-        diffgrantserver(&(inqueue.queue[inqueue.head].msg));
-        break;
-    case GETP:
-        getpserver(&(inqueue.queue[inqueue.head].msg));
-        break;
-    case GETPGRANT:
-        getpgrantserver(&(inqueue.queue[inqueue.head].msg));
-        break;
-    case ACQ:
-        acqserver(&(inqueue.queue[inqueue.head].msg));
-        break;
-    case ACQGRANT:
-        acqgrantserver(&(inqueue.queue[inqueue.head].msg));
-        break;
-    case INVLD:
-        invserver(&(inqueue.queue[inqueue.head].msg));
-        break;
-    case BARR:
-        barrserver(&(inqueue.queue[inqueue.head].msg));
-        break;
-    case BARRGRANT:
-        barrgrantserver(&(inqueue.queue[inqueue.head].msg));
-        break;
-    case REL:
-        relserver(&(inqueue.queue[inqueue.head].msg));
-        break;
-    case WTNT:
-        wtntserver(&(inqueue.queue[inqueue.head].msg));
-        break;
-    case JIAEXIT:
-        jiaexitserver(&(inqueue.queue[inqueue.head].msg));
-        break;
-    case WAIT:
-        waitserver(&(inqueue.queue[inqueue.head].msg));
-        break;
-    case WAITGRANT:
-        waitgrantserver(&(inqueue.queue[inqueue.head].msg));
-        break;
-    case STAT:
-        statserver(&(inqueue.queue[inqueue.head].msg));
-        break;
-    case STATGRANT:
-        statgrantserver(&(inqueue.queue[inqueue.head].msg));
-        break;
-    case SETCV:
-        setcvserver(&(inqueue.queue[inqueue.head].msg));
-        break;
-    case RESETCV:
-        resetcvserver(&(inqueue.queue[inqueue.head].msg));
-        break;
-    case WAITCV:
-        waitcvserver(&(inqueue.queue[inqueue.head].msg));
-        break;
-    case CVGRANT:
-        cvgrantserver(&(inqueue.queue[inqueue.head].msg));
-        break;
-    case MSGBODY:
-    case MSGTAIL:
-        msgrecvserver(&(inqueue.queue[inqueue.head].msg));
-        break;
-    case LOADREQ:
-        loadserver(&(inqueue.queue[inqueue.head].msg));
-        break;
-    case LOADGRANT:
-        loadgrantserver(&(inqueue.queue[inqueue.head].msg));
-        break;
-
-    default:
-        if (inqueue[inhead].op >= BCAST) {
-            bcastserver(&(inqueue.queue[inqueue.head].msg));
-        } else {
-            printmsg(&(inqueue.queue[inqueue.head].msg), 1);
-            local_assert(0, "msgserver(): Incorrect Message!");
-        }
-        break;
-    }
-    SPACE(1);
-    VERBOSE_LOG(3, "Out servermsg!\n");
 }
 
 /**

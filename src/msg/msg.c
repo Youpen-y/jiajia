@@ -105,7 +105,6 @@ void initmsg() {
 }
 
 
-
 int init_msg_buffer(msg_buffer_t *msg_buffer, int size)
 {
     if (size <= 0) {

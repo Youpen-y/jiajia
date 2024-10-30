@@ -11,13 +11,13 @@ void *client_thread(void *args) {
     msg_queue_t *outqueue = (msg_queue_t *)args;
     jia_msg_t msg;
     while (1) {
-        if (dequeue(&outqueue, &msg) == -1) {
+        if (dequeue(outqueue, &msg) == -1) {
             perror("outqueue dequeue");
             continue;
         } else {
             outsend(&msg);
         }
-    }
+     }
 }
 
 void *client_listen(void *args) {
@@ -100,4 +100,6 @@ int outsend(jia_msg_t *msg) {
         /* step 3: update snd_seq */
         comm_manager.snd_seq[to_id]++;
     }
+
+    return 0;
 }

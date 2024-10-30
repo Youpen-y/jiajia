@@ -193,11 +193,6 @@ void asendmsg(jia_msg_t *msg);
  */
 void msgserver();
 
-/**
- * @brief outsend -- outsend the outqueue[outhead] msg
- *
- */
-void outsend();
 
 /**
  * @brief bsendmsg -- broadcast msg
