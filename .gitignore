@@ -8,6 +8,5 @@ apps/.jiahosts
 apps/*/*/*
 !apps/*/src/*
 !**/Makefile
-.clang-format
 rebuild.sh
 reports
