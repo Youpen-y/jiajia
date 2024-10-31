@@ -106,4 +106,12 @@ void print_setting(const setting_t *setting);
  */
 void free_setting(setting_t *setting);
 
+
+/**
+ * @brief trim -- trim leading and trailing whitespace of str
+ * 
+ * @param str 
+ */
+static void trim(char* str);
+
 #endif /* SETTING_H */

@@ -42,11 +42,12 @@
 #include "global.h"
 #include "init.h"
 #include "mem.h"
+#include "msg.h"
+#include "setting.h"
+#include "stat.h"
 #include "syn.h"
 #include "tools.h"
 #include <time.h>
-#include "setting.h"
-#include "stat.h"
 
 extern jiastack_t lockstack[Maxstacksize];
 extern int totalhome;
@@ -56,7 +57,7 @@ extern unsigned long globaladdr;
 extern int firsttime;
 extern float caltime;
 
-char errstr[Linesize];       /* buffer for error info */
+char errstr[Linesize]; /* buffer for error info */
 
 jia_msg_t assertmsg;
 
@@ -80,8 +81,8 @@ void inittools() {
 }
 
 /**
- * @brief local_assert -- assert the condition locally, if cond is false, print the amsg and
- * exit
+ * @brief local_assert -- assert the condition locally, if cond is false, print
+ * the amsg and exit
  *
  * @param cond condition
  * @param amsg assert message
@@ -89,7 +90,8 @@ void inittools() {
 void local_assert(int cond, char *format, ...) {
     if (!cond) {
         // print error message
-        fprintf(stderr, "Assert0 error from host %d ---\n", system_setting.jia_pid);
+        fprintf(stderr, "Assert0 error from host %d ---\n",
+                system_setting.jia_pid);
         va_list args;
         va_start(args, format);
         vfprintf(stderr, format, args);
@@ -131,12 +133,11 @@ void jia_assert(int cond, char *format, ...) {
                 asendmsg(&assertmsg);
             }
         }
-        assertmsg.topid = system_setting.jia_pid; // self send JIAEXIT msg in the last
+        assertmsg.topid =
+            system_setting.jia_pid; // self send JIAEXIT msg in the last
         asendmsg(&assertmsg);
     }
 }
-
-
 
 /**
  * @brief jiaexitserver -- output error message and exit
@@ -145,7 +146,7 @@ void jia_assert(int cond, char *format, ...) {
  */
 void jiaexitserver(jia_msg_t *req) {
     VERBOSE_LOG(3, "Assert error from host %d --- %s\n", req->frompid,
-           (char *)req->data);
+                (char *)req->data);
     fflush(stderr);
     fflush(stdout);
     free_system_resources();
@@ -178,14 +179,15 @@ void freetwin(address_t *twin) {
 // /**
 //  * @brief newmsg() -- find an available msg space in msg_buffer.msgarray
 //  *
-//  * @return jia_msg_t* the first free space address in msg_buffer.msgarray that available
+//  * @return jia_msg_t* the first free space address in msg_buffer.msgarray
+//  that available
 //  */
 // jia_msg_t *newmsg() {
 //     int i, j;
 
 //     for (i = 0; (i < msg_buffer.size) && (msg_buffer.msgbusy[i] != 0); i++)
 //         ;
-    
+
 //     // here we got a free space in msgarray with index i
 //     jia_assert((i < msg_buffer.size), "Cannot allocate message space!");
 //     msg_buffer.msgbusy[i] = 1;
@@ -279,11 +281,14 @@ void printmsg(jia_msg_t *msg) {
             SPACE(1);
             VERBOSE_LOG(3, "msg.size    = %d\n", msg->size);
             SPACE(1);
-            VERBOSE_LOG(3, "msg.data(addr) = %p\n", stol(msg->data)); // addr(8bytes)
+            VERBOSE_LOG(3, "msg.data(addr) = %p\n",
+                        stol(msg->data)); // addr(8bytes)
             SPACE(1);
-            VERBOSE_LOG(3, "msg.data(totalsize)    = %p\n", bytestoi(msg->data + 8));
+            VERBOSE_LOG(3, "msg.data(totalsize)    = %p\n",
+                        bytestoi(msg->data + 8));
             SPACE(1);
-            VERBOSE_LOG(3, "msg.data(start|count)    = %p\n", bytestoi(msg->data + 12));
+            VERBOSE_LOG(3, "msg.data(start|count)    = %p\n",
+                        bytestoi(msg->data + 12));
             break;
         case DIFFGRANT:
             VERBOSE_LOG(3, "msg.op      = DIFFGRANT\n");
@@ -410,7 +415,8 @@ void printmsg(jia_msg_t *msg) {
             SPACE(1);
             VERBOSE_LOG(3, "msg.size    = %d\n", msg->size);
             SPACE(1);
-            VERBOSE_LOG(3, "msg.data    = %p\n", bytestoi(msg->data)); // lock (4bytes)
+            VERBOSE_LOG(3, "msg.data    = %p\n",
+                        bytestoi(msg->data)); // lock (4bytes)
             SPACE(1);
             VERBOSE_LOG(3, "msg.data    = %p\n", stol(msg->data + 4));
             SPACE(1);
@@ -431,11 +437,13 @@ void printmsg(jia_msg_t *msg) {
             SPACE(1);
             VERBOSE_LOG(3, "msg.size    = %d\n", msg->size);
             SPACE(1);
-            VERBOSE_LOG(3, "msg.data    = %p\n", bytestoi(msg->data)); // lock (4bytes)
+            VERBOSE_LOG(3, "msg.data    = %p\n",
+                        bytestoi(msg->data)); // lock (4bytes)
             SPACE(1);
             VERBOSE_LOG(3, "msg.data    = %p\n", stol(msg->data + 4));
             SPACE(1);
-            VERBOSE_LOG(3, "msg.data(from)    = %p\n", bytestoi(msg->data + 12));
+            VERBOSE_LOG(3, "msg.data(from)    = %p\n",
+                        bytestoi(msg->data + 12));
             break;
         case WAIT:
             VERBOSE_LOG(3, "msg.op      = WAIT     \n");
@@ -482,11 +490,13 @@ void printmsg(jia_msg_t *msg) {
             SPACE(1);
             VERBOSE_LOG(3, "msg.size    = %d\n", msg->size);
             SPACE(1);
-            VERBOSE_LOG(3, "msg.data    = %p\n", bytestoi(msg->data)); // lock (4bytes)
+            VERBOSE_LOG(3, "msg.data    = %p\n",
+                        bytestoi(msg->data)); // lock (4bytes)
             SPACE(1);
             VERBOSE_LOG(3, "msg.data    = %p\n", stol(msg->data + 4));
             SPACE(1);
-            VERBOSE_LOG(3, "msg.data(from)    = %p\n", bytestoi(msg->data + 12));
+            VERBOSE_LOG(3, "msg.data(from)    = %p\n",
+                        bytestoi(msg->data + 12));
             break;
         case WTNT:
             VERBOSE_LOG(3, "msg.op      = WTNT     \n");
@@ -503,7 +513,8 @@ void printmsg(jia_msg_t *msg) {
             SPACE(1);
             VERBOSE_LOG(3, "msg.size    = %d\n", msg->size);
             SPACE(1);
-            VERBOSE_LOG(3, "msg.data    = %p\n", bytestoi(msg->data)); // lock (4bytes)
+            VERBOSE_LOG(3, "msg.data    = %p\n",
+                        bytestoi(msg->data)); // lock (4bytes)
             SPACE(1);
             VERBOSE_LOG(3, "msg.data    = %p\n", stol(msg->data + 4));
             SPACE(1);
@@ -720,7 +731,8 @@ void jia_config(int dest, int value) {
         if ((W_VEC == OFF) &&
             (value == ON)) { /*  change optimization 'write vector' to value */
             for (i = 0; i < Homepages; i++) {
-                home[i].wtvect = (wtvect_t *)malloc(system_setting.hostc * sizeof(wtvect_t));
+                home[i].wtvect =
+                    (wtvect_t *)malloc(system_setting.hostc * sizeof(wtvect_t));
                 setwtvect(i, WVFULL);
             }
         } else if ((W_VEC == ON) && (value == OFF)) {
@@ -803,9 +815,10 @@ retry:
 #endif /* AIX41 */
 }
 
-
 void free_system_resources() {
-    free_msg_buffer();    // free msg buffer
-    free_setting(&system_setting);    // free system setting
+    free_msg_buffer(&msg_buffer);  // free msg buffer
+    free_msg_queue(&outqueue);     // free outqueue
+    free_msg_queue(&inqueue);      // free inqueue
+    free_setting(&system_setting); // free system setting
     // ...
 }
