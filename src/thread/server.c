@@ -10,23 +10,31 @@
 #include "stat.h"
 
 pthread_t server_tid;
+static jia_msg_t msg;
+static void msg_handle(jia_msg_t *msg);
+
 void *server_thread(void *args)
 {
     msg_queue_t *inqueue = (msg_queue_t *)args;
-    jia_msg_t msg;
 
     while (1) {
         if (dequeue(inqueue, &msg) == -1) {
-            perror("msg_queue dequeue");
+            log_err("msg_queue dequeue");
             continue;
         } else {
-            // there, should have a condition (msg.seqno == comm_manager.rcv_seq[msg.frompid]
+            // there, should have a condition (msg.seqno == comm_manager.rcv_seq[msg.frompid])
             msg_handle(&msg);
         }
     }
 }
 
-void msg_handle(jia_msg_t *msg) {
+/**
+ * @brief msg_handle - handle msg
+ * 
+ * @param msg 
+ * @note msg_handle called by server_thread
+ */
+static void msg_handle(jia_msg_t *msg) {
     VERBOSE_LOG(3, "In servermsg!\n");
     SPACE(1);
 
@@ -106,7 +114,7 @@ void msg_handle(jia_msg_t *msg) {
         if (msg->op >= BCAST) {
             bcastserver(msg);
         } else {
-            printmsg(msg, 1);
+            printmsg(msg);
             local_assert(0, "msgserver(): Incorrect Message!");
         }
         break;

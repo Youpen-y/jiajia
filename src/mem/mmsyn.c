@@ -38,12 +38,12 @@
 #include "comm.h"
 #include "jia.h"
 #include "mem.h"
+#include "msg.h"
+#include "setting.h"
+#include "stat.h"
 #include "syn.h"
 #include "tools.h"
 #include "utils.h"
-#include "setting.h"
-#include "stat.h"
-#include "msg.h"
 
 /* user */
 extern jiahome_t home[Homepages];    /* host owned page */
@@ -84,8 +84,10 @@ static void savediff(int cachei);
 void flushpage(int cachei) {
     memunmap((void *)cache[cachei].addr, Pagesize);
 
-    page[((unsigned long)cache[cachei].addr - system_setting.global_start_addr) / Pagesize].cachei =
-        Cachepages; // normal cachi range: [0, Cachepages)
+    page[((unsigned long)cache[cachei].addr -
+          system_setting.global_start_addr) /
+         Pagesize]
+        .cachei = Cachepages; // normal cachi range: [0, Cachepages)
 
     if (cache[cachei].state == RW) { // cache's state equals RW means that there
                                      // is a twin(copy) for the cached page.
@@ -107,11 +109,12 @@ void getpage(address_t addr, int flag) {
     jia_msg_t *req;
 
     homeid = homehost(addr);
-    jia_assert((homeid != system_setting.jia_pid), "This should not have happened 2!");
+    jia_assert((homeid != system_setting.jia_pid),
+               "This should not have happened 2!");
     // req = newmsg();
 
-    int index = freemsg_lock(&jia_msg_buffer);
-    req = &jia_msg_buffer.buffer[index].msg;
+    int index = freemsg_lock(&msg_buffer);
+    req = &msg_buffer.buffer[index].msg;
 
     req->op = GETP;
     req->frompid = system_setting.jia_pid;
@@ -211,7 +214,8 @@ int findposition(address_t addr) {
         }
 #endif
     }
-    page[((unsigned long)(addr)-system_setting.global_start_addr) / Pagesize].cachei =  (unsigned short)(cachei + seti);
+    page[((unsigned long)(addr)-system_setting.global_start_addr) / Pagesize]
+        .cachei = (unsigned short)(cachei + seti);
     return (cachei + seti);
 }
 
@@ -278,8 +282,9 @@ void sigsegv_handler(int signo, siginfo_t *sip, ucontext_t *uap)
     VERBOSE_LOG(3,
                 "Shared memory out of range from %p to %p!, faultaddr=%p, "
                 "writefault=%d\n",
-                (void *)system_setting.global_start_addr, (void *)(system_setting.global_start_addr + globaladdr), faultaddr,
-                writefault);
+                (void *)system_setting.global_start_addr,
+                (void *)(system_setting.global_start_addr + globaladdr),
+                faultaddr, writefault);
 
     VERBOSE_LOG(3, "sig info structure siginfo_t\n");
     VERBOSE_LOG(3,
@@ -288,11 +293,14 @@ void sigsegv_handler(int signo, siginfo_t *sip, ucontext_t *uap)
                 "\t    si_addr: %p\n",
                 sip->si_errno, sip->si_code, sip->si_addr);
 
-    jia_assert((((unsigned long)faultaddr < (system_setting.global_start_addr + globaladdr)) &&
-            ((unsigned long)faultaddr >= system_setting.global_start_addr)),
-           "Access shared memory out of range from 0x%x to 0x%x!, "
-           "faultaddr=0x%x, writefault=0x%x",
-           system_setting.global_start_addr, system_setting.global_start_addr + globaladdr, faultaddr, writefault);
+    jia_assert((((unsigned long)faultaddr <
+                 (system_setting.global_start_addr + globaladdr)) &&
+                ((unsigned long)faultaddr >= system_setting.global_start_addr)),
+               "Access shared memory out of range from 0x%x to 0x%x!, "
+               "faultaddr=0x%x, writefault=0x%x",
+               system_setting.global_start_addr,
+               system_setting.global_start_addr + globaladdr, faultaddr,
+               writefault);
 
     // page's home is current host (si_code = 2)
     if (homehost(faultaddr) == system_setting.jia_pid) {
@@ -312,8 +320,10 @@ void sigsegv_handler(int signo, siginfo_t *sip, ucontext_t *uap)
 
         // page on other host, page must be get before other operations
         writefault = (writefault == 0) ? 0 : 1;
-        cachei =
-            (int)page[((unsigned long)faultaddr - system_setting.global_start_addr) / Pagesize].cachei;
+        cachei = (int)page[((unsigned long)faultaddr -
+                            system_setting.global_start_addr) /
+                           Pagesize]
+                     .cachei;
 
         /**
          * cachei == Cachepages: page's cache has exist
@@ -493,14 +503,17 @@ void savediff(int cachei) {
  */
 void senddiffs() {
     int hosti;
-
     for (hosti = 0; hosti < system_setting.hostc; hosti++) {
         if (diffmsg[hosti] != DIFFNULL) {   // hosti's diff msgs is non-NULL
             if (diffmsg[hosti]->size > 0) { // diff data size > 0
                 diffwait++;
-                asendmsg(diffmsg[hosti]); // asynchronous send diff msg
+                move_msg_to_outqueue(
+                    &msg_buffer,
+                    ((void *)diffmsg[hosti] - (void *)msg_buffer.buffer) /
+                        sizeof(slot_t),
+                    &outqueue);
             }
-            freemsg(diffmsg[hosti]);
+            //freemsg(diffmsg[hosti]);
             diffmsg[hosti] = DIFFNULL;
         }
     }

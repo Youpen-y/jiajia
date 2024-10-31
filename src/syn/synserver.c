@@ -157,7 +157,6 @@ void waitserver(jia_msg_t *req) {
     waitcounter++;
 
     if (waitcounter == system_setting.hostc) {
-        // grant = newmsg();
         index = freemsg_lock(&msg_buffer);
         grant = &msg_buffer.buffer[index].msg;
         waitcounter = 0;
@@ -165,7 +164,6 @@ void waitserver(jia_msg_t *req) {
         grant->size = 0;
         grant->op = WAITGRANT;
         broadcast(grant, index);
-        // freemsg(grant);
         freemsg_unlock(&msg_buffer, index);
     }
 }
@@ -283,7 +281,7 @@ void acqgrantserver(jia_msg_t *req) {
  * barr msg data: | lock (4bytes) |
  */
 void barrserver(jia_msg_t *req) {
-    VERBOSE_LOG(3, "host %d is running in barrserver\n", jiapid);
+    log_info(3, "host %d is running in barrserver", jiapid);
     int lock;
 
     jia_assert((req->op == BARR) && (req->topid == system_setting.jia_pid),
@@ -301,14 +299,14 @@ void barrserver(jia_msg_t *req) {
 #ifdef DEBUG
     VERBOSE_LOG(3, "barrier count=%d, from host %d\n", locks[lock].acqc, req->frompid);
 #endif
-    VERBOSE_LOG(3, "locks[%d].acqc = %d\n", lock, locks[lock].acqc);
+    log_info(3, "locks[%d].acqc = %d", lock, locks[lock].acqc);
     if (locks[lock].acqc == system_setting.hostc) {
         locks[lock].scope++;
         grantbarr(lock);
         locks[lock].acqc = 0;
         freewtntspace(locks[lock].wtntp);
     }
-    VERBOSE_LOG(3, "host %d is out of barrserver\n", jiapid);
+    log_info(3, "host %d is out of barrserver", jiapid);
 }
 
 /**

@@ -5,6 +5,7 @@
 #include "setting.h"
 #include "utils.h"
 #include "msg.h"
+#include "tools.h"
 
 
 jiastat_t jiastat;
@@ -82,7 +83,7 @@ void statserver(jia_msg_t *rep)
 
  statcnt++;
 
- VERBOSE_LOG(3, "Stats received from %d[%d]\n", rep->frompid, statcnt);
+ log_info(3, "Stats received from %d[%d]\n", rep->frompid, statcnt);
 
  if (statcnt == system_setting.hostc) {
     statcnt = 0;
@@ -94,10 +95,8 @@ void statserver(jia_msg_t *rep)
     grant->op=STATGRANT;
     for(i=0; i<system_setting.hostc; i++) {
        grant->topid = i;
-      //  asendmsg(grant);
       move_msg_to_outqueue(&msg_buffer, index, &outqueue);
     }
-   //  freemsg(grant);
    freemsg_unlock(&msg_buffer, index);
  }
 }

@@ -174,7 +174,7 @@ void sendwtnts(int operation) {
     while (wnptr != WNULL) {
         req->op = WTNT;
         // asendmsg(req);
-        move_msg_to_outqueue(&msg_buffer, index);
+        move_msg_to_outqueue(&msg_buffer, index, &outqueue);
         req->size = Intbytes; // TODO: Need to check
         wnptr = appendstackwtnts(req, wnptr);
     }

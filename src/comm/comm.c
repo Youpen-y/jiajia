@@ -86,6 +86,9 @@ msg_queue_t outqueue;
 
 unsigned short start_port;
 
+static int init_comm_manager();
+static int fd_create(int i, enum FDCR_MODE flag);
+
 // function definitions
 
 /**
@@ -127,10 +130,9 @@ void initcomm() {
                    &inqueue); // create a new thread to serve msg from inqueue
     pthread_create(&listen_tid, NULL, listen_thread, NULL);
 
-
-// #ifdef LINUX
-//     {
-//         struct sigaction act;
+    // #ifdef LINUX
+    //     {
+    //         struct sigaction act;
 
     //         // sigio's action: sigio_handler
     //         act.sa_handler = (void_func_handler)sigio_handler;
@@ -152,13 +154,16 @@ void initcomm() {
 
 /**
  * @brief fd_create -- creat socket file descriptor used to send and recv
- * msg and acknowledgement msg
+ * request
  *
  * @param i the index of host
- * @param flag enum FDCR_MODE
+ * @param flag 1 means sin_port = 0, random port; others means specified
+ * sin_port = reqports[jia_pid][i]
  * @return int socket file descriptor
+ * creat socket file descriptor(fd) used to send and recv request and bind it to
+ * an address (ip/port combination)
  */
-int fd_create(int i, enum FDCR_MODE flag) {
+static int fd_create(int i, enum FDCR_MODE flag) {
     int fd, res, size;
     struct sockaddr_in addr;
 
@@ -207,309 +212,318 @@ void sigint_handler() {
 void sigio_handler(int sig, siginfo_t *sip, ucontext_t *uap)
 #endif
 
-/**
- * @brief sigio_handler -- sigio handler (it can be interrupt)
- *
- */
+    /**
+     * @brief sigio_handler -- sigio handler (it can be interrupt)
+     *
+     */
 
-// #if defined LINUX || defined AIX41
-//     void sigio_handler()
-// #endif
-// {
-//     int res, len, oldindex;
-//     int i, s;
-//     fd_set readfds;
-//     struct sockaddr_in from, to;
-//     sigset_t set, oldset;
-//     int servemsg = 0;
-//     struct timeval zerotime = {0, 0};
+    // #if defined LINUX || defined AIX41
+    //     void sigio_handler()
+    // #endif
+    // {
+    //     int res, len, oldindex;
+    //     int i, s;
+    //     fd_set readfds;
+    //     struct sockaddr_in from, to;
+    //     sigset_t set, oldset;
+    //     int servemsg = 0;
+    //     struct timeval zerotime = {0, 0};
 
-//     // begin segvio time
-// #ifdef DOSTAT
-//     register unsigned int begin;
-//     STATOP(jiastat.sigiocnt++; if (interruptflag == 0) {
-//         begin = get_usecs();
-//         if (jiastat.kernelflag == 0) {
-//             jiastat.usersigiocnt++;
-//         } else if (jiastat.kernelflag == 1) {
-//             jiastat.synsigiocnt++;
-//         } else if (jiastat.kernelflag == 2) {
-//             jiastat.segvsigiocnt++;
-//         }
-//     } interruptflag++;)
-// #endif
+    //     // begin segvio time
+    // #ifdef DOSTAT
+    //     register unsigned int begin;
+    //     STATOP(jiastat.sigiocnt++; if (interruptflag == 0) {
+    //         begin = get_usecs();
+    //         if (jiastat.kernelflag == 0) {
+    //             jiastat.usersigiocnt++;
+    //         } else if (jiastat.kernelflag == 1) {
+    //             jiastat.synsigiocnt++;
+    //         } else if (jiastat.kernelflag == 2) {
+    //             jiastat.segvsigiocnt++;
+    //         }
+    //     } interruptflag++;)
+    // #endif
 
-//     VERBOSE_LOG(3, "\nEnter sigio_handler!\n");
+    //     VERBOSE_LOG(3, "\nEnter sigio_handler!\n");
 
-//     // whether there is a requested from other hosts
-//     readfds = comm_.rcv_set;
-//     res = select(commreq.rcv_maxfd, &readfds, NULL, NULL, &zerotime);
-//     while (res > 0) {
-//         // handle ready fd(from other hosts)
-//         for (i = 0; i < system_setting.hostc; i++) {
-//             if ((i != system_setting.jia_pid) &&
-//                 FD_ISSET(commreq.rcv_fds[i], &readfds)) {
+    //     // whether there is a requested from other hosts
+    //     readfds = comm_.rcv_set;
+    //     res = select(commreq.rcv_maxfd, &readfds, NULL, NULL, &zerotime);
+    //     while (res > 0) {
+    //         // handle ready fd(from other hosts)
+    //         for (i = 0; i < system_setting.hostc; i++) {
+    //             if ((i != system_setting.jia_pid) &&
+    //                 FD_ISSET(commreq.rcv_fds[i], &readfds)) {
 
-//                 /* step 1: receive data from host i and store it into
-//                  * inqueue[intail]*/
-//                 s = sizeof(from);
-//                 res = recvfrom(commreq.rcv_fds[i], (char *)&(inqt),
-//                                Maxmsgsize + Msgheadsize, 0,
-//                                (struct sockaddr *)&from, &s);
-//                 local_assert((res >= 0), "sigio_handler()-->recvfrom()");
+    //                 /* step 1: receive data from host i and store it into
+    //                  * inqueue[intail]*/
+    //                 s = sizeof(from);
+    //                 res = recvfrom(commreq.rcv_fds[i], (char *)&(inqt),
+    //                                Maxmsgsize + Msgheadsize, 0,
+    //                                (struct sockaddr *)&from, &s);
+    //                 local_assert((res >= 0), "sigio_handler()-->recvfrom()");
 
-//                 /* step 2: init socket to && send ack(actually
-//                  * seqno(4bytes)) to host i */
-//                 /* must send ack before inqrecv update intail(ack use intail)
-//                  */
-//                 to.sin_family = AF_INET;
-//                 to.sin_addr.s_addr = inet_addr(system_setting.hosts[i].ip);
-//                 to.sin_port = htons(repports[inqt.frompid][inqt.topid]);
-//                 res = sendto(commrep.snd_fds[i], (char *)&(inqt.seqno),
-//                              sizeof(inqt.seqno), 0, (struct sockaddr *)&to,
-//                              sizeof(to));
-//                 local_assert((res != -1), "sigio_handler()-->sendto() ACK");
+    //                 /* step 2: init socket to && send ack(actually
+    //                  * seqno(4bytes)) to host i */
+    //                 /* must send ack before inqrecv update intail(ack use
+    //                 intail)
+    //                  */
+    //                 to.sin_family = AF_INET;
+    //                 to.sin_addr.s_addr =
+    //                 inet_addr(system_setting.hosts[i].ip); to.sin_port =
+    //                 htons(repports[inqt.frompid][inqt.topid]); res =
+    //                 sendto(commrep.snd_fds[i], (char *)&(inqt.seqno),
+    //                              sizeof(inqt.seqno), 0, (struct sockaddr
+    //                              *)&to, sizeof(to));
+    //                 local_assert((res != -1), "sigio_handler()-->sendto()
+    //                 ACK");
 
-//                 /* step 3: recv msg iff new msg's seqno is greater than the
-//                    former's from the same host, instead print resend  */
-//                 if (inqt.seqno > commreq.rcv_seq[i]) {
-// #ifdef DOSTAT
-//                     STATOP(if (inqt.frompid != inqt.topid) {
-//                         jiastat.msgrcvcnt++;
-//                         jiastat.msgrcvbytes += (inqt.size + Msgheadsize);
-//                     })
-// #endif
+    //                 /* step 3: recv msg iff new msg's seqno is greater than
+    //                 the
+    //                    former's from the same host, instead print resend  */
+    //                 if (inqt.seqno > commreq.rcv_seq[i]) {
+    // #ifdef DOSTAT
+    //                     STATOP(if (inqt.frompid != inqt.topid) {
+    //                         jiastat.msgrcvcnt++;
+    //                         jiastat.msgrcvbytes += (inqt.size + Msgheadsize);
+    //                     })
+    // #endif
 
-//                     BEGINCS;
-//                     servemsg = inqrecv(i);
-//                     ENDCS;
-//                 } else {
-//                     printmsg(&inqt, 1);
-//                     VERBOSE_LOG(3, "Receive resend message!\n");
-// #ifdef DOSTAT
-//                     STATOP(jiastat.resentcnt++;)
-// #endif
-//                 }
-//             }
-//         }
-//         // check whether there are more data or not
-//         readfds = commreq.rcv_set;
-//         res = select(commreq.rcv_maxfd, &readfds, NULL, NULL, &zerotime);
-//     }
+    //                     BEGINCS;
+    //                     servemsg = inqrecv(i);
+    //                     ENDCS;
+    //                 } else {
+    //                     printmsg(&inqt, 1);
+    //                     VERBOSE_LOG(3, "Receive resend message!\n");
+    // #ifdef DOSTAT
+    //                     STATOP(jiastat.resentcnt++;)
+    // #endif
+    //                 }
+    //             }
+    //         }
+    //         // check whether there are more data or not
+    //         readfds = commreq.rcv_set;
+    //         res = select(commreq.rcv_maxfd, &readfds, NULL, NULL, &zerotime);
+    //     }
 
-//     SPACE(1);
-//     VERBOSE_LOG(3, "Finishrecvmsg!inc=%d,inh=%d,int=%d\n", incount, inhead,
-//                 intail);
+    //     SPACE(1);
+    //     VERBOSE_LOG(3, "Finishrecvmsg!inc=%d,inh=%d,int=%d\n", incount,
+    //     inhead,
+    //                 intail);
 
-//     // handle msg
-//     while (servemsg == 1) {
-//         msgserver();
-//         BEGINCS;
-//         servemsg = inqcomp();
-//         ENDCS;
-//     }
+    //     // handle msg
+    //     while (servemsg == 1) {
+    //         msgserver();
+    //         BEGINCS;
+    //         servemsg = inqcomp();
+    //         ENDCS;
+    //     }
 
-//     SPACE(1);
-//     VERBOSE_LOG(3, "Out sigio_handler!\n");
+    //     SPACE(1);
+    //     VERBOSE_LOG(3, "Out sigio_handler!\n");
 
-//     // end segvio time
-// #ifdef DOSTAT
-//     STATOP(interruptflag--; if (interruptflag == 0) {
-//         if (jiastat.kernelflag == 0) {
-//             jiastat.usersigiotime += get_usecs() - begin;
-//         } else if (jiastat.kernelflag == 1) {
-//             jiastat.synsigiotime += get_usecs() - begin;
-//         } else if (jiastat.kernelflag == 2) {
-//             jiastat.segvsigiotime += get_usecs() - begin;
-//         }
-//     })
-// #endif
-// }
+    //     // end segvio time
+    // #ifdef DOSTAT
+    //     STATOP(interruptflag--; if (interruptflag == 0) {
+    //         if (jiastat.kernelflag == 0) {
+    //             jiastat.usersigiotime += get_usecs() - begin;
+    //         } else if (jiastat.kernelflag == 1) {
+    //             jiastat.synsigiotime += get_usecs() - begin;
+    //         } else if (jiastat.kernelflag == 2) {
+    //             jiastat.segvsigiotime += get_usecs() - begin;
+    //         }
+    //     })
+    // #endif
+    // }
 
-// /**
-//  * @brief asendmsg() -- send msg to outqueue[outtail], and call outsend()
-//  *
-//  * @param msg
-//  */
-// void asendmsg(jia_msg_t *msg) {
+    // /**
+    //  * @brief asendmsg() -- send msg to outqueue[outtail], and call outsend()
+    //  *
+    //  * @param msg
+    //  */
+    // void asendmsg(jia_msg_t *msg) {
 
-//     int outsendmsg = 0;
+    //     int outsendmsg = 0;
 
-//     // begin asend time && cal s/l jiamsg cnt
-// #ifdef DOSTAT
-//     register unsigned int begin = get_usecs();
-//     STATOP(if (msg->size > 4096) jiastat.largecnt++;
-//            if (msg->size < 128) jiastat.smallcnt++;)
-// #endif
+    //     // begin asend time && cal s/l jiamsg cnt
+    // #ifdef DOSTAT
+    //     register unsigned int begin = get_usecs();
+    //     STATOP(if (msg->size > 4096) jiastat.largecnt++;
+    //            if (msg->size < 128) jiastat.smallcnt++;)
+    // #endif
 
-//     VERBOSE_LOG(3, "Enter asendmsg!");
+    //     VERBOSE_LOG(3, "Enter asendmsg!");
 
-//     printmsg(msg);
+    //     printmsg(msg);
 
-//     /* step 1: memcpy to outqt && update outqueue */
-//     BEGINCS;
-//     memcpy(&(outqt), msg, Msgheadsize + msg->size);
-//     outsendmsg = outqsend(outqt.topid);
-//     ENDCS;
-//     VERBOSE_LOG(3,
-//                 "Before outsend(), Out asendmsg! outc=%d, outh=%d, outt=%d\n",
-//                 outcount, outhead, outtail);
+    //     /* step 1: memcpy to outqt && update outqueue */
+    //     BEGINCS;
+    //     memcpy(&(outqt), msg, Msgheadsize + msg->size);
+    //     outsendmsg = outqsend(outqt.topid);
+    //     ENDCS;
+    //     VERBOSE_LOG(3,
+    //                 "Before outsend(), Out asendmsg! outc=%d, outh=%d,
+    //                 outt=%d\n", outcount, outhead, outtail);
 
-//     /* step 2: call outsend() to send msg && update outqueue */
-//     // there is msg need to be sent in outqueue
-//     while (outsendmsg == 1) {
-//         outsend();
-//         BEGINCS;
-//         outsendmsg = outqcomp();
-//         ENDCS;
-//     }
-//     VERBOSE_LOG(3, "Out asendmsg! outc=%d, outh=%d, outt=%d\n", outcount,
-//                 outhead, outtail);
+    //     /* step 2: call outsend() to send msg && update outqueue */
+    //     // there is msg need to be sent in outqueue
+    //     while (outsendmsg == 1) {
+    //         outsend();
+    //         BEGINCS;
+    //         outsendmsg = outqcomp();
+    //         ENDCS;
+    //     }
+    //     VERBOSE_LOG(3, "Out asendmsg! outc=%d, outh=%d, outt=%d\n", outcount,
+    //                 outhead, outtail);
 
-//     // end asend time
-// #ifdef DOSTAT
-//     STATOP(jiastat.asendtime += get_usecs() - begin;)
-// #endif
-// }
+    //     // end asend time
+    // #ifdef DOSTAT
+    //     STATOP(jiastat.asendtime += get_usecs() - begin;)
+    // #endif
+    // }
 
-// /**
-//  * @brief outsend -- outsend the outqueue[outhead] msg
-//  *
-//  */
-// void outsend() {
-//     int res, toproc, fromproc;
-//     struct sockaddr_in to, from;
-//     int rep;
-//     int retries_num;
-//     unsigned long start, end;
-//     int msgsize;
-//     int s;
-//     int sendsuccess, arrived;
-//     fd_set readfds;
-//     int servemsg;
-//     struct timeval zerotime = {0, 0};
-// #ifdef DOSTAT
-//     register unsigned int begin;
-// #endif
+    // /**
+    //  * @brief outsend -- outsend the outqueue[outhead] msg
+    //  *
+    //  */
+    // void outsend() {
+    //     int res, toproc, fromproc;
+    //     struct sockaddr_in to, from;
+    //     int rep;
+    //     int retries_num;
+    //     unsigned long start, end;
+    //     int msgsize;
+    //     int s;
+    //     int sendsuccess, arrived;
+    //     fd_set readfds;
+    //     int servemsg;
+    //     struct timeval zerotime = {0, 0};
+    // #ifdef DOSTAT
+    //     register unsigned int begin;
+    // #endif
 
-//     VERBOSE_LOG(3, "\nEnter outsend!\n");
+    //     VERBOSE_LOG(3, "\nEnter outsend!\n");
 
-//     printmsg(&outqh, 1);
+    //     printmsg(&outqh, 1);
 
-//     toproc = outqh.topid;
-//     fromproc = outqh.frompid;
-//     VERBOSE_LOG(3, "outc=%d, outh=%d, outt=%d\n \
-//                 outqueue[outhead].topid = %d outqueue[outhead].frompid = %d\n",
-//                 outcount, outhead, outtail, toproc, fromproc);
+    //     toproc = outqh.topid;
+    //     fromproc = outqh.frompid;
+    //     VERBOSE_LOG(3, "outc=%d, outh=%d, outt=%d\n \
+//                 outqueue[outhead].topid = %d outqueue[outhead].frompid =
+    //                 %d\n", outcount, outhead, outtail, toproc, fromproc);
 
-//     if (toproc == fromproc) { // single machine communication
+    //     if (toproc == fromproc) { // single machine communication
 
-//         /* step 1: memcpy to inqt && update inqueue */
-//         BEGINCS;
-//         memcpy(&(inqt), &(outqh), Msgheadsize + outqh.size);
-//         servemsg = inqrecv(fromproc);
-//         ENDCS;
+    //         /* step 1: memcpy to inqt && update inqueue */
+    //         BEGINCS;
+    //         memcpy(&(inqt), &(outqh), Msgheadsize + outqh.size);
+    //         servemsg = inqrecv(fromproc);
+    //         ENDCS;
 
-//         VERBOSE_LOG(
-//             3,
-//             "Finishcopymsg,incount=%d,inhead=%d,intail=%d!\nservemsg == %d\n",
-//             incount, inhead, intail, servemsg);
+    //         VERBOSE_LOG(
+    //             3,
+    //             "Finishcopymsg,incount=%d,inhead=%d,intail=%d!\nservemsg ==
+    //             %d\n", incount, inhead, intail, servemsg);
 
-//         /* step 2: call msgserver() to manage msg && update inqueue */
-//         // there are some msg need be served
-//         while (servemsg == 1) {
-//             msgserver();
-//             BEGINCS;
-//             servemsg = inqcomp();
-//             ENDCS;
-//         }
-//     } else { // comm between different hosts
-//         msgsize = outqh.size + Msgheadsize;
-// #ifdef DOSTAT
-//         if (statflag == 1) {
-//             jiastat.msgsndcnt++;
-//             jiastat.msgsndbytes += msgsize;
-//         }
-// #endif
-//         to.sin_family = AF_INET;
-//         VERBOSE_LOG(3, "toproc IP address is %s\n",
-//                     system_setting.hosts[toproc].ip);
-//         to.sin_addr.s_addr = inet_addr(system_setting.hosts[toproc].ip);
-//         to.sin_port = htons(reqports[toproc][fromproc]);
+    //         /* step 2: call msgserver() to manage msg && update inqueue */
+    //         // there are some msg need be served
+    //         while (servemsg == 1) {
+    //             msgserver();
+    //             BEGINCS;
+    //             servemsg = inqcomp();
+    //             ENDCS;
+    //         }
+    //     } else { // comm between different hosts
+    //         msgsize = outqh.size + Msgheadsize;
+    // #ifdef DOSTAT
+    //         if (statflag == 1) {
+    //             jiastat.msgsndcnt++;
+    //             jiastat.msgsndbytes += msgsize;
+    //         }
+    // #endif
+    //         to.sin_family = AF_INET;
+    //         VERBOSE_LOG(3, "toproc IP address is %s\n",
+    //                     system_setting.hosts[toproc].ip);
+    //         to.sin_addr.s_addr = inet_addr(system_setting.hosts[toproc].ip);
+    //         to.sin_port = htons(reqports[toproc][fromproc]);
 
-//         VERBOSE_LOG(3, "reqports[toproc][fromproc] = %u\n",
-//                     reqports[toproc][fromproc]);
+    //         VERBOSE_LOG(3, "reqports[toproc][fromproc] = %u\n",
+    //                     reqports[toproc][fromproc]);
 
-//         retries_num = 0;
-//         sendsuccess = 0;
+    //         retries_num = 0;
+    //         sendsuccess = 0;
 
-//         VERBOSE_LOG(3, "commreq.snd_fds[toproc] = %d\n",
-//                     commreq.snd_fds[toproc]);
-//         VERBOSE_LOG(3, "commreq.rcv_fds[toproc] = %d\n",
-//                     commreq.rcv_fds[toproc]);
-//         while ((retries_num < MAX_RETRIES) &&
-//                (sendsuccess != 1)) { // retransimission
-//             BEGINCS;
-//             res = sendto(commreq.snd_fds[toproc], (char *)&(outqh), msgsize, 0,
-//                          (struct sockaddr *)&to, sizeof(to));
-//             local_assert((res != -1), "outsend()-->sendto()");
-//             ENDCS;
+    //         VERBOSE_LOG(3, "commreq.snd_fds[toproc] = %d\n",
+    //                     commreq.snd_fds[toproc]);
+    //         VERBOSE_LOG(3, "commreq.rcv_fds[toproc] = %d\n",
+    //                     commreq.rcv_fds[toproc]);
+    //         while ((retries_num < MAX_RETRIES) &&
+    //                (sendsuccess != 1)) { // retransimission
+    //             BEGINCS;
+    //             res = sendto(commreq.snd_fds[toproc], (char *)&(outqh),
+    //             msgsize, 0,
+    //                          (struct sockaddr *)&to, sizeof(to));
+    //             local_assert((res != -1), "outsend()-->sendto()");
+    //             ENDCS;
 
-//             arrived = 0;
-//             start = jia_current_time();
-//             end = start + TIMEOUT;
+    //             arrived = 0;
+    //             start = jia_current_time();
+    //             end = start + TIMEOUT;
 
-//             while ((jia_current_time() < end) &&
-//                    (arrived != 1)) { // wait for ack
-//                 FD_ZERO(&readfds);
-//                 FD_SET(commrep.rcv_fds[toproc], &readfds);
-//                 res =
-//                     select(commrep.rcv_maxfd, &readfds, NULL, NULL, &zerotime);
-//                 arrived = (FD_ISSET(commrep.rcv_fds[toproc], &readfds) != 0);
-//             }
-//             VERBOSE_LOG(3, "arrived = %d\n", arrived);
-//             if (arrived) {
-//             recv_again:
-//                 s = sizeof(from);
-//                 BEGINCS;
-//                 res = recvfrom(commrep.rcv_fds[toproc], (char *)&rep, Intbytes,
-//                                0, (struct sockaddr *)&from, &s);
-//                 ENDCS;
-//                 if ((res < 0) && (errno == EINTR)) {
-//                     VERBOSE_LOG(
-//                         3, "A signal interrupted recvfrom() before any data "
-//                            "was available\n");
-//                     goto recv_again;
-//                 }
-//                 if ((res != -1) && (rep == outqh.seqno)) {
-//                     sendsuccess = 1;
-//                 }
-//             }
-//             retries_num++;
-//         }
+    //             while ((jia_current_time() < end) &&
+    //                    (arrived != 1)) { // wait for ack
+    //                 FD_ZERO(&readfds);
+    //                 FD_SET(commrep.rcv_fds[toproc], &readfds);
+    //                 res =
+    //                     select(commrep.rcv_maxfd, &readfds, NULL, NULL,
+    //                     &zerotime);
+    //                 arrived = (FD_ISSET(commrep.rcv_fds[toproc], &readfds) !=
+    //                 0);
+    //             }
+    //             VERBOSE_LOG(3, "arrived = %d\n", arrived);
+    //             if (arrived) {
+    //             recv_again:
+    //                 s = sizeof(from);
+    //                 BEGINCS;
+    //                 res = recvfrom(commrep.rcv_fds[toproc], (char *)&rep,
+    //                 Intbytes,
+    //                                0, (struct sockaddr *)&from, &s);
+    //                 ENDCS;
+    //                 if ((res < 0) && (errno == EINTR)) {
+    //                     VERBOSE_LOG(
+    //                         3, "A signal interrupted recvfrom() before any
+    //                         data "
+    //                            "was available\n");
+    //                     goto recv_again;
+    //                 }
+    //                 if ((res != -1) && (rep == outqh.seqno)) {
+    //                     sendsuccess = 1;
+    //                 }
+    //             }
+    //             retries_num++;
+    //         }
 
-//         if (sendsuccess != 1) {
-//             VERBOSE_LOG(3,
-//                         "I am host %d, hostname = %s, I am running outsend() "
-//                         "function\n",
-//                         system_setting.jia_pid,
-//                         system_setting.hosts[system_setting.jia_pid].username);
-//             sprintf(errstr, "I Can't asend message(%d,%d) to host %d!",
-//                     outqh.op, outqh.seqno, toproc);
-//             VERBOSE_LOG(3, "BUFFER SIZE %d (%d)\n", outqh.size, msgsize);
-//             local_assert((sendsuccess == 1), errstr);
-//         }
-//     }
+    //         if (sendsuccess != 1) {
+    //             VERBOSE_LOG(3,
+    //                         "I am host %d, hostname = %s, I am running
+    //                         outsend() " "function\n", system_setting.jia_pid,
+    //                         system_setting.hosts[system_setting.jia_pid].username);
+    //             sprintf(errstr, "I Can't asend message(%d,%d) to host %d!",
+    //                     outqh.op, outqh.seqno, toproc);
+    //             VERBOSE_LOG(3, "BUFFER SIZE %d (%d)\n", outqh.size, msgsize);
+    //             local_assert((sendsuccess == 1), errstr);
+    //         }
+    //     }
 
-//     VERBOSE_LOG(3, "Out outsend!\n\n");
-// }
+    //     VERBOSE_LOG(3, "Out outsend!\n\n");
+    // }
 
-/**
- * @brief bsendmsg -- broadcast msg
- *
- * @param msg
- */
-void bsendmsg(jia_msg_t *msg) {
+    /**
+     * @brief bsendmsg -- broadcast msg
+     *
+     * @param msg
+     */
+    void bsendmsg(jia_msg_t *msg) {
     unsigned int root, level;
 
     msg->op += BCAST; // op >= BCAST, always call bcastserver
@@ -520,13 +534,31 @@ void bsendmsg(jia_msg_t *msg) {
         level = 1;
     } else {
         for (level = 0; (1 << level) < system_setting.hostc; level++)
-            ; // TODO: some problem here (hostc==2, level equals 1 too)
+            ;
     }
 
     msg->temp = ((root & 0xffff) << 16) | (level & 0xffff);
 
     bcastserver(msg);
 }
+
+/*
+ *  (no matter what root's jiapid is, its mypid in this tree is 0)
+ *  (example for hostc=8)
+ *
+ *  3   2   1   0   level
+ *  0---0---0---0
+ *  |   |   |---1
+ *  |   |
+ *  |   |---2---2
+ *  |       |---3
+ *  |
+ *  |---4---4---4
+ *      |   |---5
+ *      |
+ *      |---6---6
+ *          |---7
+ */
 
 /**
  * @brief bcastserver --
@@ -540,29 +572,38 @@ void bcastserver(jia_msg_t *msg) {
     int jia_pid = system_setting.jia_pid;
     int hostc = system_setting.hostc;
 
+    /* step 1: get root and current level
+     * (ensure current host's child1 and child2) */
     rootlevel = msg->temp;
     root = (rootlevel >> 16) & 0xffff;
     level = rootlevel & 0xffff;
     level--;
 
+    /* step 2: mypid is current host's position in broadcast tree */
     mypid =
         ((jia_pid - root) >= 0) ? (jia_pid - root) : (jia_pid - root + hostc);
     child1 = mypid;
     child2 = mypid + (1 << level);
 
+    /* step 3: broadcast msg to child1 and child2 */
     if (level == 0) {
+        /* if level==0, msg must be handled and stop broadcast in the last level
+         */
         msg->op -= BCAST;
     }
     msg->temp = ((root & 0xffff) << 16) | (level & 0xffff);
     msg->frompid = jia_pid;
-
     if (child2 < hostc) {
         msg->topid = (child2 + root) % hostc;
-        asendmsg(msg);
+        move_msg_to_outqueue(&msg_buffer,
+                             ((void *)msg - (void *)&msg_buffer.buffer) /
+                                 sizeof(slot_t),
+                             &outqueue);
     }
-
     msg->topid = (child1 + root) % hostc;
-    asendmsg(msg);
+    move_msg_to_outqueue(
+        &msg_buffer,
+        ((void *)msg - (void *)&msg_buffer.buffer) / sizeof(slot_t), &outqueue);
 }
 
 int init_msg_queue(msg_queue_t *msg_queue, int size) {
@@ -692,7 +733,12 @@ void free_msg_queue(msg_queue_t *msg_queue) {
     free(msg_queue->queue);
 }
 
-int init_comm_manager() {
+/**
+ * @brief init_comm_manager - initialize comm_manager
+ * 
+ * @return int 
+ */
+static int init_comm_manager() {
     // snd port: Port monitored by peer host i
     // rcv port: Port monitored by local host that will be used by peer host i
     for (int i = 0; i < Maxhosts; i++) {

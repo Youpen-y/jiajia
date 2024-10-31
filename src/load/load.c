@@ -42,7 +42,7 @@
 
 extern void freemsg(jia_msg_t *);
 extern void asendmsg(jia_msg_t *msg);
-extern void broadcast(jia_msg_t *msg);
+extern void broadcast(jia_msg_t *msg, int index);
 extern float jia_clock();
 extern void appendmsg(jia_msg_t *, unsigned char *, int);
 
@@ -135,7 +135,6 @@ void loadserver(jia_msg_t *req) {
     if (loadcnt == system_setting.hostc) {
         loadcnt = 0;
         jia_newload();
-        // grant = newmsg();
         index = freemsg_lock(&msg_buffer);
         grant = &(msg_buffer.buffer[index].msg);
         grant->frompid = system_setting.jia_pid;
@@ -149,7 +148,6 @@ void loadserver(jia_msg_t *req) {
 
         broadcast(grant, index);
 
-        // freemsg(grant);
         freemsg_unlock(&msg_buffer, index);
     }
 }

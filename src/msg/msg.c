@@ -50,7 +50,7 @@
 #include "tools.h"
 
 extern void freemsg(jia_msg_t *);
-extern void printmsg(jia_msg_t *msg, int right);
+extern void printmsg(jia_msg_t *msg);
 extern void asendmsg(jia_msg_t *msg);
 extern void broadcast(jia_msg_t *msg, int index);
 extern float jia_clock();
@@ -544,8 +544,7 @@ void jia_bcast(char *buf, int len, int root) {
         req->size = 0;
         appendmsg(req, (unsigned char *)msgptr, msgsize);
         bsendmsg(req);
-
-        freemsg(req);
+        freemsg_unlock(&msg_buffer, index);
     }
 
     jia_recv(buf, len, MSG_PROC_ALL, BCAST_TAG);

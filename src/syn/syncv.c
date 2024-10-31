@@ -57,7 +57,6 @@ void grantcondv(int condv, int toproc) {
     int index;
     jia_msg_t *grant;
 
-    // grant = newmsg();
     index = freemsg_lock(&msg_buffer);
     grant = &msg_buffer.buffer[index].msg;
     grant->op = CVGRANT;
@@ -66,8 +65,6 @@ void grantcondv(int condv, int toproc) {
     grant->size = 0;
     appendmsg(grant, ltos(condv), Intbytes);
 
-    // asendmsg(grant);
-    // freemsg(grant);
-    move_msg_to_outqueue(&msg_buffer, index, &msg_buffer.outqueue);
+    move_msg_to_outqueue(&msg_buffer, index, &outqueue);
     freemsg_unlock(&msg_buffer, index);
 }

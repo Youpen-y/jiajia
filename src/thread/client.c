@@ -14,6 +14,7 @@
 static bool success = false;
 static jia_msg_t msg;
 pthread_t client_tid;
+static int outsend(jia_msg_t *msg);
 
 void *client_thread(void *args) {
     msg_queue_t *outqueue = (msg_queue_t *)args;
@@ -49,7 +50,13 @@ void *client_thread(void *args) {
     }
 }
 
-int outsend(jia_msg_t *msg) {
+/**
+ * @brief outsend - send msg to destination host
+ *
+ * @param msg msg to send
+ * @return int
+ */
+static int outsend(jia_msg_t *msg) {
     if (msg == NULL) {
         perror("msg is NULL");
         return -1;
@@ -89,7 +96,7 @@ int outsend(jia_msg_t *msg) {
         }
 
         /* step 3: ack success && error manager*/
-        if (ret != -1 && (ack.seqno == msg->seqno)) {
+        if (ret != -1 && (ack.seqno == (msg->seqno+1))) {
             return 0;
         }
         if (ret == -1) {
@@ -97,7 +104,7 @@ int outsend(jia_msg_t *msg) {
             return -1;
         }
         // this cond may not happen
-        if (ack.seqno != msg->seqno) {
+        if (ack.seqno != (msg->seqno+1)) {
             log_info(3, "ERROR: seqno not match[ack.seqno: %d msg.seqno: %d]",
                      ack.seqno, msg->seqno);
             return -1;

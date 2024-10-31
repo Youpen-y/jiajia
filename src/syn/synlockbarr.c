@@ -89,7 +89,7 @@ void acquire(int lock) {
     // asendmsg(req); // send the ACQ msg the lock owner
     // freemsg(req);
 
-    move_msg_to_outqueue(&msg_buffer, index, &msg_buffer.outqueue);
+    move_msg_to_outqueue(&msg_buffer, index, &outqueue);
     freemsg_unlock(&msg_buffer, index);
     while (acqwait)
         ;
@@ -109,7 +109,7 @@ void grantlock(int lock, int toproc, int acqscope) {
     wtnt_t *wnptr;
     int index;
 
-    // grant = newmsg();
+    index = freemsg_lock(&msg_buffer);
     grant = &msg_buffer.buffer[index].msg;
     grant->frompid = system_setting.jia_pid;
     grant->topid = toproc;
@@ -123,16 +123,14 @@ void grantlock(int lock, int toproc, int acqscope) {
     while (wnptr != WNULL) { // current msg is full, but still wtnts  left
         grant->op = INVLD;
         // asendmsg(grant);
-        move_msg_to_outqueue(&msg_buffer, index, &msg_buffer.outqueue);
+        move_msg_to_outqueue(&msg_buffer, index, &outqueue);
         grant->size = Intbytes;
         wnptr = appendlockwtnts(grant, wnptr, acqscope);
     }
 
     grant->op = ACQGRANT;
 
-    // asendmsg(grant);
-    // freemsg(grant);
-    move_msg_to_outqueue(&msg_buffer, index, &msg_buffer.outqueue);
+    move_msg_to_outqueue(&msg_buffer, index, &outqueue);
     freemsg_unlock(&msg_buffer, index);
 }
 
@@ -152,6 +150,7 @@ void grantbarr(int lock) {
     int hosti, index;
 
     // grant = newmsg();
+    index = freemsg_lock(&msg_buffer);
     grant = &msg_buffer.buffer[index].msg;
 
     grant->frompid = system_setting.jia_pid;
@@ -173,7 +172,6 @@ void grantbarr(int lock) {
     }
     grant->op = BARRGRANT;
     broadcast(grant, index);
-    // freemsg(grant);
     freemsg_unlock(&msg_buffer, index);
 }
 
@@ -190,9 +188,9 @@ void broadcast(jia_msg_t *msg, int index) {
         for (hosti = 0; hosti < system_setting.hostc; hosti++) {
             msg->topid = hosti;
             // asendmsg(msg);
-            move_msg_to_outqueue(&msg_buffer, index, &msg_buffer.outqueue);
+            move_msg_to_outqueue(&msg_buffer, index, &outqueue);
         }
     } else {
-        bsendmsg(msg); // TODO: 
+        bsendmsg(msg);
     }
 }

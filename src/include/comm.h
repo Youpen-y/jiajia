@@ -190,14 +190,6 @@ void bsendmsg(jia_msg_t *msg);
 
 void bcastserver(jia_msg_t *msg);
 
-
-/**
- * @brief init_comm_manager - initialize comm_manager
- * 
- * @return int 
- */
-static int init_comm_manager();
-
 /**
  * @brief fd_create -- creat socket file descriptor used to send and recv
  * request

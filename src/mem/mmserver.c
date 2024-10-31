@@ -156,7 +156,7 @@ void diffserver(jia_msg_t *req) {
 
     // asendmsg(rep);
     // freemsg(rep);
-    move_msg_to_outqueue(&msg_buffer, index, &msg_buffer.outqueue);
+    move_msg_to_outqueue(&msg_buffer, index, &outqueue);
     freemsg_unlock(&msg_buffer, index);
 }
 
@@ -189,9 +189,6 @@ void getpserver(jia_msg_t *req) {
            "Incorrect GETP Message!");
 
     paddr = (address_t)stol(req->data); // getp message data is the page's addr
-                                        /*
-                                         VERBOSE_LOG(3, "getpage=0x%x from host %d\n",(unsigned long) paddr,req->frompid);
-                                        */
     if ((H_MIG == ON) && (homehost(paddr) != jia_pid)) {
         /*This is a new home, the home[] data structure may
           not be updated, but the page has already been here
@@ -238,14 +235,11 @@ void getpserver(jia_msg_t *req) {
 
     if (W_VEC == ON) {
         home[homei].wtvect[req->frompid] = WVNULL;
-        /*
-          VERBOSE_LOG(3, "0x%x\n",rep->temp);
-        */
     }
 
     // asendmsg(rep);
     // freemsg(rep);
-    move_msg_to_outqueue(&msg_buffer, index, &msg_buffer.outqueue);
+    move_msg_to_outqueue(&msg_buffer, index, &outqueue);
     freemsg_unlock(&msg_buffer, index);
 }
 
@@ -278,10 +272,10 @@ void getpgrantserver(jia_msg_t *rep) {
             }
         }
     } else {
-        VERBOSE_LOG(3, "addr is %p , rep->data+datai = %p\n", addr, rep->data + datai);
+        log_info(3, "addr is %p , rep->data+datai = %p", addr, rep->data + datai);
         memcpy((unsigned char *)addr, rep->data + datai,
                Pagesize); // TODO:possible bug
-        VERBOSE_LOG(3, "I have copy the page from remote home to %p\n", addr);
+        log_info(3, "I have copy the page from remote home to %p", addr);
     }
 
     getpwait = 0;

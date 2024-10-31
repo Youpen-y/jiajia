@@ -114,28 +114,35 @@ void local_assert(int cond, char *format, ...) {
  */
 void jia_assert(int cond, char *format, ...) {
     int hosti;
+    int index;
+    jia_msg_t* assert_msg;
 
     if (!cond) { // if condition is false then send JIAEXIT msg to all hosts
-
         // init assertmsg
+        index = freemsg_lock(&msg_buffer);
+        assert_msg = &msg_buffer.buffer[index].msg;
+
         va_list args;
         va_start(args, format);
-        sprintf((char *)assertmsg.data, format, args);
+        sprintf((char *)assert_msg->data, format, args);
         va_end(args);
-        assertmsg.op = JIAEXIT;
-        assertmsg.frompid = system_setting.jia_pid;
-        assertmsg.size = strlen((char *)assertmsg.data) + 1;
+        assert_msg->op = JIAEXIT;
+        assert_msg->frompid = system_setting.jia_pid;
+        assert_msg->size = strlen((char *)assert_msg->data) + 1;
 
         // asend message
         for (hosti = 0; hosti < system_setting.hostc; hosti++) {
             if (hosti != system_setting.jia_pid) {
-                assertmsg.topid = hosti;
-                asendmsg(&assertmsg);
+                assert_msg->topid = hosti;
+                move_msg_to_outqueue(&msg_buffer, index, &outqueue);
+                //asendmsg(&assertmsg);
             }
         }
         assertmsg.topid =
             system_setting.jia_pid; // self send JIAEXIT msg in the last
-        asendmsg(&assertmsg);
+        //asendmsg(&assertmsg);
+        move_msg_to_outqueue(&msg_buffer, index, &outqueue);
+        freemsg_unlock(&msg_buffer, index);
     }
 }
 
