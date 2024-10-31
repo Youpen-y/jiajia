@@ -1,5 +1,6 @@
 #if !defined(SETTING_H)
 #define SETTING_H
+#include <errno.h>
 
 /* max line length */
 #define MAX_LINE_LEN 256

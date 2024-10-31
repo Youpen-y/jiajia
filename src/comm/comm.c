@@ -581,8 +581,8 @@ int init_msg_queue(msg_queue_t *msg_queue, int size) {
     msg_queue->tail = 0;
 
     // initialize head mutex and tail mutex
-    if (pthread_mutex_init(&(msg_queue->head_mutex), NULL) != 0 ||
-        pthread_mutex_init(&(msg_queue->tail_mutex), NULL) != 0) {
+    if (pthread_mutex_init(&(msg_queue->head_lock), NULL) != 0 ||
+        pthread_mutex_init(&(msg_queue->tail_lock), NULL) != 0) {
         perror("msg_queue mutex init");
         free(msg_queue->queue);
         return -1;
@@ -592,23 +592,23 @@ int init_msg_queue(msg_queue_t *msg_queue, int size) {
     if (sem_init(&(msg_queue->busy_count), 0, 0) != 0 ||
         sem_init(&(msg_queue->free_count), 0, size) != 0) {
         perror("msg_queue sem init");
-        pthread_mutex_destroy(&(msg_queue->head_mutex));
-        pthread_mutex_destroy(&(msg_queue->tail_mutex));
+        pthread_mutex_destroy(&(msg_queue->head_lock));
+        pthread_mutex_destroy(&(msg_queue->tail_lock));
         free(msg_queue->queue);
         return -1;
     }
 
     // initialize slot mutex and condition variable
     for (int i = 0; i < size; i++) {
-        if (pthread_mutex_init(&(msg_queue->queue[i].mutex), NULL) != 0) {
+        if (pthread_mutex_init(&(msg_queue->queue[i].lock), NULL) != 0) {
             perror("msg_queue slot mutex init");
             for (int j = 0; j < i; j++) {
-                pthread_mutex_destroy(&(msg_queue->queue[j].mutex));
+                pthread_mutex_destroy(&(msg_queue->queue[j].lock));
             }
             sem_destroy(&(msg_queue->busy_count));
             sem_destroy(&(msg_queue->free_count));
-            pthread_mutex_destroy(&(msg_queue->head_mutex));
-            pthread_mutex_destroy(&(msg_queue->tail_mutex));
+            pthread_mutex_destroy(&(msg_queue->head_lock));
+            pthread_mutex_destroy(&(msg_queue->tail_lock));
             free(msg_queue->queue);
             return -1;
         }
@@ -621,7 +621,7 @@ int init_msg_queue(msg_queue_t *msg_queue, int size) {
 int enqueue(msg_queue_t *msg_queue, jia_msg_t *msg) {
     if (msg_queue == NULL || msg == NULL) {
         log_err("msg_queue or msg is NULL[msg_queue: %lx msg: %lx]",
-                msg_queue, msg);
+                (long unsigned)msg_queue, (long unsigned)msg);
         return -1;
     }
 
@@ -633,12 +633,12 @@ int enqueue(msg_queue_t *msg_queue, jia_msg_t *msg) {
 
     int slot_index;
     // lock tail and update tail pointer
-    pthread_mutex_lock(&(msg_queue->tail_mutex));
+    pthread_mutex_lock(&(msg_queue->tail_lock));
     slot_index = msg_queue->tail;
     msg_queue->tail = (msg_queue->tail + 1) % msg_queue->size;
-    pthread_mutex_unlock(&(msg_queue->tail_mutex));
+    pthread_mutex_unlock(&(msg_queue->tail_lock));
 
-    queue_slot_t *slot = &(msg_queue->queue[slot_index]);
+    slot_t *slot = &(msg_queue->queue[slot_index]);
     memcpy(&(slot->msg), msg, sizeof(jia_msg_t)); // copy msg to slot
     slot->state = SLOT_BUSY;                      // set slot state to busy
 
@@ -658,10 +658,10 @@ int dequeue(msg_queue_t *msg_queue, jia_msg_t *msg) {
 
     int slot_index;
     // lock head and update head pointer
-    pthread_mutex_lock(&(msg_queue->head_mutex));
+    pthread_mutex_lock(&(msg_queue->head_lock));
     slot_index = msg_queue->head;
     msg_queue->head = (msg_queue->head + 1) % msg_queue->size;
-    pthread_mutex_unlock(&(msg_queue->head_mutex));
+    pthread_mutex_unlock(&(msg_queue->head_lock));
 
     slot_t *slot = &(msg_queue->queue[slot_index]);
     memcpy(msg, &(slot->msg), sizeof(jia_msg_t)); // copy msg from slot
@@ -678,7 +678,7 @@ void free_msg_queue(msg_queue_t *msg_queue) {
 
     // destory slot mutex and condition variable
     for (int i = 0; i < msg_queue->size; i++) {
-        pthread_mutex_destroy(&(msg_queue->queue[i].mutex));
+        pthread_mutex_destroy(&(msg_queue->queue[i].lock));
     }
 
     // destory semaphores
@@ -686,8 +686,8 @@ void free_msg_queue(msg_queue_t *msg_queue) {
     sem_destroy(&(msg_queue->free_count));
 
     // destory head mutex and tail mutex
-    pthread_mutex_destroy(&(msg_queue->head_mutex));
-    pthread_mutex_destroy(&(msg_queue->tail_mutex));
+    pthread_mutex_destroy(&(msg_queue->head_lock));
+    pthread_mutex_destroy(&(msg_queue->tail_lock));
 
     free(msg_queue->queue);
 }
