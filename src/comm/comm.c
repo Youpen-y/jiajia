@@ -701,7 +701,7 @@ int init_comm_manager() {
         comm_manager.rcv_ports[i] = start_port + i;
     }
 
-    for (i = 0; i < Maxhosts; i++) {
+    for (int i = 0; i < Maxhosts; i++) {
         // create socket and bind it to [INADDR_ANY, comm_manager.rcv_ports[i]
         // request from (host i) is will be receive from commreq.rcv_fds[i]
         // (whose port = comm_manager.rcv_ports[i])
@@ -714,7 +714,7 @@ int init_comm_manager() {
     comm_manager.ack_fds = fd_create(0, FDCR_ACK);
     set_nonblocking(comm_manager.ack_fds);
 
-    for (i = 0; i < Maxhosts; i++) {
+    for (int i = 0; i < Maxhosts; i++) {
         comm_manager.snd_seq[i] = 0;
         comm_manager.ack_seq[i] = 0;
         comm_manager.rcv_seq[i] = 0;

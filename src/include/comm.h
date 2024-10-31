@@ -146,19 +146,6 @@ extern comm_manager_t comm_manager;
  */
 void initcomm();
 
-/**
- * @brief fd_create -- creat socket file descriptor used to send and recv
- * request
- *
- * @param i the index of host
- * @param flag 1 means sin_port = 0, random port; others means specified
- * sin_port = reqports[jia_pid][i]
- * @return int socket file descriptor
- * creat socket file descriptor(fd) used to send and recv request and bind it to
- * an address (ip/port combination)
- */
-static int fd_create(int i, enum FDCR_MODE flag);
-
 
 /**
  * @brief sigio_handler -- IO signal handler
@@ -211,6 +198,18 @@ void bcastserver(jia_msg_t *msg);
  */
 static int init_comm_manager();
 
+/**
+ * @brief fd_create -- creat socket file descriptor used to send and recv
+ * request
+ *
+ * @param i the index of host
+ * @param flag 1 means sin_port = 0, random port; others means specified
+ * sin_port = reqports[jia_pid][i]
+ * @return int socket file descriptor
+ * creat socket file descriptor(fd) used to send and recv request and bind it to
+ * an address (ip/port combination)
+ */
+static int fd_create(int i, enum FDCR_MODE flag);
 
 /**
  * @brief set_nonblocking - set socket to nonblocking mode

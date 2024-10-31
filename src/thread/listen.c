@@ -1,3 +1,4 @@
+#include "msg.h"
 #include "thread.h"
 #include "comm.h"
 #include "setting.h"
@@ -16,14 +17,14 @@ void *listen_thread(void *args)
     int epollfd = epoll_create(1);
     if (epollfd == -1)
     {
-        perror("epoll_create");
+        log_err("epoll_create failed");
         exit(1);
     }
 
     // add rcv_fds to epollfd instance
     for (int i = 0; i < Maxhosts; i++)
     {
-        addfd(epollfd, comm_manager.rcv_fds[i], false, 0);
+        addfd(epollfd, comm_manager.rcv_fds[i], 1);
     }
 
     struct epoll_event events[Maxhosts];
@@ -47,9 +48,9 @@ void *listen_thread(void *args)
 
                 // receive a msg
                 int ret = recvfrom(sockfd, &msg, sizeof(jia_msg_t), 0, NULL, NULL);
-                if (ret == -1)
+                if (ret != sizeof(jia_msg_t))
                 {
-                    perror("recvfrom");
+                    log_err("recvfrom failed, only got %d bytes", ret);
                     continue;
                 }
 
@@ -66,7 +67,7 @@ void *listen_thread(void *args)
                 ack_addr.sin_port = htons(comm_manager.ack_port);
                 ack_addr.sin_addr.s_addr = inet_addr(system_setting.hosts[to_id].ip);
 
-                ret = sendto(comm_manager.snd_fds[1], &ack, sizeof(ack), 0, (struct sockaddr *)&ack_addr, sizeof(ack_addr));
+                ret = sendto(comm_manager.snd_fds, &ack, sizeof(ack), 0, (struct sockaddr *)&ack_addr, sizeof(ack_addr));
                 local_assert((ret != -1), "ack sendto failed");
 
                 if (seqno == comm_manager.rcv_seq[to_id] + 1)
@@ -77,14 +78,14 @@ void *listen_thread(void *args)
                 else
                 {
                     // drop the msg, don't do anything
-                    VERBOSE_LOG(3, "Receive resend msg");
+                    log_info(3, "Receive resend msg");
                 }
             }
         }
     }
 }
 
-void addfd(int epollfd, int fd, bool one_shot, int trigger_mode)
+void addfd(int epollfd, int fd, int trigger_mode)
 {
     struct epoll_event event;
     event.data.fd = fd;
@@ -96,11 +97,6 @@ void addfd(int epollfd, int fd, bool one_shot, int trigger_mode)
     else
     {
         event.events = EPOLLIN;
-    }
-
-    if (one_shot)
-    {
-        event.events |= EPOLLONESHOT; // 单次触发，收到此事件后需重新添加
     }
     epoll_ctl(epollfd, EPOLL_CTL_ADD, fd, &event);
 }
