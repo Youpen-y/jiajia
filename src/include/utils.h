@@ -42,4 +42,11 @@ extern FILE* logfile;
     exit(EXIT_FAILURE);                                                        \
   }
 
+/**
+ * @brief open_logfile - open logfile
+ * 
+ * @param filename 
+ * @return int 
+ */
+int open_logfile(char *filename);
 #endif

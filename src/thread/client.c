@@ -33,6 +33,10 @@ void *client_thread(void *args) {
                     success = true;
                     break;
                 }
+                
+                #ifdef DOSTAT
+                    STATOP(jiastat.resendcnt++;)
+                #endif
             }
 
             /* step 3: manage error */
@@ -61,6 +65,11 @@ static int outsend(jia_msg_t *msg) {
         perror("msg is NULL");
         return -1;
     }
+
+#ifdef DOSTAT
+    STATOP(if (msg->size > 4096) jiastat.largecnt++;
+            if (msg->size < 128) jiastat.smallcnt++;)
+#endif
 
     int ret;
     struct sockaddr_in to_addr;

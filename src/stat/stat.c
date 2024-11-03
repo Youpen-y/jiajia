@@ -42,7 +42,6 @@ void statserver(jia_msg_t *rep)
  allstats[rep->frompid].usersigiocnt = stat->usersigiocnt;
  allstats[rep->frompid].synsigiocnt  = stat->synsigiocnt;
  allstats[rep->frompid].segvsigiocnt = stat->segvsigiocnt;
- allstats[rep->frompid].overlapsigiocnt = stat->overlapsigiocnt;
  allstats[rep->frompid].barrcnt      = stat->barrcnt;
  allstats[rep->frompid].lockcnt      = stat->lockcnt;
  allstats[rep->frompid].getpcnt      = stat->getpcnt;
@@ -53,7 +52,7 @@ void statserver(jia_msg_t *rep)
  allstats[rep->frompid].repRWcnt     = stat->repRWcnt;
  allstats[rep->frompid].migincnt     = stat->migincnt;
  allstats[rep->frompid].migoutcnt    = stat->migoutcnt;
- allstats[rep->frompid].resentcnt    = stat->resentcnt;
+ allstats[rep->frompid].resendcnt    = stat->resendcnt;
 
  allstats[rep->frompid].barrtime     = stat->barrtime;
  allstats[rep->frompid].segvRtime    = stat->segvRtime;
@@ -62,11 +61,9 @@ void statserver(jia_msg_t *rep)
  allstats[rep->frompid].unlocktime   = stat->unlocktime;
  allstats[rep->frompid].synsigiotime = stat->synsigiotime;
  allstats[rep->frompid].segvsigiotime= stat->segvsigiotime;
- allstats[rep->frompid].overlapsigiotime= stat->overlapsigiotime;
  allstats[rep->frompid].usersigiotime= stat->usersigiotime;
  allstats[rep->frompid].endifftime   = stat->endifftime;
  allstats[rep->frompid].dedifftime   = stat->dedifftime;
- allstats[rep->frompid].asendtime    = stat->asendtime;
 
 /* Follow used by Shi*/
  allstats[rep->frompid].largecnt    = stat->largecnt;

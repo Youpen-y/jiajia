@@ -168,7 +168,7 @@ void migpage(unsigned long addr, int frompid, int topid) {
         }
 #endif
     } else if (frompid == system_setting.jia_pid) { /*Old Home*/
-        homei = homepage(addr);
+        homei = homepage((address_t)addr);
         jia_assert((unsigned long)home[homei].addr == addr, "MIG ERROR");
 
         for (cachei = 0;

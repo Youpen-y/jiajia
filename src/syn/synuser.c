@@ -196,12 +196,10 @@ void jia_barrier() {
     freewtntspace(top.wtntp);
     while (barrwait)
         ;
-    VERBOSE_LOG(3, "555555555555555\n");
     if ((H_MIG == ON) && (W_VEC == ON)) {
         jia_wait();
     }
     startinterval(BARR);
-    VERBOSE_LOG(3, "66666666666666\n");
     if (LOAD_BAL == ON)
         starttime = jia_clock();
 

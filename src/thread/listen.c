@@ -4,6 +4,7 @@
 #include "thread.h"
 #include "tools.h"
 #include "utils.h"
+#include "stat.h"
 #include <stdbool.h>
 #include <stdlib.h>
 #include <sys/epoll.h>
@@ -71,10 +72,20 @@ void *listen_thread(void *args) {
                 if (msg.seqno == comm_manager.rcv_seq[to_id]) {
                     comm_manager.rcv_seq[to_id]++;
                     enqueue(&inqueue, &msg);
+
+                    #ifdef DOSTAT
+                    if (statflag == 1) {
+                        jiastat.msgrcvcnt++;
+                        jiastat.msgrcvbytes +=
+                            (msg.size + Msgheadsize);
+                    }
+                    #endif
+
                 } else {
                     // drop the msg(msg's seqno is not need), don't do anything
                     log_info(3, "Receive resend msg");
                 }
+
             }
         }
     }

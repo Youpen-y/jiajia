@@ -42,6 +42,7 @@
 #include "setting.h"
 #include "stat.h"
 #include "msg.h"
+#include "mem.h"
 
 /* jiajia */
 // extern int jia_pid;
@@ -96,7 +97,7 @@ void diffserver(jia_msg_t *req) {
         datai += sizeof(unsigned char *);
         wv = WVNULL;
 
-        homei = homepage(paddr);
+        homei = homepage((address_t)paddr);
 
         /**
          * In the case of H_MIG==ON, homei may be the index of

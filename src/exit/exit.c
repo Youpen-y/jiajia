@@ -111,13 +111,10 @@ void jia_exit() {
                 total.repRWcnt += allstats[i].repRWcnt;
                 total.migincnt += allstats[i].migincnt;
                 total.migoutcnt += allstats[i].migoutcnt;
-                total.resentcnt += allstats[i].resentcnt;
-
+                total.resendcnt += allstats[i].resendcnt;
                 total.usersigiocnt += allstats[i].usersigiocnt;
                 total.synsigiocnt += allstats[i].synsigiocnt;
                 total.segvsigiocnt += allstats[i].segvsigiocnt;
-                total.overlapsigiocnt += allstats[i].overlapsigiocnt;
-
                 total.segvLtime += allstats[i].segvLtime;
                 total.segvRtime += allstats[i].segvRtime;
                 total.barrtime += allstats[i].barrtime;
@@ -126,8 +123,6 @@ void jia_exit() {
                 total.usersigiotime += allstats[i].usersigiotime;
                 total.synsigiotime += allstats[i].synsigiotime;
                 total.segvsigiotime += allstats[i].segvsigiotime;
-                total.overlapsigiotime += allstats[i].overlapsigiotime;
-
                 total.largecnt += allstats[i].largecnt;
                 total.smallcnt += allstats[i].smallcnt;
                 total.syntime += allstats[i].syntime;
@@ -235,8 +230,8 @@ void jia_exit() {
 
             printf("\nResent Msgs        = ");
             for (i = 0; i < hostc; i++)
-                printf("%8d ", allstats[i].resentcnt);
-            printf(" %8d ", total.resentcnt);
+                printf("%8d ", allstats[i].resendcnt);
+            printf(" %8d ", total.resendcnt);
 
             printf("\nLarge message      = ");
             for (i = 0; i < hostc; i++)
@@ -275,18 +270,12 @@ void jia_exit() {
             printf("\nSIGIO time (SEGV)  = ");
             for (i = 0; i < hostc; i++)
                 printf("%8.2f ", allstats[i].segvsigiotime / 1000.0);
-            printf("\nSIGIO time (Over)  = ");
-            for (i = 0; i < hostc; i++)
-                printf("%8.2f ", allstats[i].overlapsigiotime / 1000.0);
             printf("\nEncode diff time   = ");
             for (i = 0; i < hostc; i++)
                 printf("%8.2f ", allstats[i].endifftime / 1000.0);
             printf("\nDecode diff time   = ");
             for (i = 0; i < hostc; i++)
                 printf("%8.2f ", allstats[i].dedifftime / 1000.0);
-            printf("\nAsendmsg time      = ");
-            for (i = 0; i < hostc; i++)
-                printf("%8.2f ", allstats[i].asendtime / 1000.0);
             // printf("\ncomm soft time     = ");
             // for (i=0; i<hostc; i++) printf("%8.2f ",
             // allstats[i].commsofttime/1000.0); printf("\ncomm hard time     =
