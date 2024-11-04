@@ -1,6 +1,6 @@
 #!/bin/bash
 ARCH=linux
-MODE=WLAN
+MODE=ETH
 TIMEOUT=25
 
 # 创建reports及其子文件夹文件夹

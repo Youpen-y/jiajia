@@ -121,7 +121,7 @@ int init_msg_buffer(msg_buffer_t *msg_buffer, int size)
     msg_buffer->size = size;
 
     // initialize semaphores
-    if (sem_init(&(msg_buffer->count), 0, 0)!= 0) {
+    if (sem_init(&(msg_buffer->count), 0, size)!= 0) {
         perror("msg_buffer sem init");
         free(msg_buffer->buffer);
         return -1;

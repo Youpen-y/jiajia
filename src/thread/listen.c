@@ -35,8 +35,11 @@ void *listen_thread(void *args) {
         // timeout = -1, block forever until an event occurs
         int nfds = epoll_wait(epollfd, events, Maxhosts, -1);
         if (nfds == -1) {
+            if (errno == EINTR) {
+                continue;
+            }
             perror("epoll_wait");
-            exit(1);
+            break;
         }
 
         for (int i = 0; i < nfds; i++) {
