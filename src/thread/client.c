@@ -80,6 +80,7 @@ static int outsend(jia_msg_t *msg) {
     ack_t ack;
 
     if (msg->topid == msg->frompid) {
+        log_out(3, "equal pid");
         return enqueue(&inqueue, msg);
     } else {
 
@@ -90,7 +91,7 @@ static int outsend(jia_msg_t *msg) {
                 (outqueue.queue[outqueue.head].msg.size + Msgheadsize);
         }
 #endif
-
+        log_out(3, "not equal pid");
         /* step 1: send msg to destination host with ip */
         to_addr.sin_family = AF_INET;
         to_addr.sin_port = htons(comm_manager.snd_server_port);
@@ -101,11 +102,13 @@ static int outsend(jia_msg_t *msg) {
         sendto(comm_manager.snd_fds, msg, sizeof(jia_msg_t), 0,
                (struct sockaddr *)&to_addr, sizeof(struct sockaddr));
 
+        log_out(3, "send once");
         /* step 2: wait for ack with time */
         FD_ZERO(&fdset);
         FD_SET(comm_manager.ack_fds, &fdset);
         ret = select(1, &fdset, NULL, NULL, &timeout);
         if ((ret == 1) &&  FD_ISSET(comm_manager.ack_fds, &fdset)) {
+            log_out(3, "resend");
             ret = recvfrom(comm_manager.ack_fds, (char *)&ack, sizeof(ack_t), 0,
                            NULL, NULL);
             /* step 3: ack success && error manager*/
@@ -118,7 +121,7 @@ static int outsend(jia_msg_t *msg) {
             }
             // this cond may not happen
             if (ack.seqno != (msg->seqno + 1)) {
-                log_err("ERROR: seqno not match[ack.seqno: %d msg.seqno: %d]",
+                log_out(3, "ERROR: seqno not match[ack.seqno: %d msg.seqno: %d]",
                          ack.seqno, msg->seqno);
                 return -1;
             }
