@@ -117,8 +117,7 @@ static int outsend(jia_msg_t *msg) {
             }
             // this cond may not happen
             if (ack.seqno != (msg->seqno + 1)) {
-                log_info(3,
-                         "ERROR: seqno not match[ack.seqno: %d msg.seqno: %d]",
+                log_err("ERROR: seqno not match[ack.seqno: %d msg.seqno: %d]",
                          ack.seqno, msg->seqno);
                 return -1;
             }
