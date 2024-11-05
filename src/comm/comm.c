@@ -554,6 +554,7 @@ int enqueue(msg_queue_t *msg_queue, jia_msg_t *msg) {
     }
 
     // wait for free slot
+    log_out(3, "msq_queue freecount: %lu", msg_queue->free_count)
     if (sem_wait(&msg_queue->free_count) != 0) {
         log_err("sem_wait error");
         return -1;
