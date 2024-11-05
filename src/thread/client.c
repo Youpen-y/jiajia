@@ -97,6 +97,7 @@ static int outsend(jia_msg_t *msg) {
         to_addr.sin_port = htons(comm_manager.snd_server_port);
         to_addr.sin_addr.s_addr =
             inet_addr(system_setting.hosts[msg->topid].ip);
+        log_out(3, "snd_server_port is %u", comm_manager.snd_server_port);
         log_out(3, "toproc IP address is %u, IP port is %u",
                  to_addr.sin_addr.s_addr, to_addr.sin_port);
         sendto(comm_manager.snd_fds, msg, sizeof(jia_msg_t), 0,
