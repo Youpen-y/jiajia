@@ -64,6 +64,7 @@ void *client_thread(void *args) {
  * @return int
  */
 static int outsend(jia_msg_t *msg) {
+    log_out(3, "enter outsend");
     if (msg == NULL) {
         perror("msg is NULL");
         return -1;
