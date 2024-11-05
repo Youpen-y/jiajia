@@ -33,6 +33,7 @@ void *listen_thread(void *args) {
 
     while (1) {
         // timeout = -1, block forever until an event occurs
+        log_out(3, "enter listen thread");
         int nfds = epoll_wait(epollfd, events, Maxhosts, -1);
         if (nfds == -1) {
             if (errno == EINTR) {
@@ -41,6 +42,7 @@ void *listen_thread(void *args) {
             perror("epoll_wait");
             break;
         }
+        log_out(3, "epoll_wait success");
 
         for (int i = 0; i < nfds; i++) {
             int sockfd = events[i].data.fd;
