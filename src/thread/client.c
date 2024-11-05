@@ -95,10 +95,11 @@ static int outsend(jia_msg_t *msg) {
         /* step 1: send msg to destination host with ip */
         to_addr.sin_family = AF_INET;
         to_addr.sin_port = htons(comm_manager.snd_server_port);
-        to_addr.sin_addr.s_addr =
-            inet_addr(system_setting.hosts[msg->topid].ip);
+        inet_aton(system_setting.hosts[msg->topid].ip, &to_addr.sin_addr);
+        // to_addr.sin_addr.s_addr =
+        //     inet_addr(system_setting.hosts[msg->topid].ip);
         log_out(3, "snd_server_port is %u", comm_manager.snd_server_port);
-        log_out(3, "toproc IP address is %u, IP port is %u",
+        log_out(3, "toproc IP address is %lx, IP port is %u",
                  to_addr.sin_addr.s_addr, to_addr.sin_port);
         sendto(comm_manager.snd_fds, msg, sizeof(jia_msg_t), 0,
                (struct sockaddr *)&to_addr, sizeof(struct sockaddr));
