@@ -575,6 +575,7 @@ int enqueue(msg_queue_t *msg_queue, jia_msg_t *msg) {
     slot->state = SLOT_BUSY;                      // set slot state to busy
 
     sem_post(&(msg_queue->busy_count));
+    log_out(3, "leave enqueue");
     return 0;
 }
 
