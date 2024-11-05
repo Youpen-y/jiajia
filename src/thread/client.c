@@ -8,13 +8,16 @@
 #include <asm-generic/errno.h>
 #include <errno.h>
 #include <stdbool.h>
+#include <sys/select.h>
 #include <unistd.h>
 
 #define RETRYNUM 4
 static bool success = false;
 static jia_msg_t msg;
 pthread_t client_tid;
+static fd_set fdset;
 static int outsend(jia_msg_t *msg);
+static struct timeval timeout = {TIMEOUT, 0};
 
 void *client_thread(void *args) {
     msg_queue_t *outqueue = (msg_queue_t *)args;
@@ -98,25 +101,27 @@ static int outsend(jia_msg_t *msg) {
                (struct sockaddr *)&to_addr, sizeof(struct sockaddr));
 
         /* step 2: wait for ack with time */
-        unsigned long timeend = jia_current_time() + TIMEOUT;
-        while ((jia_current_time() < timeend) && (errno == EWOULDBLOCK)) {
+        FD_ZERO(&fdset);
+        FD_SET(comm_manager.ack_fds, &fdset);
+        ret = select(1, &fdset, NULL, NULL, &timeout);
+        if ((ret == 1) &&  FD_ISSET(comm_manager.ack_fds, &fdset)) {
             ret = recvfrom(comm_manager.ack_fds, (char *)&ack, sizeof(ack_t), 0,
                            NULL, NULL);
-        }
-
-        /* step 3: ack success && error manager*/
-        if (ret != -1 && (ack.seqno == (msg->seqno+1))) {
-            return 0;
-        }
-        if (ret == -1) {
-            log_info(3, "TIMEOUT! try resend");
-            return -1;
-        }
-        // this cond may not happen
-        if (ack.seqno != (msg->seqno+1)) {
-            log_info(3, "ERROR: seqno not match[ack.seqno: %d msg.seqno: %d]",
-                     ack.seqno, msg->seqno);
-            return -1;
+            /* step 3: ack success && error manager*/
+            if (ret != -1 && (ack.seqno == (msg->seqno + 1))) {
+                return 0;
+            }
+            if (ret == -1) {
+                log_info(3, "TIMEOUT! try resend");
+                return -1;
+            }
+            // this cond may not happen
+            if (ack.seqno != (msg->seqno + 1)) {
+                log_info(3,
+                         "ERROR: seqno not match[ack.seqno: %d msg.seqno: %d]",
+                         ack.seqno, msg->seqno);
+                return -1;
+            }
         }
     }
 
