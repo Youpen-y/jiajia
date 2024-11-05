@@ -180,6 +180,7 @@ static int fd_create(int i, enum FDCR_MODE flag) {
     res = setsockopt(fd, SOL_SOCKET, SO_SNDBUF, (char *)&size, sizeof(size));
     local_assert((res == 0), "req_fdcreate()-->setsockopt():SO_SNDBUF");
 
+    bzero(&addr,sizeof(addr));
     addr.sin_family = AF_INET;
     addr.sin_addr.s_addr = htonl(INADDR_ANY);
     switch (flag) {

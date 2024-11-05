@@ -18,16 +18,16 @@ void *listen_thread(void *args) {
     struct sockaddr_in ack_addr;
 
     // create epollfd epoll instance
-    int epollfd = epoll_create(1);
+    int epollfd = epoll_create(Maxhosts);
     if (epollfd == -1) {
         log_err("epoll_create failed");
         exit(1);
     }
 
     struct epoll_event event, events[Maxhosts];
-    event.events = EPOLLIN; // listen read event
     // add rcv_fds to epollfd instance
     for (int i = 0; i < Maxhosts; i++) {
+        event.events = EPOLLIN; // listen read event
         event.data.fd = comm_manager.rcv_fds[i];
         if(epoll_ctl(epollfd, EPOLL_CTL_ADD, event.data.fd, &event) == -1){
             log_err("epoll_ctl failed");
