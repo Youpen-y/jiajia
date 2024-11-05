@@ -3,6 +3,37 @@ ARCH=linux
 MODE=ETH
 TIMEOUT=25
 
+CLEAN=true
+ALLTEST=true
+RUN=true
+tests=("lu" "ep")
+
+run_app() {
+    # 进入文件夹并在reports下创建对应的log文件
+    echo -e "\nrunning $1..."
+    if [ ! -f ./reports/$ARCH/$MODE/"$1" ]; then
+        echo "touch reports/$ARCH/$MODE/$1 file..."
+        touch ./reports/$ARCH/$MODE/"$1"
+    fi
+
+    # 运行程序
+    cd ./apps/"$1"/$ARCH || exit
+    ./"$1" > ../../../reports/$ARCH/$MODE/"$1" &
+    cd ../../..
+}
+
+listen() {
+    sleep $TIMEOUT
+    if ps -p "$1" > /dev/null
+    then
+        # 如果进程仍在运行，则终止该进程
+        echo "Terminating process with PID $1"
+        kill "$1"
+    else
+        echo "Process with PID $1 has completed within the time limit"
+    fi
+}
+
 # 创建reports及其子文件夹文件夹
 if [ ! -d ./reports ]; then
     echo "make reports dir..."
@@ -19,69 +50,60 @@ fi
 
 # 创建libjia库
 echo -e "\nmake libjia.a..."
-cd ./lib/$ARCH || exit
-make all
-cd ../../apps || exit
+if $CLEAN; then
+    make clean -C ./lib/$ARCH
+fi
+make all -C ./lib/$ARCH
 sleep 1
 
 # 编译app
 echo -e "\nmake all apps..."
-for dir in */; do
-    cd ./$dir/$ARCH || exit
+for dir in apps/*/; do
     echo "compile ${dir%/}..."
-    make all >> /dev/null
-    cd ../..
+    if $CLEAN; then
+        make clean -C ./"${dir%/}"/$ARCH
+    fi
+    make all -C ./"${dir%/}"/$ARCH
 done
 sleep 1
 
 # 拷贝.jiahosts到所有文件夹下(从pi出发)
 echo -e "\ncopy .jiahosts..."
-for dir in */; do
-    cd ./$dir/$ARCH || exit
-    cp ../../.jiahosts .
-    cd ../..
+for dir in apps/*/ ; do
+        cp apps/.jiahosts "${dir%/}"/$ARCH/
 done
 sleep 1
 
 # 拷贝 system.conf 文件到所有文件夹下
 echo -e "\ncopy system.conf..."
-for dir in */; do
-    cd ./$dir/$ARCH || exit
-    cp ../../system.conf .
-    cd ../..
+for dir in apps/*/; do
+        cp apps/system.conf "${dir%/}"/$ARCH/
 done
 sleep 1
 
 # 请求用户输入密码
 # read -s -p "Please enter your sudo password:" password
 
-# 运行所有apps
-for dir in */; do
+# 运行所有app || 运行指定app
+if $RUN; then
+    if $ALLTEST; then
+        for dir in apps/*/; do
+            # shellcheck disable=SC2046
+            run_app $(basename "${dir%/}")
+            pid=$!
+            listen "$pid"
 
-    # 进入文件夹并在reports下创建对应的log文件
-    echo -e "\nrunning ${dir%/}..."
-    cd ./$dir/$ARCH || exit
-    if [ ! -f ../../../reports/$ARCH/$MODE/${dir%/} ]; then
-        echo "touch reports/$ARCH/$MODE/${dir%/} file..."
-        touch ../../../reports/$ARCH/$MODE/${dir%/}
-    fi
-
-    #运行程序
-    # echo "$password" | sudo -S ./"${dir%/}" >> ../../../reports/$ARCH/${dir%/}
-    ./"${dir%/}" > ../../../reports/$ARCH/$MODE/${dir%/} &
-
-    #获得进程pid号并进行监视，防止进程超时
-    pid=$!
-    sleep $TIMEOUT
-    if ps -p $pid > /dev/null
-    then
-        # 如果进程仍在运行，则终止该进程
-        echo "Terminating process with PID $pid"
-        kill $pid
+            # 等待5秒后继续运行下一个程序
+            sleep 5
+        done
     else
-        echo "Process with PID $pid has completed within the time limit"
-    fi
+        for test in "${tests[@]}"; do
+            run_app "$test"
+            pid=$!
+            listen "$pid"
 
-    cd ../..
-    sleep 5
-done
+            # 等待5秒后继续运行下一个程序
+            sleep 5
+        done
+    fi
+fi
