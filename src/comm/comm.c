@@ -36,6 +36,7 @@
  **********************************************************************/
 
 #include <pthread.h>
+#include <semaphore.h>
 #include <sys/socket.h>
 #ifndef NULL_LIB
 #include "comm.h" // statgrantserver,
@@ -554,7 +555,9 @@ int enqueue(msg_queue_t *msg_queue, jia_msg_t *msg) {
     }
 
     // wait for free slot
-    log_out(3, "msq_queue freecount: %lu", msg_queue->free_count)
+    int sem_value;
+    sem_getvalue(&msg_queue->free_count, &sem_value);
+    log_out(3, "msq_queue freecount: %d", sem_value);
     if (sem_wait(&msg_queue->free_count) != 0) {
         log_err("sem_wait error");
         return -1;
