@@ -633,10 +633,13 @@ void free_msg_queue(msg_queue_t *msg_queue) {
 static int init_comm_manager() {
     // snd port: Port monitored by peer host i
     // rcv port: Port monitored by local host that will be used by peer host i
+    comm_manager.snd_server_port = start_port + system_setting.jia_pid;
+    comm_manager.ack_port = start_port + Maxhosts;
+    log_out(3, "comm_manager.ack_port: %d", comm_manager.ack_port);
+    log_out(3, "comm_manager.snd_server_port: %d", comm_manager.snd_server_port);
     for (int i = 0; i < Maxhosts; i++) {
-        comm_manager.snd_server_port = start_port + system_setting.jia_pid;
-        comm_manager.ack_port = start_port + Maxhosts;
         comm_manager.rcv_ports[i] = start_port + i;
+        log_out(3, "comm_manager.rcv_ports[%d]: %d", i, comm_manager.rcv_ports[i]);
     }
 
     for (int i = 0; i < Maxhosts; i++) {
