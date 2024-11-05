@@ -24,12 +24,16 @@ void *listen_thread(void *args) {
         exit(1);
     }
 
+    struct epoll_event event, events[Maxhosts];
+    event.events = EPOLLIN; // listen read event
     // add rcv_fds to epollfd instance
     for (int i = 0; i < Maxhosts; i++) {
-        addfd(epollfd, comm_manager.rcv_fds[i], 1);
+        event.data.fd = comm_manager.rcv_fds[i];
+        if(epoll_ctl(epollfd, EPOLL_CTL_ADD, event.data.fd, &event) == -1){
+            log_err("epoll_ctl failed");
+            exit(1);
+        }
     }
-
-    struct epoll_event events[Maxhosts];
 
     while (1) {
         // timeout = -1, block forever until an event occurs
