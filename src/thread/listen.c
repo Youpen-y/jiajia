@@ -66,6 +66,7 @@ void *listen_thread(void *args) {
                 ack_addr.sin_port = htons(comm_manager.ack_port);
                 ack_addr.sin_addr.s_addr =
                     inet_addr(system_setting.hosts[to_id].ip);
+                log_out(3, "toid ip: %s", system_setting.hosts[to_id].ip);
                 ret = sendto(comm_manager.snd_fds, &ack, sizeof(ack), 0,
                              (struct sockaddr *)&ack_addr, sizeof(ack_addr));
                 if (ret != sizeof(ack_t)) {
