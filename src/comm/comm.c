@@ -195,6 +195,7 @@ static int fd_create(int i, enum FDCR_MODE flag) {
     }
 
     res = bind(fd, (struct sockaddr *)&addr, sizeof(addr));
+    log_out(3, "addr sin_port: %d", addr.sin_port);
     local_assert((res == 0), "req_fdcreate()-->bind()");
 
     return fd;
