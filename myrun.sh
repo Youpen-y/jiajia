@@ -5,7 +5,7 @@ TIMEOUT=25
 
 CLEAN=true
 ALLTEST=true
-RUN=true
+RUN=false
 tests=("lu" "ep")
 
 run_app() {
