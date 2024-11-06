@@ -10,10 +10,12 @@
 #include <stdbool.h>
 #include <stdlib.h>
 #include <sys/epoll.h>
-
+#include <sys/types.h>
 
 pthread_t listen_tid;
 static jia_msg_t msg;
+ack_t ack;
+struct epoll_event events[Maxhosts];
 static void addfd(int epollfd, int fd, int trigger_mode);
 
 void *listen_thread(void *args) {
@@ -26,30 +28,13 @@ void *listen_thread(void *args) {
         exit(1);
     }
 
-    struct epoll_event event, events[Maxhosts];
     // add rcv_fds to epollfd instance
     for (int i = 0; i < Maxhosts; i++) {
         addfd(epollfd, comm_manager.rcv_fds[i], 1);
     }
 
-    struct epoll_event events[Maxhosts];
-
-    // sigset_t sigmask;
-    // sigemptyset(&sigmask);
-    // sigaddset(&sigmask, SIGINT | SIGSTOP | SIGSEGV);
     while (1) {
-        // timeout = -1, block forever until an event occurs
-        // int nfds = epoll_pwait(epollfd, events, Maxhosts, -1, &sigmask);
         int nfds = epoll_wait(epollfd, events, Maxhosts, -1);
-        if (nfds == -1) {
-            if (errno == EINTR) {
-                log_err("epoll_wait interrupted");
-                continue;
-            }
-            perror("epoll_wait");
-            break;
-        }
-        log_out(3, "epoll_wait success");
 
         for (int i = 0; i < nfds; i++) {
             int sockfd = events[i].data.fd;
@@ -62,10 +47,14 @@ void *listen_thread(void *args) {
                     continue;
                 }
 
+                log_info(3,
+                        "get msg <seqno:%d, op:%d, "
+                        "frompid:%d, topid:%d>",
+                        msg.seqno, msg.op, msg.frompid, msg.topid);
+
                 /* step 2: construct an ack msg */
-                ack_t ack;
                 ack.seqno = msg.seqno + 1;
-                ack.sid = msg.frompid;
+                ack.sid = msg.topid;
 
                 /* step 3: return an ack */
                 int to_id = msg.frompid;
@@ -73,17 +62,24 @@ void *listen_thread(void *args) {
                 ack_addr.sin_port = htons(comm_manager.ack_port);
                 ack_addr.sin_addr.s_addr =
                     inet_addr(system_setting.hosts[to_id].ip);
-                log_out(3, "toid ip: %s", system_setting.hosts[to_id].ip);
+
                 ret = sendto(comm_manager.snd_fds, &ack, sizeof(ack), 0,
                              (struct sockaddr *)&ack_addr, sizeof(ack_addr));
                 if (ret != sizeof(ack_t)) {
-                    log_err("sendto ack failed");
+                    log_err("sendto ret = %d, ack failed", ret);
                     exit(-1);
                 }
+
+                log_info(3, "send ack<seqno:%d, sid:%d> to machine: %s",
+                        ack.seqno, ack.sid, system_setting.hosts[to_id].ip);
 
                 /* step 4: enqueue new msg into inqueue */
                 if (msg.seqno == comm_manager.rcv_seq[to_id]) {
                     comm_manager.rcv_seq[to_id]++;
+                    log_info(3,
+                            "msg<seqno:%d, op:%d, frompid:%d, topid:%d> will "
+                            "be enqueued",
+                            msg.seqno, msg.op, msg.frompid, msg.topid);
                     enqueue(&inqueue, &msg);
 
 #ifdef DOSTAT
@@ -96,11 +92,9 @@ void *listen_thread(void *args) {
                 } else {
                     // drop the msg(msg's seqno is not need), don't do anything
                     log_info(3,
-                             "comm_manager.rcv_seq[to_id]: %d, to_id: %d, msg: "
-                             "msg.op = %d, msg.seqno = %d",
-                             comm_manager.rcv_seq[to_id], to_id, msg.op,
-                             msg.seqno);
-                    log_info(3, "Receive resend msg");
+                             "Receive resend msg, msg<seqno:%d, op:%d, "
+                             "frompid:%d, topid:%d> will be droped",
+                             msg.seqno, msg.op, msg.frompid, msg.topid);
                 }
             }
         }

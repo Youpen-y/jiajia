@@ -21,7 +21,7 @@ extern FILE* logfile;
 #define show_errno() (errno == 0 ? "None" : strerror(errno))
 
 #define log_err(STR, ...)                                                      \
-  fprintf(stderr, "[ERROR] (%s:%d:%s: errno: %s) " STR "\n", __FILE__,         \
+  fprintf(stderr, "[\033[31mERROR\033[0m] (%s:%d:%s: errno: %s) " STR "\n", __FILE__,         \
           __LINE__, __func__, show_errno(), ##__VA_ARGS__)
 
 #define log_info(level, STR, ...)                                              \

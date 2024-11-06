@@ -3,7 +3,7 @@
 #*********************************************************
 
 CC = cc
-#CFLAGS = -dn
+CFLAGS += -DLINUX
 
 ARCH = linux
 LDFLAGS = -lm

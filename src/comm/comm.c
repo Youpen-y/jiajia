@@ -196,7 +196,6 @@ static int fd_create(int i, enum FDCR_MODE flag) {
     }
 
     res = bind(fd, (struct sockaddr *)&addr, sizeof(addr));
-    log_out(3, "addr sin_port: %d", addr.sin_port);
     local_assert((res == 0), "req_fdcreate()-->bind()");
 
     return fd;
@@ -559,7 +558,6 @@ int enqueue(msg_queue_t *msg_queue, jia_msg_t *msg) {
     // wait for free slot
     int sem_value;
     sem_getvalue(&msg_queue->free_count, &sem_value);
-    log_out(3, "msq_queue freecount: %d", sem_value);
     if (sem_wait(&msg_queue->free_count) != 0) {
         log_err("sem_wait error");
         return -1;
@@ -577,7 +575,6 @@ int enqueue(msg_queue_t *msg_queue, jia_msg_t *msg) {
     slot->state = SLOT_BUSY;                      // set slot state to busy
 
     sem_post(&(msg_queue->busy_count));
-    log_out(3, "leave enqueue");
     return 0;
 }
 

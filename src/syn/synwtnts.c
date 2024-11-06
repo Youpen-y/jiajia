@@ -167,10 +167,6 @@ void sendwtnts(int operation) {
     wnptr = top.wtntp;
     wnptr = appendstackwtnts(req, wnptr);
 
-    VERBOSE_LOG(3, "req message frompid = %d, topid = %d\n", system_setting.jia_pid,
-                req->topid);
-    VERBOSE_LOG(3, "req size is %d, req data is %s\n", req->size, req->data);
-    VERBOSE_LOG(3, "wnptr == WNULL is %d\n", wnptr == WNULL ? 1 : 0);
     while (wnptr != WNULL) {
         req->op = WTNT;
         // asendmsg(req);
@@ -179,7 +175,6 @@ void sendwtnts(int operation) {
         wnptr = appendstackwtnts(req, wnptr);
     }
     req->op = operation;
-    VERBOSE_LOG(3, "my pid is %d\n", jiapid);
     // asendmsg(req);
     // freemsg(req);
     move_msg_to_outqueue(&msg_buffer, index, &outqueue);

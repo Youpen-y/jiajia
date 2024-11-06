@@ -327,7 +327,9 @@ void redirect_slave_io(int argc, char **argv) {
 void jia_init(int argc, char **argv) {
     init_setting(&system_setting);
     open_logfile("jiajia.log");
-    print_setting(&system_setting);
+    if (system_setting.jia_pid == 0) {
+        print_setting(&system_setting);
+    }
 
     unsigned long timel, time1;
     struct rlimit rl;

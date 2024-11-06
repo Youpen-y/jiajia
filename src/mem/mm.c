@@ -149,7 +149,7 @@ void initmem() {
         sigemptyset(&act.sa_mask);
         // act.sa_flags = SA_NOMASK;
         // act.sa_flags = SA_NODEFER;  /* SA_NOMASK is obsolete */
-        act.sa_flags = SA_NODEFER | SA_SIGINFO;
+        act.sa_flags = SA_NODEFER | SA_SIGINFO | SA_RESTART;
         if (sigaction(SIGSEGV, &act, NULL))
             local_assert(0, "segv sigaction problem");
     }

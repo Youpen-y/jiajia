@@ -23,6 +23,8 @@ void *server_thread(void *args)
             continue;
         } else {
             // there, should have a condition (msg.seqno == comm_manager.rcv_seq[msg.frompid])
+            log_info(3,"thread[server], dequeue msg<seqno:%d, op:%d, frompid:%d, topid:%d>", msg.seqno, msg.op, msg.frompid, msg.topid);
+
             msg_handle(&msg);
         }
     }
@@ -36,7 +38,6 @@ void *server_thread(void *args)
  */
 static void msg_handle(jia_msg_t *msg) {
     VERBOSE_LOG(3, "In servermsg!\n");
-    SPACE(1);
 
     switch (msg->op) {
     case DIFF:
@@ -119,6 +120,5 @@ static void msg_handle(jia_msg_t *msg) {
         }
         break;
     }
-    SPACE(1);
     VERBOSE_LOG(3, "Out servermsg!\n");
 }

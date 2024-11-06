@@ -50,18 +50,13 @@
 #endif
 
 #define   Maxmemsize  0x8000000     /* max number of bytes of the shared memory 128MB, [Startaddr, Startaddr+Maxmemsize) */
-#define   Maxmempages (Maxmemsize/Pagesize) /* max number of pages of the shared memory£¬ 32K */
+#define   Maxmempages (Maxmemsize/Pagesize) /* max number of pages of the shared memoryï¿½ï¿½ 32K */
 
 #include        <stdio.h>
 #include        <stdlib.h>
 #include        <memory.h>
 #include        <stdarg.h>
 #include        <math.h>
-
-#ifndef    LINUX
-#include        <stropts.h>
-#include        <sys/conf.h>
-#endif 
 
 #include        <sys/socket.h>
 #include        <sys/time.h>

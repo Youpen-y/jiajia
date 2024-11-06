@@ -44,7 +44,7 @@
 #include "msg.h"
 #include "semaphore.h"
 
-#define TIMEOUT 1000   /* used to wait for ack */
+#define TIMEOUT 100   /* used to wait for ack */
 #define MAX_RETRIES 64 /* number of retransmissions */
 
 extern msg_queue_t inqueue;
@@ -57,7 +57,7 @@ enum FDCR_MODE{
 };
 
 typedef struct {
-    unsigned int seqno;     // sequence number
+    int          seqno;     // sequence number
     int          sid;       // the ack is returned by the host sid
 } ack_t;
 
