@@ -5,7 +5,7 @@
 #include <stdio.h>
 
 static int verbose_log = 4;
-static int verbose_out = 3;
+static int verbose_out = 4;
 extern FILE* logfile;
 
 #define VERBOSE_LOG(level, fmt, ...)                                                               \

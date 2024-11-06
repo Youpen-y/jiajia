@@ -11,7 +11,7 @@
 #include <sys/select.h>
 #include <unistd.h>
 
-#define RETRYNUM 4
+#define RETRYNUM 20
 static bool success = false;
 static jia_msg_t msg;
 pthread_t client_tid;
@@ -104,7 +104,7 @@ static int outsend(jia_msg_t *msg) {
         sendto(comm_manager.snd_fds, msg, sizeof(jia_msg_t), 0,
                (struct sockaddr *)&to_addr, sizeof(struct sockaddr));
 
-        log_out(3, "send once");
+	log_err("Before recv ack, ack.seqno = %d",ack.seqno); 
         /* step 2: wait for ack with time */
         FD_ZERO(&fdset);
         FD_SET(comm_manager.ack_fds, &fdset);
@@ -113,20 +113,21 @@ static int outsend(jia_msg_t *msg) {
             log_out(3, "resend");
             ret = recvfrom(comm_manager.ack_fds, (char *)&ack, sizeof(ack_t), 0,
                            NULL, NULL);
-            /* step 3: ack success && error manager*/
-            if (ret != -1 && (ack.seqno == (msg->seqno + 1))) {
-                return 0;
-            }
-            if (ret == -1) {
-                log_info(3, "TIMEOUT! try resend");
-                return -1;
-            }
-            // this cond may not happen
-            if (ack.seqno != (msg->seqno + 1)) {
-                log_out(3, "ERROR: seqno not match[ack.seqno: %d msg.seqno: %d]",
-                         ack.seqno, msg->seqno);
-                return -1;
-            }
+        }
+
+        /* step 3: ack success && error manager*/
+        if (ret != -1 && (ack.seqno == (msg->seqno+1))) {
+            return 0;
+        }
+        if (ret == -1) {
+            log_err("TIMEOUT! try resend");
+            return -1;
+        }
+        // this cond may not happen
+        if (ack.seqno != (msg->seqno+1)) {
+            log_err("ERROR: seqno not match[ack.seqno: %u msg.seqno: %u]",
+                     ack.seqno, msg->seqno);
+            return -1;
         }
     }
 

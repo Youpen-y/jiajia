@@ -1,10 +1,12 @@
 #include "comm.h"
 #include "msg.h"
 #include "setting.h"
+#include "stat.h"
 #include "thread.h"
 #include "tools.h"
 #include "utils.h"
-#include "stat.h"
+#include <errno.h>
+#include <signal.h>
 #include <stdbool.h>
 #include <stdlib.h>
 #include <sys/epoll.h>
@@ -27,20 +29,21 @@ void *listen_thread(void *args) {
     struct epoll_event event, events[Maxhosts];
     // add rcv_fds to epollfd instance
     for (int i = 0; i < Maxhosts; i++) {
-        event.events = EPOLLIN; // listen read event
-        event.data.fd = comm_manager.rcv_fds[i];
-        if(epoll_ctl(epollfd, EPOLL_CTL_ADD, event.data.fd, &event) == -1){
-            log_err("epoll_ctl failed");
-            exit(1);
-        }
+        addfd(epollfd, comm_manager.rcv_fds[i], 1);
     }
 
+    struct epoll_event events[Maxhosts];
+
+    // sigset_t sigmask;
+    // sigemptyset(&sigmask);
+    // sigaddset(&sigmask, SIGINT | SIGSTOP | SIGSEGV);
     while (1) {
         // timeout = -1, block forever until an event occurs
-        log_out(3, "enter listen thread");
+        // int nfds = epoll_pwait(epollfd, events, Maxhosts, -1, &sigmask);
         int nfds = epoll_wait(epollfd, events, Maxhosts, -1);
         if (nfds == -1) {
             if (errno == EINTR) {
+                log_err("epoll_wait interrupted");
                 continue;
             }
             perror("epoll_wait");
@@ -83,19 +86,22 @@ void *listen_thread(void *args) {
                     comm_manager.rcv_seq[to_id]++;
                     enqueue(&inqueue, &msg);
 
-                    #ifdef DOSTAT
+#ifdef DOSTAT
                     if (statflag == 1) {
                         jiastat.msgrcvcnt++;
-                        jiastat.msgrcvbytes +=
-                            (msg.size + Msgheadsize);
+                        jiastat.msgrcvbytes += (msg.size + Msgheadsize);
                     }
-                    #endif
+#endif
 
                 } else {
                     // drop the msg(msg's seqno is not need), don't do anything
+                    log_info(3,
+                             "comm_manager.rcv_seq[to_id]: %d, to_id: %d, msg: "
+                             "msg.op = %d, msg.seqno = %d",
+                             comm_manager.rcv_seq[to_id], to_id, msg.op,
+                             msg.seqno);
                     log_info(3, "Receive resend msg");
                 }
-
             }
         }
     }
@@ -104,7 +110,7 @@ void *listen_thread(void *args) {
 /**
  * @brief addfd - add fd to epollfd instance
 
- * 
+ *
  * @param epollfd epollfd instance
  * @param fd fd to add
  * @param trigger_mode trigger mode, 1 for edge trigger, 0 for level trigger
