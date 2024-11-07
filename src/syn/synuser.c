@@ -211,7 +211,6 @@ void jia_barrier() {
     }
 #endif
     VERBOSE_LOG(3, "jia_barrier completed\n");
-    test++;
 }
 
 

@@ -1,11 +1,11 @@
 #!/bin/bash
 ARCH=linux
 MODE=ETH
-TIMEOUT=25
+TIMEOUT=40
 
 CLEAN=true
 ALLTEST=true
-RUN=false
+RUN=true
 tests=("lu" "ep")
 
 run_app() {
@@ -23,15 +23,19 @@ run_app() {
 }
 
 listen() {
-    sleep $TIMEOUT
-    if ps -p "$1" > /dev/null
-    then
-        # 如果进程仍在运行，则终止该进程
-        echo "Terminating process with PID $1"
-        kill "$1"
-    else
-        echo "Process with PID $1 has completed within the time limit"
-    fi
+    time=0
+    while [[ $time -lt $TIMEOUT ]]; do
+        # 检查进程是否存在
+        if ! ps -p "$1" > /dev/null; then
+            echo "Process with PID $1 has completed within the time limit"
+            return 0
+        fi
+        ((time++))
+        sleep 1
+    done
+    echo "Terminating process with PID $1"
+    kill "$1"
+    return 1
 }
 
 # 创建reports及其子文件夹文件夹

@@ -88,7 +88,7 @@ void copyfiles(int argc, char **argv) {
     int hosti, rcpyes;
     char cmd[Linesize];
 
-    VERBOSE_LOG(3, "******Start to copy system files to slaves!******\n");
+    VERBOSE_LOG(3, "Start to copy system files to slaves!\n");
 
     for (hosti = 1; hosti < system_setting.hostc; hosti++) {
         VERBOSE_LOG(3, "Copy files to %s@%s.\n", system_setting.hosts[hosti].username,
@@ -148,7 +148,7 @@ int startprocs(int argc, char **argv) {
     int hosti;
     char cmd[Linesize], *hostname;
 
-    VERBOSE_LOG(3, "******Start to create processes on slaves!******\n\n");
+    VERBOSE_LOG(3, "Start to create processes on slaves!\n\n");
 
 #ifdef NFS
     sprintf(errstr, "Failed to get current working directory");
@@ -235,19 +235,18 @@ void jiacreat(int argc, char **argv) {
         exit(0);
     }
 
-    if (system_setting.jia_pid == 0) {
-        // master does
+    if (system_setting.jia_pid == 0) { // master does
         VERBOSE_LOG(3, "*********Total of %d hosts found!**********\n\n",
                 system_setting.hostc);
 #ifndef NFS
+        // step 1: copy files
         copyfiles(argc, argv);
 #endif /* NFS */
         sleep(1);
 
-        // step 4: start proc on slaves
+        // step 2: start proc on slaves
         startprocs(argc, argv);
-    } else {
-        // slave does
+    } else { // slave does
         int c;
         optind = 1;
         int i=0;
@@ -334,8 +333,8 @@ void jia_init(int argc, char **argv) {
     unsigned long timel, time1;
     struct rlimit rl;
 
-    VERBOSE_LOG(3, "\n***JIAJIA---Software DSM***\n***  \
-                Cachepages = %4d  Pagesize=%d***\n\n",
+    VERBOSE_LOG(3, "\n***JIAJIA---Software DSM***");
+    VERBOSE_LOG(3, "\n***Cachepages = %4d  Pagesize=%d***\n\n",
                 Cachepages, Pagesize);
     disable_sigio();
     jia_lock_index = 0;

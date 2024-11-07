@@ -5,6 +5,7 @@
 #include <strings.h> // bzero
 #include <sys/time.h>
 #include <unistd.h> // getopt
+
 double aint(double x) {
     if (x > 0.0)
         return floor(x);
