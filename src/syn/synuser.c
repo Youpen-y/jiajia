@@ -177,6 +177,7 @@ void jia_barrier() {
     if (system_setting.hostc == 1)
         return; // single machine
 
+
     if (LOAD_BAL == ON) {
         endtime = jia_clock();
         caltime += (endtime - starttime);
@@ -210,6 +211,7 @@ void jia_barrier() {
     }
 #endif
     VERBOSE_LOG(3, "jia_barrier completed\n");
+    test++;
 }
 
 

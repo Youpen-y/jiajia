@@ -48,6 +48,7 @@
 #include "setting.h"
 #include "stat.h"
 #include "tools.h"
+#include "utils.h"
 
 extern void freemsg(jia_msg_t *);
 extern void printmsg(jia_msg_t *msg);
@@ -178,6 +179,9 @@ int copy_msg_to_buffer(msg_buffer_t *buffer, jia_msg_t *msg)
 
 int freemsg_lock(msg_buffer_t *buffer)
 {
+    int semvalue;
+    sem_getvalue(&msg_buffer.count, &semvalue);
+    log_info(3, "pre freemsg_lock count value: %d", semvalue);
     if (sem_wait(&msg_buffer.count) != 0) {
         return -1;
     }
@@ -199,6 +203,10 @@ void freemsg_unlock(msg_buffer_t *buffer, int index)
     pthread_mutex_unlock(&slot->lock);
     
     sem_post(&msg_buffer.count);
+
+    int semvalue;
+    sem_getvalue(&msg_buffer.count, &semvalue);
+    log_info(3, "after freemsg_unlock count value: %d", semvalue);
 }
 
 int move_msg_to_outqueue(msg_buffer_t *buffer, int index, msg_queue_t *outqueue)

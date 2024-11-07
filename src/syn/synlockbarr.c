@@ -78,6 +78,7 @@ void acquire(int lock) {
     int index;
 
     // req = newmsg();
+    index = freemsg_lock(&msg_buffer);
     req = &msg_buffer.buffer[index].msg;
     req->op = ACQ;
     req->frompid = system_setting.jia_pid;

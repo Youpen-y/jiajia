@@ -486,7 +486,6 @@ void savediff(int cachei) {
         diffwait++;
         // asendmsg(diffmsg[hosti]);
         move_msg_to_outqueue(&msg_buffer, index, &outqueue);
-        freemsg_unlock(&msg_buffer, index);
         diffmsg[hosti]->size = 0;
         appendmsg(diffmsg[hosti], diff, diffsize);
         // while (diffwait)
@@ -503,17 +502,17 @@ void savediff(int cachei) {
  */
 void senddiffs() {
     int hosti;
+    int index;
     for (hosti = 0; hosti < system_setting.hostc; hosti++) {
-        if (diffmsg[hosti] != DIFFNULL) {   // hosti's diff msgs is non-NULL
+        if (diffmsg[hosti] != DIFFNULL) { // hosti's diff msgs is non-NULL
+            index = ((void *)diffmsg[hosti] - (void *)msg_buffer.buffer) /
+                    sizeof(slot_t);
             if (diffmsg[hosti]->size > 0) { // diff data size > 0
                 diffwait++;
-                move_msg_to_outqueue(
-                    &msg_buffer,
-                    ((void *)diffmsg[hosti] - (void *)msg_buffer.buffer) /
-                        sizeof(slot_t),
-                    &outqueue);
+                move_msg_to_outqueue(&msg_buffer, index, &outqueue);
+                freemsg_unlock(&msg_buffer, index);
             }
-            //freemsg(diffmsg[hosti]);
+            // freemsg(diffmsg[hosti]);
             diffmsg[hosti] = DIFFNULL;
         }
     }
