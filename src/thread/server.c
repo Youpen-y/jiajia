@@ -23,7 +23,7 @@ void *server_thread(void *args)
             continue;
         } else {
             // there, should have a condition (msg.seqno == comm_manager.rcv_seq[msg.frompid])
-            log_info(3,"thread[server], dequeue msg<seqno:%d, op:%d, frompid:%d, topid:%d>", msg.seqno, msg.op, msg.frompid, msg.topid);
+            log_info(3,"dequeue msg<seqno:%d, op:%d, frompid:%d, topid:%d>", msg.seqno, msg.op, msg.frompid, msg.topid);
 
             msg_handle(&msg);
         }

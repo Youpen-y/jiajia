@@ -37,6 +37,7 @@
 
 #include "utils.h"
 #include <bits/types/clockid_t.h>
+#include <unistd.h>
 #ifndef NULL_LIB
 #include "comm.h"
 #include "global.h"
@@ -115,10 +116,12 @@ void local_assert(int cond, char *format, ...) {
 void jia_assert(int cond, char *format, ...) {
     int hosti;
     int index;
-    jia_msg_t* assert_msg;
+    jia_msg_t *assert_msg;
 
     if (!cond) { // if condition is false then send JIAEXIT msg to all hosts
         // init assertmsg
+        log_info(3, "enter jia_assert!!!");
+        sleep(15);
         index = freemsg_lock(&msg_buffer);
         assert_msg = &msg_buffer.buffer[index].msg;
 
@@ -135,12 +138,12 @@ void jia_assert(int cond, char *format, ...) {
             if (hosti != system_setting.jia_pid) {
                 assert_msg->topid = hosti;
                 move_msg_to_outqueue(&msg_buffer, index, &outqueue);
-                //asendmsg(&assertmsg);
+                // asendmsg(&assertmsg);
             }
         }
         assertmsg.topid =
             system_setting.jia_pid; // self send JIAEXIT msg in the last
-        //asendmsg(&assertmsg);
+        // asendmsg(&assertmsg);
         move_msg_to_outqueue(&msg_buffer, index, &outqueue);
         freemsg_unlock(&msg_buffer, index);
     }
@@ -154,6 +157,7 @@ void jia_assert(int cond, char *format, ...) {
 void jiaexitserver(jia_msg_t *req) {
     VERBOSE_LOG(3, "Assert error from host %d --- %s\n", req->frompid,
                 (char *)req->data);
+    sleep(15);
     fflush(stderr);
     fflush(stdout);
     free_system_resources();

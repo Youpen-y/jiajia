@@ -180,7 +180,7 @@ static int fd_create(int i, enum FDCR_MODE flag) {
     res = setsockopt(fd, SOL_SOCKET, SO_SNDBUF, (char *)&size, sizeof(size));
     local_assert((res == 0), "req_fdcreate()-->setsockopt():SO_SNDBUF");
 
-    bzero(&addr,sizeof(addr));
+    bzero(&addr, sizeof(addr));
     addr.sin_family = AF_INET;
     addr.sin_addr.s_addr = htonl(INADDR_ANY);
     switch (flag) {
@@ -209,13 +209,12 @@ void sigint_handler() {
     jia_assert(0, "Exit by user!!\n");
 }
 
+/**
+ * @brief sigio_handler -- sigio handler (it can be interrupt)
+ *
+ */
 
-    /**
-     * @brief sigio_handler -- sigio handler (it can be interrupt)
-     *
-     */
-
-void sigio_handler(){
+void sigio_handler() {
 #ifdef DOSTAT
     register unsigned int begin;
     STATOP(jiastat.sigiocnt++; if (interruptflag == 0) {
@@ -244,175 +243,12 @@ void sigio_handler(){
 }
 
 
-    // void asendmsg(jia_msg_t *msg) {
-
-    //     int outsendmsg = 0;
-
-    //     // begin asend time && cal s/l jiamsg cnt
-
-    //     VERBOSE_LOG(3, "Enter asendmsg!");
-
-    //     printmsg(msg);
-
-    //     /* step 1: memcpy to outqt && update outqueue */
-    //     BEGINCS;
-    //     memcpy(&(outqt), msg, Msgheadsize + msg->size);
-    //     outsendmsg = outqsend(outqt.topid);
-    //     ENDCS;
-    //     VERBOSE_LOG(3,
-    //                 "Before outsend(), Out asendmsg! outc=%d, outh=%d,
-    //                 outt=%d\n", outcount, outhead, outtail);
-
-    //     /* step 2: call outsend() to send msg && update outqueue */
-    //     // there is msg need to be sent in outqueue
-    //     while (outsendmsg == 1) {
-    //         outsend();
-    //         BEGINCS;
-    //         outsendmsg = outqcomp();
-    //         ENDCS;
-    //     }
-    //     VERBOSE_LOG(3, "Out asendmsg! outc=%d, outh=%d, outt=%d\n", outcount,
-    //                 outhead, outtail);
-
-    //     // end asend time
-    // }
-
-    // /**
-    //  * @brief outsend -- outsend the outqueue[outhead] msg
-    //  *
-    //  */
-    // void outsend() {
-    //     int res, toproc, fromproc;
-    //     struct sockaddr_in to, from;
-    //     int rep;
-    //     int retries_num;
-    //     unsigned long start, end;
-    //     int msgsize;
-    //     int s;
-    //     int sendsuccess, arrived;
-    //     fd_set readfds;
-    //     int servemsg;
-    //     struct timeval zerotime = {0, 0};
-    // #ifdef DOSTAT
-    //     register unsigned int begin;
-    // #endif
-
-    //     VERBOSE_LOG(3, "\nEnter outsend!\n");
-
-    //     printmsg(&outqh, 1);
-
-    //     toproc = outqh.topid;
-    //     fromproc = outqh.frompid;
-    //     VERBOSE_LOG(3, "outc=%d, outh=%d, outt=%d\n \
-//                 outqueue[outhead].topid = %d outqueue[outhead].frompid =
-    //                 %d\n", outcount, outhead, outtail, toproc, fromproc);
-
-    //     if (toproc == fromproc) { // single machine communication
-
-    //         /* step 1: memcpy to inqt && update inqueue */
-    //         BEGINCS;
-    //         memcpy(&(inqt), &(outqh), Msgheadsize + outqh.size);
-    //         servemsg = inqrecv(fromproc);
-    //         ENDCS;
-
-    //         VERBOSE_LOG(
-    //             3,
-    //             "Finishcopymsg,incount=%d,inhead=%d,intail=%d!\nservemsg ==
-    //             %d\n", incount, inhead, intail, servemsg);
-
-    //         /* step 2: call msgserver() to manage msg && update inqueue */
-    //         // there are some msg need be served
-    //         while (servemsg == 1) {
-    //             msgserver();
-    //             BEGINCS;
-    //             servemsg = inqcomp();
-    //             ENDCS;
-    //         }
-    //     } else { // comm between different hosts
-    //         msgsize = outqh.size + Msgheadsize;
-    //         to.sin_family = AF_INET;
-    //         VERBOSE_LOG(3, "toproc IP address is %s\n",
-    //                     system_setting.hosts[toproc].ip);
-    //         to.sin_addr.s_addr = inet_addr(system_setting.hosts[toproc].ip);
-    //         to.sin_port = htons(reqports[toproc][fromproc]);
-
-    //         VERBOSE_LOG(3, "reqports[toproc][fromproc] = %u\n",
-    //                     reqports[toproc][fromproc]);
-
-    //         retries_num = 0;
-    //         sendsuccess = 0;
-
-    //         VERBOSE_LOG(3, "commreq.snd_fds[toproc] = %d\n",
-    //                     commreq.snd_fds[toproc]);
-    //         VERBOSE_LOG(3, "commreq.rcv_fds[toproc] = %d\n",
-    //                     commreq.rcv_fds[toproc]);
-    //         while ((retries_num < MAX_RETRIES) &&
-    //                (sendsuccess != 1)) { // retransimission
-    //             BEGINCS;
-    //             res = sendto(commreq.snd_fds[toproc], (char *)&(outqh),
-    //             msgsize, 0,
-    //                          (struct sockaddr *)&to, sizeof(to));
-    //             local_assert((res != -1), "outsend()-->sendto()");
-    //             ENDCS;
-
-    //             arrived = 0;
-    //             start = jia_current_time();
-    //             end = start + TIMEOUT;
-
-    //             while ((jia_current_time() < end) &&
-    //                    (arrived != 1)) { // wait for ack
-    //                 FD_ZERO(&readfds);
-    //                 FD_SET(commrep.rcv_fds[toproc], &readfds);
-    //                 res =
-    //                     select(commrep.rcv_maxfd, &readfds, NULL, NULL,
-    //                     &zerotime);
-    //                 arrived = (FD_ISSET(commrep.rcv_fds[toproc], &readfds) !=
-    //                 0);
-    //             }
-    //             VERBOSE_LOG(3, "arrived = %d\n", arrived);
-    //             if (arrived) {
-    //             recv_again:
-    //                 s = sizeof(from);
-    //                 BEGINCS;
-    //                 res = recvfrom(commrep.rcv_fds[toproc], (char *)&rep,
-    //                 Intbytes,
-    //                                0, (struct sockaddr *)&from, &s);
-    //                 ENDCS;
-    //                 if ((res < 0) && (errno == EINTR)) {
-    //                     VERBOSE_LOG(
-    //                         3, "A signal interrupted recvfrom() before any
-    //                         data "
-    //                            "was available\n");
-    //                     goto recv_again;
-    //                 }
-    //                 if ((res != -1) && (rep == outqh.seqno)) {
-    //                     sendsuccess = 1;
-    //                 }
-    //             }
-    //             retries_num++;
-    //         }
-
-    //         if (sendsuccess != 1) {
-    //             VERBOSE_LOG(3,
-    //                         "I am host %d, hostname = %s, I am running
-    //                         outsend() " "function\n", system_setting.jia_pid,
-    //                         system_setting.hosts[system_setting.jia_pid].username);
-    //             sprintf(errstr, "I Can't asend message(%d,%d) to host %d!",
-    //                     outqh.op, outqh.seqno, toproc);
-    //             VERBOSE_LOG(3, "BUFFER SIZE %d (%d)\n", outqh.size, msgsize);
-    //             local_assert((sendsuccess == 1), errstr);
-    //         }
-    //     }
-
-    //     VERBOSE_LOG(3, "Out outsend!\n\n");
-    // }
-
-    /**
-     * @brief bsendmsg -- broadcast msg
-     *
-     * @param msg
-     */
-    void bsendmsg(jia_msg_t *msg) {
+/**
+ * @brief bsendmsg -- broadcast msg
+ *
+ * @param msg
+ */
+void bsendmsg(jia_msg_t *msg) {
     unsigned int root, level;
 
     msg->op += BCAST; // op >= BCAST, always call bcastserver
@@ -554,7 +390,7 @@ int enqueue(msg_queue_t *msg_queue, jia_msg_t *msg) {
                 (long unsigned)msg_queue, (long unsigned)msg);
         return -1;
     }
-    char* queue = (msg_queue == &outqueue) ? "outqueue" : "inqueue";
+    char *queue = (msg_queue == &outqueue) ? "outqueue" : "inqueue";
     int semvalue;
     sem_getvalue(&msg_queue->free_count, &semvalue);
     log_info(3, "pre %s enqueue free_count value: %d", queue, semvalue);
@@ -589,7 +425,7 @@ int dequeue(msg_queue_t *msg_queue, jia_msg_t *msg) {
     if (msg_queue == NULL || msg == NULL) {
         return -1;
     }
-    char* queue = (msg_queue == &outqueue) ? "outqueue" : "inqueue";
+    char *queue = (msg_queue == &outqueue) ? "outqueue" : "inqueue";
     int semvalue;
     sem_getvalue(&msg_queue->busy_count, &semvalue);
     log_info(3, "pre %s dequeue busy_count value: %d", queue, semvalue);
@@ -642,8 +478,8 @@ void free_msg_queue(msg_queue_t *msg_queue) {
 
 /**
  * @brief init_comm_manager - initialize comm_manager
- * 
- * @return int 
+ *
+ * @return int
  */
 static int init_comm_manager() {
     // snd port: Port monitored by peer host i
@@ -651,10 +487,12 @@ static int init_comm_manager() {
     comm_manager.snd_server_port = start_port + system_setting.jia_pid;
     comm_manager.ack_port = start_port + Maxhosts;
     log_out(3, "comm_manager.ack_port: %d", comm_manager.ack_port);
-    log_out(3, "comm_manager.snd_server_port: %d", comm_manager.snd_server_port);
+    log_out(3, "comm_manager.snd_server_port: %d",
+            comm_manager.snd_server_port);
     for (int i = 0; i < Maxhosts; i++) {
         comm_manager.rcv_ports[i] = start_port + i;
-        log_out(3, "comm_manager.rcv_ports[%d]: %d", i, comm_manager.rcv_ports[i]);
+        log_out(3, "comm_manager.rcv_ports[%d]: %d", i,
+                comm_manager.rcv_ports[i]);
     }
 
     for (int i = 0; i < Maxhosts; i++) {

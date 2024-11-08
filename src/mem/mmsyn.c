@@ -278,20 +278,20 @@ void sigsegv_handler(int signo, siginfo_t *sip, ucontext_t *uap)
                              => () si_code: 2 means that invalid permissions for
                              mapped object => ()*/
 #endif
-    VERBOSE_LOG(3, "Enter sigsegv handler\n");
-    VERBOSE_LOG(3,
-                "Shared memory out of range from %p to %p!, faultaddr=%p, "
-                "writefault=%d\n",
-                (void *)system_setting.global_start_addr,
-                (void *)(system_setting.global_start_addr + globaladdr),
-                faultaddr, writefault);
+    log_info(3, "Enter sigsegv handler\n");
+    log_info(3,
+             "Shared memory out of range from %p to %p!, faultaddr=%p, "
+             "writefault=%d\n",
+             (void *)system_setting.global_start_addr,
+             (void *)(system_setting.global_start_addr + globaladdr), faultaddr,
+             writefault);
 
-    VERBOSE_LOG(3, "sig info structure siginfo_t\n");
-    VERBOSE_LOG(3,
-                "\tsignal err : %d \n"
-                "\tsignal code: %d \n"
-                "\t    si_addr: %p\n",
-                sip->si_errno, sip->si_code, sip->si_addr);
+    log_info(3, "sig info structure siginfo_t\n");
+    log_info(3,
+             "\tsignal err : %d \n"
+             "\tsignal code: %d \n"
+             "\t    si_addr: %p\n",
+             sip->si_errno, sip->si_code, sip->si_addr);
 
     jia_assert((((unsigned long)faultaddr <
                  (system_setting.global_start_addr + globaladdr)) &&
