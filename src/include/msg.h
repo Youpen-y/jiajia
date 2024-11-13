@@ -119,7 +119,7 @@ typedef struct slot {
 typedef struct {
     slot_t *buffer;
     int        size;
-    sem_t      count;
+    sem_t      count;   // available slot count
 } msg_buffer_t;
 
 typedef struct msg_queue {

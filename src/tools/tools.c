@@ -37,6 +37,7 @@
 
 #include "utils.h"
 #include <bits/types/clockid_t.h>
+#include <stdlib.h>
 #include <unistd.h>
 #ifndef NULL_LIB
 #include "comm.h"
@@ -109,6 +110,7 @@ void local_assert(int cond, char *format, ...) {
 
 /**
  * @brief jia_assert -- judge the cond condition and send assert message
+ * If cond is falut, broadcast JIAEXIT msg
  *
  * @param cond conditons
  * @param amsg assert error message
@@ -120,14 +122,15 @@ void jia_assert(int cond, char *format, ...) {
 
     if (!cond) { // if condition is false then send JIAEXIT msg to all hosts
         // init assertmsg
-        log_info(3, "enter jia_assert!!!");
-        sleep(15);
+        log_err("enter jia_assert!!!");
+    
         index = freemsg_lock(&msg_buffer);
         assert_msg = &msg_buffer.buffer[index].msg;
 
         va_list args;
         va_start(args, format);
-        sprintf((char *)assert_msg->data, format, args);
+        vsprintf((char *)assert_msg->data, format, args);
+        log_info(3, "Errmsg: %s", assert_msg->data);
         va_end(args);
         assert_msg->op = JIAEXIT;
         assert_msg->frompid = system_setting.jia_pid;
@@ -146,6 +149,7 @@ void jia_assert(int cond, char *format, ...) {
         // asendmsg(&assertmsg);
         move_msg_to_outqueue(&msg_buffer, index, &outqueue);
         freemsg_unlock(&msg_buffer, index);
+        // exit(-1);
     }
 }
 
@@ -155,9 +159,8 @@ void jia_assert(int cond, char *format, ...) {
  * @param req msg that will be printed
  */
 void jiaexitserver(jia_msg_t *req) {
-    VERBOSE_LOG(3, "Assert error from host %d --- %s\n", req->frompid,
+    log_err("Assert error from host %d --- %s\n", req->frompid,
                 (char *)req->data);
-    sleep(15);
     fflush(stderr);
     fflush(stdout);
     free_system_resources();

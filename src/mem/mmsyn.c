@@ -44,6 +44,10 @@
 #include "syn.h"
 #include "tools.h"
 #include "utils.h"
+#include <stddef.h>
+#include <string.h>
+#include <unistd.h>
+#include <execinfo.h>
 
 /* user */
 extern jiahome_t home[Homepages];    /* host owned page */
@@ -121,13 +125,8 @@ void getpage(address_t addr, int flag) {
     req->topid = homeid;
     req->temp = flag; /*0:read request, 1:write request*/
     req->size = 0;
-    // appendmsg(req,ltos(addr),Intbytes);
+    // append address of request page to data[0..7]
     appendmsg(req, ltos(addr), sizeof(unsigned char *));
-    // getpwait = 1;
-    // asendmsg(req);
-    // freemsg(req);
-    // while (getpwait)
-    //     ;
     move_msg_to_outqueue(&msg_buffer, index, &outqueue);
     freemsg_unlock(&msg_buffer, index);
 
@@ -249,8 +248,8 @@ void sigsegv_handler(int signo, siginfo_t *sip, ucontext_t *uap)
 #endif
 
     sigemptyset(&set);
-    sigaddset(&set, SIGIO);
-    sigprocmask(SIG_UNBLOCK, &set, NULL);
+    sigaddset(&set, SIGSEGV);
+    sigprocmask(SIG_BLOCK, &set, NULL);
 
 #ifdef SOLARIS
     faultaddr = (address_t)sip->si_addr;
@@ -258,48 +257,43 @@ void sigsegv_handler(int signo, siginfo_t *sip, ucontext_t *uap)
     writefault = (int)(*(unsigned *)uap->uc_mcontext.gregs[REG_PC] & (1 << 21));
 #endif
 
-#ifdef AIX41
-    faultaddr = (char *)scp->sc_jmpbuf.jmp_context.o_vaddr;
-    faultaddr = (address_t)((unsigned long)faultaddr / Pagesize * Pagesize);
-    writefault = (scp->sc_jmpbuf.jmp_context.except[1] & DSISR_ST) >> 25;
-#endif
-
-#ifdef IRIX62
-    faultaddr = (address_t)scp->sc_badvaddr;
-    faultaddr = (address_t)((unsigned long)faultaddr / Pagesize * Pagesize);
-    writefault = (int)(scp->sc_cause & EXC_CODE(1));
-#endif
-
 #ifdef LINUX
     faultaddr = (address_t)sip->si_addr;
-    faultaddr = (address_t)((unsigned long)faultaddr / Pagesize * Pagesize);
+    faultaddr = (address_t)((unsigned long long)faultaddr / Pagesize * Pagesize);
     writefault =
         sip->si_code & 2; /* si_code: 1 means that address not mapped to object
                              => () si_code: 2 means that invalid permissions for
                              mapped object => ()*/
 #endif
-    log_info(3, "Enter sigsegv handler\n");
+    // void *array[10];
+    // char **strings;
+    // size_t size = backtrace(array, 10);
+    // strings = backtrace_symbols(array, size);
+    // for(int i = 0; i < size; i++) {
+    //     log_info(3, "%s", strings[i]);
+    // }
+    log_info(3, "Enter sigsegv ");
     log_info(3,
-             "Shared memory out of range from %p to %p!, faultaddr=%p, "
+             "Shared memory range from %p to %p!, faultaddr=%p, "
              "writefault=%d\n",
              (void *)system_setting.global_start_addr,
-             (void *)(system_setting.global_start_addr + globaladdr), faultaddr,
-             writefault);
+             (void *)(system_setting.global_start_addr + globaladdr), faultaddr, writefault);
 
-    log_info(3, "sig info structure siginfo_t\n");
     log_info(3,
-             "\tsignal err : %d \n"
+             "\nsig info structure siginfo_t"
+             "\n\tsignal err : %d \n"
              "\tsignal code: %d \n"
-             "\t    si_addr: %p\n",
+             "\t    si_addr: %p",
              sip->si_errno, sip->si_code, sip->si_addr);
 
-    jia_assert((((unsigned long)faultaddr <
+    
+    jia_assert((((unsigned long long)faultaddr <
                  (system_setting.global_start_addr + globaladdr)) &&
-                ((unsigned long)faultaddr >= system_setting.global_start_addr)),
-               "Access shared memory out of range from 0x%x to 0x%x!, "
-               "faultaddr=0x%x, writefault=0x%x",
-               system_setting.global_start_addr,
-               system_setting.global_start_addr + globaladdr, faultaddr,
+                ((unsigned long long)faultaddr >= system_setting.global_start_addr)),
+               "Access shared memory out of range from %p to %p!, "
+               "faultaddr=%p, writefault=%d",
+               (void *)system_setting.global_start_addr,
+               (void *)(system_setting.global_start_addr + globaladdr), (void *)faultaddr,
                writefault);
 
     // page's home is current host (si_code = 2)
@@ -369,7 +363,7 @@ void sigsegv_handler(int signo, siginfo_t *sip, ucontext_t *uap)
         }
 #endif
     }
-    VERBOSE_LOG(3, "Out sigsegv_handler\n\n");
+    log_info(3, "Out of sigsegv_handler\n");
 }
 
 /**
@@ -395,7 +389,7 @@ int encodediff(int cachei, unsigned char *diff) {
     register unsigned int begin = get_usecs();
 #endif
 
-    // step 1: encode the cache page addr first (4 bytes)
+    // step 1: encode the cache page addr first (8 bytes)
     memcpy(diff + size, ltos(cache[cachei].addr), sizeof(unsigned char *));
     size += sizeof(unsigned char *);
     size += Intbytes; /* leave space for size */
@@ -411,6 +405,7 @@ int encodediff(int cachei, unsigned char *diff) {
             ;
 
         if (bytei < Pagesize) {
+            cnt = 0;
             start = bytei; // record the start byte index of the diff
 
             // how much diffunit is different
@@ -516,7 +511,6 @@ void senddiffs() {
             diffmsg[hosti] = DIFFNULL;
         }
     }
-    /*
-     while(diffwait); // diffwait is detected after senddiffs() called
-    */
+    
+    while(diffwait); // diffwait is detected after senddiffs() called
 }

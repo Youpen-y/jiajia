@@ -76,7 +76,6 @@ sigset_t startup_mask;      /* used by Shi. */
 int jia_lock_index;
 
 
-
 /**
  * @brief copyfiles -- copy .jiahosts and program(i.e. argv[0]) to slaves
  *
@@ -85,49 +84,19 @@ int jia_lock_index;
  */
 void copyfiles(int argc, char **argv) {
     // replace rcp with scp
-    int hosti, rcpyes;
+    int i, ret;
     char cmd[Linesize];
 
     VERBOSE_LOG(3, "Start to copy system files to slaves!\n");
 
-    for (hosti = 1; hosti < system_setting.hostc; hosti++) {
-        VERBOSE_LOG(3, "Copy files to %s@%s.\n", system_setting.hosts[hosti].username,
-                    system_setting.hosts[hosti].ip);
-
-        /* copy .jiahosts to slaves */
-        cmd[0] = '\0';
-        strcat(cmd, "scp .jiahosts ");
-        strcat(cmd, system_setting.hosts[hosti].username);
-        strcat(cmd, "@");
-        strcat(cmd, system_setting.hosts[hosti].ip);
-        strcat(cmd, ":");
-        rcpyes = system(cmd);
-        local_assert((rcpyes == 0), "Cannot scp .jiahosts to %s!\n",
-                system_setting.hosts[hosti].ip);
-
-        /* copy system.conf to slaves */
-        cmd[0] = '\0';
-        strcat(cmd, "scp system.conf ");
-        strcat(cmd, system_setting.hosts[hosti].username);
-        strcat(cmd, "@");
-        strcat(cmd, system_setting.hosts[hosti].ip);
-        strcat(cmd, ":");
-        rcpyes = system(cmd);
-        local_assert((rcpyes == 0), "Cannot scp system.conf to %s!\n",
-                system_setting.hosts[hosti].ip);
-
-        /* copy program to slaves */
-        cmd[0] = '\0';
-        strcat(cmd, "scp ");
-        strcat(cmd, argv[0]);
-        strcat(cmd, " ");
-        strcat(cmd, system_setting.hosts[hosti].username);
-        strcat(cmd, "@");
-        strcat(cmd, system_setting.hosts[hosti].ip);
-        strcat(cmd, ":");
-        rcpyes = system(cmd);
-        local_assert((rcpyes == 0), "Cannot scp %s to %s!\n", argv[0],
-                system_setting.hosts[hosti].ip);
+    // copy necessary files to slaves
+    for (i = 1; i < system_setting.hostc; i++) {
+        VERBOSE_LOG(3, "Copy files to %s@%s.\n", system_setting.hosts[i].username,
+                    system_setting.hosts[i].ip);
+        
+        sprintf(cmd, "scp .jiahosts system.conf %s %s@%s:~/", argv[0], system_setting.hosts[i].username, system_setting.hosts[i].ip, argv[0]);
+        ret = system(cmd);
+        local_assert(ret == 0, "Copy system files failed");
     }
     VERBOSE_LOG(3, "Remote copy succeed!\n\n");
 }
@@ -239,6 +208,8 @@ void jiacreat(int argc, char **argv) {
         VERBOSE_LOG(3, "*********Total of %d hosts found!**********\n\n",
                 system_setting.hostc);
 #ifndef NFS
+        // TODO: Add a step that mkdir special work directory on slaves
+
         // step 1: copy files
         copyfiles(argc, argv);
 #endif /* NFS */

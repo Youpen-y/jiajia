@@ -108,9 +108,9 @@ static int outsend(jia_msg_t *msg) {
         // inet_aton(system_setting.hosts[msg->topid].ip, &to_addr.sin_addr);
         to_addr.sin_addr.s_addr =
             inet_addr(system_setting.hosts[msg->topid].ip);
-        ret = sendto(comm_manager.snd_fds, msg, sizeof(jia_msg_t), 0,
-                     (struct sockaddr *)&to_addr, sizeof(struct sockaddr));
-        if (ret == sizeof(jia_msg_t)) {
+            ret = sendto(comm_manager.snd_fds, msg, sizeof(jia_msg_t), 0,
+                        (struct sockaddr *)&to_addr, sizeof(struct sockaddr));
+                if (ret == sizeof(jia_msg_t)) {
             log_info(
                 3, "msg <seqno:%d, op:%d, frompid:%d, topid:%d> is send to %s",
                 msg->seqno, msg->op, msg->frompid, msg->topid,

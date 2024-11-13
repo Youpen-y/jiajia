@@ -49,7 +49,7 @@
 #define Cachepages 1024             /* cache size in number of pages */
 #endif
 
-#define   Maxmemsize  0x8000000     /* max number of bytes of the shared memory 128MB, [Startaddr, Startaddr+Maxmemsize) */
+#define   Maxmemsize  0x800000000     /* max number of bytes of the shared memory 128MB, [Startaddr, Startaddr+Maxmemsize) */
 #define   Maxmempages (Maxmemsize/Pagesize) /* max number of pages of the shared memory�� 32K */
 
 #include        <stdio.h>

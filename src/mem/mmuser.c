@@ -109,7 +109,7 @@ unsigned long jia_alloc3(int size, int block, int starthost) {
         }
 
         if (system_setting.jia_pid == homepid) {
-            VERBOSE_LOG(3, "Map 0x%x bytes in home %4d! globaladdr = 0x%lx\n",
+            log_info(3, "Map 0x%x bytes in home %4d! globaladdr = 0x%lx",
                         mapsize, homepid, globaladdr);
         }
 

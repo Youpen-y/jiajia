@@ -12,7 +12,7 @@ extern FILE *logfile;
 static char *clientstr = "[Thread client]";
 static char *serverstr = "[Thread server]";
 static char *listenstr = "[Thread listen]";
-static char *mainstr   = "[Thread  main ]";
+static char *mainstr = "[Thread  main ]";
 
 #define VERBOSE_LOG(level, fmt, ...)                                           \
     if (verbose_log >= level) {                                                \
@@ -27,19 +27,27 @@ static char *mainstr   = "[Thread  main ]";
 #define show_errno() (errno == 0 ? "None" : strerror(errno))
 
 #define log_err(STR, ...)                                                      \
-    char *str;                                                                 \
-    if (pthread_self() == client_tid) {                                        \
-        str = clientstr;                                                       \
-    } else if (pthread_self() == server_tid) {                                 \
-        str = serverstr;                                                       \
-    } else if (pthread_self() == listen_tid) {                                 \
-        str = listenstr;                                                       \
-    } else {                                                                   \
-        str = mainstr;                                                            \
-    }                                                                          \
-    fprintf(stderr,                                                            \
-            "[\033[31mERROR\033[0m] %s (%s:%d:%s: errno: %s) " STR "\n", str,  \
-            __FILE__, __LINE__, __func__, show_errno(), ##__VA_ARGS__)
+    do {                                                                       \
+        char *str;                                                             \
+        if (pthread_self() == client_tid) {                                    \
+            str = clientstr;                                                   \
+        } else if (pthread_self() == server_tid) {                             \
+            str = serverstr;                                                   \
+        } else if (pthread_self() == listen_tid) {                             \
+            str = listenstr;                                                   \
+        } else {                                                               \
+            str = mainstr;                                                     \
+        }                                                                      \
+        fprintf(stderr,                                                        \
+                "[\033[31mERROR\033[0m] %s (%s:%d:%s: errno: %s) " STR "\n",   \
+                str, __FILE__, __LINE__, __func__, show_errno(),               \
+                ##__VA_ARGS__);                                                \
+        } while (0)
+
+        // fprintf(logfile,                                                       \
+        //         "[ERROR] %s (%s:%d:%s: errno: %s) " STR "\n",   \
+        //         str, __FILE__, __LINE__, __func__, show_errno(),               \
+        //         ##__VA_ARGS__);                                                \
 
 #define log_info(level, STR, ...)                                              \
     if (verbose_log >= level) {                                                \
@@ -51,7 +59,7 @@ static char *mainstr   = "[Thread  main ]";
         } else if (pthread_self() == listen_tid) {                             \
             str = listenstr;                                                   \
         } else {                                                               \
-            str = mainstr;                                                        \
+            str = mainstr;                                                     \
         }                                                                      \
         fprintf(logfile, "[INFO] %s (%s:%d:%s) " STR "\n", str, __FILE__,      \
                 __LINE__, __func__, ##__VA_ARGS__);                            \

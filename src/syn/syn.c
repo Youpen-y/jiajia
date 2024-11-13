@@ -128,7 +128,7 @@ void endinterval(int synop) {
     register int cachei;
     register int pagei;
     register int hpages;
-    VERBOSE_LOG(3, "Enter endinterval!\n");
+    log_info(3, "Enter endinterval!");
 
     // step 1: send all cache diffs
     for (cachei = 0; cachei < Cachepages; cachei++) {
@@ -166,7 +166,7 @@ void endinterval(int synop) {
     }     /*for*/
     while (diffwait)
         ; // wait all diffs were handled
-    VERBOSE_LOG(3, "Out of endinterval!\n");
+    log_info(3, "Out of endinterval!");
 }
 
 /**

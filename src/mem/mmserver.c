@@ -218,6 +218,8 @@ void getpserver(jia_msg_t *req) {
     // appendmsg(rep,req->data,Intbytes);  // reply msg data format
     // [req->data(4bytes), pagedata(4096bytes)], req->data is the page start
     // address
+
+    // GETPGRANT msg format { header(32bytes) | addr(8bytes) | pagedata(4096bytes) |}
     appendmsg(rep, req->data, sizeof(unsigned char *)); // carry the addr
 
     if ((W_VEC == ON) && (req->temp == 1)) {
@@ -238,8 +240,6 @@ void getpserver(jia_msg_t *req) {
         home[homei].wtvect[req->frompid] = WVNULL;
     }
 
-    // asendmsg(rep);
-    // freemsg(rep);
     move_msg_to_outqueue(&msg_buffer, index, &outqueue);
     freemsg_unlock(&msg_buffer, index);
 }
@@ -275,7 +275,7 @@ void getpgrantserver(jia_msg_t *rep) {
     } else {
         log_info(3, "addr is %p , rep->data+datai = %p", addr, rep->data + datai);
         memcpy((unsigned char *)addr, rep->data + datai,
-               Pagesize); // TODO:possible bug
+               Pagesize);
         log_info(3, "I have copy the page from remote home to %p", addr);
     }
 
