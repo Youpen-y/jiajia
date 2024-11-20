@@ -149,7 +149,7 @@ void jia_assert(int cond, char *format, ...) {
         // asendmsg(&assertmsg);
         move_msg_to_outqueue(&msg_buffer, index, &outqueue);
         freemsg_unlock(&msg_buffer, index);
-        // exit(-1);
+        exit(-1);
     }
 }
 

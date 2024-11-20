@@ -50,12 +50,14 @@
 extern msg_queue_t inqueue;
 extern msg_queue_t outqueue;
 
+/* fd type */
 enum FDCR_MODE{
-    FDCR_SEND,
-    FDCR_RECV,
-    FDCR_ACK
+    FDCR_SEND,  // send fd
+    FDCR_RECV,  // recv fd
+    FDCR_ACK    // ack fd
 };
 
+/* ack type */
 typedef struct {
     int          seqno;     // sequence number
     int          sid;       // the ack is returned by the host sid
@@ -97,19 +99,7 @@ int dequeue(msg_queue_t *queue, jia_msg_t *msg);
  */
 void free_msg_queue(msg_queue_t *queue);
 
-
-// typedef struct CommManager {
-//     int         snd_fds[Maxhosts];      // send file descriptor
-//     fd_set      snd_set;             // send fd_set, use with `select`
-//     int         snd_maxfd;              // max_fd, use with `select`
-//     unsigned    snd_seq[Maxhosts]; // sequence number that used to acknowledge
-
-//     int         rcv_fds[Maxhosts];      // read file descriptor
-//     fd_set      rcv_set;             // read fd_set
-//     int         rcv_maxfd;              // max_fd, use with `select`
-//     unsigned    rcv_seq[Maxhosts]; // sequence number
-// } CommManager;
-
+/* communication manager */
 typedef struct comm_manager {
     int         snd_fds;  // send file descriptor
     unsigned    snd_seq[Maxhosts];  // sequence number that used to acknowledge
@@ -146,26 +136,23 @@ extern comm_manager_t comm_manager;
  */
 void initcomm();
 
-
 /**
  * @brief sigio_handler -- IO signal handler
  * 
  */
-#if defined SOLARIS || defined IRIX62
-void sigio_handler(int sig, siginfo_t *sip, ucontext_t *uap);
-#endif /* SOLARIS */
-#ifdef LINUX
 void sigio_handler();
-#endif
-#ifdef AIX41
-void sigio_handler();
-#endif /* AIX41 */
 
 /**
  * @brief sigint_handler -- interrupt signal handler
  * 
  */
 void sigint_handler();
+
+/** 
+ * @brief register_sigint_handler -- register sigint signal handler
+ *
+ */
+static void register_sigint_handler();
 
 /**
  * @brief asendmsg() -- send msg to outqueue[outtail], and call outsend()

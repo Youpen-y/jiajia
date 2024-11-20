@@ -43,6 +43,7 @@
 #include "utils.h"
 #include "setting.h"
 #include "stat.h"
+#include <libgen.h>
 
 extern void initmem();
 extern void initsyn();
@@ -74,6 +75,17 @@ extern long start_port;
 
 sigset_t startup_mask;      /* used by Shi. */
 int jia_lock_index;
+
+
+void createdir(int argc, char **argv) {
+    char cmd[Linesize];
+
+    for (int i = 1; i < system_setting.hostc; i++) {
+        sprintf(cmd, "ssh %s@%s \"[ ! -d 'jianode%d/%s' ] && mkdir -p 'jianode%d/%s'\"",
+                system_setting.hosts[i].username, system_setting.hosts[i].ip, i, basename(argv[0]), i, argv[0]);
+        system(cmd);
+    }
+}
 
 
 /**
@@ -193,7 +205,7 @@ int startprocs(int argc, char **argv) {
 }
 
 /**
- * @brief jiacreat --
+ * @brief jiacreat -- creat process on other machines
  *
  * @param argc
  * @param argv
@@ -342,9 +354,6 @@ void jia_init(int argc, char **argv) {
     sleep(2);
 #endif
 
-    if (system_setting.jia_pid != 0) { // slave does
-        VERBOSE_LOG(3, "I am %d, running here\n", system_setting.jia_pid);
-    }
     enable_sigio();
 
     timel = jia_current_time();
@@ -387,3 +396,4 @@ unsigned int jia_stopstat() {
     t_stop = get_usecs();
     return t_stop;
 }
+

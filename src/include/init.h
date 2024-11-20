@@ -62,4 +62,9 @@
 // function prototypes
 void redirect_slave_io(int argc, char **argv);
 
+
+/** @brief createdir -- create work dir jiajia/program/ in slaves
+ */
+static void createdir(int argc, char **argv);
+
 #endif /*JIACREAT_H*/

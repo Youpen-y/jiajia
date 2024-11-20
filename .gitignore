@@ -10,3 +10,4 @@ apps/*/*/*
 !**/Makefile
 rebuild.sh
 reports
+clean.sh

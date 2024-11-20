@@ -94,17 +94,6 @@ static int fd_create(int i, enum FDCR_MODE flag);
 
 /**
  * @brief initcomm -- initialize communication setting
- *
- * step1: initialize msg array and correpsonding flag to indicate busy or free
- *
- * step2: initialize pointer that indicate head, tail and count of inqueue and
- * outqueue
- *
- * step3: register signal handler (SIGIO, SIGINT)
- *
- * step4: initialize comm ports (reqports, repports)
- *
- * step5: initialize comm manager (commreq, commrep)
  */
 void initcomm() {
     int i, j, fd;
@@ -115,42 +104,28 @@ void initcomm() {
     VERBOSE_LOG(3, "current jia_pid = %d\n", system_setting.jia_pid);
     VERBOSE_LOG(3, " start_port = %u \n", start_port);
 
+    /* step 1: init msg buffer */
     init_msg_buffer(&msg_buffer,
-                    system_setting.msg_buffer_size); // init msg buffer
+                    system_setting.msg_buffer_size);
 
+    /* step 2: init inqueue, outqueue msg queue */
     init_msg_queue(&inqueue,
-                   system_setting.msg_queue_size); // init input msg queue
+                   system_setting.msg_queue_size);
     init_msg_queue(&outqueue,
-                   system_setting.msg_queue_size); // init output msg queue
+                   system_setting.msg_queue_size);
 
+    /* step 3: init comm manager */
     init_comm_manager();
 
+    /* step 4: create client, server, listen threads */
     pthread_create(&client_tid, NULL, client_thread,
                    &outqueue); // create a new thread to send msg from outqueue
     pthread_create(&server_tid, NULL, server_thread,
                    &inqueue); // create a new thread to serve msg from inqueue
     pthread_create(&listen_tid, NULL, listen_thread, NULL);
 
-    // #ifdef LINUX
-    //     {
-    //         struct sigaction act;
-
-    //         // sigio's action: sigio_handler
-    //         act.sa_handler = (void_func_handler)sigio_handler;
-    //         sigemptyset(&act.sa_mask);
-    //         act.sa_flags = SA_NODEFER | SA_RESTART;
-    //         if (sigaction(SIGIO, &act, NULL))
-    //             local_assert(0, "initcomm()-->sigaction()");
-
-    //         // sigint's action: sigint_handler
-    //         act.sa_handler = (void_func_handler)sigint_handler;
-    //         sigemptyset(&act.sa_mask);
-    //         act.sa_flags = SA_NODEFER;
-    //         if (sigaction(SIGINT, &act, NULL)) {
-    //             local_assert(0, "segv sigaction problem");
-    //         }
-    //     }
-    // #endif
+    /* step 5: register sigint handler */
+    register_sigint_handler();
 }
 
 /**
@@ -201,12 +176,24 @@ static int fd_create(int i, enum FDCR_MODE flag) {
     return fd;
 }
 
+
 /**
  * @brief sigint_handler -- sigint handler
  *
  */
 void sigint_handler() {
     jia_assert(0, "Exit by user!!\n");
+}
+
+void register_sigint_handler(){
+    struct sigaction act;
+
+    act.sa_handler = (void_func_handler)sigint_handler;
+    sigemptyset(&act.sa_mask);
+    act.sa_flags = SA_NODEFER;
+    if (sigaction(SIGINT, &act, NULL)) {
+        local_assert(0, "segv sigaction problem");
+    }
 }
 
 /**
