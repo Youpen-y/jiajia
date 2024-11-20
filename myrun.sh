@@ -1,7 +1,7 @@
 #!/bin/bash
 ARCH=linux
 MODE=ETH
-TIMEOUT=40
+TIMEOUT=60
 
 CLEAN=true
 ALLTEST=true
