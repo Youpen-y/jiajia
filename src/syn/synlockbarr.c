@@ -94,6 +94,7 @@ void acquire(int lock) {
     freemsg_unlock(&msg_buffer, index);
     while (acqwait)
         ;
+    log_info(3, "acquire lock!!!");
 }
 
 /**

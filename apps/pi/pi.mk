@@ -2,7 +2,7 @@
 # Application specific rules and defines...
 #*********************************************************
 CPPFLAGS = -I../../../src/include
-CFLAGS = -O2 -g
+CFLAGS = -O0 -g
 OBJS 	= pi.o
 VPATH = ../src 
 JIALIB = ../../../lib/$(ARCH)

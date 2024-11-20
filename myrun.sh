@@ -5,7 +5,7 @@ TIMEOUT=40
 
 CLEAN=true
 ALLTEST=true
-RUN=false
+RUN=true
 tests=("lu" "ep")
 
 run_app() {
@@ -107,7 +107,7 @@ if $RUN; then
             listen "$pid"
 
             # 等待5秒后继续运行下一个程序
-            sleep 5
+            sleep 1
         done
     fi
 fi

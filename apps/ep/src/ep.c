@@ -38,6 +38,7 @@ int main(int argc, char **argv) {
     int begin, end;
 
     struct timeval start, stop;
+    sleep(15);
 
     while ((c = getopt(argc, argv, "m:")) != -1)
         switch (c) {

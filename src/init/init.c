@@ -106,7 +106,7 @@ void copyfiles(int argc, char **argv) {
         VERBOSE_LOG(3, "Copy files to %s@%s.\n", system_setting.hosts[i].username,
                     system_setting.hosts[i].ip);
         
-        sprintf(cmd, "scp .jiahosts system.conf %s %s@%s:~/", argv[0], system_setting.hosts[i].username, system_setting.hosts[i].ip, argv[0]);
+        sprintf(cmd, "scp .jiahosts system.conf %s %s@%s:~/", argv[0], system_setting.hosts[i].username, system_setting.hosts[i].ip);
         ret = system(cmd);
         local_assert(ret == 0, "Copy system files failed");
     }
@@ -152,15 +152,18 @@ int startprocs(int argc, char **argv) {
         sprintf(cmd, "cd %s; %s", pwd, pwd);
 #else
         cmd[0] = '\0';
-        sprintf(cmd, "ssh -l %s", system_setting.hosts[hosti].username);
+        sprintf(cmd, "ssh %s@", system_setting.hosts[hosti].username);
 #endif /* NFS */
-        sprintf(cmd, "%s %s", cmd, hostname);
+        sprintf(cmd, "%s%s", cmd, hostname);
 
-        for (int i = 0; i < argc; i++)
-            sprintf(cmd, "%s %s ", cmd, argv[i]);
+        char* base;
+        for (int i = 0; i < argc; i++){
+            base = basename(argv[i]);
+            sprintf(cmd, "%s '~/%s ", cmd, base);
+        }
 
         strcat(cmd, "-P");
-        sprintf(cmd, "%s %ld", cmd, start_port);
+        sprintf(cmd, "%s %ld'", cmd, start_port);
         strcat(cmd, " &");
         VERBOSE_LOG(3, "Starting CMD %s on host %s\n", cmd, hostname);
         system(cmd);

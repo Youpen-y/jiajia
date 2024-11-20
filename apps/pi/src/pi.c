@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <math.h>
 #include <jia.h>
+#include <unistd.h>
 
 double f(double a)
 {
@@ -15,8 +16,8 @@ int main(int argc,char *argv[])
     float startt, endt;
     double *pa;
 
-   
     jia_init(argc,argv); 
+    //sleep(20);
     n = 1000000;
     pa=(double *)jia_alloc(sizeof(double));
     jia_barrier();
