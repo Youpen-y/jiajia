@@ -1,3 +1,4 @@
+#include "setting.h"
 #include <stdio.h>
 #include <math.h>
 #include <jia.h>
@@ -38,9 +39,12 @@ int main(int argc,char *argv[])
       sum += f(x);
     }
     mypi = h * sum;
-
+    
+    // if(system_setting.jia_pid == 1){
+    //   sleep(1);
+    // }
     jia_lock(1);
-     *pa= *pa+mypi;
+    *pa= *pa+mypi;
     jia_unlock(1);
     jia_barrier();
     endt = jia_clock();

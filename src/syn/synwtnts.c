@@ -40,12 +40,12 @@
 #include "init.h"
 #include "jia.h"
 #include "mem.h"
+#include "msg.h"
+#include "setting.h"
+#include "stat.h"
 #include "syn.h"
 #include "tools.h"
 #include "utils.h"
-#include "setting.h"
-#include "stat.h"
-#include "msg.h"
 
 /* syn */
 extern jiapage_t page[Maxmempages];
@@ -88,7 +88,7 @@ void savewtnt(wtnt_t *ptr, address_t addr, int frompid) {
         if (wtnti >= wnptr->wtntc)
             wnptr = wnptr->more;
         else
-            exist = 1; 
+            exist = 1;
     }
 
     /**
@@ -96,9 +96,9 @@ void savewtnt(wtnt_t *ptr, address_t addr, int frompid) {
      * existed: Change its frompid.
      * not existed: newwtnt() && record new addr
      */
-    if (exist == 0) { 
+    if (exist == 0) {
         wnptr = ptr;
-        while (wnptr->wtntc >= Maxwtnts) {  
+        while (wnptr->wtntc >= Maxwtnts) {
             if (wnptr->more == WNULL)
                 wnptr->more = newwtnt();
             wnptr = wnptr->more;
@@ -106,7 +106,7 @@ void savewtnt(wtnt_t *ptr, address_t addr, int frompid) {
         wnptr->wtnts[wnptr->wtntc] = addr;
         wnptr->from[wnptr->wtntc] = frompid;
         wnptr->wtntc++;
-    } else {                                
+    } else {
         if (ptr == locks[hidelock].wtntp) { /*barrier*/
             wnptr->from[wtnti] = Maxhosts;
         } else {
@@ -232,8 +232,9 @@ wtnt_t *appendlockwtnts(jia_msg_t *msg, wtnt_t *ptr, int acqscope) {
             Maxmsgsize) {
             for (wtnti = 0; wtnti < wnptr->wtntc; wtnti++)
                 if ((wnptr->from[wtnti] > acqscope) &&
+                    // if homehost(wnptr->wtnts[wtnti]) == msg->topid), not
+                    // send(remote host is the owner of this copy)
                     (homehost(wnptr->wtnts[wtnti]) != msg->topid))
-                    // appendmsg(msg,ltos(wnptr->wtnts[wtnti]),Intbytes);
                     appendmsg(msg, ltos(wnptr->wtnts[wtnti]),
                               sizeof(unsigned char *));
             wnptr = wnptr->more;

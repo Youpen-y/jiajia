@@ -121,7 +121,7 @@ void initsyn() {
  * @brief endinterval -- end an interval, save the changes and send them to
  * their home page
  *
- * @param synop syn operation
+ * @param synop syn operation ACQ/BARR
  */
 void endinterval(int synop) {
     // register advise compiler store these variables into registers
@@ -142,8 +142,11 @@ void endinterval(int synop) {
     // TODO: for what?
     hpages = system_setting.hosts[system_setting.jia_pid].homesize / Pagesize; // page number of jia_pid host
     for (pagei = 0; pagei < hpages; pagei++) {
-        if ((home[pagei].wtnt & 1) != 0) { // bit1 == 1
+        /** home[pagei].wtnt & 1: home host has written this homepage */
+        if ((home[pagei].wtnt & 1) != 0) { 
+            /** home[pagei].rdnt != 0: remote host has valid copy of this homepage(cachepage) */
             if (home[pagei].rdnt != 0) {
+                // remote host && home host has different copy, so we will savewtnts to record it
                 savewtnt(top.wtntp, home[pagei].addr, Maxhosts);
                 if (synop == BARR)
                     home[pagei].rdnt = 0;
@@ -192,7 +195,7 @@ void startinterval(int synop) {
     hpages = system_setting.hosts[system_setting.jia_pid].homesize / Pagesize;
     if ((synop != BARR) || (AD_WD != ON)) {
         for (pagei = 0; pagei < hpages; pagei++)
-            if ((home[pagei].wtnt & 1) != 0) {
+            if (home[pagei].wtnt & 1) {
                 home[pagei].wtnt &= 0xfe;
                 memprotect((caddr_t)home[pagei].addr, Pagesize, PROT_READ);
             }

@@ -35,14 +35,13 @@
  * =================================================================== *
  **********************************************************************/
 
-#include "utils.h"
-#include "tools.h"
-#include "mem.h"
 #include "comm.h"
+#include "mem.h"
+#include "msg.h"
 #include "setting.h"
 #include "stat.h"
-#include "msg.h"
-#include "mem.h"
+#include "tools.h"
+#include "utils.h"
 
 /* jiajia */
 // extern int jia_pid;
@@ -66,7 +65,6 @@ extern jiastat_t jiastat;
 extern int statflag;
 #endif
 
-
 /**
  * @brief diffserver -- msg diff server
  *s
@@ -88,7 +86,7 @@ void diffserver(jia_msg_t *req) {
 
     int jia_pid = system_setting.jia_pid;
     jia_assert((req->op == DIFF) && (req->topid == jia_pid),
-           "Incorrect DIFF Message!");
+               "Incorrect DIFF Message!");
 
     datai = 0;
     while (datai < req->size) {
@@ -106,6 +104,7 @@ void diffserver(jia_msg_t *req) {
          * home[Homepages].wtnt==0
          */
 
+        // when home's wtnt==0, give RW permission for memcpy diff to homapage's addr
         if ((home[homei].wtnt & 1) != 1)
             memprotect((caddr_t)paddr, Pagesize, PROT_READ | PROT_WRITE);
 
@@ -135,6 +134,7 @@ void diffserver(jia_msg_t *req) {
         if (W_VEC == ON)
             addwtvect(homei, wv, req->frompid);
 
+        // after memcpy diff to homapage's addr, revoke write permission
         if ((home[homei].wtnt & 1) != 1)
             memprotect((caddr_t)paddr, (size_t)Pagesize, (int)PROT_READ);
 
@@ -161,7 +161,6 @@ void diffserver(jia_msg_t *req) {
     freemsg_unlock(&msg_buffer, index);
 }
 
-
 /**
  * @brief diffgrantserver -- msg diffgrant server
  *
@@ -169,11 +168,10 @@ void diffserver(jia_msg_t *req) {
  */
 void diffgrantserver(jia_msg_t *rep) {
     jia_assert((rep->op == DIFFGRANT) && (rep->size == 0),
-           "Incorrect returned message!");
+               "Incorrect returned message!");
 
     diffwait--;
 }
-
 
 /**
  * @brief getpserver -- getp msg server
@@ -187,7 +185,7 @@ void getpserver(jia_msg_t *req) {
 
     int jia_pid = system_setting.jia_pid;
     jia_assert((req->op == GETP) && (req->topid == jia_pid),
-           "Incorrect GETP Message!");
+               "Incorrect GETP Message!");
 
     paddr = (address_t)stol(req->data); // getp message data is the page's addr
     if ((H_MIG == ON) && (homehost(paddr) != jia_pid)) {
@@ -196,7 +194,7 @@ void getpserver(jia_msg_t *req) {
           the rdnt item of new home is set to 1 in migpage()*/
     } else {
         jia_assert((homehost(paddr) == jia_pid),
-               "This should have not been happened!");
+                   "This should have not been happened!");
         homei = homepage(paddr);
 
         if ((W_VEC == ON) && (home[homei].wvfull == 1)) {
@@ -205,6 +203,7 @@ void getpserver(jia_msg_t *req) {
             memcpy(home[homei].twin, home[homei].addr, Pagesize);
         }
 
+        /* somebody will have a valid copy*/
         home[homei].rdnt = 1;
     }
     // rep = newmsg();
@@ -219,7 +218,8 @@ void getpserver(jia_msg_t *req) {
     // [req->data(4bytes), pagedata(4096bytes)], req->data is the page start
     // address
 
-    // GETPGRANT msg format { header(32bytes) | addr(8bytes) | pagedata(4096bytes) |}
+    // GETPGRANT msg format { header(32bytes) | addr(8bytes) |
+    // pagedata(4096bytes) |}
     appendmsg(rep, req->data, sizeof(unsigned char *)); // carry the addr
 
     if ((W_VEC == ON) && (req->temp == 1)) {
@@ -243,7 +243,6 @@ void getpserver(jia_msg_t *req) {
     move_msg_to_outqueue(&msg_buffer, index, &outqueue);
     freemsg_unlock(&msg_buffer, index);
 }
-
 
 /**
  * @brief getpgrantserver -- getpgrant msg server
@@ -273,9 +272,12 @@ void getpgrantserver(jia_msg_t *rep) {
             }
         }
     } else {
-        log_info(3, "addr is %p , rep->data+datai = %p", addr, rep->data + datai);
-        memcpy((unsigned char *)addr, rep->data + datai,
-               Pagesize);
+        // addr: current host's cache addr(dst addr)
+        // srcdata: other host's homepage data(packing in rep) 
+        unsigned char *srcdata = rep->data + datai;
+        log_info(3, "addr is %p , rep->data+datai = %p", addr,
+                 rep->data + datai);
+        memcpy((unsigned char *)addr, srcdata, Pagesize);
         log_info(3, "I have copy the page from remote home to %p", addr);
     }
 
