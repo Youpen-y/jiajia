@@ -59,19 +59,6 @@ extern long jiamapfd; /* file descriptor of the file that mapped to process's vi
 extern int repcnt[Setnum]; /* record the last replacement index of every set */
 
 
-int homehost(address_t addr){
-    return page[((unsigned long long)(addr)-system_setting.global_start_addr) / Pagesize].homepid;
-}
-
-unsigned int homepage(address_t addr){
-    return page[((unsigned long long)(addr)-system_setting.global_start_addr) / Pagesize].homei;
-}
-
-unsigned int cachepage(address_t addr){
-    return page[((unsigned long long)(addr)-system_setting.global_start_addr) / Pagesize].cachei;
-}
-
-
 /**
  * @brief initmem - initialize memory setting (wait for SIGSEGV signal)
  *

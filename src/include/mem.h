@@ -166,10 +166,13 @@ static inline int xor (address_t addr) {
 extern jiapage_t page[Maxmempages]; /* global page space */
 
 
-int homehost(address_t addr);
+#define homehost(addr) \
+    page[((unsigned long long)(addr)-system_setting.global_start_addr) / Pagesize].homepid
 
-unsigned int homepage(address_t addr);
+#define homepage(addr) \
+    page[((unsigned long long)(addr)-system_setting.global_start_addr) / Pagesize].homei
 
-unsigned int cachepage(address_t addr);
+#define cachepage(addr) \
+    page[((unsigned long long)(addr)-system_setting.global_start_addr) / Pagesize].cachei
 
 #endif /*JIAMEM_H*/

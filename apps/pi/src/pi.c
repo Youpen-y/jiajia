@@ -40,9 +40,9 @@ int main(int argc,char *argv[])
     }
     mypi = h * sum;
     
-    // if(system_setting.jia_pid == 1){
-    //   sleep(1);
-    // }
+    if(system_setting.jia_pid == 1){
+      sleep(3);
+    }
     jia_lock(1);
     *pa= *pa+mypi;
     jia_unlock(1);

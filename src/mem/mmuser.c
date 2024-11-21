@@ -88,12 +88,18 @@ unsigned long jia_alloc3(int size, int block, int starthost) {
     while (allocsize > 0) {
         // only when current host pid == homepid, use mmap alloc space
         if (system_setting.jia_pid == homepid) {
+
+            /* alloc page on homepid */
             jia_assert((system_setting.hosts[homepid].homesize + mapsize) < (Homepages * Pagesize),
                    "Too many home pages");
+            // single: RW && multi : RO
             protect = (system_setting.hostc == 1) ? PROT_READ | PROT_WRITE : PROT_READ;
             memmap((void *)(system_setting.global_start_addr + globaladdr), (size_t)mapsize, protect);
 
-            // only when page on current host, set page's homei && homei's addr
+            /**  
+             * only when page on current host, set page's homei && homei's addr
+             * use home array(home[homei]) to record homepage's addr, map page[pagei] with home[homei]
+             */
             for (i = 0; i < mapsize; i += Pagesize) {
                 pagei = (globaladdr + i) / Pagesize;
                 homei = (system_setting.hosts[homepid].homesize + i) / Pagesize;

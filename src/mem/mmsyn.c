@@ -44,10 +44,10 @@
 #include "syn.h"
 #include "tools.h"
 #include "utils.h"
+#include <execinfo.h>
 #include <stddef.h>
 #include <string.h>
 #include <unistd.h>
-#include <execinfo.h>
 
 /* user */
 extern jiahome_t home[Homepages];    /* host owned page */
@@ -88,10 +88,8 @@ static void savediff(int cachei);
 void flushpage(int cachei) {
     memunmap((void *)cache[cachei].addr, Pagesize);
 
-    page[((unsigned long)cache[cachei].addr -
-          system_setting.global_start_addr) /
-         Pagesize]
-        .cachei = Cachepages; // normal cachi range: [0, Cachepages)
+    cachepage(cache[cachei].addr) =
+        Cachepages; // normal cachi range: [0, Cachepages)
 
     if (cache[cachei].state == RW) { // cache's state equals RW means that there
                                      // is a twin(copy) for the cached page.
@@ -175,8 +173,11 @@ int findposition(address_t addr) {
     seti = replacei(cachei);
     invi = -1;
 
-    // find a cached page whose state is UNMAP (or INV, use invi to record it)
-    // or the last page in this set
+    /**
+     * find a cached page whose state is UNMAP (or INV, use invi to record it)
+     * or the last page in this set
+     * UNMAP is the highest priority， second is INV
+     */
     for (i = 0; (cache[cachei + seti].state != UNMAP) && (i < Setpages); i++) {
         if ((invi == (-1)) && (cache[cachei + seti].state == INV))
             invi = seti;
@@ -187,6 +188,8 @@ int findposition(address_t addr) {
     if ((cache[cachei + seti].state != UNMAP) && (invi != (-1))) {
         seti = invi;
     }
+
+    // cache priorty sequence: UNMAP > INV > RO > RW
 
     /**
      * INV||RO : flush
@@ -214,8 +217,7 @@ int findposition(address_t addr) {
         }
 #endif
     }
-    page[((unsigned long)(addr)-system_setting.global_start_addr) / Pagesize]
-        .cachei = (unsigned short)(cachei + seti);
+    cachepage(addr) = (unsigned short)(cachei + seti);
     return (cachei + seti);
 }
 
@@ -260,11 +262,13 @@ void sigsegv_handler(int signo, siginfo_t *sip, ucontext_t *uap)
 
 #ifdef LINUX
     faultaddr = (address_t)sip->si_addr;
-    faultaddr = (address_t)((unsigned long long)faultaddr / Pagesize * Pagesize);
-    writefault =
-        sip->si_code & 2; /* si_code: 1 means that address not mapped to object
-                             => () si_code: 2 means that invalid permissions for
-                             mapped object => ()*/
+    faultaddr =
+        (address_t)((unsigned long long)faultaddr / Pagesize * Pagesize);
+    /**
+     * si_code: 1 means that address not mapped to object
+     * si_code: 2 means that invalid permissions for mapped object
+     */
+    writefault = sip->si_code & 2;
 #endif
 
     log_info(3, "Enter sigsegv ");
@@ -272,7 +276,8 @@ void sigsegv_handler(int signo, siginfo_t *sip, ucontext_t *uap)
              "Shared memory range from %p to %p!, faultaddr=%p, "
              "writefault=%d\n",
              (void *)system_setting.global_start_addr,
-             (void *)(system_setting.global_start_addr + globaladdr), faultaddr, writefault);
+             (void *)(system_setting.global_start_addr + globaladdr), faultaddr,
+             writefault);
 
     log_info(3,
              "\nsig info structure siginfo_t"
@@ -281,22 +286,22 @@ void sigsegv_handler(int signo, siginfo_t *sip, ucontext_t *uap)
              "\t    si_addr: %p",
              sip->si_errno, sip->si_code, sip->si_addr);
 
-    
-    jia_assert((((unsigned long long)faultaddr <
-                 (system_setting.global_start_addr + globaladdr)) &&
-                ((unsigned long long)faultaddr >= system_setting.global_start_addr)),
-               "Access shared memory out of range from %p to %p!, "
-               "faultaddr=%p, writefault=%d",
-               (void *)system_setting.global_start_addr,
-               (void *)(system_setting.global_start_addr + globaladdr), (void *)faultaddr,
-               writefault);
+    jia_assert(
+        (((unsigned long long)faultaddr <
+          (system_setting.global_start_addr + globaladdr)) &&
+         ((unsigned long long)faultaddr >= system_setting.global_start_addr)),
+        "Access shared memory out of range from %p to %p!, "
+        "faultaddr=%p, writefault=%d",
+        (void *)system_setting.global_start_addr,
+        (void *)(system_setting.global_start_addr + globaladdr),
+        (void *)faultaddr, writefault);
 
     // page's home is current host (si_code = 2)
     if (homehost(faultaddr) == system_setting.jia_pid) {
-        memprotect((caddr_t)faultaddr, Pagesize,
-                   PROT_READ | PROT_WRITE); // grant write right
+        // grant write right beyond read right
+        memprotect((caddr_t)faultaddr, Pagesize, PROT_READ | PROT_WRITE);
         homei = homepage(faultaddr);
-        home[homei].wtnt |= 3; /* set bit0 = 1, bit1 = 1 */
+        home[homei].wtnt |= 3;
         if ((W_VEC == ON) && (home[homei].wvfull == 0)) {
             newtwin(&(home[homei].twin));
             memcpy(home[homei].twin, home[homei].addr, Pagesize);
@@ -309,16 +314,14 @@ void sigsegv_handler(int signo, siginfo_t *sip, ucontext_t *uap)
 
         // page on other host, page must be get before other operations
         writefault = (writefault == 0) ? 0 : 1;
-        cachei = (int)page[((unsigned long)faultaddr -
-                            system_setting.global_start_addr) /
-                           Pagesize]
-                     .cachei;
+        cachei = cachepage(faultaddr);
 
         /**
-         * cachei == Cachepages: page's cache has exist
-         * cachei != Cachepages: should be mmapped
+         * cachei != Cachepages: page's cache has exist
+         * cachei == Cachepages: should be mmapped
          * note: first protect it as writable, and then make changes based on
-         * writefault later.
+         * writefault later. first writable permission is for getpgrantserver's
+         * copy(to faultaddr)
          */
         if (cachei < Cachepages) {
             memprotect((caddr_t)faultaddr, Pagesize, PROT_READ | PROT_WRITE);
@@ -332,12 +335,14 @@ void sigsegv_handler(int signo, siginfo_t *sip, ucontext_t *uap)
         }
 
         /**
-         * make (protect right)changes based on writefault later.
+         * writefault == 0(not mapped): getpage without RW permission(only RO)
+         * writefault == 1(not permitted): give faultaddr RW permission to write
          */
         if (writefault) {
             cache[cachei].addr = faultaddr;
             cache[cachei].state = RW;
             cache[cachei].wtnt = 1;
+            // new twin to store origin data for compare and senddiffs later
             newtwin(&(cache[cachei].twin));
             while (getpwait)
                 ;
@@ -506,6 +511,7 @@ void senddiffs() {
             diffmsg[hosti] = DIFFNULL;
         }
     }
-    
-    while(diffwait); // diffwait is detected after senddiffs() called
+
+    while (diffwait)
+        ; // diffwait is detected after senddiffs() called
 }
