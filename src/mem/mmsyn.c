@@ -130,6 +130,7 @@ void getpage(address_t addr, int flag) {
     move_msg_to_outqueue(&msg_buffer, index, &outqueue);
     freemsg_unlock(&msg_buffer, index);
 
+    getpwait = 1;
 #ifdef DOSTAT
     if (statflag == 1) {
         jiastat.getpcnt++;
@@ -265,13 +266,7 @@ void sigsegv_handler(int signo, siginfo_t *sip, ucontext_t *uap)
                              => () si_code: 2 means that invalid permissions for
                              mapped object => ()*/
 #endif
-    // void *array[10];
-    // char **strings;
-    // size_t size = backtrace(array, 10);
-    // strings = backtrace_symbols(array, size);
-    // for(int i = 0; i < size; i++) {
-    //     log_info(3, "%s", strings[i]);
-    // }
+
     log_info(3, "Enter sigsegv ");
     log_info(3,
              "Shared memory range from %p to %p!, faultaddr=%p, "
@@ -389,7 +384,7 @@ int encodediff(int cachei, unsigned char *diff) {
     register unsigned int begin = get_usecs();
 #endif
 
-    // step 1: encode the cache page addr first (8 bytes)
+    // step 1: encode the cache page addr first
     memcpy(diff + size, ltos(cache[cachei].addr), sizeof(unsigned char *));
     size += sizeof(unsigned char *);
     size += Intbytes; /* leave space for size */

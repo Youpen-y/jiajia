@@ -2,7 +2,7 @@
 # Application specific rules and defines...
 #*********************************************************
 CPPFLAGS = -I../../../src/include
-CFLAGS = -O0 -g
+CFLAGS = -O0 -g -fdebug-prefix-map=${PWD}=.
 OBJS 	= pi.o
 VPATH = ../src 
 JIALIB = ../../../lib/$(ARCH)
@@ -11,7 +11,7 @@ JIALIB = ../../../lib/$(ARCH)
 #	@echo "Creating $@..."
 #	@$(SHELL) -ec "$(CC)  $(CPPFLAGS) $< | sed ' s/$*\.o/& $@/g' > $@"
 
-TARGET 	= ./pi
+TARGET 	= ./pi.linux
 
 $(TARGET):$(OBJS) $(JIALIB)/libjia.a
 	$(CC) $(CFLAGS) -o $@ $(OBJS) -L$(JIALIB) -ljia $(LDFLAGS)

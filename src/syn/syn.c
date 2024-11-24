@@ -139,7 +139,6 @@ void endinterval(int synop) {
     senddiffs();
 
     // step 2: save all home page wtnts
-    // TODO: for what?
     hpages = system_setting.hosts[system_setting.jia_pid].homesize / Pagesize; // page number of jia_pid host
     for (pagei = 0; pagei < hpages; pagei++) {
         /** home[pagei].wtnt & 1: home host has written this homepage */
