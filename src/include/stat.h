@@ -59,7 +59,7 @@ extern jiastat_t jiastat;
 extern jiastat_t allstats[Maxhosts];
 extern int statflag;
 extern unsigned int interruptflag;
-extern volatile int waitstat;
+extern _Atomic volatile int waitstat;
 
 
 /* function declarations */

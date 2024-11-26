@@ -46,10 +46,11 @@
 #include "setting.h"
 #include "stat.h"
 #include "msg.h"
+#include <stdatomic.h>
 
 /* syn */
 extern jialock_t locks[Maxlocks + 1];
-extern volatile int waitwait, cvwait, acqwait, barrwait;
+extern _Atomic volatile int waitwait, cvwait, acqwait, barrwait;
 extern int B_CAST;
 
 /************Lock Part****************/
@@ -92,7 +93,7 @@ void acquire(int lock) {
 
     move_msg_to_outqueue(&msg_buffer, index, &outqueue);
     freemsg_unlock(&msg_buffer, index);
-    while (acqwait)
+    while (atomic_load(&acqwait))
         ;
     log_info(3, "acquire lock!!!");
 }

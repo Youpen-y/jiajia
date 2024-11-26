@@ -48,9 +48,9 @@ void *listen_thread(void *args) {
                 }
 
                 log_info(3,
-                        "get msg <seqno:%d, op:%d, "
+                        "get msg <seqno:%d, op:%s, "
                         "frompid:%d, topid:%d>",
-                        msg.seqno, msg.op, msg.frompid, msg.topid);
+                        msg.seqno, op2name(msg.op), msg.frompid, msg.topid);
 
                 /* step 2: construct an ack msg */
                 ack.seqno = msg.seqno + 1;
@@ -77,9 +77,9 @@ void *listen_thread(void *args) {
                 if (msg.seqno == comm_manager.rcv_seq[to_id]) {
                     comm_manager.rcv_seq[to_id]++;
                     log_info(4,
-                            "msg<seqno:%d, op:%d, frompid:%d, topid:%d> will "
+                            "msg<seqno:%d, op:%s, frompid:%d, topid:%d> will "
                             "be enqueued",
-                            msg.seqno, msg.op, msg.frompid, msg.topid);
+                            msg.seqno, op2name(msg.op), msg.frompid, msg.topid);
                     enqueue(&inqueue, &msg);
 
 #ifdef DOSTAT
@@ -92,9 +92,9 @@ void *listen_thread(void *args) {
                 } else {
                     // drop the msg(msg's seqno is not need), don't do anything
                     log_info(3,
-                             "Receive resend msg, msg<seqno:%d, op:%d, "
+                             "Receive resend msg, msg<seqno:%d, op:%s, "
                              "frompid:%d, topid:%d> will be droped",
-                             msg.seqno, msg.op, msg.frompid, msg.topid);
+                             msg.seqno, op2name(msg.op), msg.frompid, msg.topid);
                 }
             }
         }

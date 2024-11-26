@@ -46,11 +46,12 @@
 #include "setting.h"
 #include "stat.h"
 #include "msg.h"
+#include <stdatomic.h>
 
 /* syn */
 extern jiacv_t condvars[Maxcvs];
 extern volatile int waitcounter;
-extern volatile int waitwait, cvwait, acqwait, barrwait;
+extern _Atomic volatile int waitwait, cvwait, acqwait, barrwait;
 extern volatile int noclearlocks;
 // lock array, according to the hosts allocate lock(eg.
 // host0: 0, 2,... 62; host1 = 1, 3, ..., 63)
@@ -136,7 +137,8 @@ void cvgrantserver(jia_msg_t *req) {
     condv = (int)stol(req->data);
 
     // ...
-    cvwait = 0;
+    //cvwait = 0;
+    atomic_store(&cvwait, 0);
 }
 
 
@@ -177,7 +179,8 @@ void waitgrantserver(jia_msg_t *req) {
     jia_assert((req->op == WAITGRANT) && (req->topid == system_setting.jia_pid),
            "Incorrect WAITGRANT Message!");
 
-    waitwait = 0;
+    //waitwait = 0;
+    atomic_store(&waitwait, 0);
 }
 
 /************Lock Part****************/
@@ -268,7 +271,9 @@ void acqgrantserver(jia_msg_t *req) {
 
     lock = (int)stol(req->data);
     locks[lock].myscope = req->scope;
-    acqwait = 0;
+
+    //acqwait = 0;
+    atomic_store(&acqwait, 0);
 }
 
 
@@ -330,7 +335,8 @@ void barrgrantserver(jia_msg_t *req) {
 
     lock = (int)stol(req->data);
     locks[lock].myscope = req->scope;
-    barrwait = 0;
+    //barrwait = 0;
+    atomic_store(&barrwait, 0);
     noclearlocks = 0;
 }
 

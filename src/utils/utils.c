@@ -1,5 +1,6 @@
 #include "utils.h"
 #include "init.h"
+#include "msg.h"
 #include <stdarg.h>
 #include <stdio.h>
 #include <string.h>
@@ -14,3 +15,65 @@ int open_logfile(char *filename) {
     }
     return 0;
 }
+
+char* op2name(int op){
+    switch (op) {
+    case DIFF:
+        return "DIFF";
+    case DIFFGRANT:
+        return "DIFFGRANT";
+    case GETP:
+        return "GETP";
+    case GETPGRANT:
+        return "GETPGRANT";
+    case ACQ:
+        return "ACQ";
+    case ACQGRANT:
+        return "ACQGRANT";
+    case INVLD:
+        return "INVALID";
+    case BARR:
+        return "BARR";
+    case BARRGRANT:
+        return "BARRGRANT";
+    case REL:
+        return "REL";
+    case WTNT:
+        return "WTNT";
+    case JIAEXIT:
+        return "JIAEXIT";
+    case WAIT:
+        return "WAIT";
+    case WAITGRANT:
+        return "WAITGRANT";
+    case STAT:
+        return "STAT";
+    case STATGRANT:
+        return "STATGRANT";
+    case SETCV:
+        return "SETCV";
+    case RESETCV:
+        return "RESETCV";
+    case WAITCV:
+        return "WAITCV";
+    case CVGRANT:
+        return "CVGRANT";
+    case MSGBODY:
+    case MSGTAIL:
+        return "MSG";
+    case LOADREQ:
+        return "LOADREQ";
+    case LOADGRANT:
+        return "LOADGRANT";
+
+    default:
+        return "NULL";
+    }
+}
+
+// void init_msg(jia_msg_t* msg, int from, int to, int op){
+//     msg->frompid = from;
+//     msg->topid = to;
+//     msg->op = op;
+//     log_info(3, "msg", ...)
+// }

@@ -46,6 +46,7 @@
 #include "stat.h"  // clearstat
 #include "tools.h" // newmsg, freemsg, appendmsg
 #include "utils.h"
+#include <stdatomic.h>
 
 extern unsigned long globaladdr;
 extern volatile int incount;
@@ -78,12 +79,13 @@ void jia_exit() {
         reply->op = STAT;
         appendmsg(reply, (char *)stat_p, sizeof(jiastat));
 
-        waitstat = 1;
+        //waitstat = 1;
+        atomic_store(&waitstat, 1);
         move_msg_to_outqueue(&msg_buffer, index, &outqueue);
         freemsg_unlock(&msg_buffer, index);
         //asendmsg(reply);
         //freemsg(reply);
-        while (waitstat)
+        while (atomic_load(&waitstat))
             ;
 
 #ifdef DEBUG

@@ -49,8 +49,8 @@ extern jiapage_t page[Maxmempages];      /* global page space */
 extern unsigned long globaladdr;         /* [0, Maxmemsize)*/
 
 /* server */
-extern volatile int getpwait;
-extern volatile int diffwait;
+extern _Atomic volatile int getpwait;
+extern _Atomic volatile int diffwait;
 
 /* mmsync */
 extern jia_msg_t *diffmsg[Maxhosts]; /* store every host's diff msgs */

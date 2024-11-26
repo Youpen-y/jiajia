@@ -632,6 +632,9 @@ void lu(int n, int bs, int MyNum, struct LocalCopies *lc, int dostats) {
             CLOCK(t11);
         }
 
+        // if(system_setting.jia_pid == 0){
+        //     sleep(1);
+        // }
         jia_mbarrier();
 
         if ((MyNum == 0) || (dostats)) {
@@ -672,6 +675,9 @@ void lu(int n, int bs, int MyNum, struct LocalCopies *lc, int dostats) {
             CLOCK(t22);
         }
 
+        // if(system_setting.jia_pid == 0){
+        //     sleep(1);
+        // }
         jia_mbarrier();
 
         if ((MyNum == 0) || (dostats)) {

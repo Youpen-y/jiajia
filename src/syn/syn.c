@@ -55,7 +55,7 @@
 extern jiapage_t page[Maxmempages];
 extern jiacache_t cache[Cachepages];
 extern jiahome_t home[Homepages];
-extern volatile int diffwait;
+extern _Atomic volatile int diffwait;
 
 /* tools */
 extern int H_MIG, AD_WD, W_VEC;
@@ -72,7 +72,7 @@ jialock_t locks[Maxlocks + 1];
 jiastack_t lockstack[Maxstacksize]; // lock stack
 
 int stackptr;
-volatile int waitwait, acqwait, barrwait, cvwait;
+_Atomic volatile int waitwait, acqwait, barrwait, cvwait;
 volatile int noclearlocks;
 volatile int waitcounter;
 jiacv_t condvars[Maxcvs];

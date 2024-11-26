@@ -6,13 +6,14 @@
 #include "setting.h"
 #include "tools.h"
 #include "utils.h"
+#include <stdatomic.h>
 
 jiastat_t jiastat;
 jiastat_t allstats[Maxhosts];
 int statflag;
 unsigned int interruptflag = 0;
 int statcnt = 0;
-volatile int waitstat;
+_Atomic volatile int waitstat;
 
 /**
  * @brief statserver -- stat msg server
@@ -105,7 +106,8 @@ void clearstat() {
 void statgrantserver(jia_msg_t *req) {
     jia_assert((req->op == STATGRANT) && (req->topid == system_setting.jia_pid),
                "Incorrect STATGRANT Message!");
-    waitstat = 0;
+    //waitstat = 0;
+    atomic_store(&waitstat, 0);
 }
 
 #else  /* NULL_LIB */

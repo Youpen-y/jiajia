@@ -47,6 +47,7 @@
 #include "setting.h"
 #include "stat.h"
 #include "msg.h"
+#include <stdatomic.h>
 
 #ifdef DOSTAT
 extern int statflag;
@@ -56,7 +57,7 @@ extern jiastat_t jiastat;
 /* syn */
 extern float caltime, starttime, endtime;
 extern int H_MIG, LOAD_BAL, W_VEC;
-extern volatile int waitwait, cvwait, acqwait, barrwait;
+extern _Atomic volatile int waitwait, cvwait, acqwait, barrwait;
 extern int stackptr;
 extern jiastack_t lockstack[Maxstacksize]; // lock stack
 
@@ -97,7 +98,8 @@ void jia_lock(int lock) {
 
     endinterval(ACQ);
 
-    acqwait = 1;
+    //acqwait = 1;
+    atomic_store(&acqwait, 1);
     acquire(lock);
 
     startinterval(ACQ);
@@ -192,10 +194,11 @@ void jia_barrier() {
         migcheckcache();
     }
 
-    barrwait = 1;
+    //barrwait = 1;
+    atomic_store(&barrwait, 1);
     sendwtnts(BARR);
     freewtntspace(top.wtntp);
-    while (barrwait)
+    while (atomic_load(&barrwait))
         ;
     if ((H_MIG == ON) && (W_VEC == ON)) {
         jia_wait();
@@ -241,12 +244,13 @@ void jia_wait() {
     req->op = WAIT;
     req->size = 0;
 
-    waitwait = 1;
+    //waitwait = 1;
+    atomic_store(&waitwait, 1);
     // asendmsg(req);
     // freemsg(req);
     move_msg_to_outqueue(&msg_buffer, index, &outqueue);
     freemsg_unlock(&msg_buffer, index);
-    while (waitwait)
+    while (atomic_load(&waitwait))
         ;
 
     if (LOAD_BAL == ON)
@@ -325,13 +329,14 @@ void jia_waitcv(int cvnum) {
     req->size = 0;
     appendmsg(req, ltos(cvnum), Intbytes);
 
-    cvwait = 1;
+    //cvwait = 1;
+    atomic_store(&cvwait, 1);
 
     // asendmsg(req);
     // freemsg(req);
     move_msg_to_outqueue(&msg_buffer, index, &outqueue);
     freemsg_unlock(&msg_buffer, index);
-    while (cvwait)
+    while (atomic_load(&cvwait))
         ;
 }
 

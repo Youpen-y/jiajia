@@ -44,6 +44,7 @@
 #include "syn.h"
 #include "tools.h"
 #include "utils.h"
+#include <stdatomic.h>
 #include <execinfo.h>
 #include <stddef.h>
 #include <string.h>
@@ -56,8 +57,8 @@ extern jiapage_t page[Maxmempages];  /* global page space */
 extern unsigned long globaladdr;
 
 /* server */
-extern volatile int getpwait;
-extern volatile int diffwait;
+extern _Atomic volatile int getpwait;
+extern _Atomic volatile int diffwait;
 
 /* tools */
 extern int H_MIG, B_CAST, W_VEC;
@@ -125,10 +126,11 @@ void getpage(address_t addr, int flag) {
     req->size = 0;
     // append address of request page to data[0..7]
     appendmsg(req, ltos(addr), sizeof(unsigned char *));
+    //getpwait = 1;
+    atomic_store(&getpwait, 1);
     move_msg_to_outqueue(&msg_buffer, index, &outqueue);
     freemsg_unlock(&msg_buffer, index);
 
-    getpwait = 1;
 #ifdef DOSTAT
     if (statflag == 1) {
         jiastat.getpcnt++;
@@ -344,13 +346,13 @@ void sigsegv_handler(int signo, siginfo_t *sip, ucontext_t *uap)
             cache[cachei].wtnt = 1;
             // new twin to store origin data for compare and senddiffs later
             newtwin(&(cache[cachei].twin));
-            while (getpwait)
+            while (atomic_load(&getpwait))
                 ;
             memcpy(cache[cachei].twin, faultaddr, Pagesize);
         } else {
             cache[cachei].addr = faultaddr;
             cache[cachei].state = RO;
-            while (getpwait)
+            while (atomic_load(&getpwait))
                 ;
             memprotect((caddr_t)faultaddr, (size_t)Pagesize, PROT_READ);
         }
@@ -478,7 +480,8 @@ void savediff(int cachei) {
         cachei, diff); // encoded the difference data between cachei page and
                        // its twin into diff [] and return size
     if ((diffmsg[hosti]->size + diffsize) > Maxmsgsize) {
-        diffwait++;
+        //diffwait++;
+        atomic_fetch_add(&diffwait, 1);
         // asendmsg(diffmsg[hosti]);
         move_msg_to_outqueue(&msg_buffer, index, &outqueue);
         diffmsg[hosti]->size = 0;
@@ -503,7 +506,8 @@ void senddiffs() {
             index = ((void *)diffmsg[hosti] - (void *)msg_buffer.buffer) /
                     sizeof(slot_t);
             if (diffmsg[hosti]->size > 0) { // diff data size > 0
-                diffwait++;
+                //diffwait++;
+                atomic_fetch_add(&diffwait, 1);
                 move_msg_to_outqueue(&msg_buffer, index, &outqueue);
                 freemsg_unlock(&msg_buffer, index);
             }

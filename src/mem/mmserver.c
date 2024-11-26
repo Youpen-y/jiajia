@@ -42,6 +42,7 @@
 #include "stat.h"
 #include "tools.h"
 #include "utils.h"
+#include <stdatomic.h>
 
 /* jiajia */
 // extern int jia_pid;
@@ -54,8 +55,8 @@ extern jiacache_t cache[Cachepages]; /* host cached page */
 extern jiapage_t page[Maxmempages];  /* global page space */
 
 /* server */
-volatile int getpwait;
-volatile int diffwait;
+_Atomic volatile int getpwait;
+_Atomic volatile int diffwait;
 
 /* tools */
 extern int H_MIG, B_CAST, W_VEC;
@@ -170,7 +171,8 @@ void diffgrantserver(jia_msg_t *rep) {
     jia_assert((rep->op == DIFFGRANT) && (rep->size == 0),
                "Incorrect returned message!");
 
-    diffwait--;
+    //diffwait--;
+    atomic_fetch_sub(&diffwait, 1);
 }
 
 /**
@@ -281,5 +283,5 @@ void getpgrantserver(jia_msg_t *rep) {
         log_info(3, "I have copy the page from remote home to %p", addr);
     }
 
-    getpwait = 0;
+    atomic_store(&getpwait, 0);
 }

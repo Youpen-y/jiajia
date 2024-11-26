@@ -89,8 +89,8 @@ static int outsend(jia_msg_t *msg) {
     ack_t ack = {-1, -1};
 
     if (msg->topid == msg->frompid) {
-        log_info(3, "msg<seqno:%d, op:%d, frompid:%d, topid:%d> is send to self",
-                msg->seqno, msg->op, msg->frompid, msg->topid);
+        log_info(3, "msg<seqno:%d, op:%s, frompid:%d, topid:%d> is send to self",
+                msg->seqno, op2name(msg->op), msg->frompid, msg->topid);
         return enqueue(&inqueue, msg);
     } else {
 
@@ -112,8 +112,8 @@ static int outsend(jia_msg_t *msg) {
                         (struct sockaddr *)&to_addr, sizeof(struct sockaddr));
                 if (ret == sizeof(jia_msg_t)) {
             log_info(
-                3, "msg <seqno:%d, op:%d, frompid:%d, topid:%d> is send to %s",
-                msg->seqno, msg->op, msg->frompid, msg->topid,
+                3, "msg <seqno:%d, op:%s, frompid:%d, topid:%d> is send to %s",
+                msg->seqno, op2name(msg->op), msg->frompid, msg->topid,
                 system_setting.hosts[msg->topid].ip)
         }
 
