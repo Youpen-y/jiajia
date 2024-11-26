@@ -123,7 +123,7 @@ void jia_assert(int cond, char *format, ...) {
     if (!cond) { // if condition is false then send JIAEXIT msg to all hosts
         // init assertmsg
         log_err("enter jia_assert!!!");
-    
+
         index = freemsg_lock(&msg_buffer);
         assert_msg = &msg_buffer.buffer[index].msg;
 
@@ -160,7 +160,7 @@ void jia_assert(int cond, char *format, ...) {
  */
 void jiaexitserver(jia_msg_t *req) {
     log_err("Assert error from host %d --- %s\n", req->frompid,
-                (char *)req->data);
+            (char *)req->data);
     fflush(stderr);
     fflush(stdout);
     free_system_resources();
@@ -632,12 +632,13 @@ unsigned long jia_current_time() {
      * to this routine.
      */
     clock_gettime(CLOCK_REALTIME, &clock);
-    if (!start_sec) {
-        start_sec = clock.tv_sec;
-        start_msec = (unsigned long)(clock.tv_nsec / 1000000);
-    }
-    return (1000 * (clock.tv_sec - start_sec) +
-            (clock.tv_nsec / 1000000 - start_msec));
+    // if (!start_sec) {
+    //     start_sec = clock.tv_sec;
+    //     start_msec = (unsigned long)(clock.tv_nsec / 1000000);
+    // }
+    // return (1000 * (clock.tv_sec - start_sec) +
+    //         (clock.tv_nsec / 1000000 - start_msec));
+    return (1000000000 * clock.tv_sec + clock.tv_nsec - 1732260388467830235);
 }
 
 /*-----------------------------------------------------------*/
@@ -651,11 +652,12 @@ float jia_clock() {
 
     struct timeval val;
     gettimeofday(&val, NULL); // get current system time and store it into val
-    if (!start_time_sec) { // if not set initial start time, set current time to
-                           // be start time
-        start_time_sec = val.tv_sec;
-        start_time_usec = val.tv_usec;
-    }
+    // if (!start_time_sec) { // if not set initial start time, set current time
+    // to
+    //                        // be start time
+    //     start_time_sec = val.tv_sec;
+    //     start_time_usec = val.tv_usec;
+    // }
 
     time = (float)((val.tv_sec * 1000000.0 + val.tv_usec * 1.0 -
                     start_time_sec * 1000000.0 - start_time_usec * 1.0) /

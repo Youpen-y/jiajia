@@ -54,7 +54,7 @@ void *client_thread(void *args) {
 
             /* step 3: manage error */
             if (success) {
-                log_info(3, "send msg success!");
+                log_info(4, "send msg success!");
                 success = false;
             } else {
                 log_err("send msg failed[msg: %lx]", (unsigned long)&msg);

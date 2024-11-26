@@ -150,7 +150,7 @@ void sendwtnts(int operation) {
     jia_msg_t *req;
     wtnt_t *wnptr; // write notice pointer
 
-    VERBOSE_LOG(3, "Enter sendwtnts!\n");
+    log_info(3, "Enter sendwtnts!");
 
     // req = newmsg();
     index = freemsg_lock(&msg_buffer);
@@ -158,7 +158,7 @@ void sendwtnts(int operation) {
     req->frompid = system_setting.jia_pid;
     req->topid = top.lockid % system_setting.hostc;
     req->size = 0;
-    req->scope = (operation == REL) ? locks[hidelock].myscope
+    req->scope = (operation == BARR) ? locks[hidelock].myscope
                                     : locks[top.lockid].myscope;
     appendmsg(req, ltos(top.lockid),
               Intbytes); // note here, after ltos transformation(8bytes),
@@ -167,6 +167,10 @@ void sendwtnts(int operation) {
     wnptr = top.wtntp;
     wnptr = appendstackwtnts(req, wnptr);
 
+    /**
+     * send wtnt(,Packing for delivery)
+     * in the end send msg in which op==REL to finish this wtnt msg stream
+     */
     while (wnptr != WNULL) {
         req->op = WTNT;
         // asendmsg(req);
@@ -180,7 +184,7 @@ void sendwtnts(int operation) {
     move_msg_to_outqueue(&msg_buffer, index, &outqueue);
     freemsg_unlock(&msg_buffer, index);
 
-    VERBOSE_LOG(3, "\nOut of sendwtnts!\n\n");
+    log_info(3, "Out of sendwtnts!");
 }
 
 /**

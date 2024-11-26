@@ -181,7 +181,7 @@ int freemsg_lock(msg_buffer_t *buffer)
 {
     int semvalue;
     sem_getvalue(&msg_buffer.count, &semvalue);
-    log_info(3, "pre freemsg_lock count value: %d", semvalue);
+    log_info(4, "pre freemsg_lock count value: %d", semvalue);
     if (sem_wait(&msg_buffer.count) != 0) {
         return -1;
     }
@@ -206,7 +206,7 @@ void freemsg_unlock(msg_buffer_t *buffer, int index)
 
     int semvalue;
     sem_getvalue(&msg_buffer.count, &semvalue);
-    log_info(3, "after freemsg_unlock count value: %d", semvalue);
+    log_info(4, "after freemsg_unlock count value: %d", semvalue);
 }
 
 int move_msg_to_outqueue(msg_buffer_t *buffer, int index, msg_queue_t *outqueue)

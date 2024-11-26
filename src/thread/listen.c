@@ -75,12 +75,12 @@ void *listen_thread(void *args) {
 
                 /* step 4: enqueue new msg into inqueue */
                 if (msg.seqno == comm_manager.rcv_seq[to_id]) {
-                comm_manager.rcv_seq[to_id]++;
-                log_info(3,
-                        "msg<seqno:%d, op:%d, frompid:%d, topid:%d> will "
-                        "be enqueued",
-                        msg.seqno, msg.op, msg.frompid, msg.topid);
-                enqueue(&inqueue, &msg);
+                    comm_manager.rcv_seq[to_id]++;
+                    log_info(4,
+                            "msg<seqno:%d, op:%d, frompid:%d, topid:%d> will "
+                            "be enqueued",
+                            msg.seqno, msg.op, msg.frompid, msg.topid);
+                    enqueue(&inqueue, &msg);
 
 #ifdef DOSTAT
                     if (statflag == 1) {

@@ -6,8 +6,8 @@
 #include <pthread.h>
 #include <stdio.h>
 
-static int verbose_log = 4;
-static int verbose_out = 4;
+static int verbose_log = 3;
+static int verbose_out = 3;
 extern FILE *logfile;
 static char *clientstr = "[Thread client]";
 static char *serverstr = "[Thread server]";
@@ -61,7 +61,7 @@ static char *mainstr = "[Thread  main ]";
         } else {                                                               \
             str = mainstr;                                                     \
         }                                                                      \
-        fprintf(logfile, "[INFO] %s (%s:%d:%s) " STR "\n", str, __FILE__,      \
+        fprintf(logfile, "[TIME: %lu] [INFO] %s (%s:%d:%s) " STR "\n", jia_current_time(), str, __FILE__,      \
                 __LINE__, __func__, ##__VA_ARGS__);                            \
     }
 

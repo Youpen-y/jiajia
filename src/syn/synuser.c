@@ -210,7 +210,7 @@ void jia_barrier() {
         jiastat.kernelflag = 0;
     }
 #endif
-    VERBOSE_LOG(3, "jia_barrier completed\n");
+    log_info(3, "jia_barrier completed\n");
 }
 
 

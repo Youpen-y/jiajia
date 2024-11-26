@@ -380,21 +380,21 @@ int enqueue(msg_queue_t *msg_queue, jia_msg_t *msg) {
     char *queue = (msg_queue == &outqueue) ? "outqueue" : "inqueue";
     int semvalue;
     sem_getvalue(&msg_queue->free_count, &semvalue);
-    log_info(3, "pre %s enqueue free_count value: %d", queue, semvalue);
+    log_info(4, "pre %s enqueue free_count value: %d", queue, semvalue);
     // wait for free slot
     if (sem_wait(&msg_queue->free_count) != 0) {
         log_err("sem_wait error");
         return -1;
     }
     sem_getvalue(&msg_queue->free_count, &semvalue);
-    log_info(3, "enter %s enqueue! free_count value: %d", queue, semvalue);
+    log_info(4, "enter %s enqueue! free_count value: %d", queue, semvalue);
 
     int slot_index;
     // lock tail and update tail pointer
     pthread_mutex_lock(&(msg_queue->tail_lock));
     slot_index = msg_queue->tail;
     msg_queue->tail = (msg_queue->tail + 1) % msg_queue->size;
-    log_info(3, "%s tail: %d", queue, msg_queue->tail);
+    log_info(4, "%s tail: %d", queue, msg_queue->tail);
     pthread_mutex_unlock(&(msg_queue->tail_lock));
 
     slot_t *slot = &(msg_queue->queue[slot_index]);
@@ -404,7 +404,7 @@ int enqueue(msg_queue_t *msg_queue, jia_msg_t *msg) {
     sem_post(&(msg_queue->busy_count));
 
     sem_getvalue(&msg_queue->busy_count, &semvalue);
-    log_info(3, "after %s enqueue busy_count value: %d", queue, semvalue);
+    log_info(4, "after %s enqueue busy_count value: %d", queue, semvalue);
     return 0;
 }
 
@@ -415,20 +415,20 @@ int dequeue(msg_queue_t *msg_queue, jia_msg_t *msg) {
     char *queue = (msg_queue == &outqueue) ? "outqueue" : "inqueue";
     int semvalue;
     sem_getvalue(&msg_queue->busy_count, &semvalue);
-    log_info(3, "pre %s dequeue busy_count value: %d", queue, semvalue);
+    log_info(4, "pre %s dequeue busy_count value: %d", queue, semvalue);
     // wait for busy slot
     if (sem_wait(&msg_queue->busy_count) != 0) {
         return -1;
     }
     sem_getvalue(&msg_queue->busy_count, &semvalue);
-    log_info(3, "enter %s dequeue! busy_count value: %d", queue, semvalue);
+    log_info(4, "enter %s dequeue! busy_count value: %d", queue, semvalue);
 
     int slot_index;
     // lock head and update head pointer
     pthread_mutex_lock(&(msg_queue->head_lock));
     slot_index = msg_queue->head;
     msg_queue->head = (msg_queue->head + 1) % msg_queue->size;
-    log_info(3, "%s head: %d", queue, msg_queue->head);
+    log_info(4, "%s head: %d", queue, msg_queue->head);
     pthread_mutex_unlock(&(msg_queue->head_lock));
 
     slot_t *slot = &(msg_queue->queue[slot_index]);
@@ -438,7 +438,7 @@ int dequeue(msg_queue_t *msg_queue, jia_msg_t *msg) {
     sem_post(&(msg_queue->free_count));
 
     sem_getvalue(&msg_queue->free_count, &semvalue);
-    log_info(3, "after %s dequeue free_count value: %d", queue, semvalue);
+    log_info(4, "after %s dequeue free_count value: %d", queue, semvalue);
     return 0;
 }
 

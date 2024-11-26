@@ -13,3 +13,5 @@ reports
 clean.sh
 lib.mk
 pi.mk
+jiajia*.log
+merge.log

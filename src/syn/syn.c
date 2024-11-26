@@ -132,7 +132,8 @@ void endinterval(int synop) {
 
     // step 1: send all cache diffs
     for (cachei = 0; cachei < Cachepages; cachei++) {
-        if (cache[cachei].wtnt == 1) { // when cached page wtnt == 1, save it
+        // cachepage's wtnt == 1 means RW permission
+        if (cache[cachei].wtnt == 1) {
             savepage(cachei);
         }
     }
