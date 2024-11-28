@@ -45,6 +45,7 @@
 #include "utils.h"
 #include "setting.h"
 #include "stat.h"
+#include <stdatomic.h>
 
 /* jiajia */
 // extern int jia_pid;
@@ -167,7 +168,7 @@ void endinterval(int synop) {
 
         } /*if*/
     }     /*for*/
-    while (diffwait)
+    while (atomic_load(&diffwait))
         ; // wait all diffs were handled
     log_info(3, "Out of endinterval!");
 }

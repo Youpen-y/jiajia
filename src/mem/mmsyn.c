@@ -482,6 +482,7 @@ void savediff(int cachei) {
     if ((diffmsg[hosti]->size + diffsize) > Maxmsgsize) {
         //diffwait++;
         atomic_fetch_add(&diffwait, 1);
+        log_info(4, "diffwait: %d", diffwait);
         // asendmsg(diffmsg[hosti]);
         move_msg_to_outqueue(&msg_buffer, index, &outqueue);
         diffmsg[hosti]->size = 0;
@@ -508,6 +509,7 @@ void senddiffs() {
             if (diffmsg[hosti]->size > 0) { // diff data size > 0
                 //diffwait++;
                 atomic_fetch_add(&diffwait, 1);
+                log_info(4, "diffwait: %d", diffwait);
                 move_msg_to_outqueue(&msg_buffer, index, &outqueue);
                 freemsg_unlock(&msg_buffer, index);
             }
@@ -516,6 +518,6 @@ void senddiffs() {
         }
     }
 
-    while (diffwait)
+    while (atomic_load(&diffwait))
         ; // diffwait is detected after senddiffs() called
 }

@@ -187,7 +187,7 @@ void jia_barrier() {
 
    jia_assert((stackptr == 0), "barrier can not be used in CS!");
 
-    log_info(3, "Enter jia barrier");
+    log_info(3, "Enter jia barrier: %d", jiastat.barrcnt);
     endinterval(BARR);
 
     if (H_MIG == ON) {
