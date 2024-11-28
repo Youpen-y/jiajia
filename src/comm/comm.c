@@ -427,7 +427,7 @@ int enqueue(msg_queue_t *msg_queue, jia_msg_t *msg) {
 
     // sem_post(&(msg_queue->busy_count));
     // sem_getvalue(&msg_queue->busy_count, &semvalue);
-
+    
     unsigned old_value = atomic_fetch_add(&(msg_queue->busy_count), 1);
     log_info(4, "after %s enqueue busy_count value: %d", queue, old_value);
     return 0;
@@ -495,9 +495,9 @@ void free_msg_queue(msg_queue_t *msg_queue) {
     }
 
     // destory slot mutex and condition variable
-    for (int i = 0; i < msg_queue->size; i++) {
-        pthread_mutex_destroy(&(msg_queue->queue[i].lock));
-    }
+    // for (int i = 0; i < msg_queue->size; i++) {
+    //     pthread_mutex_destroy(&(msg_queue->queue[i].lock));
+    // }
 
     // destory semaphores
     // sem_destroy(&(msg_queue->busy_count));

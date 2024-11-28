@@ -133,16 +133,17 @@ int init_msg_buffer(msg_buffer_t *msg_buffer, int size)
     for (int i = 0; i < size; i++) {
         msg_buffer->buffer[i].msg = (jia_msg_t) {0};
         msg_buffer->buffer[i].msg.op = ERRMSG;
-        msg_buffer->buffer[i].state = SLOT_FREE;
-        if(pthread_mutex_init(&(msg_buffer->buffer[i].lock), NULL)!= 0) {
-            perror("msg_buffer mutex/cond init");
-            for(int j = 0; j < i; j++) {
-                pthread_mutex_destroy(&(msg_buffer->buffer[j].lock));
-            }
-            sem_destroy(&(msg_buffer->count));
-            free(msg_buffer->buffer);
-            return -1;
-        }
+        //msg_buffer->buffer[i].state = SLOT_FREE;
+        atomic_init(&msg_buffer->buffer[i].state, SLOT_FREE);
+        // if(pthread_mutex_init(&(msg_buffer->buffer[i].lock), NULL)!= 0) {
+        //     perror("msg_buffer mutex/cond init");
+        //     for(int j = 0; j < i; j++) {
+        //         pthread_mutex_destroy(&(msg_buffer->buffer[j].lock));
+        //     }
+        //     sem_destroy(&(msg_buffer->count));
+        //     free(msg_buffer->buffer);
+        //     return -1;
+        // }
     }
 
     return 0;
@@ -152,31 +153,31 @@ void free_msg_buffer(msg_buffer_t *msg_buffer)
 {
     for (int i = 0; i < msg_buffer->size; i++) {
         slot_t *slot = &msg_buffer->buffer[i];
-        pthread_mutex_destroy(&slot->lock);
+        //pthread_mutex_destroy(&slot->lock);
     }
     sem_destroy(&msg_buffer->count);
     free(msg_buffer->buffer);
 }
 
-int copy_msg_to_buffer(msg_buffer_t *buffer, jia_msg_t *msg)
-{
-    if (sem_wait(&msg_buffer.count) != 0) {
-        return -1;
-    }
+// int copy_msg_to_buffer(msg_buffer_t *buffer, jia_msg_t *msg)
+// {
+//     if (sem_wait(&msg_buffer.count) != 0) {
+//         return -1;
+//     }
 
-    for (int i = 0; i < msg_buffer.size; i++) {
-        slot_t *slot = &msg_buffer.buffer[i];
-        if(!pthread_mutex_trylock(&slot->lock)){
-            slot->state = SLOT_BUSY;
-            memcpy((void *)&slot->msg, (void *)msg, sizeof(jia_msg_t));
-            slot->state = SLOT_FREE;
-            return i;
-        }
-    }
+//     for (int i = 0; i < msg_buffer.size; i++) {
+//         slot_t *slot = &msg_buffer.buffer[i];
+//         if(!pthread_mutex_trylock(&slot->lock)){
+//             slot->state = SLOT_BUSY;
+//             memcpy((void *)&slot->msg, (void *)msg, sizeof(jia_msg_t));
+//             slot->state = SLOT_FREE;
+//             return i;
+//         }
+//     }
 
-    sem_post(&msg_buffer.count);
-    return 0;
-}
+//     sem_post(&msg_buffer.count);
+//     return 0;
+// }
 
 int freemsg_lock(msg_buffer_t *buffer)
 {
@@ -188,11 +189,14 @@ int freemsg_lock(msg_buffer_t *buffer)
     }
 
     for (int i = 0; i < msg_buffer.size; i++) {
+        slot_state_t slot_state = SLOT_FREE;
         slot_t *slot = &msg_buffer.buffer[i];
-        if(!pthread_mutex_trylock(&slot->lock)){
-            slot->state = SLOT_BUSY;
+        if(atomic_compare_exchange_weak(&slot->state, &slot_state, SLOT_BUSY))
             return i;
-        }
+        // if(!pthread_mutex_trylock(&slot->lock)){
+        //     slot->state = SLOT_BUSY;
+        //     return i;
+        // }
     }
     return -1;
 }
@@ -200,8 +204,9 @@ int freemsg_lock(msg_buffer_t *buffer)
 void freemsg_unlock(msg_buffer_t *buffer, int index)
 {
     slot_t *slot = &msg_buffer.buffer[index];
-    slot->state = SLOT_FREE;
-    pthread_mutex_unlock(&slot->lock);
+    //slot->state = SLOT_FREE;
+    atomic_store(&slot->state, SLOT_FREE);
+    //pthread_mutex_unlock(&slot->lock);
     
     sem_post(&msg_buffer.count);
 

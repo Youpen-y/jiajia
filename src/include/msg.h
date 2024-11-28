@@ -113,8 +113,8 @@ typedef enum {
 
 typedef struct slot {
     jia_msg_t msg;
-    volatile slot_state_t state;
-    pthread_mutex_t lock;
+    _Atomic volatile slot_state_t state;
+    //pthread_mutex_t lock;
 } slot_t;
 typedef struct {
     slot_t *buffer;

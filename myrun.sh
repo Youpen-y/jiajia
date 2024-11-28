@@ -1,12 +1,12 @@
 #!/bin/bash
 ARCH=linux
-MODE=IPoIB_LOCKFREE
-TIMEOUT=60
+MODE=IPoIB_LOCKFREE1
+TIMEOUT=20
 
-CLEAN=true
+CLEAN=false
 ALLTEST=true
 RUN=true
-tests=("lu" "sor")
+tests=("lu")
 
 run_app() {
     # 进入文件夹并在reports下创建对应的log文件

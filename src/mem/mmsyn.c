@@ -273,6 +273,10 @@ void sigsegv_handler(int signo, siginfo_t *sip, ucontext_t *uap)
     writefault = sip->si_code & 2;
 #endif
 
+    if((unsigned long)faultaddr > 0x700000000000){
+        printf("1");
+    }
+
     log_info(3, "Enter sigsegv ");
     log_info(3,
              "Shared memory range from %p to %p!, faultaddr=%p, "
