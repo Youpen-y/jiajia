@@ -1,12 +1,12 @@
 #!/bin/bash
 ARCH=linux
-MODE=ETH
+MODE=IPoIB_LOCKFREE
 TIMEOUT=60
 
 CLEAN=true
 ALLTEST=true
-RUN=false
-tests=("lu" "ep")
+RUN=true
+tests=("lu" "sor")
 
 run_app() {
     # 进入文件夹并在reports下创建对应的log文件
@@ -18,7 +18,17 @@ run_app() {
 
     # 运行程序
     cd ./apps/"$1"/$ARCH || exit
-    ./"$1" > ../../../reports/$ARCH/$MODE/"$1" &
+    # ./"$1" > ../../../reports/$ARCH/$MODE/"$1" &
+    # python3 "$1" ../../../reports/$ARCH/$MODE/"$1" &
+    output=$(python3 ../../../time.py "$1" "$TIMEOUT")
+    time=$(echo "$output" | tail -n 1)
+    if [ "$(echo "$time < $TIMEOUT" | bc)" -eq 1 ]; then
+        echo "$output" > ../../../reports/$ARCH/$MODE/"$1"
+        echo "Process $1 completed with time: $time"
+    else
+        echo "Terminating process $1 with time: $time"
+    fi
+    # echo "genaeral time: $time" > ../../../reports/$ARCH/$MODE/"$1"
     cd ../../..
 }
 
@@ -94,8 +104,8 @@ if $RUN; then
         for dir in apps/*/; do
             # shellcheck disable=SC2046
             run_app $(basename "${dir%/}")
-            pid=$!
-            listen "$pid"
+            # pid=$!
+            # listen "$pid"
 
             # 等待5秒后继续运行下一个程序
             sleep 5
@@ -103,8 +113,8 @@ if $RUN; then
     else
         for test in "${tests[@]}"; do
             run_app "$test"
-            pid=$!
-            listen "$pid"
+            # pid=$!
+            # listen "$pid"
 
             # 等待5秒后继续运行下一个程序
             sleep 1
