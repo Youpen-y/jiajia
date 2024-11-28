@@ -41,6 +41,7 @@
 
 #include "comm.h" // jia_msg_t
 #include "setting.h"
+#include <signal.h>
 
 
 #define RESERVE_TWIN_SPACE
