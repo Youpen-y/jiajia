@@ -98,7 +98,7 @@ static int outsend(jia_msg_t *msg) {
         if (statflag == 1) {
             jiastat.msgsndcnt++;
             jiastat.msgsndbytes +=
-                (outqueue.queue[outqueue.head].msg.size + Msgheadsize);
+                (outqueue.queue[outqueue.head & (outqueue.size-1)].msg.size + Msgheadsize);
         }
 #endif
 

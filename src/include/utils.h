@@ -6,8 +6,8 @@
 #include <pthread.h>
 #include <stdio.h>
 
-static int verbose_log = 4;
-static int verbose_out = 4;
+static int verbose_log = 3;
+static int verbose_out = 3;
 extern FILE *logfile;
 static char *clientstr = "[Thread client]";
 static char *serverstr = "[Thread server]";

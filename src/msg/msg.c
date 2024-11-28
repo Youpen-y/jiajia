@@ -37,6 +37,7 @@
 
 #include "tools.h"
 #include <pthread.h>
+#include <stdatomic.h>
 #include <string.h>
 #ifndef NULL_LIB
 #include "comm.h"
