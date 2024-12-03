@@ -108,7 +108,7 @@ if $RUN; then
             # listen "$pid"
 
             # 等待5秒后继续运行下一个程序
-            sleep 5
+            sleep 1
         done
     else
         for test in "${tests[@]}"; do

@@ -326,18 +326,18 @@ int init_msg_queue(msg_queue_t *msg_queue, int size) {
     }
 
     msg_queue->size = size;
-    // msg_queue->head = 0;
-    // msg_queue->tail = 0;
-    atomic_init(&msg_queue->head, 0);
-    atomic_init(&msg_queue->tail, 0);
+    msg_queue->head = 0;
+    msg_queue->tail = 0;
+    // atomic_init(&msg_queue->enqueue_lock, 0);
+    // atomic_init(&msg_queue->dequeue_lock, 0);
 
     // initialize head mutex and tail mutex
-    // if (pthread_mutex_init(&(msg_queue->head_lock), NULL) != 0 ||
-    //     pthread_mutex_init(&(msg_queue->tail_lock), NULL) != 0) {
-    //     perror("msg_queue mutex init");
-    //     free(msg_queue->queue);
-    //     return -1;
-    // }
+    if (pthread_mutex_init(&(msg_queue->head_lock), NULL) != 0 ||
+        pthread_mutex_init(&(msg_queue->tail_lock), NULL) != 0) {
+        perror("msg_queue mutex init");
+        free(msg_queue->queue);
+        return -1;
+    }
 
     // initialize semaphores
     // if (sem_init(&(msg_queue->busy_count), 0, 0) != 0 ||
@@ -373,6 +373,7 @@ int init_msg_queue(msg_queue_t *msg_queue, int size) {
 }
 
 int enqueue(msg_queue_t *msg_queue, jia_msg_t *msg) {
+    unsigned zero = 0;
     unsigned current_value;
     unsigned slot_index;
     if (msg_queue == NULL || msg == NULL) {
@@ -391,7 +392,6 @@ int enqueue(msg_queue_t *msg_queue, jia_msg_t *msg) {
     // }
     // sem_getvalue(&msg_queue->free_count, &semvalue);
     // log_info(4, "enter %s enqueue! free_count value: %d", queue, semvalue);
-
     log_info(4, "pre %s enqueue free_count value: %d", queue,
              msg_queue->free_count);
     /**
@@ -412,23 +412,25 @@ int enqueue(msg_queue_t *msg_queue, jia_msg_t *msg) {
              current_value - 1);
 
     // lock tail and update tail pointer
-    // pthread_mutex_lock(&(msg_queue->tail_lock));
-    // slot_index = msg_queue->tail;
-    // msg_queue->tail = (msg_queue->tail + 1) % msg_queue->size;
-    // log_info(4, "%s tail: %d", queue, msg_queue->tail);
-    // pthread_mutex_unlock(&(msg_queue->tail_lock));
-
-    slot_index = atomic_fetch_add(&(msg_queue->tail), 1);
-    log_info(4, "%s current tail: %u\nthread write index: %u", queue,
+    pthread_mutex_lock(&(msg_queue->tail_lock));
+    //while (!atomic_compare_exchange_strong(&msg_queue->enqueue_lock, &zero, 1));
+    //log_info(4, "pre enqueue_lock value: %d", msg_queue->enqueue_lock);
+    slot_index = msg_queue->tail;
+    msg_queue->tail = (msg_queue->tail + 1) & (msg_queue->size - 1);
+    log_info(4, "%s current tail: %u thread write index: %u", queue,
              msg_queue->tail, slot_index);
-    slot_t *slot = &(msg_queue->queue[slot_index & (msg_queue->size-1)]);
+    slot_t *slot = &(msg_queue->queue[slot_index]);
     memcpy(&(slot->msg), msg, sizeof(jia_msg_t)); // copy msg to slot
     slot->state = SLOT_BUSY;                      // set slot state to busy
 
     // sem_post(&(msg_queue->busy_count));
     // sem_getvalue(&msg_queue->busy_count, &semvalue);
-    
-    unsigned old_value = atomic_fetch_add(&(msg_queue->busy_count), 1);
+
+    unsigned old_value = msg_queue->busy_count;
+    msg_queue->busy_count++;
+    //atomic_fetch_sub(&msg_queue->enqueue_lock, 1);
+    //log_info(4, "after enqueue_lock value: %d", msg_queue->enqueue_lock);
+    pthread_mutex_unlock(&(msg_queue->tail_lock));
     log_info(4, "after %s enqueue busy_count value: %d", queue, old_value);
     return 0;
 }
@@ -469,22 +471,21 @@ int dequeue(msg_queue_t *msg_queue, jia_msg_t *msg) {
     log_info(4, "enter %s dequeue! busy_count value: %d", queue,
              current_value - 1);
     // lock head and update head pointer
-    // pthread_mutex_lock(&(msg_queue->head_lock));
-    // slot_index = msg_queue->head;
-    // msg_queue->head = (msg_queue->head + 1) % msg_queue->size;
-    // log_info(4, "%s head: %d", queue, msg_queue->head);
-    // pthread_mutex_unlock(&(msg_queue->head_lock));
-    slot_index = atomic_fetch_add(&(msg_queue->head), 1);
-    log_info(4, "%s current head: %u\nthread write index: %u", queue,
+    pthread_mutex_lock(&(msg_queue->head_lock));
+    slot_index = msg_queue->head;
+    msg_queue->head = (msg_queue->head + 1) & (msg_queue->size - 1);
+    log_info(4, "%s current head: %u thread write index: %u", queue,
              msg_queue->head, slot_index);
-    slot_t *slot = &(msg_queue->queue[slot_index & (msg_queue->size-1)]);
+    slot_t *slot = &(msg_queue->queue[slot_index]);
     memcpy(msg, &(slot->msg), sizeof(jia_msg_t)); // copy msg from slot
     slot->state = SLOT_FREE;                      // set slot state to free
 
     // sem_post(&(msg_queue->free_count));
     // sem_getvalue(&msg_queue->free_count, &semvalue);
 
-    unsigned old_value = atomic_fetch_add(&(msg_queue->free_count), 1);
+    unsigned old_value = msg_queue->free_count;
+    msg_queue->free_count++;
+    pthread_mutex_unlock(&(msg_queue->head_lock));
     log_info(4, "after %s dequeue free_count value: %d", queue, old_value + 1);
     return 0;
 }
@@ -504,8 +505,8 @@ void free_msg_queue(msg_queue_t *msg_queue) {
     // sem_destroy(&(msg_queue->free_count));
 
     // destory head mutex and tail mutex
-    // pthread_mutex_destroy(&(msg_queue->head_lock));
-    // pthread_mutex_destroy(&(msg_queue->tail_lock));
+    pthread_mutex_destroy(&(msg_queue->head_lock));
+    pthread_mutex_destroy(&(msg_queue->tail_lock));
 
     free(msg_queue->queue);
 }

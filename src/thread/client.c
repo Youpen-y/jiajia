@@ -98,7 +98,7 @@ static int outsend(jia_msg_t *msg) {
         if (statflag == 1) {
             jiastat.msgsndcnt++;
             jiastat.msgsndbytes +=
-                (outqueue.queue[outqueue.head & (outqueue.size-1)].msg.size + Msgheadsize);
+                (outqueue.queue[outqueue.head].msg.size + Msgheadsize);
         }
 #endif
 
@@ -117,7 +117,11 @@ static int outsend(jia_msg_t *msg) {
                 system_setting.hosts[msg->topid].ip)
         }
 
-        int nfds = epoll_wait(epollfd, &event, 1, -1);
+        int nfds = epoll_wait(epollfd, &event, 1, TIMEOUT);
+        if (nfds <= 0){
+            log_info(3, "TIMEOUT! try resend");
+            return -1;
+        }
 
         if (event.data.fd == comm_manager.ack_fds && event.events & EPOLLIN) {
             ret = recvfrom(comm_manager.ack_fds, &ack, sizeof(ack_t), 0, NULL,
@@ -128,7 +132,7 @@ static int outsend(jia_msg_t *msg) {
                 return 0;
             }
             if (ret == -1) {
-                log_err("TIMEOUT! try resend");
+                log_err("ack error! try resend");
                 return -1;
             }
             // this cond may not happen

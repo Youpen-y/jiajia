@@ -339,7 +339,8 @@ void jia_init(int argc, char **argv) {
               &rl); /* set maximum size of process's data segment */
 
     redirect_slave_io(argc, argv); /*redirect slave's output*/
-
+    setbuf(logfile, NULL);
+    
     initmem();
     initsyn();
     initcomm();
