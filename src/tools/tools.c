@@ -638,7 +638,7 @@ unsigned long jia_current_time() {
     // }
     // return (1000 * (clock.tv_sec - start_sec) +
     //         (clock.tv_nsec / 1000000 - start_msec));
-    return (1000000000 * clock.tv_sec + clock.tv_nsec - 1732260388467830235);
+    return (1000000000 * clock.tv_sec + clock.tv_nsec);
 }
 
 /*-----------------------------------------------------------*/
