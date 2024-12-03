@@ -42,9 +42,9 @@ static char *mainstr = "[Thread  main ]";
                 "[\033[31mERROR\033[0m] %s (%s:%d:%s: errno: %s) " STR "\n",   \
                 str, __FILE__, __LINE__, __func__, show_errno(),               \
                 ##__VA_ARGS__);                                                \
-        } while (0)
+    } while (0)
 
-        // fprintf(logfile,                                                       \
+// fprintf(logfile,                                                       \
         //         "[ERROR] %s (%s:%d:%s: errno: %s) " STR "\n",   \
         //         str, __FILE__, __LINE__, __func__, show_errno(),               \
         //         ##__VA_ARGS__);                                                \
@@ -61,8 +61,9 @@ static char *mainstr = "[Thread  main ]";
         } else {                                                               \
             str = mainstr;                                                     \
         }                                                                      \
-        fprintf(logfile, "[TIME: %lu] [INFO] %s (%s:%d:%s) " STR "\n", jia_current_time(), str, __FILE__,      \
-                __LINE__, __func__, ##__VA_ARGS__);                            \
+        fprintf(logfile, "[TIME: %lu] [INFO] %s (%s:%d:%s) " STR "\n",         \
+                jia_current_time(), str, __FILE__, __LINE__, __func__,         \
+                ##__VA_ARGS__);                                                \
     }
 
 #define log_out(level, STR, ...)                                               \
@@ -84,5 +85,5 @@ static char *mainstr = "[Thread  main ]";
  * @return int
  */
 int open_logfile(char *filename);
-char* op2name(int op);
+char *op2name(int op);
 #endif

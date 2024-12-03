@@ -295,7 +295,7 @@ void barrserver(jia_msg_t *req) {
     lock = (int)stol(req->data);
 
     jia_assert((lock % system_setting.hostc == system_setting.jia_pid), "Incorrect home of lock!");
-    jia_assert((lock == hidelock), "This should not have happened! 8");
+    jia_assert((lock == hidelock), "This should not have happened! 8"); // barrier is hidelock
 
     recordwtnts(req); // record write notices in msg barr's data
 
@@ -322,6 +322,7 @@ void barrserver(jia_msg_t *req) {
 void barrgrantserver(jia_msg_t *req) {
     int lock;
 
+    log_info(3, "Enter barrgrantserver");
     jia_assert((req->op == BARRGRANT) && (req->topid == system_setting.jia_pid),
            "Incorrect BARRGRANT Message!");
 
@@ -338,6 +339,7 @@ void barrgrantserver(jia_msg_t *req) {
     //barrwait = 0;
     atomic_store(&barrwait, 0);
     noclearlocks = 0;
+    log_info(3, "Out of barrgrantserver");
 }
 
 

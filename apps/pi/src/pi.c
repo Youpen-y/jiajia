@@ -40,9 +40,6 @@ int main(int argc,char *argv[])
     }
     mypi = h * sum;
     
-    if(system_setting.jia_pid == 0){
-      sleep(3);
-    }
     jia_lock(1);
     *pa= *pa+mypi;
     jia_unlock(1);
@@ -50,9 +47,9 @@ int main(int argc,char *argv[])
     endt = jia_clock();
 
     if (jiapid==0) {
-       printf("pi is approximately %.16f, Error is %.16f\n",
-       *pa, fabs(*pa - PI25DT));
-       printf("Elapsed time = %f\n", endt-startt);
+      printf("pi is approximately %.16f, Error is %.16f\n",
+      *pa, fabs(*pa - PI25DT));
+      printf("Elapsed time = %f\n", endt-startt);
     }
 
     jia_exit();

@@ -279,10 +279,10 @@ void sigsegv_handler(int signo, siginfo_t *sip, ucontext_t *uap)
 
     log_info(3, "Enter sigsegv ");
     log_info(3,
-             "Shared memory range from %p to %p!, faultaddr=%p, "
-             "writefault=%d\n",
+             "Shared memory range from %p to %p!, faultaddr=%p(%d), "
+             "writefault=%d",
              (void *)system_setting.global_start_addr,
-             (void *)(system_setting.global_start_addr + globaladdr), faultaddr,
+             (void *)(system_setting.global_start_addr + globaladdr), faultaddr, homehost(faultaddr),
              writefault);
 
     log_info(3,
@@ -329,6 +329,7 @@ void sigsegv_handler(int signo, siginfo_t *sip, ucontext_t *uap)
          * writefault later. first writable permission is for getpgrantserver's
          * copy(to faultaddr)
          */
+
         if (cachei < Cachepages) {
             memprotect((caddr_t)faultaddr, Pagesize, PROT_READ | PROT_WRITE);
             if (!((writefault) && (cache[cachei].state == RO))) {
@@ -491,9 +492,8 @@ void savediff(int cachei) {
         move_msg_to_outqueue(&msg_buffer, index, &outqueue);
         diffmsg[hosti]->size = 0;
         appendmsg(diffmsg[hosti], diff, diffsize);
-        // while (diffwait)
-        //     ;
-        // TODO: wait condition variable
+        while (diffwait)
+            ;
     } else {
         appendmsg(diffmsg[hosti], diff, diffsize);
     }

@@ -131,7 +131,7 @@ void endinterval(int synop) {
     register int hpages;
     log_info(3, "Enter endinterval!");
 
-    // step 1: send all cache diffs
+    /*/ step 1: save all cache diff */
     for (cachei = 0; cachei < Cachepages; cachei++) {
         // cachepage's wtnt == 1 means RW permission
         if (cache[cachei].wtnt == 1) {

@@ -78,7 +78,6 @@ void acquire(int lock) {
     jia_msg_t *req;
     int index;
 
-    // req = newmsg();
     index = freemsg_lock(&msg_buffer);
     req = &msg_buffer.buffer[index].msg;
     req->op = ACQ;
@@ -87,9 +86,6 @@ void acquire(int lock) {
     req->scope = locks[lock].myscope;
     req->size = 0;
     appendmsg(req, ltos(lock), Intbytes);
-
-    // asendmsg(req); // send the ACQ msg the lock owner
-    // freemsg(req);
 
     move_msg_to_outqueue(&msg_buffer, index, &outqueue);
     freemsg_unlock(&msg_buffer, index);

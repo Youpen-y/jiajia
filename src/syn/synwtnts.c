@@ -231,10 +231,12 @@ wtnt_t *appendlockwtnts(jia_msg_t *msg, wtnt_t *ptr, int acqscope) {
 
     full = 0;
     wnptr = ptr;
+
+    /* wnptr is not NULL and a msg is not full */
     while ((wnptr != WNULL) && (full == 0)) {
         if ((msg->size + (wnptr->wtntc * (sizeof(unsigned char *)))) <
             Maxmsgsize) {
-            for (wtnti = 0; wtnti < wnptr->wtntc; wtnti++)
+            for (wtnti = 0; wtnti < wnptr->wtntc; wtnti++) 
                 if ((wnptr->from[wtnti] > acqscope) &&
                     // if homehost(wnptr->wtnts[wtnti]) == msg->topid), not
                     // send(remote host is the owner of this copy)

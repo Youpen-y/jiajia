@@ -37,7 +37,7 @@ void *server_thread(void *args)
  * @note msg_handle called by server_thread
  */
 static void msg_handle(jia_msg_t *msg) {
-    log_info(3, "In servermsg!\n");
+    log_info(3, "In servermsg!");
 
     switch (msg->op) {
     case DIFF:
