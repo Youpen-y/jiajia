@@ -10,7 +10,7 @@ FC = gfortran	# gfortran is more common
 # define dirs
 SRCDIR	= ../../src
 INCLUDEDIR = $(SRCDIR)/include
-CFLAGS	+= -I./${INCLUDEDIR} $(ARCH_FLAGS) -DDOSTAT -g
+CFLAGS	+= -I./${INCLUDEDIR} $(ARCH_FLAGS) -DDOSTAT -DDEBUG -g -fdebug-prefix-map=${PWD}=.
 
 # define files
 SRCS 	:= $(wildcard $(SRCDIR)/*/*.c)

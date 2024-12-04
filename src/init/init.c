@@ -306,7 +306,9 @@ void redirect_slave_io(int argc, char **argv) {
         sprintf(outfile, "%s.log\0", argv[0]);
 #endif                                 /* NFS */
         freopen(outfile, "w", stdout); // redirect stdout to file outfile
+#ifdef DEBUG
         setbuf(stdout, NULL);
+#endif
 
 #ifdef NFS
         sprintf(outfile, "%s-%d.err\0", argv[0], system_setting.jia_pid);
@@ -314,7 +316,9 @@ void redirect_slave_io(int argc, char **argv) {
         sprintf(outfile, "%s.err\0", argv[0]);
 #endif                                 /* NFS */
         freopen(outfile, "w", stderr); // redirect stderr to file outfile
+#ifdef DEBUG
         setbuf(stderr, NULL);
+#endif
     }
 }
 
@@ -355,7 +359,10 @@ void jia_init(int argc, char **argv) {
               &rl); /* set maximum size of process's data segment */
 
     redirect_slave_io(argc, argv); /*redirect slave's output*/
+
+#ifdef DEBUG
     setbuf(logfile, NULL);
+#endif
 
     initmem();
     initsyn();
