@@ -7,6 +7,7 @@ boot.ps1
 apps/.jiahosts
 apps/*/*/*
 !apps/*/src/*
+!apps/*/*/*files
 !**/Makefile
 rebuild.sh
 reports

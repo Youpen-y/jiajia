@@ -35,14 +35,15 @@
  * =================================================================== *
  **********************************************************************/
 
+#include "jia.h"
 #include "tools.h"
 #ifndef NULL_LIB
 #include "global.h"
 #include "init.h"
 #include "mem.h"
-#include "utils.h"
 #include "setting.h"
 #include "stat.h"
+#include "utils.h"
 #include <libgen.h>
 
 extern void initmem();
@@ -72,21 +73,20 @@ void clearstat();
 extern char errstr[Linesize];
 extern long start_port;
 
-
-sigset_t startup_mask;      /* used by Shi. */
+sigset_t startup_mask; /* used by Shi. */
 int jia_lock_index;
-
 
 void createdir(int argc, char **argv) {
     char cmd[Linesize];
 
     for (int i = 1; i < system_setting.hostc; i++) {
-        sprintf(cmd, "ssh %s@%s \"[ ! -d 'jianode%d/%s' ] && mkdir -p 'jianode%d/%s'\"",
-                system_setting.hosts[i].username, system_setting.hosts[i].ip, i, basename(argv[0]), i, argv[0]);
+        sprintf(cmd,
+                "ssh %s@%s \"[ ! -d 'jianode/%s' ] && mkdir -p 'jianode/%s'\"",
+                system_setting.hosts[i].username, system_setting.hosts[i].ip,
+                basename(argv[0]), argv[0]);
         system(cmd);
     }
 }
-
 
 /**
  * @brief copyfiles -- copy .jiahosts and program(i.e. argv[0]) to slaves
@@ -103,10 +103,13 @@ void copyfiles(int argc, char **argv) {
 
     // copy necessary files to slaves
     for (i = 1; i < system_setting.hostc; i++) {
-        VERBOSE_LOG(3, "Copy files to %s@%s.\n", system_setting.hosts[i].username,
+        VERBOSE_LOG(3, "Copy files to %s@%s.\n",
+                    system_setting.hosts[i].username,
                     system_setting.hosts[i].ip);
-        
-        sprintf(cmd, "scp .jiahosts system.conf %s %s@%s:~/", argv[0], system_setting.hosts[i].username, system_setting.hosts[i].ip);
+
+        sprintf(cmd, "scp .jiahosts system.conf %s %s@%s:~/jianode/%s",
+                basename(argv[0]), system_setting.hosts[i].username,
+                system_setting.hosts[i].ip, basename(argv[0]));
         ret = system(cmd);
         local_assert(ret == 0, "Copy system files failed");
     }
@@ -122,12 +125,13 @@ void copyfiles(int argc, char **argv) {
  */
 int startprocs(int argc, char **argv) {
     struct servent *sp;
+    int hosti;
+    char cmd[Linesize], *hostname;
+    char shell[Linesize];
 
 #ifdef NFS
     char *pwd;
 #endif /* NFS*/
-    int hosti;
-    char cmd[Linesize], *hostname;
 
     VERBOSE_LOG(3, "Start to create processes on slaves!\n\n");
 
@@ -146,29 +150,47 @@ int startprocs(int argc, char **argv) {
     // cmd on every host
     for (hosti = 1; hosti < system_setting.hostc; hosti++) {
 
-        /* ssh -l username ip (argv) -P 1234 & */
         hostname = system_setting.hosts[hosti].ip;
+
 #ifdef NFS
         sprintf(cmd, "cd %s; %s", pwd, pwd);
+        sprintf(cmd, "%s%s", cmd, hostname);
 #else
+        /* ssh username@ip (argv) -P 1234 & */
         cmd[0] = '\0';
         sprintf(cmd, "ssh %s@", system_setting.hosts[hosti].username);
-#endif /* NFS */
+        hostname = system_setting.hosts[hosti].ip;
         sprintf(cmd, "%s%s", cmd, hostname);
+#endif /* NFS */
 
-        char* base;
-        for (int i = 0; i < argc; i++){
-            base = basename(argv[i]);
-            sprintf(cmd, "%s '~/%s ", cmd, base);
+        /**
+         * step 1: give program basename from argv[0]
+         * step 2: use other argvs for remote host
+         * step 3: use -P to ensure startport for commManager
+         */
+        char *base = basename(argv[0]);
+        // sprintf(shell, "cd ./jianode/%s &&", base);
+        // sprintf(shell, "%s ./%s", shell, base);
+        sprintf(shell,"~/jianode/%s/%s", base, base);
+        for (int i = 1; i < argc; i++) {
+            sprintf(cmd, "%s %s", cmd, argv[i]);
         }
+        sprintf(shell, "%s -P %ld &", shell, start_port);
 
-        strcat(cmd, "-P");
-        sprintf(cmd, "%s %ld'", cmd, start_port);
-        strcat(cmd, " &");
+        // strcat cmd && shell to execute
+        sprintf(cmd, "%s '%s'", cmd, shell);
         VERBOSE_LOG(3, "Starting CMD %s on host %s\n", cmd, hostname);
+
+        // bash cmd
         system(cmd);
+        local_assert((system_setting.hosts[hosti].riofd != -1),
+                     "Fail to start process on %s!",
+                     system_setting.hosts[hosti].username);
+    }
+
 #else /*LINUX*/
     for (hosti = 1; hosti < system_setting.hostc; hosti++) {
+
 #ifdef NFS
         sprintf(cmd, "cd %s; %s", pwd, pwd);
 #else  /* NFS */
@@ -176,33 +198,25 @@ int startprocs(int argc, char **argv) {
         strcat(cmd, "~");
         strcat(cmd, system_setting.hosts[hosti].username);
 #endif /* NFS */
-        strcat(cmd, "/");
-        for (i = 0; i < argc; i++) {
-            strcat(cmd, argv[i]);
-            strcat(cmd, " ");
-        }
-        strcat(cmd, "-P");
-        sprintf(cmd, "%s%d ", cmd, start_port);
-
-        VERBOSE_LOG(3,"Starting CMD %s on host %s\n", cmd, system_setting.hosts[hosti].ip);
-        sp = getservbyname("exec", "tcp");
-        local_assert((sp != NULL), "exec/tcp: unknown service!");
-        hostname = system_setting.hosts[hosti].username;
 
 #ifdef NFS
-        system_setting.hosts[hosti].riofd = rexec(&hostname, sp->s_port, NULL, NULL, cmd,
-                                   &(system_setting.hosts[hosti].rerrfd));
+        system_setting.hosts[hosti].riofd =
+            rexec(&hostname, sp->s_port, NULL, NULL, cmd,
+                  &(system_setting.hosts[hosti].rerrfd));
 #else  /* NFS */
-        system_setting.hosts[hosti].riofd = rexec(
-            &hostname, sp->s_port, system_setting.hosts[hosti].username, hosts[hosti].password, cmd,
-            &(system_setting.hosts[hosti].rerrfd)); // TODO rexec is obsoleted by rcmd (reason:
-                                     // rexec sends the unencrypted password
-                                     // across the network)
+        system_setting.hosts[hosti].riofd =
+            rexec(&hostname, sp->s_port, system_setting.hosts[hosti].username,
+                  hosts[hosti].password, cmd,
+                  &(system_setting.startprocs(argc, argv);hosts[hosti]
+                        .rerrfd)); // TODO rexec is obsoleted by rcmd (reason:
+                                   // rexec sends the unencrypted password
+                                   // across the network)
 #endif /* NFS */
-#endif /* LINUX */
-        local_assert((system_setting.hosts[hosti].riofd != -1), "Fail to start process on %s!",
-                system_setting.hosts[hosti].username);
+        local_assert((system_setting.hosts[hosti].riofd != -1),
+                     "Fail to start process on %s!",
+                     system_setting.hosts[hosti].username);
     }
+#endif /* LINUX */
 
     return 0;
 }
@@ -221,10 +235,10 @@ void jiacreat(int argc, char **argv) {
 
     if (system_setting.jia_pid == 0) { // master does
         VERBOSE_LOG(3, "*********Total of %d hosts found!**********\n\n",
-                system_setting.hostc);
+                    system_setting.hostc);
 #ifndef NFS
         // TODO: Add a step that mkdir special work directory on slaves
-
+        createdir(argc, argv);
         // step 1: copy files
         copyfiles(argc, argv);
 #endif /* NFS */
@@ -235,7 +249,7 @@ void jiacreat(int argc, char **argv) {
     } else { // slave does
         int c;
         optind = 1;
-        int i=0;
+        int i = 0;
         while ((c = getopt(argc, argv, "P:")) != -1) {
             switch (c) {
             case 'P': {
@@ -254,10 +268,11 @@ void barrier0() {
 
     if (system_setting.jia_pid == 0) {
         for (hosti = 1; hosti < system_setting.hostc; hosti++) {
-            VERBOSE_LOG(3,"Poll host %d: stream %4d----", hosti, system_setting.hosts[hosti].riofd);
+            VERBOSE_LOG(3, "Poll host %d: stream %4d----", hosti,
+                        system_setting.hosts[hosti].riofd);
             read(system_setting.hosts[hosti].riofd, buf, 3);
             buf[3] = '\0';
-            VERBOSE_LOG(3,"%s Host %4d arrives!\n", buf, hosti);
+            VERBOSE_LOG(3, "%s Host %4d arrives!\n", buf, hosti);
 #ifdef NFS
             write(system_setting.hosts[hosti].riofd, "ok!", 3);
 #endif
@@ -299,7 +314,7 @@ void redirect_slave_io(int argc, char **argv) {
         sprintf(outfile, "%s.err\0", argv[0]);
 #endif                                 /* NFS */
         freopen(outfile, "w", stderr); // redirect stderr to file outfile
-        setbuf(stderr, NULL);          
+        setbuf(stderr, NULL);
     }
 }
 
@@ -310,8 +325,9 @@ void redirect_slave_io(int argc, char **argv) {
  * @param argv same as main
  */
 void jia_init(int argc, char **argv) {
+
     init_setting(&system_setting);
-    open_logfile("jiajia.log");
+    open_logfile("jiajia.log", argc, argv);
     if (system_setting.jia_pid == 0) {
         print_setting(&system_setting);
     }
@@ -320,8 +336,8 @@ void jia_init(int argc, char **argv) {
     struct rlimit rl;
 
     VERBOSE_LOG(3, "\n***JIAJIA---Software DSM***");
-    VERBOSE_LOG(3, "\n***Cachepages = %4d  Pagesize=%d***\n\n",
-                Cachepages, Pagesize);
+    VERBOSE_LOG(3, "\n***Cachepages = %4d  Pagesize=%d***\n\n", Cachepages,
+                Pagesize);
     disable_sigio();
     jia_lock_index = 0;
     jiacreat(argc, argv);
@@ -340,7 +356,7 @@ void jia_init(int argc, char **argv) {
 
     redirect_slave_io(argc, argv); /*redirect slave's output*/
     setbuf(logfile, NULL);
-    
+
     initmem();
     initsyn();
     initcomm();
@@ -364,7 +380,7 @@ void jia_init(int argc, char **argv) {
     time1 = jia_clock();
 
     if (system_setting.jia_pid == 0)
-        VERBOSE_LOG(3,"End of Initialization\n");
+        VERBOSE_LOG(3, "End of Initialization\n");
 
     if (system_setting.jia_pid != 0)
         sleep(1);
@@ -378,7 +394,7 @@ system_setting.jia_pid = 0;
 system_setting.hostc = 1;
 
 void jia_init(int argc, char **argv) {
-    VERBOSE_LOG(3,"This is JIAJIA-NULL\n");
+    VERBOSE_LOG(3, "This is JIAJIA-NULL\n");
 }
 #endif /* NULL_LIB */
 
@@ -400,4 +416,3 @@ unsigned int jia_stopstat() {
     t_stop = get_usecs();
     return t_stop;
 }
-

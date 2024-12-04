@@ -1,14 +1,22 @@
 #include "utils.h"
 #include "init.h"
 #include "msg.h"
+#include "setting.h"
+#include <libgen.h>
 #include <stdarg.h>
 #include <stdio.h>
 #include <string.h>
 
 FILE *logfile;
 
-int open_logfile(char *filename) {
-    logfile = fopen(filename, "w");
+int open_logfile(char *filename, int argc, char **argv) {
+    char name[30];
+    if (system_setting.jia_pid == 0) {
+        logfile = fopen(filename, "w+");
+    } else {
+        sprintf(name, "./jianode/%s/%s", basename(argv[0]), filename);
+        logfile = fopen(name, "w+");
+    }
     if (logfile == NULL) {
         printf("Cannot open logfile %s\n", filename);
         return -1;

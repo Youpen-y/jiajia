@@ -1,7 +1,7 @@
 #!/bin/bash
 ARCH=linux
 MODE=IPoIB_LOCKFREE1
-TIMEOUT=20
+TIMEOUT=40
 
 CLEAN=false
 ALLTEST=true

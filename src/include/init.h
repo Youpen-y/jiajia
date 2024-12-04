@@ -63,7 +63,11 @@
 void redirect_slave_io(int argc, char **argv);
 
 
-/** @brief createdir -- create work dir jiajia/program/ in slaves
+/** 
+ * @brief createdir -- create work dir jiajia/program/ in slaves
+ *
+ * @param argc same as main's argc
+ * @param argv same as main's argv
  */
 static void createdir(int argc, char **argv);
 

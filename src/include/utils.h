@@ -14,6 +14,8 @@ static char *serverstr = "[Thread server]";
 static char *listenstr = "[Thread listen]";
 static char *mainstr = "[Thread  main ]";
 
+#define LOCKFREE
+
 #define VERBOSE_LOG(level, fmt, ...)                                           \
     if (verbose_log >= level) {                                                \
         fprintf(logfile, fmt, ##__VA_ARGS__);                                  \
@@ -84,6 +86,6 @@ static char *mainstr = "[Thread  main ]";
  * @param filename
  * @return int
  */
-int open_logfile(char *filename);
-char *op2name(int op);
+int open_logfile(char *filename, int argc, char **argv);
+char* op2name(int op);
 #endif

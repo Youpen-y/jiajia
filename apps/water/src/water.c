@@ -52,7 +52,7 @@ void CNSTNT(int N, double *C);
 int main(int argc, char **argv)
 {
   FILE *fp;
-  char *input_file = "../waterfiles/sample.in";
+  char *input_file = "./waterfiles/sample.in";
   int mol, pid, func, c, dir, atom, tsteps = 0;
   double XTT, MDMAIN();
   double VIR;
@@ -72,7 +72,7 @@ int main(int argc, char **argv)
     dup(errout);
 *******/     
   six = stderr;
-  nfmc = fopen("../waterfiles/LWI12","r"); /* input file for particle
+  nfmc = fopen("./waterfiles/LWI12","r"); /* input file for particle
                                 displacements */
 
   TEMP  =298.0;
