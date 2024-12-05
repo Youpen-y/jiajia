@@ -190,31 +190,6 @@ void freetwin(address_t *twin) {
 #endif
 }
 
-// /**
-//  * @brief newmsg() -- find an available msg space in msg_buffer.msgarray
-//  *
-//  * @return jia_msg_t* the first free space address in msg_buffer.msgarray
-//  that available
-//  */
-// jia_msg_t *newmsg() {
-//     int i, j;
-
-//     for (i = 0; (i < msg_buffer.size) && (msg_buffer.msgbusy[i] != 0); i++)
-//         ;
-
-//     // here we got a free space in msgarray with index i
-//     jia_assert((i < msg_buffer.size), "Cannot allocate message space!");
-//     msg_buffer.msgbusy[i] = 1;
-
-// #ifdef JIA_DEBUG
-//     for (j = 0; j < msg_buffer.size; j++)
-//         VERBOSE_LOG(3, "%d ", msg_buffer.msgbusy[j]);
-// #endif
-
-//     jia_msg_t *msg = &(msg_buffer.msgarray[i]);
-//     return msg;
-// }
-
 /**
  * @brief apppendmsg() -- append message with len bytes from str
  *

@@ -46,8 +46,6 @@ extern void broadcast(jia_msg_t *msg, int index);
 extern float jia_clock();
 extern void appendmsg(jia_msg_t *, unsigned char *, int);
 
-// extern int jia_pid;
-// extern int hostc;
 extern int LOAD_BAL;
 
 float caltime, starttime, endtime;
@@ -67,27 +65,24 @@ void initload() {
 }
 
 void jia_loadbalance() {
+    // send LOADREQ msg to master
     jia_msg_t *req;
 
     int index = freemsg_lock(&msg_buffer);
     req = &(msg_buffer.buffer[index].msg);
-    // req = newmsg();
     req->frompid = system_setting.jia_pid;
     req->topid = 0;
     req->op = LOADREQ;
     req->size = 0;
     appendmsg(req, (unsigned char *)(&caltime), Intbytes);
 
-    // loadwait = 1;
-    // asendmsg(req);
-    // while (loadwait)
-    //     ;
+    loadwait = 1;
 
     move_msg_to_outqueue(&msg_buffer, index, &outqueue);
     freemsg_unlock(&msg_buffer, index);
 
-    // TODO: get an acknowledgement from topid 0
-    
+    while (loadwait)
+        ;
 }
 
 void jia_newload() {
@@ -107,6 +102,7 @@ void jia_newload() {
     sigma = ex2 - ex * ex;
 
     if (sigma / (ex * ex) < (Delta * Delta)) {
+    
     } else {
         Ptotal = 0.0;
         for (i = 0; i < system_setting.hostc; i++) {
@@ -167,17 +163,8 @@ void loadgrantserver(jia_msg_t *grant) {
     loadwait = 0;
 }
 
-/**
- * @brief jia_loadcheck() - check and record computation power of each processor
- * in the system
- *
- * @note Total computation power of all processors are always normalized to 1
- *
- * Processor computation power = Old computation power / computation time since
- * last jia_loadcheck() call
- */
 void jia_loadcheck() {
-    if (LOAD_BAL == ON) { // Load Blancing technique is trun on
+    if (LOAD_BAL == ON) {
         endtime = jia_clock();
         caltime += (endtime - starttime);
         jia_loadbalance();

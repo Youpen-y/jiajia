@@ -53,9 +53,9 @@
 #define Homepages 16384 /* maximum number of home pages in a host */
 #define Homesize (Homepages * Pagesize)
 #define Cachesize (Pagesize * Cachepages)
-#define Setnum 1 /* num of entries in a set */
+#define Setnum 1 /* num of set */
 #define Setpages                                                               \
-    Cachepages / Setnum /* change Setpages so that have multiple sets */
+    Cachepages / Setnum /* page num of a set */
 
 #define DIFFNULL ((jia_msg_t *)NULL)
 typedef unsigned char *address_t;
@@ -87,6 +87,7 @@ typedef struct {
 } jiahome_t;
 
 typedef enum { UNMAP, INV, RO, RW } pagestate_t;
+typedef enum {RANDOM, CIRCULAR, LRU} repscheme_t;   // cache replacement scheme
 
 typedef struct {
     pagestate_t state; /*cache state: UNMAP, INV, RO, RW*/

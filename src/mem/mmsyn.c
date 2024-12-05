@@ -47,6 +47,7 @@
 #include <stdatomic.h>
 #include <execinfo.h>
 #include <stddef.h>
+#include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
 
@@ -159,6 +160,28 @@ int replacei(int cachei) {
     }
 }
 
+
+// int replacei(int cachei, repscheme_t flag) {
+//     int seti, repi;
+//     switch (flag) {
+//         case RANDOM:
+//             repi = ((random() >> 8) % Setpages);
+//             break;
+//         case CIRCULAR:
+//             seti = cachei / Setpages;
+//             repcnt[seti] = (repcnt[seti] + 1) % Setpages;
+//             repi = repcnt[seti];
+//             break;
+//         case LRU:
+
+//             break;
+//     }
+//     return repi;
+// }
+
+
+
+
 /**
  * @brief findposition -- find an available cache slot in cache
  *
@@ -227,15 +250,7 @@ int findposition(address_t addr) {
 void sigsegv_handler(int signo, siginfo_t *sip, ucontext_t *uap)
 #endif
 
-#if defined AIX41 || defined IRIX62
-    void sigsegv_handler(int signo,
-                         int code,
-                         struct sigcontext *scp,
-                         char *addr)
-#endif
-
 #ifdef LINUX
-    // void sigsegv_handler(int signo, struct sigcontext sigctx)
     void sigsegv_handler(int signo, siginfo_t *sip, void *context)
 #endif
 {
@@ -272,10 +287,6 @@ void sigsegv_handler(int signo, siginfo_t *sip, ucontext_t *uap)
      */
     writefault = sip->si_code & 2;
 #endif
-
-    if((unsigned long)faultaddr > 0x700000000000){
-        printf("1");
-    }
 
     log_info(3, "Enter sigsegv ");
     log_info(3,

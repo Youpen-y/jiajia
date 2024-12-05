@@ -1,14 +1,16 @@
 ### Next generation JIAJIA (SDSM) --- JIAJIA3.0
 JIAJIA is a software distributed shared memory system that written at the beginning of the century. What makes it unique is its lock-based consistency.
 
-As a static library, it provide some usable interfaces to programmer so that they can use it divide their task to run on multiple machines. [Interfaces](#jiajia30-interfaces)
+As a static library, it provide usable interfaces to programmer so that they can use it divide their tasks to run on multiple machines. [Interfaces](#jiajia30-interfaces)
 
-What I want to do is mainly include these aspects:
+> This project is implemented and maintained by [@Youpen-y](https://github.com/Youpen-y) and [@segzix](https://github.com/segzix).
 
+### Target
 - Upgrade it so that it can be adapted to 64-bit machines
-- Redesign some interfaces to increase usability (eg. replace signal-driven IO with event-driven IO epoll in linux system)
+- Redesign some interfaces to increase usability (eg. replace signal-driven IO with event-driven IO epoll in linux system; jia_falloc alloc memory with control flag)
 - Optimize cache design to support LRU
-- Memory pool support to provide finer-grained control on memory allocation
+- Prefetch pages to reduce SIGSEGV triggers
+- Memory pool support to provide finer-grained control on memory allocation(Reconsidering)
 - Adopt RDMA technology to redesign the whole system desing (two directions)
   - RDMA support as a extra function that can be truned on or off. It means that there are two side-by-side network protocol stacks in the system, and will use RDMA first if possible.
   - Pure RDMA (pursue extreme performance)
@@ -29,7 +31,7 @@ void jia_init(int argc, char **argv);
 void jia_exit();
 ```
 `jia_init()` should be called before any other JIAJIA3.0 functions. \
-`jia_end()` should be called at the end of your program.
+`jia_exit()` should be called at the end of your program.
 ```c
 /**
  * @brief Allocate size bytes memory across the hosts
@@ -64,11 +66,5 @@ void jia_barrier();
 ```
 Note: `jia_barrier()` cannot be called inside a critical section enclosed by `jia_lock()` and `jia_unlock()`
 
-### Work up to Now
-- Upgrade origin code with detailed comments
-- Remove obsolete code (functions or usages) snippets
-- Adapt it to 64bit machine (redesign msg structure)
-- Some tests (IPoIB vs traditional TCP/IP stack performance comparsion)
-- Blueprints of JIAJIA3.0
 
 ### Usage
