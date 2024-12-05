@@ -242,7 +242,6 @@ void jiacreat(int argc, char **argv) {
         // step 1: copy files
         copyfiles(argc, argv);
 #endif /* NFS */
-        sleep(1);
 
         // step 2: start proc on slaves
         startprocs(argc, argv);
@@ -252,10 +251,9 @@ void jiacreat(int argc, char **argv) {
         int i = 0;
         while ((c = getopt(argc, argv, "P:")) != -1) {
             switch (c) {
-            case 'P': {
-                start_port = atol(optarg);
-                break;
-            }
+                case 'P': 
+                    start_port = atol(optarg);
+                    break;
             }
         }
         optind = 1;
@@ -346,7 +344,6 @@ void jia_init(int argc, char **argv) {
     jia_lock_index = 0;
     jiacreat(argc, argv);
 #if defined SOLARIS || defined LINUX
-    sleep(2);
     rl.rlim_cur = Maxfileno;
     rl.rlim_max = Maxfileno;
     setrlimit(RLIMIT_NOFILE, &rl); /* set maximum number of files that can be
@@ -378,7 +375,6 @@ void jia_init(int argc, char **argv) {
 #ifndef LINUX
     barrier0();
 #else
-    sleep(2);
 #endif
 
     enable_sigio();
@@ -389,8 +385,6 @@ void jia_init(int argc, char **argv) {
     if (system_setting.jia_pid == 0)
         VERBOSE_LOG(3, "End of Initialization\n");
 
-    if (system_setting.jia_pid != 0)
-        sleep(1);
 }
 
 #else /* NULL_LIB */

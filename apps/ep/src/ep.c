@@ -41,9 +41,9 @@ int main(int argc, char **argv) {
 
     while ((c = getopt(argc, argv, "m:")) != -1)
         switch (c) {
-        case 'm':
-            M = atoi(optarg);
-            break;
+            case 'm':
+                M = atoi(optarg);
+                break;
         }
 
     if (!M)
