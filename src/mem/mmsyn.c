@@ -496,10 +496,8 @@ void savediff(int cachei) {
         cachei, diff); // encoded the difference data between cachei page and
                        // its twin into diff [] and return size
     if ((diffmsg[hosti]->size + diffsize) > Maxmsgsize) {
-        //diffwait++;
         atomic_fetch_add(&diffwait, 1);
         log_info(4, "diffwait: %d", diffwait);
-        // asendmsg(diffmsg[hosti]);
         move_msg_to_outqueue(&msg_buffer, index, &outqueue);
         diffmsg[hosti]->size = 0;
         appendmsg(diffmsg[hosti], diff, diffsize);

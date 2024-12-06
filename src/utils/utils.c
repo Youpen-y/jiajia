@@ -7,7 +7,7 @@
 #include <stdio.h>
 #include <string.h>
 
-FILE *logfile;
+FILE *logfile = NULL;
 
 int open_logfile(char *filename, int argc, char **argv) {
     char name[30];

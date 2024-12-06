@@ -237,13 +237,14 @@ void jiacreat(int argc, char **argv) {
         VERBOSE_LOG(3, "*********Total of %d hosts found!**********\n\n",
                     system_setting.hostc);
 #ifndef NFS
-        // TODO: Add a step that mkdir special work directory on slaves
+        /* step 1: create directories */
         createdir(argc, argv);
-        // step 1: copy files
+
+        /* step 2: copy files */
         copyfiles(argc, argv);
 #endif /* NFS */
 
-        // step 2: start proc on slaves
+        /* step 3: start proc on slaves */
         startprocs(argc, argv);
     } else { // slave does
         int c;
@@ -258,6 +259,8 @@ void jiacreat(int argc, char **argv) {
         }
         optind = 1;
     }
+
+    open_logfile("jiajia.log", argc, argv);
 }
 
 void barrier0() {
@@ -327,9 +330,7 @@ void redirect_slave_io(int argc, char **argv) {
  * @param argv same as main
  */
 void jia_init(int argc, char **argv) {
-
     init_setting(&system_setting);
-    open_logfile("jiajia.log", argc, argv);
     if (system_setting.jia_pid == 0) {
         print_setting(&system_setting);
     }
@@ -337,10 +338,11 @@ void jia_init(int argc, char **argv) {
     unsigned long timel, time1;
     struct rlimit rl;
 
-    VERBOSE_LOG(3, "\n***JIAJIA---Software DSM***");
-    VERBOSE_LOG(3, "\n***Cachepages = %4d  Pagesize=%d***\n\n", Cachepages,
-                Pagesize);
-    disable_sigio();
+    if (system_setting.jia_pid == 0) {
+        VERBOSE_LOG(3, "\n***JIAJIA---Software DSM***");
+        VERBOSE_LOG(3, "\n***Cachepages = %4d  Pagesize=%d***\n\n", Cachepages,
+                    Pagesize);
+    }
     jia_lock_index = 0;
     jiacreat(argc, argv);
 #if defined SOLARIS || defined LINUX

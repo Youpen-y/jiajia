@@ -18,7 +18,10 @@ static char *mainstr = "[Thread  main ]";
 
 #define VERBOSE_LOG(level, fmt, ...)                                           \
     if (verbose_log >= level) {                                                \
-        fprintf(logfile, fmt, ##__VA_ARGS__);                                  \
+        if (logfile != NULL)                                                   \
+            fprintf(logfile, fmt, ##__VA_ARGS__);                              \
+        else                                                                   \
+            fprintf(stdout, fmt, ##__VA_ARGS__);                               \
     }
 
 #define VERBOSE_OUT(level, fmt, ...)                                           \
