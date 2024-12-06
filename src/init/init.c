@@ -34,10 +34,9 @@
  *         Edmonton, Alberta T6G 2H1 CANADA                            *
  * =================================================================== *
  **********************************************************************/
-
+#ifndef NULL_LIB
 #include "jia.h"
 #include "tools.h"
-#ifndef NULL_LIB
 #include "global.h"
 #include "init.h"
 #include "mem.h"
@@ -56,27 +55,92 @@ extern void disable_sigio();
 extern void enable_sigio();
 extern unsigned long jia_current_time();
 extern float jia_clock();
-
 extern unsigned int get_usecs();
-
-// int my_getline(int *wordc, char wordv[Maxwords][Wordsize]);
-// void gethosts();
-// int mypid();
-void copyfiles(int argc, char **argv);
-int startprocs(int argc, char **argv);
-void jiacreat(int argc, char **argv);
-void barrier0();
-
-void jia_init(int argc, char **argv);
-void clearstat();
-
 extern char errstr[Linesize];
 extern long start_port;
 
-sigset_t startup_mask; /* used by Shi. */
+static void copyfiles(int argc, char **argv);
+static int startprocs(int argc, char **argv);
+static void jiacreat(int argc, char **argv);
+static void createdir(int argc, char **argv);
+static void redirect_slave_io(int argc, char **argv);
+static void barrier0();
+
 int jia_lock_index;
 
-void createdir(int argc, char **argv) {
+/**
+ * @brief jia_init -- init jiajia basic setting
+ *
+ * @param argc same as main
+ * @param argv same as main
+ */
+void jia_init(int argc, char **argv) {
+    init_setting(&system_setting);
+    if (system_setting.jia_pid == 0) {
+        print_setting(&system_setting);
+    }
+
+    unsigned long timel, time1;
+    struct rlimit rl;
+
+    if (system_setting.jia_pid == 0) {
+        VERBOSE_LOG(3, "\n***JIAJIA---Software DSM***");
+        VERBOSE_LOG(3, "\n***Cachepages = %4d  Pagesize=%d***\n\n", Cachepages,
+                    Pagesize);
+    }
+    jia_lock_index = 0;
+    jiacreat(argc, argv);
+#if defined SOLARIS || defined LINUX
+    rl.rlim_cur = Maxfileno;
+    rl.rlim_max = Maxfileno;
+    setrlimit(RLIMIT_NOFILE, &rl); /* set maximum number of files that can be
+                                      opened by process limit */
+#endif                             /* SOLARIS */
+
+    rl.rlim_cur = Maxmemsize;
+    rl.rlim_max = Maxmemsize;
+    setrlimit(RLIMIT_DATA,
+              &rl); /* set maximum size of process's data segment */
+
+    redirect_slave_io(argc, argv); /*redirect slave's output*/
+
+#ifdef DEBUG
+    setbuf(logfile, NULL);
+#endif
+
+    initmem();
+    initsyn();
+    initcomm();
+    initmsg();
+    inittools();
+    initload();
+
+#ifdef DOSTAT
+    clearstat();
+    statflag = 1; // stat switch on
+#endif
+#ifndef LINUX
+    barrier0();
+#else
+#endif
+
+    enable_sigio();
+
+    timel = jia_current_time();
+    time1 = jia_clock();
+
+    if (system_setting.jia_pid == 0)
+        VERBOSE_LOG(3, "End of Initialization\n");
+
+}
+
+/** 
+ * @brief createdir -- create work dir jiajia/program/ in slaves
+ *
+ * @param argc same as main's argc
+ * @param argv same as main's argv
+ */
+static void createdir(int argc, char **argv) {
     char cmd[Linesize];
 
     for (int i = 1; i < system_setting.hostc; i++) {
@@ -94,7 +158,7 @@ void createdir(int argc, char **argv) {
  * @param argc same as main's argc
  * @param argv same as main's argv
  */
-void copyfiles(int argc, char **argv) {
+static void copyfiles(int argc, char **argv) {
     // replace rcp with scp
     int i, ret;
     char cmd[Linesize];
@@ -123,7 +187,7 @@ void copyfiles(int argc, char **argv) {
  * @param argv same as masters'
  * @return int
  */
-int startprocs(int argc, char **argv) {
+static int startprocs(int argc, char **argv) {
     struct servent *sp;
     int hosti;
     char cmd[Linesize], *hostname;
@@ -227,7 +291,7 @@ int startprocs(int argc, char **argv) {
  * @param argc
  * @param argv
  */
-void jiacreat(int argc, char **argv) {
+static void jiacreat(int argc, char **argv) {
     if (system_setting.hostc == 0) {
         VERBOSE_LOG(3, "  No hosts specified!\n");
         exit(0);
@@ -263,7 +327,7 @@ void jiacreat(int argc, char **argv) {
     open_logfile("jiajia.log", argc, argv);
 }
 
-void barrier0() {
+static void barrier0() {
     int hosti;
     char buf[4];
 
@@ -297,7 +361,7 @@ void barrier0() {
  * @note redirstdio makes effects on slaves only
  */
 
-void redirect_slave_io(int argc, char **argv) {
+static void redirect_slave_io(int argc, char **argv) {
     char outfile[Wordsize];
 
     if (system_setting.jia_pid != 0) { // slaves does
@@ -321,72 +385,6 @@ void redirect_slave_io(int argc, char **argv) {
         setbuf(stderr, NULL);
 #endif
     }
-}
-
-/**
- * @brief jia_init -- init jiajia basic setting
- *
- * @param argc same as main
- * @param argv same as main
- */
-void jia_init(int argc, char **argv) {
-    init_setting(&system_setting);
-    if (system_setting.jia_pid == 0) {
-        print_setting(&system_setting);
-    }
-
-    unsigned long timel, time1;
-    struct rlimit rl;
-
-    if (system_setting.jia_pid == 0) {
-        VERBOSE_LOG(3, "\n***JIAJIA---Software DSM***");
-        VERBOSE_LOG(3, "\n***Cachepages = %4d  Pagesize=%d***\n\n", Cachepages,
-                    Pagesize);
-    }
-    jia_lock_index = 0;
-    jiacreat(argc, argv);
-#if defined SOLARIS || defined LINUX
-    rl.rlim_cur = Maxfileno;
-    rl.rlim_max = Maxfileno;
-    setrlimit(RLIMIT_NOFILE, &rl); /* set maximum number of files that can be
-                                      opened by process limit */
-#endif                             /* SOLARIS */
-
-    rl.rlim_cur = Maxmemsize;
-    rl.rlim_max = Maxmemsize;
-    setrlimit(RLIMIT_DATA,
-              &rl); /* set maximum size of process's data segment */
-
-    redirect_slave_io(argc, argv); /*redirect slave's output*/
-
-#ifdef DEBUG
-    setbuf(logfile, NULL);
-#endif
-
-    initmem();
-    initsyn();
-    initcomm();
-    initmsg();
-    inittools();
-    initload();
-
-#ifdef DOSTAT
-    clearstat();
-    statflag = 1; // stat switch on
-#endif
-#ifndef LINUX
-    barrier0();
-#else
-#endif
-
-    enable_sigio();
-
-    timel = jia_current_time();
-    time1 = jia_clock();
-
-    if (system_setting.jia_pid == 0)
-        VERBOSE_LOG(3, "End of Initialization\n");
-
 }
 
 #else /* NULL_LIB */

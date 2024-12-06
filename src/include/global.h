@@ -46,7 +46,7 @@
 #define Intbits    32               /* number of bits of int type */
 #define Pagesize   4096             /* page size of JIAJIA */
 #ifndef Cachepages
-#define Cachepages 10             /* cache size in number of pages */
+#define Cachepages 1024             /* cache size in number of pages */
 #endif
 
 #define   Maxmemsize  0x800000000     /* max number of bytes of the shared memory 128MB, [Startaddr, Startaddr+Maxmemsize) */

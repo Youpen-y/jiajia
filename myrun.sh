@@ -1,16 +1,15 @@
 #!/bin/bash
 ARCH=linux
 MODE=IPoIB_LOCKFREE1
-TIMEOUT=20
+TIMEOUT=30
 
 CLEAN=false
-ALLTEST=true
+ALLTEST=false
 RUN=true
-tests=("lu")
+tests=("lu" "ep")
 
 run_app() {
     # 进入文件夹并在reports下创建对应的log文件
-    echo -e "\nrunning $1..."
     if [ ! -f ./reports/$ARCH/$MODE/"$1" ]; then
         echo "touch reports/$ARCH/$MODE/$1 file..."
         touch ./reports/$ARCH/$MODE/"$1"
@@ -18,24 +17,17 @@ run_app() {
 
     # 运行程序
     cd ./apps/"$1"/$ARCH || exit
-    # ./"$1" > ../../../reports/$ARCH/$MODE/"$1" &
-    # python3 "$1" ../../../reports/$ARCH/$MODE/"$1" &
-    output=$(python3 ../../../time.py "$1" "$TIMEOUT")
-    time=$(echo "$output" | tail -n 1)
-    if [ "$(echo "$time < $TIMEOUT" | bc)" -eq 1 ]; then
-        echo "$output" > ../../../reports/$ARCH/$MODE/"$1"
-        echo "Process $1 completed with time: $time"
-    else
-        echo "Terminating process $1 with time: $time"
-    fi
-    # echo "genaeral time: $time" > ../../../reports/$ARCH/$MODE/"$1"
+    { time ./"$1"; } >& "../../../reports/$ARCH/$MODE/""$1""" &
+    local pid=$!
     cd ../../..
+    echo "$pid"
 }
 
 listen() {
     time=0
     while [[ $time -lt $TIMEOUT ]]; do
         # 检查进程是否存在
+        # echo "$time"
         if ! ps -p "$1" > /dev/null; then
             echo "Process with PID $1 has completed within the time limit"
             return 0
@@ -102,19 +94,19 @@ sleep 1
 if $RUN; then
     if $ALLTEST; then
         for dir in apps/*/; do
+            echo -e "\nrunning ${dir%/}..."
             # shellcheck disable=SC2046
-            run_app $(basename "${dir%/}")
-            # pid=$!
-            # listen "$pid"
+            pid=$(run_app $(basename "${dir%/}"))
+            listen "$pid"
 
             # 等待5秒后继续运行下一个程序
             sleep 1
         done
     else
         for test in "${tests[@]}"; do
-            run_app "$test"
-            # pid=$!
-            # listen "$pid"
+            echo -e "\nrunning ${test}..."
+            pid=$(run_app "$test")
+            listen "$pid"
 
             # 等待5秒后继续运行下一个程序
             sleep 1
