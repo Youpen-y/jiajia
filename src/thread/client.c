@@ -105,7 +105,6 @@ static int outsend(jia_msg_t *msg) {
         /* step 1: send msg to destination host with ip */
         to_addr.sin_family = AF_INET;
         to_addr.sin_port = htons(comm_manager.snd_server_port);
-        // inet_aton(system_setting.hosts[msg->topid].ip, &to_addr.sin_addr);
         to_addr.sin_addr.s_addr =
             inet_addr(system_setting.hosts[msg->topid].ip);
             ret = sendto(comm_manager.snd_fds, msg, sizeof(jia_msg_t), 0,

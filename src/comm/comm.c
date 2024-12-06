@@ -35,10 +35,10 @@
  * =================================================================== *
  **********************************************************************/
 
+#ifndef NULL_LIB
 #include <pthread.h>
 #include <semaphore.h>
 #include <sys/socket.h>
-#ifndef NULL_LIB
 #include "comm.h" // statgrantserver,
 #include "mem.h"  // diffserver, getserver, diffgrantserver, getpgrantserver
 #include "setting.h"
@@ -53,33 +53,10 @@
 #include "thread.h"
 #include <stdatomic.h>
 
-int oldsigiomask;
-#define BEGINCS                                                                \
-    {                                                                          \
-        sigset_t newmask, oldmask;                                             \
-        sigemptyset(&newmask);                                                 \
-        sigaddset(&newmask, SIGIO);                                            \
-        sigprocmask(SIG_BLOCK, &newmask, &oldmask);                            \
-        oldsigiomask = sigismember(&oldmask, SIGIO);                           \
-        VERBOSE_LOG(3, "Enter CS\t");                                          \
-    }
-#define ENDCS                                                                  \
-    {                                                                          \
-        if (oldsigiomask == 0)                                                 \
-            enable_sigio();                                                    \
-        VERBOSE_LOG(3, "Exit CS\n");                                           \
-    }
-
-// #ifndef JIA_DEBUG
-// #define  msgprint  0
-// #define  VERBOSE_LOG 3,   emptyprintf
-// #else  /* JIA_DEBUG */
-// #define msgprint  1
-// #endif  /* JIA_DEBUG */
-// #define msgprint 1
 
 // global variables
-/* communication manager*/
+
+/* communication manager */
 comm_manager_t comm_manager;
 
 /* in/out queue */
@@ -134,8 +111,8 @@ void initcomm() {
  * request
  *
  * @param i the index of host
- * @param flag 1 means sin_port = 0, random port; others means specified
- * sin_port = reqports[jia_pid][i]
+ * @param flag fd create flag, FDCR_ACK for ack port / FDCR_RECV for recv port / FDCR_SEND for send port
+ *
  * @return int socket file descriptor
  * creat socket file descriptor(fd) used to send and recv request and bind it to
  * an address (ip/port combination)
@@ -160,15 +137,15 @@ static int fd_create(int i, enum FDCR_MODE flag) {
     addr.sin_family = AF_INET;
     addr.sin_addr.s_addr = htonl(INADDR_ANY);
     switch (flag) {
-    case FDCR_ACK:
-        addr.sin_port = htons(comm_manager.ack_port);
-        break;
-    case FDCR_RECV:
-        addr.sin_port = htons(comm_manager.rcv_ports[i]);
-        break;
-    case FDCR_SEND:
-        addr.sin_port = htons(0);
-        break;
+        case FDCR_ACK:
+            addr.sin_port = htons(comm_manager.ack_port);   // specified ack port
+            break;
+        case FDCR_RECV:
+            addr.sin_port = htons(comm_manager.rcv_ports[i]);   // specified recv port
+            break;
+        case FDCR_SEND:
+            addr.sin_port = htons(0);   // random send port 
+            break;
     }
 
     res = bind(fd, (struct sockaddr *)&addr, sizeof(addr));

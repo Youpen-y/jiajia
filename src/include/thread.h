@@ -7,30 +7,11 @@
 
 /**
  * @brief client_thread - client thread that move msg from msgbuffer to outqueue
-
  * 
+ * @param args outqueue
  * @return void* 
  */
-void *client_thread(void *);
-
-
-/**
- * @brief client_listen - thread that listens on ack_fds and waits for ack
- * 
- * @return void* 
- */
-void *client_listen(void *);
-
-
-
-
-// /**
-//  * @brief move_msg_to_outqueue - move msg from msgbuffer to outqueue
-//  * 
-//  * @return int 
-//  */
-// int move_msg_to_outqueue();
-
+void *client_thread(void *args);
 
 /**
  * @brief server_thread - server thread that handles msg in inqueue
@@ -44,7 +25,7 @@ void *server_thread(void *args);
  * @brief listen_thread - listen thread that listening on recv_fds
 
  * 
- * @param args 
+ * @param args NULL
  * @return void* 
  */
 void *listen_thread(void *args);

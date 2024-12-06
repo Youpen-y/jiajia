@@ -236,7 +236,7 @@ void jia_wait() {
         caltime += (endtime - starttime);
     }
 
-    // req = newmsg();
+    // construct WAIT msg
     index = freemsg_lock(&msg_buffer);
     req = &(msg_buffer.buffer[index].msg);
     req->frompid = system_setting.jia_pid;
@@ -244,12 +244,13 @@ void jia_wait() {
     req->op = WAIT;
     req->size = 0;
 
-    //waitwait = 1;
     atomic_store(&waitwait, 1);
-    // asendmsg(req);
-    // freemsg(req);
+
+    // send WAIT msg
     move_msg_to_outqueue(&msg_buffer, index, &outqueue);
     freemsg_unlock(&msg_buffer, index);
+
+    // busywaiting until waitwait is clear by waitgrantserver
     while (atomic_load(&waitwait))
         ;
 

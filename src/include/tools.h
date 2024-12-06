@@ -6,10 +6,9 @@
 #include "syn.h"
 #include <comm.h>
 
+typedef void (* void_func_handler)();
 
-/* */
 extern char errstr[Linesize];
-
 
 /* Function Declaration */
 void inittools();

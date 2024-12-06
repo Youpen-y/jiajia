@@ -35,8 +35,8 @@
  * =================================================================== *
  **********************************************************************/
 
-#include "msg.h"
 #ifndef NULL_LIB
+#include "msg.h"
 #include "comm.h" // asendmsg
 #include "global.h"
 #include "init.h"
@@ -66,25 +66,28 @@ void jia_exit() {
     jiastat_t *stat_p = &jiastat;
     jiastat_t total;
 
+    // a type of synchronization
     jia_wait();
 
-    VERBOSE_OUT(3, "\nShared Memory (%d-byte pages) : %d (total) %d (used)\n",
+    VERBOSE_OUT(3, "\nShared Memory (%d-byte pages) : %ld (total) %lu (used)\n",
                 Pagesize, Maxmemsize / Pagesize, globaladdr / Pagesize);
     if (hostc > 1) {
-         index = freemsg_lock(&msg_buffer);
+        // construct STAT msg
+        index = freemsg_lock(&msg_buffer);
         reply = &(msg_buffer.buffer[index].msg);
         reply->frompid = system_setting.jia_pid;
         reply->topid = 0;
         reply->size = 0;
         reply->op = STAT;
-        appendmsg(reply, (char *)stat_p, sizeof(jiastat));
+        appendmsg(reply, (unsigned char *)stat_p, sizeof(jiastat));
 
-        //waitstat = 1;
         atomic_store(&waitstat, 1);
+
+        // send msg
         move_msg_to_outqueue(&msg_buffer, index, &outqueue);
         freemsg_unlock(&msg_buffer, index);
-        //asendmsg(reply);
-        //freemsg(reply);
+
+        // busywait until waitstat is clear by statgrantserver
         while (atomic_load(&waitstat))
             ;
 

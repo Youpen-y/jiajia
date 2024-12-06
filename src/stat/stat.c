@@ -1,5 +1,4 @@
 #ifndef NULL_LIB
-
 #include "stat.h"
 #include "comm.h"
 #include "msg.h"
@@ -106,7 +105,7 @@ void clearstat() {
 void statgrantserver(jia_msg_t *req) {
     jia_assert((req->op == STATGRANT) && (req->topid == system_setting.jia_pid),
                "Incorrect STATGRANT Message!");
-    //waitstat = 0;
+
     atomic_store(&waitstat, 0);
 }
 

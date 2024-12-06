@@ -43,7 +43,7 @@
 #include "stat.h"
 
 /* user */
-extern jiahome_t home[Homepages];       /* host owned page */
+extern jiahome_t home[Homepages];        /* host owned page */
 extern jiacache_t cache[Cachepages];     /* host cached page */
 extern jiapage_t page[Maxmempages];      /* global page space */
 extern unsigned long globaladdr;         /* [0, Maxmemsize)*/
