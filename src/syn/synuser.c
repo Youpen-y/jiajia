@@ -118,7 +118,7 @@ void jia_lock(int lock) {
 }
 
 /**
- * @brief jia_unlock --
+ * @brief jia_unlock -- unlock the lock
  *
  * @param lock
  */
@@ -340,43 +340,6 @@ void jia_waitcv(int cvnum) {
         ;
 }
 
-/**
- * @brief pushstack -- push lock into lockstack
- *
- * @param lock lock id
- */
-void pushstack(int lock) {
-    stackptr++;
-    jia_assert((stackptr < Maxstacksize), "Too many continuous ACQUIRES!");
-
-    top.lockid = lock;
-}
-
-/**
- * @brief popstack -- pop the top lock in lockstack
- *
- * (save the unlucky one's write notice pairs (wtnts[i], from[i]) to the new top
- * one)
- *
- */
-void popstack() {
-    int wtnti;
-    wtnt_t *wnptr;
-
-    stackptr--;
-    jia_assert((stackptr >= -1), "More unlocks than locks!");
-
-    if (stackptr >= 0) {
-        wnptr = lockstack[stackptr + 1].wtntp;
-        while (wnptr != WNULL) {
-            for (wtnti = 0; wtnti < wnptr->wtntc; wtnti++)
-                savewtnt(top.wtntp, wnptr->wtnts[wtnti], wnptr->from[wtnti]);
-            wnptr = wnptr->more;
-        }
-    }
-
-    freewtntspace(lockstack[stackptr + 1].wtntp);
-}
 
 #else /* NULL_LIB */
 void jia_lock(int lock) {}

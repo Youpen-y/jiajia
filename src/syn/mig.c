@@ -42,7 +42,7 @@
 #include "setting.h"
 #include "stat.h"
 
-/* mm */
+/* mem */
 extern jiapage_t page[Maxmempages];
 extern jiacache_t cache[Cachepages];
 extern jiahome_t home[Homepages];

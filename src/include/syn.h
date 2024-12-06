@@ -109,6 +109,7 @@ void savewtnt(wtnt_t *ptr, address_t addr, int frompid);
 void recordwtnts(jia_msg_t *req);
 wtnt_t *appendbarrwtnts(jia_msg_t *msg, wtnt_t *ptr);
 wtnt_t *appendlockwtnts(jia_msg_t *msg, wtnt_t *ptr, int acqscope);
+wtnt_t *appendstackwtnts(jia_msg_t *msg, wtnt_t *ptr);
 
 /* synlockbarr */
 void acquire(int lock);

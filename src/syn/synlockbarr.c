@@ -56,45 +56,6 @@ extern int B_CAST;
 /************Lock Part****************/
 
 /**
- * @brief clearlocks() -- free the write notice space that used by lock
- *
- */
-void clearlocks() {
-    int i;
-
-    for (i = system_setting.jia_pid; i < Maxlocks; i += system_setting.hostc) {
-        freewtntspace(locks[i].wtntp);
-    }
-}
-
-/**
- * @brief acquire() -- send ACQ msg to lock%hostc to acquire the lock
- *
- * @param lock
- *
- * acq msg data: | lock |
- */
-void acquire(int lock) {
-    jia_msg_t *req;
-    int index;
-
-    index = freemsg_lock(&msg_buffer);
-    req = &msg_buffer.buffer[index].msg;
-    req->op = ACQ;
-    req->frompid = system_setting.jia_pid;
-    req->topid = lock % system_setting.hostc; // it seems that lock was divided circularly
-    req->scope = locks[lock].myscope;
-    req->size = 0;
-    appendmsg(req, ltos(lock), Intbytes);
-
-    move_msg_to_outqueue(&msg_buffer, index, &outqueue);
-    freemsg_unlock(&msg_buffer, index);
-    while (atomic_load(&acqwait))
-        ;
-    log_info(3, "acquire lock!!!");
-}
-
-/**
  * @brief grantlock -- grant the acquire lock msg request
  *
  * @param lock

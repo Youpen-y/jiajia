@@ -49,6 +49,8 @@
 #include <stdatomic.h>
 
 /* syn */
+extern jiacache_t cache[Cachepages];
+extern jiahome_t home[Homepages];
 extern jiacv_t condvars[Maxcvs];
 extern volatile int waitcounter;
 extern _Atomic volatile int waitwait, cvwait, acqwait, barrwait;
@@ -57,7 +59,7 @@ extern volatile int noclearlocks;
 // host0: 0, 2,... 62; host1 = 1, 3, ..., 63)
 extern jialock_t locks[Maxlocks + 1];
 
-extern int H_MIG;
+extern int H_MIG, AD_WD;
 
 /************Conditional Variable Part****************/
 
@@ -179,11 +181,76 @@ void waitgrantserver(jia_msg_t *req) {
     jia_assert((req->op == WAITGRANT) && (req->topid == system_setting.jia_pid),
            "Incorrect WAITGRANT Message!");
 
-    //waitwait = 0;
     atomic_store(&waitwait, 0);
 }
 
 /************Lock Part****************/
+
+/**
+ * @brief invalidate -- 
+ *
+ * @param req
+ */
+void invalidate(jia_msg_t *req) {
+    int cachei, seti;
+    int lock;
+    int datai;
+    address_t addr;
+    int migtag;
+    int from;
+    int homei, pagei;
+
+    lock = (int)stol(req->data); // get the lock
+    datai = Intbytes;
+
+    while (datai < req->size) {
+        // get the addr
+        addr = (address_t)stol(req->data + datai); 
+        if (H_MIG == ON) {
+            migtag = ((unsigned long)addr) % Pagesize;
+            addr = (address_t)(((unsigned long)addr / Pagesize) * Pagesize);
+        }
+        datai += sizeof(unsigned char *);
+
+        // TODO: Barrier or Lock?
+        if (lock == hidelock) { /*Barrier*/
+            from = (int)stol(req->data + datai);
+            datai += Intbytes;
+        } else { /*Lock*/
+            from = Maxhosts;
+        }
+
+        // invalidate all pages that are not on this host(cache)
+        if ((from != system_setting.jia_pid) && (homehost(addr) != system_setting.jia_pid)) {
+            cachei = (int)cachepage(addr);
+            if (cachei < Cachepages) {
+                if (cache[cachei].state != INV) {
+                    if (cache[cachei].state == RW)
+                        freetwin(&(cache[cachei].twin));
+                    cache[cachei].wtnt = 0;
+                    cache[cachei].state = INV;
+                    memprotect((caddr_t)cache[cachei].addr, Pagesize,
+                               PROT_NONE);
+#ifdef DOSTAT
+                    STATOP(jiastat.invcnt++;)
+#endif
+                }
+            }
+        }
+
+        if ((H_MIG == ON) && (lock == hidelock) && (from != Maxhosts) &&
+            (migtag != 0)) {
+            migpage((unsigned long)addr, homehost(addr), from);
+        }
+
+        if ((AD_WD == ON) && (lock == hidelock) &&
+            (homehost(addr) == system_setting.jia_pid) && (from != system_setting.jia_pid)) {
+            homei = homepage(addr);
+            home[homei].wtnt |= 4;
+        }
+
+    } /*while*/
+}
 
 /**
  * @brief invserver -- INVLD msg server
