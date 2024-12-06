@@ -35,8 +35,8 @@
  * =================================================================== *
  **********************************************************************/
 
-#ifndef JIACREAT_H
-#define JIACREAT_H
+#ifndef JIAINIT_H
+#define JIAINIT_H
 
 #define Wordsize        80
 #define Linesize        200
@@ -47,7 +47,7 @@
         in UNIX, (>= 4*Maxhosts*Maxhosts) */
 #define Maxfileno       1024 
 
-
+// TODO: should recompute the cost 
 #define   SEGVoverhead  600
 #define   SIGIOoverhead 200
 #define   ALPHAsend     151.76

@@ -126,9 +126,6 @@ typedef struct msg_queue {
     slot_t *queue;    // msg queue
     int               size;     // size of queue(must be power of 2)
 
-    // _Atomic volatile unsigned  enqueue_lock;    //atomic lock
-    // _Atomic volatile unsigned  dequeue_lock;
-
     pthread_mutex_t   head_lock;    // lock for head
     pthread_mutex_t   tail_lock;    // lock for tail
     volatile unsigned               head;         // head
@@ -200,8 +197,64 @@ void freemsg_unlock(msg_buffer_t *buffer, int index);
 int move_msg_to_outqueue(msg_buffer_t *buffer, int index, msg_queue_t *outqueue);
 
 
+/**
+ * @brief jia_recv --
+ *
+ * @param buf
+ * @param len
+ * @param fromproc
+ * @param tag
+ * @return int
+ */
+int jia_recv(char *buf, int len, int fromproc, int tag);
 
+
+/**
+ * @brief jia_send -- send len bytes message from buf to host toproc with tag
+ *
+ * @param buf message source
+ * @param len length of message (total, per bytes)
+ * @param toproc destination
+ * @param tag set msg'scope to tag
+ */
+void jia_send(char *buf, int len, int toproc, int tag);
+
+
+/**
+ * @brief jia_reduce -- reduce msg to one host
+ *
+ * @param sendbuf message source
+ * @param recvbuf message dest
+ * @param count data count
+ * @param op msg's reduce op
+ * @param root src host's pid
+ */
+void jia_reduce(char *sendbuf, char *recvbuf, int count, int op, int root);
+
+
+/**
+ * @brief jia_bcast -- broadcast one msg to every host
+ *
+ * @param buf message source
+ * @param len msg's length
+ * @param root src host's pid
+ */
+void jia_bcast(char *buf, int len, int root);
+
+
+/**
+ * @brief msgrecvserver -- put the msg req into the first empty space in msgbuf
+ *
+ * @param req msg
+ */
 void msgrecvserver(jia_msg_t *req);
 
+
+/**
+ * @brief bcastserver --
+ *
+ * @param msg
+ */
+void bcastserver(jia_msg_t *msg);
 
 #endif /*JIAMSG_H*/

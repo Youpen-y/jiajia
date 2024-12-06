@@ -49,11 +49,6 @@ static char *mainstr = "[Thread  main ]";
                 ##__VA_ARGS__);                                                \
     } while (0)
 
-// fprintf(logfile,                                                       \
-        //         "[ERROR] %s (%s:%d:%s: errno: %s) " STR "\n",   \
-        //         str, __FILE__, __LINE__, __func__, show_errno(),               \
-        //         ##__VA_ARGS__);                                                \
-
 #define log_info(level, STR, ...)                                              \
     if (verbose_log >= level) {                                                \
         char *str;                                                             \
@@ -83,12 +78,11 @@ static char *mainstr = "[Thread  main ]";
         exit(EXIT_FAILURE);                                                    \
     }
 
-/**
- * @brief open_logfile - open logfile
- *
- * @param filename
- * @return int
- */
+
 int open_logfile(char *filename, int argc, char **argv);
 char* op2name(int op);
+static inline void set_nonblocking(int sockfd) {
+    int flags = fcntl(sockfd, F_GETFL, 0);
+    fcntl(sockfd, F_SETFL, flags | O_NONBLOCK);
+}
 #endif

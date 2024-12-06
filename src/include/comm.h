@@ -137,24 +137,6 @@ extern comm_manager_t comm_manager;
 void initcomm();
 
 /**
- * @brief sigio_handler -- IO signal handler
- * 
- */
-void sigio_handler();
-
-/**
- * @brief sigint_handler -- interrupt signal handler
- * 
- */
-void sigint_handler();
-
-/** 
- * @brief register_sigint_handler -- register sigint signal handler
- *
- */
-static void register_sigint_handler();
-
-/**
  * @brief asendmsg() -- send msg to outqueue[outtail], and call outsend()
  *
  * @param msg msg that will be sent

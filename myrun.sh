@@ -4,7 +4,7 @@ MODE=IPoIB_LOCKFREE1
 TIMEOUT=30
 
 CLEAN=false
-ALLTEST=false
+ALLTEST=true
 RUN=true
 tests=("lu" "ep")
 

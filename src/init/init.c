@@ -35,15 +35,16 @@
  * =================================================================== *
  **********************************************************************/
 #ifndef NULL_LIB
-#include "jia.h"
-#include "tools.h"
-#include "global.h"
 #include "init.h"
+#include "global.h"
+#include "jia.h"
 #include "mem.h"
 #include "setting.h"
 #include "stat.h"
+#include "tools.h"
 #include "utils.h"
 #include <libgen.h>
+
 
 extern void initmem();
 extern void initsyn();
@@ -57,7 +58,7 @@ extern unsigned long jia_current_time();
 extern float jia_clock();
 extern unsigned int get_usecs();
 extern char errstr[Linesize];
-extern long start_port;
+extern short start_port;
 
 static void copyfiles(int argc, char **argv);
 static int startprocs(int argc, char **argv);
@@ -75,39 +76,42 @@ int jia_lock_index;
  * @param argv same as main
  */
 void jia_init(int argc, char **argv) {
+
+    // step 1:init system_setting
     init_setting(&system_setting);
     if (system_setting.jia_pid == 0) {
         print_setting(&system_setting);
-    }
-
-    unsigned long timel, time1;
-    struct rlimit rl;
-
-    if (system_setting.jia_pid == 0) {
         VERBOSE_LOG(3, "\n***JIAJIA---Software DSM***");
         VERBOSE_LOG(3, "\n***Cachepages = %4d  Pagesize=%d***\n\n", Cachepages,
                     Pagesize);
     }
+
+    // step 2:start proc on slave host
     jia_lock_index = 0;
     jiacreat(argc, argv);
+
+    // step 3:set resources' limit
+    struct rlimit rl;
 #if defined SOLARIS || defined LINUX
     rl.rlim_cur = Maxfileno;
     rl.rlim_max = Maxfileno;
     setrlimit(RLIMIT_NOFILE, &rl); /* set maximum number of files that can be
                                       opened by process limit */
 #endif                             /* SOLARIS */
-
     rl.rlim_cur = Maxmemsize;
     rl.rlim_max = Maxmemsize;
     setrlimit(RLIMIT_DATA,
               &rl); /* set maximum size of process's data segment */
 
-    redirect_slave_io(argc, argv); /*redirect slave's output*/
+    // step 4:redirect slave's io (stdout&&stderr)
+    if (system_setting.jia_pid != 0)
+        redirect_slave_io(argc, argv); /*redirect slave's output*/
 
 #ifdef DEBUG
     setbuf(logfile, NULL);
 #endif
 
+    // step 5:init system resources
     initmem();
     initsyn();
     initcomm();
@@ -124,17 +128,11 @@ void jia_init(int argc, char **argv) {
 #else
 #endif
 
-    enable_sigio();
-
-    timel = jia_current_time();
-    time1 = jia_clock();
-
     if (system_setting.jia_pid == 0)
         VERBOSE_LOG(3, "End of Initialization\n");
-
 }
 
-/** 
+/**
  * @brief createdir -- create work dir jiajia/program/ in slaves
  *
  * @param argc same as main's argc
@@ -159,7 +157,6 @@ static void createdir(int argc, char **argv) {
  * @param argv same as main's argv
  */
 static void copyfiles(int argc, char **argv) {
-    // replace rcp with scp
     int i, ret;
     char cmd[Linesize];
 
@@ -235,7 +232,7 @@ static int startprocs(int argc, char **argv) {
         char *base = basename(argv[0]);
         // sprintf(shell, "cd ./jianode/%s &&", base);
         // sprintf(shell, "%s ./%s", shell, base);
-        sprintf(shell,"~/jianode/%s/%s", base, base);
+        sprintf(shell, "~/jianode/%s/%s", base, base);
         for (int i = 1; i < argc; i++) {
             sprintf(cmd, "%s %s", cmd, argv[i]);
         }
@@ -268,13 +265,13 @@ static int startprocs(int argc, char **argv) {
             rexec(&hostname, sp->s_port, NULL, NULL, cmd,
                   &(system_setting.hosts[hosti].rerrfd));
 #else  /* NFS */
-        system_setting.hosts[hosti].riofd =
-            rexec(&hostname, sp->s_port, system_setting.hosts[hosti].username,
-                  hosts[hosti].password, cmd,
-                  &(system_setting.startprocs(argc, argv);hosts[hosti]
-                        .rerrfd)); // TODO rexec is obsoleted by rcmd (reason:
-                                   // rexec sends the unencrypted password
-                                   // across the network)
+        system_setting.hosts[hosti].riofd = rexec(
+            &hostname, sp->s_port, system_setting.hosts[hosti].username,
+            hosts[hosti].password, cmd,
+            &(system_setting.startprocs(argc, argv);
+              hosts[hosti].rerrfd)); // TODO rexec is obsoleted by rcmd (reason:
+                                     // rexec sends the unencrypted password
+                                     // across the network)
 #endif /* NFS */
         local_assert((system_setting.hosts[hosti].riofd != -1),
                      "Fail to start process on %s!",
@@ -288,8 +285,8 @@ static int startprocs(int argc, char **argv) {
 /**
  * @brief jiacreat -- creat process on other machines
  *
- * @param argc
- * @param argv
+ * @param argc same as masters'
+ * @param argv same as masters'
  */
 static void jiacreat(int argc, char **argv) {
     if (system_setting.hostc == 0) {
@@ -316,9 +313,9 @@ static void jiacreat(int argc, char **argv) {
         int i = 0;
         while ((c = getopt(argc, argv, "P:")) != -1) {
             switch (c) {
-                case 'P': 
-                    start_port = atol(optarg);
-                    break;
+            case 'P':
+                start_port = atol(optarg);
+                break;
             }
         }
         optind = 1;
@@ -360,31 +357,28 @@ static void barrier0() {
  * @param argv program arguments array
  * @note redirstdio makes effects on slaves only
  */
-
 static void redirect_slave_io(int argc, char **argv) {
     char outfile[Wordsize];
 
-    if (system_setting.jia_pid != 0) { // slaves does
 #ifdef NFS
-        sprintf(outfile, "%s-%d.log\0", argv[0], system_setting.jia_pid);
+    sprintf(outfile, "%s-%d.log\0", argv[0], system_setting.jia_pid);
 #else
-        sprintf(outfile, "%s.log\0", argv[0]);
-#endif                                 /* NFS */
-        freopen(outfile, "w", stdout); // redirect stdout to file outfile
+    sprintf(outfile, "%s.log", argv[0]);
+#endif                             /* NFS */
+    freopen(outfile, "w", stdout); // redirect stdout to file outfile
 #ifdef DEBUG
-        setbuf(stdout, NULL);
+    setbuf(stdout, NULL);
 #endif
 
 #ifdef NFS
-        sprintf(outfile, "%s-%d.err\0", argv[0], system_setting.jia_pid);
+    sprintf(outfile, "%s-%d.err\0", argv[0], system_setting.jia_pid);
 #else
-        sprintf(outfile, "%s.err\0", argv[0]);
-#endif                                 /* NFS */
-        freopen(outfile, "w", stderr); // redirect stderr to file outfile
+    sprintf(outfile, "%s.err", argv[0]);
+#endif                             /* NFS */
+    freopen(outfile, "w", stderr); // redirect stderr to file outfile
 #ifdef DEBUG
-        setbuf(stderr, NULL);
+    setbuf(stderr, NULL);
 #endif
-    }
 }
 
 #else /* NULL_LIB */

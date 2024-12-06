@@ -90,6 +90,9 @@ unsigned short start_port;
 
 static int init_comm_manager();
 static int fd_create(int i, enum FDCR_MODE flag);
+static void sigint_handler();
+static void sigio_handler();
+static void register_sigint_handler();
 
 // function definitions
 
@@ -175,14 +178,10 @@ static int fd_create(int i, enum FDCR_MODE flag) {
 }
 
 /**
- * @brief sigint_handler -- sigint handler
+ * @brief register_sigint_handler -- register sigint signal handler
  *
  */
-void sigint_handler() {
-    jia_assert(0, "Exit by user!!\n");
-}
-
-void register_sigint_handler() {
+static void register_sigint_handler() {
     struct sigaction act;
 
     act.sa_handler = (void_func_handler)sigint_handler;
@@ -194,11 +193,18 @@ void register_sigint_handler() {
 }
 
 /**
+ * @brief sigint_handler -- sigint handler
+ *
+ */
+static void sigint_handler() {
+    jia_assert(0, "Exit by user!!\n");
+}
+
+/**
  * @brief sigio_handler -- sigio handler (it can be interrupt)
  *
  */
-
-void sigio_handler() {
+static void sigio_handler() {
 #ifdef DOSTAT
     register unsigned int begin;
     STATOP(jiastat.sigiocnt++; if (interruptflag == 0) {
@@ -226,112 +232,24 @@ void sigio_handler() {
 #endif
 }
 
-/**
- * @brief bsendmsg -- broadcast msg
- *
- * @param msg
- */
-void bsendmsg(jia_msg_t *msg) {
-    unsigned int root, level;
-
-    msg->op += BCAST; // op >= BCAST, always call bcastserver
-
-    root = system_setting.jia_pid; // current host as root
-
-    if (system_setting.hostc == 1) { // single machine
-        level = 1;
-    } else {
-        for (level = 0; (1 << level) < system_setting.hostc; level++)
-            ;
-    }
-
-    msg->temp = ((root & 0xffff) << 16) | (level & 0xffff);
-
-    bcastserver(msg);
-}
-
-/*
- *  (no matter what root's jiapid is, its mypid in this tree is 0)
- *  (example for hostc=8)
- *
- *  3   2   1   0   level
- *  0---0---0---0
- *  |   |   |---1
- *  |   |
- *  |   |---2---2
- *  |       |---3
- *  |
- *  |---4---4---4
- *      |   |---5
- *      |
- *      |---6---6
- *          |---7
- */
-
-/**
- * @brief bcastserver --
- *
- * @param msg
- */
-void bcastserver(jia_msg_t *msg) {
-    int mypid, child1, child2;
-    int rootlevel, root, level;
-
-    int jia_pid = system_setting.jia_pid;
-    int hostc = system_setting.hostc;
-
-    /* step 1: get root and current level
-     * (ensure current host's child1 and child2) */
-    rootlevel = msg->temp;
-    root = (rootlevel >> 16) & 0xffff;
-    level = rootlevel & 0xffff;
-    level--;
-
-    /* step 2: mypid is current host's position in broadcast tree */
-    mypid =
-        ((jia_pid - root) >= 0) ? (jia_pid - root) : (jia_pid - root + hostc);
-    child1 = mypid;
-    child2 = mypid + (1 << level);
-
-    /* step 3: broadcast msg to child1 and child2 */
-    if (level == 0) {
-        /* if level==0, msg must be handled and stop broadcast in the last level
-         */
-        msg->op -= BCAST;
-    }
-    msg->temp = ((root & 0xffff) << 16) | (level & 0xffff);
-    msg->frompid = jia_pid;
-    if (child2 < hostc) {
-        msg->topid = (child2 + root) % hostc;
-        move_msg_to_outqueue(&msg_buffer,
-                             ((void *)msg - (void *)&msg_buffer.buffer) /
-                                 sizeof(slot_t),
-                             &outqueue);
-    }
-    msg->topid = (child1 + root) % hostc;
-    move_msg_to_outqueue(
-        &msg_buffer,
-        ((void *)msg - (void *)&msg_buffer.buffer) / sizeof(slot_t), &outqueue);
-}
-
 int init_msg_queue(msg_queue_t *msg_queue, int size) {
+
+    /** step 1: allocate memory size for msg_queue */ 
     if (size <= 0) {
         size = system_setting.msg_queue_size;
     }
-
     msg_queue->queue = (slot_t *)malloc(sizeof(slot_t) * size);
     if (msg_queue->queue == NULL) {
         perror("msg_queue malloc");
         return -1;
     }
 
+    /** step 2: init msg_queue */ 
     msg_queue->size = size;
     msg_queue->head = 0;
     msg_queue->tail = 0;
-    // atomic_init(&msg_queue->enqueue_lock, 0);
-    // atomic_init(&msg_queue->dequeue_lock, 0);
 
-    // initialize head mutex and tail mutex
+    /** step 3: initialize head mutex and tail mutex */ 
     if (pthread_mutex_init(&(msg_queue->head_lock), NULL) != 0 ||
         pthread_mutex_init(&(msg_queue->tail_lock), NULL) != 0) {
         perror("msg_queue mutex init");
@@ -339,7 +257,7 @@ int init_msg_queue(msg_queue_t *msg_queue, int size) {
         return -1;
     }
 
-    // initialize semaphores
+    /** step 4: initialize semaphores (or atomic count)*/
     // if (sem_init(&(msg_queue->busy_count), 0, 0) != 0 ||
     //     sem_init(&(msg_queue->free_count), 0, size) != 0) {
     //     perror("msg_queue sem init");
@@ -352,20 +270,8 @@ int init_msg_queue(msg_queue_t *msg_queue, int size) {
     atomic_init(&msg_queue->busy_count, 0);
     atomic_init(&msg_queue->free_count, size);
 
-    // initialize slot mutex and condition variable
+    /** step 5:init slot's state */
     for (int i = 0; i < size; i++) {
-        // if (pthread_mutex_init(&(msg_queue->queue[i].lock), NULL) != 0) {
-        //     perror("msg_queue slot mutex init");
-        //     for (int j = 0; j < i; j++) {
-        //         pthread_mutex_destroy(&(msg_queue->queue[j].lock));
-        //     }
-        //     sem_destroy(&(msg_queue->busy_count));
-        //     sem_destroy(&(msg_queue->free_count));
-        //     pthread_mutex_destroy(&(msg_queue->head_lock));
-        //     pthread_mutex_destroy(&(msg_queue->tail_lock));
-        //     free(msg_queue->queue);
-        //     return -1;
-        // }
         msg_queue->queue[i].state = SLOT_FREE;
     }
 
@@ -373,7 +279,6 @@ int init_msg_queue(msg_queue_t *msg_queue, int size) {
 }
 
 int enqueue(msg_queue_t *msg_queue, jia_msg_t *msg) {
-    unsigned zero = 0;
     unsigned current_value;
     unsigned slot_index;
     if (msg_queue == NULL || msg == NULL) {
@@ -382,6 +287,9 @@ int enqueue(msg_queue_t *msg_queue, jia_msg_t *msg) {
         return -1;
     }
     char *queue = (msg_queue == &outqueue) ? "outqueue" : "inqueue";
+
+    log_info(4, "pre %s enqueue free_count value: %d", queue,
+             msg_queue->free_count);
     // int semvalue;
     // sem_getvalue(&msg_queue->free_count, &semvalue);
     // log_info(4, "pre %s enqueue free_count value: %d", queue, semvalue);
@@ -392,8 +300,6 @@ int enqueue(msg_queue_t *msg_queue, jia_msg_t *msg) {
     // }
     // sem_getvalue(&msg_queue->free_count, &semvalue);
     // log_info(4, "enter %s enqueue! free_count value: %d", queue, semvalue);
-    log_info(4, "pre %s enqueue free_count value: %d", queue,
-             msg_queue->free_count);
     /**
      * step 1: get current value
      * step 2: we will atomic sub busy_count iff current value > 0
@@ -413,8 +319,6 @@ int enqueue(msg_queue_t *msg_queue, jia_msg_t *msg) {
 
     // lock tail and update tail pointer
     pthread_mutex_lock(&(msg_queue->tail_lock));
-    //while (!atomic_compare_exchange_strong(&msg_queue->enqueue_lock, &zero, 1));
-    //log_info(4, "pre enqueue_lock value: %d", msg_queue->enqueue_lock);
     slot_index = msg_queue->tail;
     msg_queue->tail = (msg_queue->tail + 1) & (msg_queue->size - 1);
     log_info(4, "%s current tail: %u thread write index: %u", queue,
@@ -425,11 +329,9 @@ int enqueue(msg_queue_t *msg_queue, jia_msg_t *msg) {
 
     // sem_post(&(msg_queue->busy_count));
     // sem_getvalue(&msg_queue->busy_count, &semvalue);
-
     unsigned old_value = msg_queue->busy_count;
     msg_queue->busy_count++;
-    //atomic_fetch_sub(&msg_queue->enqueue_lock, 1);
-    //log_info(4, "after enqueue_lock value: %d", msg_queue->enqueue_lock);
+
     pthread_mutex_unlock(&(msg_queue->tail_lock));
     log_info(4, "after %s enqueue busy_count value: %d", queue, old_value);
     return 0;
@@ -442,6 +344,10 @@ int dequeue(msg_queue_t *msg_queue, jia_msg_t *msg) {
         return -1;
     }
     char *queue = (msg_queue == &outqueue) ? "outqueue" : "inqueue";
+
+    // sem or atomic instruction
+    log_info(4, "pre %s dequeue busy_count value: %d", queue,
+             msg_queue->busy_count);
     // int semvalue;
     // sem_getvalue(&msg_queue->busy_count, &semvalue);
     // log_info(4, "pre %s dequeue busy_count value: %d", queue, semvalue);
@@ -451,9 +357,6 @@ int dequeue(msg_queue_t *msg_queue, jia_msg_t *msg) {
     // }
     // sem_getvalue(&msg_queue->busy_count, &semvalue);
     // log_info(4, "enter %s dequeue! busy_count value: %d", queue, semvalue);
-
-    log_info(4, "pre %s dequeue busy_count value: %d", queue,
-             msg_queue->busy_count);
     /**
      * step 1: get current value
      * step 2: we will atomic sub busy_count iff current value > 0
@@ -470,6 +373,7 @@ int dequeue(msg_queue_t *msg_queue, jia_msg_t *msg) {
     }
     log_info(4, "enter %s dequeue! busy_count value: %d", queue,
              current_value - 1);
+
     // lock head and update head pointer
     pthread_mutex_lock(&(msg_queue->head_lock));
     slot_index = msg_queue->head;
@@ -482,9 +386,9 @@ int dequeue(msg_queue_t *msg_queue, jia_msg_t *msg) {
 
     // sem_post(&(msg_queue->free_count));
     // sem_getvalue(&msg_queue->free_count, &semvalue);
-
     unsigned old_value = msg_queue->free_count;
     msg_queue->free_count++;
+
     pthread_mutex_unlock(&(msg_queue->head_lock));
     log_info(4, "after %s dequeue free_count value: %d", queue, old_value + 1);
     return 0;
@@ -494,11 +398,6 @@ void free_msg_queue(msg_queue_t *msg_queue) {
     if (msg_queue == NULL) {
         return;
     }
-
-    // destory slot mutex and condition variable
-    // for (int i = 0; i < msg_queue->size; i++) {
-    //     pthread_mutex_destroy(&(msg_queue->queue[i].lock));
-    // }
 
     // destory semaphores
     // sem_destroy(&(msg_queue->busy_count));
@@ -517,19 +416,16 @@ void free_msg_queue(msg_queue_t *msg_queue) {
  * @return int
  */
 static int init_comm_manager() {
+    /** step 1:set snd, rcv, ack ports */
     // snd port: Port monitored by peer host i
     // rcv port: Port monitored by local host that will be used by peer host i
     comm_manager.snd_server_port = start_port + system_setting.jia_pid;
     comm_manager.ack_port = start_port + Maxhosts;
-    // log_out(3, "comm_manager.ack_port: %d", comm_manager.ack_port);
-    // log_out(3, "comm_manager.snd_server_port: %d",
-    //         comm_manager.snd_server_port);
     for (int i = 0; i < Maxhosts; i++) {
         comm_manager.rcv_ports[i] = start_port + i;
-        // log_out(3, "comm_manager.rcv_ports[%d]: %d", i,
-        //         comm_manager.rcv_ports[i]);
     }
 
+    /** step 2:bind fds */
     for (int i = 0; i < Maxhosts; i++) {
         // create socket and bind it to [INADDR_ANY, comm_manager.rcv_ports[i]
         // request from (host i) is will be receive from commreq.rcv_fds[i]
@@ -543,16 +439,14 @@ static int init_comm_manager() {
     comm_manager.ack_fds = fd_create(0, FDCR_ACK);
     set_nonblocking(comm_manager.ack_fds);
 
+    /** step 3:init seq */
     for (int i = 0; i < Maxhosts; i++) {
         comm_manager.snd_seq[i] = 0;
         comm_manager.ack_seq[i] = 0;
         comm_manager.rcv_seq[i] = 0;
     }
-}
 
-void set_nonblocking(int sockfd) {
-    int flags = fcntl(sockfd, F_GETFL, 0);
-    fcntl(sockfd, F_SETFL, flags | O_NONBLOCK);
+    return 0;
 }
 
 #else  /* NULL_LIB */
