@@ -61,9 +61,6 @@ extern _Atomic volatile int waitwait, cvwait, acqwait, barrwait;
 extern int stackptr;
 extern jiastack_t lockstack[Maxstacksize]; // lock stack
 
-static void pushstack(int lock);
-static void popstack();
-
 /************Lock Part****************/
 
 /**
@@ -178,7 +175,6 @@ void jia_barrier() {
 #endif
     if (system_setting.hostc == 1)
         return; // single machine
-
 
     if (LOAD_BAL == ON) {
         endtime = jia_clock();

@@ -520,13 +520,11 @@ void senddiffs() {
             index = ((void *)diffmsg[hosti] - (void *)msg_buffer.buffer) /
                     sizeof(slot_t);
             if (diffmsg[hosti]->size > 0) { // diff data size > 0
-                //diffwait++;
                 atomic_fetch_add(&diffwait, 1);
                 log_info(4, "diffwait: %d", diffwait);
                 move_msg_to_outqueue(&msg_buffer, index, &outqueue);
                 freemsg_unlock(&msg_buffer, index);
             }
-            // freemsg(diffmsg[hosti]);
             diffmsg[hosti] = DIFFNULL;
         }
     }

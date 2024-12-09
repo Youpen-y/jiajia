@@ -120,7 +120,7 @@ void diffserver(jia_msg_t *req) {
             datai += Intbytes;
 
             // copy diffmsg to cache
-            memcpy((address_t)(paddr + doffset), req->data + datai, dsize);
+            memcpy((address_t)(paddr + doffset), req->data + datai, dsize); // there may be race condition with mainthread
             datai += dsize;
 
             // cal which diffunit should be modified

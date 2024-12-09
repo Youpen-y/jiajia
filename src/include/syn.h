@@ -64,8 +64,8 @@ typedef struct wtnttype {
                } wtnt_t;
 
 typedef struct locktype {
-        int         acqs[Maxhosts];     /* acquire the lock's hostid*/
-        int         acqscope[Maxhosts]; /**/
+        int         acqs[Maxhosts];     /* acquirer's id*/
+        int         acqscope[Maxhosts]; /* acquirer's scope*/
         int         acqc;               /* acquire counter */
         int         scope;
         int         myscope;
@@ -99,6 +99,8 @@ void waitcvserver(jia_msg_t *);
 void cvgrantserver(jia_msg_t *);
 
 /* syn */
+void pushstack(int lock);
+void popstack();
 void endinterval(int synop);
 void startinterval(int synop);
 void invalidate(jia_msg_t *req);

@@ -306,7 +306,7 @@ void relserver(jia_msg_t *req) {
     lock = (int)stol(req->data); // get the lock
     jia_assert((lock % system_setting.hostc == system_setting.jia_pid), "Incorrect home of lock!");
     jia_assert((req->frompid == locks[lock].acqs[0]),
-           "This should not have happened! 6");
+           "This should not have happened!");
 
     if (req->scope > locks[hidelock].myscope)
         noclearlocks = 1;

@@ -64,7 +64,7 @@ extern jiastat_t jiastat;
 /* syn */
 // lock array, according to the hosts allocate lock(eg.
 // host0: 0, 2,... 62; host1 = 1, 3, ..., 63)
-jialock_t locks[Maxlocks + 1];
+jialock_t locks[Maxlocks + 1];  // the last one is a barrier(hidelock)
 jiastack_t lockstack[Maxstacksize]; // lock stack
 int stackptr;
 
@@ -103,7 +103,7 @@ void initsyn() {
     }
 
     stackptr = 0;
-    top.lockid = hidelock;
+    top.lockid = hidelock;  // lockstack[0].lockid = 64
     noclearlocks = 0;
 
     /** step 3: init condition variables */
@@ -175,7 +175,7 @@ void endinterval(int synop) {
 /**
  * @brief startinterval -- start an interval
  *
- * @param synop
+ * @param synop: ACQ/REL/BARR
  */
 void startinterval(int synop) {
     register int cachei;

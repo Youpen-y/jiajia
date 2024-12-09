@@ -236,7 +236,7 @@ static int startprocs(int argc, char **argv) {
         for (int i = 1; i < argc; i++) {
             sprintf(cmd, "%s %s", cmd, argv[i]);
         }
-        sprintf(shell, "%s -P %ld &", shell, start_port);
+        sprintf(shell, "%s -P %ud &", shell, start_port);
 
         // strcat cmd && shell to execute
         sprintf(cmd, "%s '%s'", cmd, shell);
