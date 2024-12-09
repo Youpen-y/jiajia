@@ -78,7 +78,7 @@ static char *mainstr = "[Thread  main ]";
         exit(EXIT_FAILURE);                                                    \
     }
 
-int oldsigiomask;
+extern int oldsigiomask;
 #define BEGINCS                                                                \
     {                                                                          \
         sigset_t newmask, oldmask;                                             \
