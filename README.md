@@ -68,11 +68,6 @@ void jia_barrier();
 ```
 Note: `jia_barrier()` cannot be called inside a critical section enclosed by `jia_lock()` and `jia_unlock()`
 
-### 
-
-
-
-
 ### Usage
 1. **ssh config**
 Refer to this tutorials [SSH Essentials: Working with SSH Servers, Clients, and Keys](https://www.digitalocean.com/community/tutorials/ssh-essentials-working-with-ssh-servers-clients-and-keys#allowing-root-access-for-specific-commands)
@@ -137,4 +132,3 @@ Example:
 ```
 bash run.sh
 ```
-will run all test cases for you.
