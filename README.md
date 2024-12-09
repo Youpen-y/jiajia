@@ -44,7 +44,7 @@ unsigned long jia_alloc(size_t size);
 ```c
 /**
  * jia_lock -- acquire the lock indentified by lockid
- * @lockid: the lock id
+ * @lockid: the lock id, range: [0:63]
  */
 
 void jia_lock(int lockid);
@@ -53,10 +53,12 @@ void jia_lock(int lockid);
 ```c
 /**
  * jia_unlock -- release the lock indentified by lockid
- * @lockid: the lock id
+ * @lockid: the lock id, range: [0,63]
  */
 void jia_unlock(int lockid);
 ```
+
+
 
 ```c
 /**
@@ -66,5 +68,73 @@ void jia_barrier();
 ```
 Note: `jia_barrier()` cannot be called inside a critical section enclosed by `jia_lock()` and `jia_unlock()`
 
+### 
+
+
+
 
 ### Usage
+1. **ssh config**
+Refer to this tutorials [SSH Essentials: Working with SSH Servers, Clients, and Keys](https://www.digitalocean.com/community/tutorials/ssh-essentials-working-with-ssh-servers-clients-and-keys#allowing-root-access-for-specific-commands)
+This step aims to help password-free operation.
+
+2. **create your apps**
+    - Use JIA api in your program with `#include <jia.h>`.
+    - Two common macro `jiahosts`(the num of machines in .jiahosts) and `jiapid`(the process id on current machine) can be used directly.
+
+Example:
+```c
+#include <jia.h>
+#include <stdio.h>
+
+int main(int argc, char **argv) {
+    jia_init(argc, argv); // init system
+    if (jiapid == 0) {
+        printf("Hello from master, Number of processes is: %d\n", jiahosts);
+    }
+    int *arr = (int *)jia_alloc(200000*sizeof(int));
+    if (jiapid == 0){
+        for(int i = 0; i < 200000; ++i) {
+            arr[i] = 0;
+        }
+    }
+
+    jia_lock(0);    // critical section
+    for(int i = 0; i < 200000; i++) {
+        arr[i]++;
+    }
+    jia_unlock(0);
+
+    jia_barrier();  // memory barrier
+
+    if (jiapid == 0) {
+        for(int i = 0; i < 200; i++) {
+            printf("arr[%d] = %d\n", i, arr[i]);
+        }
+    }
+
+    jia_exit(); // exit system
+}
+```
+
+3. **Modify .jiahost file**
+Add machines that you want to add to the system.
+
+Example:
+```
+# comment line
+192.168.103.1 username password
+192.168.103.2 username password
+# ...
+```
+
+4. **Optional**: Makefile (Refer to other app structure)
+
+
+### Test
+`run.sh` is a test script that used to test all cases.
+
+```
+bash run.sh
+```
+will run all test cases for you.

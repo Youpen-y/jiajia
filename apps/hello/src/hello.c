@@ -16,12 +16,7 @@ int main(int argc, char **argv) {
 
     jia_lock(0);
     for(int i = 0; i < 200000; i++) {
-        if (jiapid == 0)
-            arr[i]++;
-        else {
-            test += arr[i];
-            printf("test = %d\n", test);
-        }
+        arr[i]++;
     }
     jia_unlock(0);
 
