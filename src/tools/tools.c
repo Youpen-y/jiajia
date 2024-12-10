@@ -72,6 +72,8 @@ int LOAD_BAL = OFF; // LOAD_BAL: load balancing flag(ON/OFF)
 int W_VEC = OFF;    // W_VEC: write vector flag(ON/OFF)
 int RDMA_SUPPORT = OFF;
 
+/************ other tools ****************/
+
 /* initial setting that default optimization method is OFF */
 void inittools() {
     H_MIG = OFF;
@@ -81,6 +83,93 @@ void inittools() {
     W_VEC = OFF;
     RDMA_SUPPORT = OFF; // TODO: RDMA_SUPPORT
 }
+
+/**
+ * @brief newtwin() -- alloc a Pagesize space for a page's copy
+ *
+ * @param twin address of the new allocated space
+ */
+void newtwin(address_t *twin) {
+    if (*twin == ((address_t)NULL))
+        *twin = (address_t)valloc(Pagesize);
+    jia_assert(((*twin) != (address_t)NULL), "Cannot allocate twin space!");
+}
+
+/**
+ * @brief freetwin() -- free the space pointed by twin
+ *
+ * @param twin address of memory that will be free
+ */
+void freetwin(address_t *twin) {
+#ifndef RESERVE_TWIN_SPACE
+    free(*twin);
+    *twin = (address_t)NULL;
+#endif
+}
+
+/**
+ * @brief apppendmsg() -- append message with len bytes from str
+ *
+ * @param msg original message
+ * @param str appended source
+ * @param len number of bytes
+ *
+ */
+void appendmsg(jia_msg_t *msg, unsigned char *str, int len) {
+    jia_assert(((msg->size + len) <= Maxmsgsize), "Message too large");
+    memcpy(msg->data + msg->size, str, len);
+    msg->size += len;
+}
+
+/**
+ * @brief newwtnt() -- allocate a space for a new wtnt_t object
+ *
+ * @return wtnt_t* return a pointer to the allocated memory on success, NULL is
+ * returned on error and set errno
+ *
+ */
+wtnt_t *newwtnt() {
+    wtnt_t *wnptr;
+
+#ifdef SOLARIS
+    wnptr = memalign((size_t)Pagesize, (size_t)sizeof(wtnt_t));
+#else  /* SOLARIS */
+    wnptr = valloc((size_t)sizeof(wtnt_t));
+#endif /* SOLARIS */
+    jia_assert((wnptr != WNULL), "Can not allocate space for write notices!");
+    wnptr->more = WNULL;
+    wnptr->wtntc = 0;
+    return (wnptr);
+}
+
+/**
+ * @brief freewtntspace() -- free the wtnt list exclude the node pointed by ptr
+ * (list head)
+ *
+ * @param ptr list head
+ */
+void freewtntspace(wtnt_t *ptr) {
+    wtnt_t *last, *wtntp;
+
+    wtntp = ptr->more;
+    while (wtntp != WNULL) {
+        last = wtntp;
+        wtntp = wtntp->more;
+        free(last);
+    }
+    ptr->wtntc = 0;
+    ptr->more = WNULL;
+}
+
+void free_system_resources() {
+    free_msg_buffer(&msg_buffer);  // free msg buffer
+    free_msg_queue(&outqueue);     // free outqueue
+    free_msg_queue(&inqueue);      // free inqueue
+    free_setting(&system_setting); // free system setting
+    // ...
+}
+
+/************ exit ****************/
 
 /**
  * @brief local_assert -- assert the condition locally, if cond is false, print
@@ -168,81 +257,20 @@ void jiaexitserver(jia_msg_t *req) {
 }
 
 /**
- * @brief newtwin() -- alloc a Pagesize space for a page's copy
+ * @brief jia_error -- output str with possible format
  *
- * @param twin address of the new allocated space
+ * @param str string to output
+ * @param ... variable arguments
  */
-void newtwin(address_t *twin) {
-    if (*twin == ((address_t)NULL))
-        *twin = (address_t)valloc(Pagesize);
-    jia_assert(((*twin) != (address_t)NULL), "Cannot allocate twin space!");
+void jia_error(char *str, ...) {
+    va_list ap;
+    va_start(ap, str);
+    vsprintf(errstr, str, ap);
+    va_end(ap);
+    jia_assert(0, errstr);
 }
 
-/**
- * @brief freetwin() -- free the space pointed by twin
- *
- * @param twin address of memory that will be free
- */
-void freetwin(address_t *twin) {
-#ifndef RESERVE_TWIN_SPACE
-    free(*twin);
-    *twin = (address_t)NULL;
-#endif
-}
-
-/**
- * @brief apppendmsg() -- append message with len bytes from str
- *
- * @param msg original message
- * @param str appended source
- * @param len number of bytes
- *
- */
-void appendmsg(jia_msg_t *msg, unsigned char *str, int len) {
-    jia_assert(((msg->size + len) <= Maxmsgsize), "Message too large");
-    memcpy(msg->data + msg->size, str, len);
-    msg->size += len;
-}
-
-/**
- * @brief newwtnt() -- allocate a space for a new wtnt_t object
- *
- * @return wtnt_t* return a pointer to the allocated memory on success, NULL is
- * returned on error and set errno
- *
- */
-wtnt_t *newwtnt() {
-    wtnt_t *wnptr;
-
-#ifdef SOLARIS
-    wnptr = memalign((size_t)Pagesize, (size_t)sizeof(wtnt_t));
-#else  /* SOLARIS */
-    wnptr = valloc((size_t)sizeof(wtnt_t));
-#endif /* SOLARIS */
-    jia_assert((wnptr != WNULL), "Can not allocate space for write notices!");
-    wnptr->more = WNULL;
-    wnptr->wtntc = 0;
-    return (wnptr);
-}
-
-/**
- * @brief freewtntspace() -- free the wtnt list exclude the node pointed by ptr
- * (list head)
- *
- * @param ptr list head
- */
-void freewtntspace(wtnt_t *ptr) {
-    wtnt_t *last, *wtntp;
-
-    wtntp = ptr->more;
-    while (wtntp != WNULL) {
-        last = wtntp;
-        wtntp = wtntp->more;
-        free(last);
-    }
-    ptr->wtntc = 0;
-    ptr->more = WNULL;
-}
+/************ print ****************/
 
 /**
  * @brief printmsg() -- print message pointed by msg (if verbose >= 3)
@@ -585,6 +613,67 @@ void printmsg(jia_msg_t *msg) {
     }
 }
 
+extern void setwtvect(int homei, wtvect_t wv);
+
+/**
+ * @brief Turn optimizations such as (home migration, write vector, adaptive
+ * write detection) on
+ *
+ * @param dest: optimization technique
+ * @param value ON, turn on the dest; OFF, turn off the dest
+ */
+void jia_config(int dest, int value) {
+    int i;
+    switch (dest) {
+    case HMIG:
+        H_MIG =
+            value; /* change optimization 'home migration' to value(ON/OFF) */
+        break;
+    case ADWD:
+        AD_WD =
+            value; /* change optimization 'adaptive write detetion' to value*/
+        break;
+    case BROADCAST:
+        B_CAST = value;
+        break;
+    case LOADBAL:
+        LOAD_BAL = value;
+        if (LOAD_BAL == ON)
+            firsttime = 1;
+        caltime = 0.0;
+        break;
+    case WVEC:
+        if ((W_VEC == OFF) &&
+            (value == ON)) { /*  change optimization 'write vector' to value */
+            for (i = 0; i < Homepages; i++) {
+                home[i].wtvect =
+                    (wtvect_t *)malloc(system_setting.hostc * sizeof(wtvect_t));
+                setwtvect(i, WVFULL);
+            }
+        } else if ((W_VEC == ON) && (value == OFF)) {
+            for (i = 0; i < Homepages; i++) {
+                free(home[i].wtvect);
+            }
+        }
+        W_VEC = value;
+        break;
+    case RDMA:
+        VERBOSE_LOG(3, "TODO! RDMA support");
+        break;
+    default:
+        VERBOSE_LOG(3, "Null configuration!\n");
+        break;
+    }
+}
+
+/**
+ * @brief emptyprintf -- do nothing
+ *
+ */
+void emptyprintf() {}
+
+/************ time ****************/
+
 /*-----------------------------------------------------------*/
 /* Following programs are used by Shi. 9.10 */
 
@@ -641,133 +730,6 @@ float jia_clock() {
 }
 
 /**
- * @brief disable_sigio - block SIGIO signal
- *
- */
-void disable_sigio() {
-    sigset_t set, oldset;
-
-    sigemptyset(&set);
-    sigaddset(&set, SIGIO);
-    sigprocmask(SIG_BLOCK, &set, &oldset);
-}
-
-/**
- * Macro: int SIGIO (The signal is sent when a file descriptor is ready to
- * perform input or output)
- * */
-
-/**
- * @brief enable_sigio - unblock SIGIO signal
- *
- */
-void enable_sigio() {
-    sigset_t set;
-
-    sigemptyset(&set);
-    sigaddset(&set, SIGIO);
-    sigprocmask(SIG_UNBLOCK, &set, NULL);
-}
-
-/**
- * @brief emptyprintf -- do nothing
- *
- */
-void emptyprintf() {}
-
-/**
- * @brief jia_error -- output str with possible format
- *
- * @param str string to output
- * @param ... variable arguments
- */
-void jia_error(char *str, ...) {
-    va_list ap;
-    va_start(ap, str);
-    vsprintf(errstr, str, ap);
-    va_end(ap);
-    jia_assert(0, errstr);
-}
-
-extern void setwtvect(int homei, wtvect_t wv);
-
-/**
- * @brief Turn optimizations such as (home migration, write vector, adaptive
- * write detection) on
- *
- * @param dest: optimization technique
- * @param value ON, turn on the dest; OFF, turn off the dest
- */
-void jia_config(int dest, int value) {
-    int i;
-    switch (dest) {
-    case HMIG:
-        H_MIG =
-            value; /* change optimization 'home migration' to value(ON/OFF) */
-        break;
-    case ADWD:
-        AD_WD =
-            value; /* change optimization 'adaptive write detetion' to value*/
-        break;
-    case BROADCAST:
-        B_CAST = value;
-        break;
-    case LOADBAL:
-        LOAD_BAL = value;
-        if (LOAD_BAL == ON)
-            firsttime = 1;
-        caltime = 0.0;
-        break;
-    case WVEC:
-        if ((W_VEC == OFF) &&
-            (value == ON)) { /*  change optimization 'write vector' to value */
-            for (i = 0; i < Homepages; i++) {
-                home[i].wtvect =
-                    (wtvect_t *)malloc(system_setting.hostc * sizeof(wtvect_t));
-                setwtvect(i, WVFULL);
-            }
-        } else if ((W_VEC == ON) && (value == OFF)) {
-            for (i = 0; i < Homepages; i++) {
-                free(home[i].wtvect);
-            }
-        }
-        W_VEC = value;
-        break;
-    case RDMA:
-        VERBOSE_LOG(3, "TODO! RDMA support");
-        break;
-    default:
-        VERBOSE_LOG(3, "Null configuration!\n");
-        break;
-    }
-}
-
-#else /* NULL_LIB */
-#include <sys/time.h>
-
-unsigned long start_sec = 0;
-unsigned long start_time_sec = 0;
-unsigned long start_time_usec = 0;
-unsigned long start_msec = 0;
-float jia_clock() {
-    struct timeval val;
-    gettimeofday(&val, NULL);
-    if (!start_time_sec) {
-        start_time_sec = val.tv_sec;
-        start_time_usec = val.tv_usec;
-    }
-    return (float)(((val.tv_sec * 1000000.0 + val.tv_usec) -
-                    (start_time_sec * 1000000.0 + start_time_usec)) /
-                   1000000.0);
-}
-
-void jia_error(char *errstr) {
-    VERBOSE_LOG(3, "JIAJIA error --- %s\n", errstr);
-    exit(-1);
-}
-#endif /* NULL_LIB */
-
-/**
  * @brief get_usecs -- Get the usecs object
  *
  * @return unsigned int the elapsed time since base (microsecond)
@@ -784,10 +746,22 @@ unsigned int get_usecs() {
             (time.tv_usec - base.tv_usec));
 }
 
-void free_system_resources() {
-    free_msg_buffer(&msg_buffer);  // free msg buffer
-    free_msg_queue(&outqueue);     // free outqueue
-    free_msg_queue(&inqueue);      // free inqueue
-    free_setting(&system_setting); // free system setting
-    // ...
+#else /* NULL_LIB */
+#include <sys/time.h>
+
+unsigned long start_sec = 0;
+unsigned long start_time_sec = 0;
+unsigned long start_time_usec = 0;
+unsigned long start_msec = 0;
+float jia_clock() {extern void setwtvect(int homei, wtvect_t wv);
+    }
+    return (float)(((val.tv_sec * 1000000.0 + val.tv_usec) -
+                    (start_time_sec * 1000000.0 + start_time_usec)) /
+                   1000000.0);
 }
+
+void jia_error(char *errstr) {
+    VERBOSE_LOG(3, "JIAJIA error --- %s\n", errstr);
+    exit(-1);
+}
+#endif /* NULL_LIB */

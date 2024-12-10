@@ -52,8 +52,6 @@ extern void initcomm();
 extern void initmsg();
 extern void inittools();
 extern void initload();
-extern void disable_sigio();
-extern void enable_sigio();
 extern unsigned long jia_current_time();
 extern float jia_clock();
 extern unsigned int get_usecs();

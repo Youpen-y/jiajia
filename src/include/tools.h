@@ -23,8 +23,6 @@ void printstack(int ptr);
 unsigned long jia_current_time();
 float jia_clock();
 void jiasleep(unsigned long);
-void disable_sigio();
-void enable_sigio();
 void freewtntspace(wtnt_t *ptr);
 wtnt_t *newwtnt();
 void newtwin(address_t *twin);

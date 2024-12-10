@@ -78,23 +78,6 @@ static char *mainstr = "[Thread  main ]";
         exit(EXIT_FAILURE);                                                    \
     }
 
-extern int oldsigiomask;
-#define BEGINCS                                                                \
-    {                                                                          \
-        sigset_t newmask, oldmask;                                             \
-        sigemptyset(&newmask);                                                 \
-        sigaddset(&newmask, SIGIO);                                            \
-        sigprocmask(SIG_BLOCK, &newmask, &oldmask);                            \
-        oldsigiomask = sigismember(&oldmask, SIGIO);                           \
-        VERBOSE_LOG(3, "Enter CS\t");                                          \
-    }
-#define ENDCS                                                                  \
-    {                                                                          \
-        if (oldsigiomask == 0)                                                 \
-            enable_sigio();                                                    \
-        VERBOSE_LOG(3, "Exit CS\n");                                           \
-    }
-
 
 int open_logfile(char *filename, int argc, char **argv);
 char* op2name(int op);
