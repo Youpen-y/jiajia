@@ -7,7 +7,13 @@ boot.ps1
 apps/.jiahosts
 apps/*/*/*
 !apps/*/src/*
+!apps/*/*/*files
 !**/Makefile
-.clang-format
 rebuild.sh
 reports
+clean.sh
+lib.mk
+pi.mk
+jiajia*.log
+jiajia.log*
+merge.log

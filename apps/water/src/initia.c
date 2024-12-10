@@ -24,7 +24,7 @@ void INITIA(FILE *nfmc)   /* nfmc points to LWI12, the input file with the initi
     int mol=0;
     int atom=0;
     
-    if (!(random_numbers = fopen("../waterfiles/random.in","r"))) {
+    if (!(random_numbers = fopen("./waterfiles/random.in","r"))) {
 	    fprintf(stderr,"Can't open 'random.in'");
     }
     XMAS[1]=sqrt(OMAS*HMAS);

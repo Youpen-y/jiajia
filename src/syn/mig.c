@@ -42,7 +42,7 @@
 #include "setting.h"
 #include "stat.h"
 
-/* mm */
+/* mem */
 extern jiapage_t page[Maxmempages];
 extern jiacache_t cache[Cachepages];
 extern jiahome_t home[Homepages];
@@ -168,7 +168,7 @@ void migpage(unsigned long addr, int frompid, int topid) {
         }
 #endif
     } else if (frompid == system_setting.jia_pid) { /*Old Home*/
-        homei = homepage(addr);
+        homei = homepage((address_t)addr);
         jia_assert((unsigned long)home[homei].addr == addr, "MIG ERROR");
 
         for (cachei = 0;

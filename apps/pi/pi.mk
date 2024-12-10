@@ -1,9 +1,8 @@
 #*********************************************************
 # Application specific rules and defines...
 #*********************************************************
-
-CFLAGS += -I../../../src/include -O2 -g
-
+CPPFLAGS = -I../../../src/include
+CFLAGS = -O0 -g -fdebug-prefix-map=${PWD}=.
 OBJS 	= pi.o
 VPATH = ../src 
 JIALIB = ../../../lib/$(ARCH)

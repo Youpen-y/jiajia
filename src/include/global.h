@@ -38,31 +38,11 @@
 #ifndef	JIAGLOBAL_H
 #define	JIAGLOBAL_H
 
-#ifndef Maxhosts
-#define Maxhosts   16               /* maximum number of hosts of a parallel system */
-#endif 
-#define	Maxlocks   64               /* maximum number of locks in JIAJIA */
-#define Intbytes   4                /* number of bytes of int type */
-#define Intbits    32               /* number of bits of int type */
-#define Pagesize   4096             /* page size of JIAJIA */
-#ifndef Cachepages
-#define Cachepages 1024             /* cache size in number of pages */
-#endif
-
-#define   Maxmemsize  0x8000000     /* max number of bytes of the shared memory 128MB, [Startaddr, Startaddr+Maxmemsize) */
-#define   Maxmempages (Maxmemsize/Pagesize) /* max number of pages of the shared memory£¬ 32K */
-
 #include        <stdio.h>
 #include        <stdlib.h>
 #include        <memory.h>
 #include        <stdarg.h>
 #include        <math.h>
-
-#ifndef    LINUX
-#include        <stropts.h>
-#include        <sys/conf.h>
-#endif 
-
 #include        <sys/socket.h>
 #include        <sys/time.h>
 #include        <sys/types.h>
@@ -86,16 +66,25 @@
 #include        <sys/file.h>
 #endif /* SOLARIS */
 
-#ifdef AIX41
-#include	<sys/select.h>
-#include 	<sys/signal.h>
-#endif /* AIX41 */
-
 #ifdef LINUX
 #include        <sys/fcntl.h>
-//#include        <asm/sigcontext.h>
 #include        <asm/mman.h> 
 #endif         
+
+
+#ifndef Maxhosts
+#define Maxhosts   16               /* maximum number of hosts of a parallel system */
+#endif 
+#define	Maxlocks   64               /* maximum number of locks in JIAJIA */
+#define Intbytes   4                /* number of bytes of int type */
+#define Intbits    32               /* number of bits of int type */
+#define Pagesize   4096             /* page size of JIAJIA */
+#ifndef Cachepages
+#define Cachepages 1024             /* cache size in number of pages */
+#endif
+
+#define   Maxmemsize  0x800000000     /* max number of bytes of the shared memory 128MB, [Startaddr, Startaddr+Maxmemsize) */
+#define   Maxmempages (Maxmemsize/Pagesize) /* max number of pages of the shared memoryï¿½ï¿½ 32K */
 
 typedef void (* void_func_handler)();
 
@@ -129,5 +118,7 @@ typedef void (* void_func_handler)();
 #define SPACE(right) {if ((right)==1) \
                        printf("\t\t\t"); \
                      }
+                     
+#define STATOP(op) if(statflag){op};
 
 #endif /* JIAGLOBAL_H */

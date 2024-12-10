@@ -1,4 +1,3 @@
-
 	subroutine jiaf_init
 	external jia_init !$pragma C(jia_init)
 	external ident

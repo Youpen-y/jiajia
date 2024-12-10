@@ -1,6 +1,8 @@
+#include "setting.h"
 #include <stdio.h>
 #include <math.h>
 #include <jia.h>
+#include <unistd.h>
 
 double f(double a)
 {
@@ -15,8 +17,8 @@ int main(int argc,char *argv[])
     float startt, endt;
     double *pa;
 
-   
     jia_init(argc,argv); 
+    //sleep(20);
     n = 1000000;
     pa=(double *)jia_alloc(sizeof(double));
     jia_barrier();
@@ -37,17 +39,17 @@ int main(int argc,char *argv[])
       sum += f(x);
     }
     mypi = h * sum;
-
+    
     jia_lock(1);
-     *pa= *pa+mypi;
+    *pa= *pa+mypi;
     jia_unlock(1);
     jia_barrier();
     endt = jia_clock();
 
     if (jiapid==0) {
-       printf("pi is approximately %.16f, Error is %.16f\n",
-       *pa, fabs(*pa - PI25DT));
-       printf("Elapsed time = %f\n", endt-startt);
+      printf("pi is approximately %.16f, Error is %.16f\n",
+      *pa, fabs(*pa - PI25DT));
+      printf("Elapsed time = %f\n", endt-startt);
     }
 
     jia_exit();

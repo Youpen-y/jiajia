@@ -38,11 +38,17 @@
 #include "comm.h"
 #include "jia.h"
 #include "mem.h"
-#include "syn.h"
-#include "tools.h"
-#include "utils.h"
+#include "msg.h"
 #include "setting.h"
 #include "stat.h"
+#include "syn.h"
+#include "tools.h"
+#include <stdatomic.h>
+#include <execinfo.h>
+#include <stddef.h>
+#include <stdlib.h>
+#include <string.h>
+#include <unistd.h>
 
 /* user */
 extern jiahome_t home[Homepages];    /* host owned page */
@@ -51,8 +57,8 @@ extern jiapage_t page[Maxmempages];  /* global page space */
 extern unsigned long globaladdr;
 
 /* server */
-extern volatile int getpwait;
-extern volatile int diffwait;
+extern _Atomic volatile int getpwait;
+extern _Atomic volatile int diffwait;
 
 /* tools */
 extern int H_MIG, B_CAST, W_VEC;
@@ -83,7 +89,7 @@ static void savediff(int cachei);
 void flushpage(int cachei) {
     memunmap((void *)cache[cachei].addr, Pagesize);
 
-    page[((unsigned long)cache[cachei].addr - system_setting.global_start_addr) / Pagesize].cachei =
+    cachepage(cache[cachei].addr) =
         Cachepages; // normal cachi range: [0, Cachepages)
 
     if (cache[cachei].state == RW) { // cache's state equals RW means that there
@@ -106,22 +112,25 @@ void getpage(address_t addr, int flag) {
     jia_msg_t *req;
 
     homeid = homehost(addr);
-    jia_assert((homeid != system_setting.jia_pid), "This should not have happened 2!");
-    req = newmsg();
+    jia_assert((homeid != system_setting.jia_pid),
+               "This should not have happened 2!");
+    // req = newmsg();
+
+    int index = freemsg_lock(&msg_buffer);
+    req = &msg_buffer.buffer[index].msg;
 
     req->op = GETP;
     req->frompid = system_setting.jia_pid;
     req->topid = homeid;
     req->temp = flag; /*0:read request, 1:write request*/
     req->size = 0;
-    // appendmsg(req,ltos(addr),Intbytes);
+    // append address of request page to data[0..7]
     appendmsg(req, ltos(addr), sizeof(unsigned char *));
-    getpwait = 1;
-    asendmsg(req);
+    //getpwait = 1;
+    atomic_store(&getpwait, 1);
+    move_msg_to_outqueue(&msg_buffer, index, &outqueue);
+    freemsg_unlock(&msg_buffer, index);
 
-    freemsg(req);
-    while (getpwait)
-        ;
 #ifdef DOSTAT
     if (statflag == 1) {
         jiastat.getpcnt++;
@@ -150,6 +159,28 @@ int replacei(int cachei) {
     }
 }
 
+
+// int replacei(int cachei, repscheme_t flag) {
+//     int seti, repi;
+//     switch (flag) {
+//         case RANDOM:
+//             repi = ((random() >> 8) % Setpages);
+//             break;
+//         case CIRCULAR:
+//             seti = cachei / Setpages;
+//             repcnt[seti] = (repcnt[seti] + 1) % Setpages;
+//             repi = repcnt[seti];
+//             break;
+//         case LRU:
+
+//             break;
+//     }
+//     return repi;
+// }
+
+
+
+
 /**
  * @brief findposition -- find an available cache slot in cache
  *
@@ -166,8 +197,11 @@ int findposition(address_t addr) {
     seti = replacei(cachei);
     invi = -1;
 
-    // find a cached page whose state is UNMAP (or INV, use invi to record it)
-    // or the last page in this set
+    /**
+     * find a cached page whose state is UNMAP (or INV, use invi to record it)
+     * or the last page in this set
+     * UNMAP is the highest priority， second is INV
+     */
     for (i = 0; (cache[cachei + seti].state != UNMAP) && (i < Setpages); i++) {
         if ((invi == (-1)) && (cache[cachei + seti].state == INV))
             invi = seti;
@@ -178,6 +212,8 @@ int findposition(address_t addr) {
     if ((cache[cachei + seti].state != UNMAP) && (invi != (-1))) {
         seti = invi;
     }
+
+    // cache priorty sequence: UNMAP > INV > RO > RW
 
     /**
      * INV||RO : flush
@@ -205,7 +241,7 @@ int findposition(address_t addr) {
         }
 #endif
     }
-    page[((unsigned long)(addr)-system_setting.global_start_addr) / Pagesize].cachei =  (unsigned short)(cachei + seti);
+    cachepage(addr) = (unsigned short)(cachei + seti);
     return (cachei + seti);
 }
 
@@ -213,15 +249,7 @@ int findposition(address_t addr) {
 void sigsegv_handler(int signo, siginfo_t *sip, ucontext_t *uap)
 #endif
 
-#if defined AIX41 || defined IRIX62
-    void sigsegv_handler(int signo,
-                         int code,
-                         struct sigcontext *scp,
-                         char *addr)
-#endif
-
 #ifdef LINUX
-    // void sigsegv_handler(int signo, struct sigcontext sigctx)
     void sigsegv_handler(int signo, siginfo_t *sip, void *context)
 #endif
 {
@@ -239,8 +267,8 @@ void sigsegv_handler(int signo, siginfo_t *sip, ucontext_t *uap)
 #endif
 
     sigemptyset(&set);
-    sigaddset(&set, SIGIO);
-    sigprocmask(SIG_UNBLOCK, &set, NULL);
+    sigaddset(&set, SIGSEGV);
+    sigprocmask(SIG_BLOCK, &set, NULL);
 
 #ifdef SOLARIS
     faultaddr = (address_t)sip->si_addr;
@@ -248,52 +276,48 @@ void sigsegv_handler(int signo, siginfo_t *sip, ucontext_t *uap)
     writefault = (int)(*(unsigned *)uap->uc_mcontext.gregs[REG_PC] & (1 << 21));
 #endif
 
-#ifdef AIX41
-    faultaddr = (char *)scp->sc_jmpbuf.jmp_context.o_vaddr;
-    faultaddr = (address_t)((unsigned long)faultaddr / Pagesize * Pagesize);
-    writefault = (scp->sc_jmpbuf.jmp_context.except[1] & DSISR_ST) >> 25;
-#endif
-
-#ifdef IRIX62
-    faultaddr = (address_t)scp->sc_badvaddr;
-    faultaddr = (address_t)((unsigned long)faultaddr / Pagesize * Pagesize);
-    writefault = (int)(scp->sc_cause & EXC_CODE(1));
-#endif
-
 #ifdef LINUX
     faultaddr = (address_t)sip->si_addr;
-    faultaddr = (address_t)((unsigned long)faultaddr / Pagesize * Pagesize);
-    writefault =
-        sip->si_code & 2; /* si_code: 1 means that address not mapped to object
-                             => () si_code: 2 means that invalid permissions for
-                             mapped object => ()*/
+    faultaddr =
+        (address_t)((unsigned long long)faultaddr / Pagesize * Pagesize);
+    /**
+     * si_code: 1 means that address not mapped to object
+     * si_code: 2 means that invalid permissions for mapped object
+     */
+    writefault = sip->si_code & 2;
 #endif
-    VERBOSE_LOG(3, "Enter sigsegv handler\n");
-    VERBOSE_LOG(3,
-                "Shared memory out of range from %p to %p!, faultaddr=%p, "
-                "writefault=%d\n",
-                (void *)system_setting.global_start_addr, (void *)(system_setting.global_start_addr + globaladdr), faultaddr,
-                writefault);
 
-    VERBOSE_LOG(3, "sig info structure siginfo_t\n");
-    VERBOSE_LOG(3,
-                "\tsignal err : %d \n"
-                "\tsignal code: %d \n"
-                "\t    si_addr: %p\n",
-                sip->si_errno, sip->si_code, sip->si_addr);
+    log_info(3, "Enter sigsegv ");
+    log_info(3,
+             "Shared memory range from %p to %p!, faultaddr=%p(%d), "
+             "writefault=%d",
+             (void *)system_setting.global_start_addr,
+             (void *)(system_setting.global_start_addr + globaladdr), faultaddr, homehost(faultaddr),
+             writefault);
 
-    jia_assert((((unsigned long)faultaddr < (system_setting.global_start_addr + globaladdr)) &&
-            ((unsigned long)faultaddr >= system_setting.global_start_addr)),
-           "Access shared memory out of range from 0x%x to 0x%x!, "
-           "faultaddr=0x%x, writefault=0x%x",
-           system_setting.global_start_addr, system_setting.global_start_addr + globaladdr, faultaddr, writefault);
+    log_info(3,
+             "\nsig info structure siginfo_t"
+             "\n\tsignal err : %d \n"
+             "\tsignal code: %d \n"
+             "\t    si_addr: %p",
+             sip->si_errno, sip->si_code, sip->si_addr);
+
+    jia_assert(
+        (((unsigned long long)faultaddr <
+          (system_setting.global_start_addr + globaladdr)) &&
+         ((unsigned long long)faultaddr >= system_setting.global_start_addr)),
+        "Access shared memory out of range from %p to %p!, "
+        "faultaddr=%p, writefault=%d",
+        (void *)system_setting.global_start_addr,
+        (void *)(system_setting.global_start_addr + globaladdr),
+        (void *)faultaddr, writefault);
 
     // page's home is current host (si_code = 2)
     if (homehost(faultaddr) == system_setting.jia_pid) {
-        memprotect((caddr_t)faultaddr, Pagesize,
-                   PROT_READ | PROT_WRITE); // grant write right
+        // grant write right beyond read right
+        memprotect((caddr_t)faultaddr, Pagesize, PROT_READ | PROT_WRITE);
         homei = homepage(faultaddr);
-        home[homei].wtnt |= 3; /* set bit0 = 1, bit1 = 1 */
+        home[homei].wtnt |= 3;
         if ((W_VEC == ON) && (home[homei].wvfull == 0)) {
             newtwin(&(home[homei].twin));
             memcpy(home[homei].twin, home[homei].addr, Pagesize);
@@ -306,15 +330,16 @@ void sigsegv_handler(int signo, siginfo_t *sip, ucontext_t *uap)
 
         // page on other host, page must be get before other operations
         writefault = (writefault == 0) ? 0 : 1;
-        cachei =
-            (int)page[((unsigned long)faultaddr - system_setting.global_start_addr) / Pagesize].cachei;
+        cachei = cachepage(faultaddr);
 
         /**
-         * cachei == Cachepages: page's cache has exist
-         * cachei != Cachepages: should be mmapped
+         * cachei != Cachepages: page's cache has exist
+         * cachei == Cachepages: should be mmapped
          * note: first protect it as writable, and then make changes based on
-         * writefault later.
+         * writefault later. first writable permission is for getpgrantserver's
+         * copy(to faultaddr)
          */
+
         if (cachei < Cachepages) {
             memprotect((caddr_t)faultaddr, Pagesize, PROT_READ | PROT_WRITE);
             if (!((writefault) && (cache[cachei].state == RO))) {
@@ -327,20 +352,22 @@ void sigsegv_handler(int signo, siginfo_t *sip, ucontext_t *uap)
         }
 
         /**
-         * make (protect right)changes based on writefault later.
+         * writefault == 0(not mapped): getpage without RW permission(only RO)
+         * writefault == 1(not permitted): give faultaddr RW permission to write
          */
         if (writefault) {
             cache[cachei].addr = faultaddr;
             cache[cachei].state = RW;
             cache[cachei].wtnt = 1;
+            // new twin to store origin data for compare and senddiffs later
             newtwin(&(cache[cachei].twin));
-            while (getpwait)
+            while (atomic_load(&getpwait))
                 ;
             memcpy(cache[cachei].twin, faultaddr, Pagesize);
         } else {
             cache[cachei].addr = faultaddr;
             cache[cachei].state = RO;
-            while (getpwait)
+            while (atomic_load(&getpwait))
                 ;
             memprotect((caddr_t)faultaddr, (size_t)Pagesize, PROT_READ);
         }
@@ -353,7 +380,7 @@ void sigsegv_handler(int signo, siginfo_t *sip, ucontext_t *uap)
         }
 #endif
     }
-    VERBOSE_LOG(3, "Out sigsegv_handler\n\n");
+    log_info(3, "Out of sigsegv_handler\n");
 }
 
 /**
@@ -379,7 +406,7 @@ int encodediff(int cachei, unsigned char *diff) {
     register unsigned int begin = get_usecs();
 #endif
 
-    // step 1: encode the cache page addr first (4 bytes)
+    // step 1: encode the cache page addr first
     memcpy(diff + size, ltos(cache[cachei].addr), sizeof(unsigned char *));
     size += sizeof(unsigned char *);
     size += Intbytes; /* leave space for size */
@@ -395,6 +422,7 @@ int encodediff(int cachei, unsigned char *diff) {
             ;
 
         if (bytei < Pagesize) {
+            cnt = 0;
             start = bytei; // record the start byte index of the diff
 
             // how much diffunit is different
@@ -449,13 +477,15 @@ void savepage(int cachei) {
 void savediff(int cachei) {
     unsigned char diff[Maxmsgsize]; // msg data array to store diff
     int diffsize;
-    int hosti;
+    int hosti, index;
 
     hosti = homehost(
         cache[cachei]
             .addr); // according to cachei addr get the page's home host index
     if (diffmsg[hosti] == DIFFNULL) { // hosti host's diffmsg is NULL
-        diffmsg[hosti] = newmsg();
+        index = freemsg_lock(&msg_buffer);
+        // diffmsg[hosti] = newmsg();
+        diffmsg[hosti] = &msg_buffer.buffer[index].msg;
         diffmsg[hosti]->op = DIFF;
         diffmsg[hosti]->frompid = system_setting.jia_pid;
         diffmsg[hosti]->topid = hosti;
@@ -465,8 +495,9 @@ void savediff(int cachei) {
         cachei, diff); // encoded the difference data between cachei page and
                        // its twin into diff [] and return size
     if ((diffmsg[hosti]->size + diffsize) > Maxmsgsize) {
-        diffwait++;
-        asendmsg(diffmsg[hosti]);
+        atomic_fetch_add(&diffwait, 1);
+        log_info(4, "diffwait: %d", diffwait);
+        move_msg_to_outqueue(&msg_buffer, index, &outqueue);
         diffmsg[hosti]->size = 0;
         appendmsg(diffmsg[hosti], diff, diffsize);
         while (diffwait)
@@ -482,18 +513,21 @@ void savediff(int cachei) {
  */
 void senddiffs() {
     int hosti;
-
+    int index;
     for (hosti = 0; hosti < system_setting.hostc; hosti++) {
-        if (diffmsg[hosti] != DIFFNULL) {   // hosti's diff msgs is non-NULL
+        if (diffmsg[hosti] != DIFFNULL) { // hosti's diff msgs is non-NULL
+            index = ((void *)diffmsg[hosti] - (void *)msg_buffer.buffer) /
+                    sizeof(slot_t);
             if (diffmsg[hosti]->size > 0) { // diff data size > 0
-                diffwait++;
-                asendmsg(diffmsg[hosti]); // asynchronous send diff msg
+                atomic_fetch_add(&diffwait, 1);
+                log_info(4, "diffwait: %d", diffwait);
+                move_msg_to_outqueue(&msg_buffer, index, &outqueue);
+                freemsg_unlock(&msg_buffer, index);
             }
-            freemsg(diffmsg[hosti]);
             diffmsg[hosti] = DIFFNULL;
         }
     }
-    /*
-     while(diffwait); // diffwait is detected after senddiffs() called
-    */
+
+    while (atomic_load(&diffwait))
+        ; // diffwait is detected after senddiffs() called
 }

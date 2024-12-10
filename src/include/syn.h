@@ -64,8 +64,8 @@ typedef struct wtnttype {
                } wtnt_t;
 
 typedef struct locktype {
-        int         acqs[Maxhosts];     /* acquire the lock's hostid*/
-        int         acqscope[Maxhosts]; /**/
+        int         acqs[Maxhosts];     /* acquirer's id*/
+        int         acqscope[Maxhosts]; /* acquirer's scope*/
         int         acqc;               /* acquire counter */
         int         scope;
         int         myscope;
@@ -99,6 +99,8 @@ void waitcvserver(jia_msg_t *);
 void cvgrantserver(jia_msg_t *);
 
 /* syn */
+void pushstack(int lock);
+void popstack();
 void endinterval(int synop);
 void startinterval(int synop);
 void invalidate(jia_msg_t *req);
@@ -109,13 +111,14 @@ void savewtnt(wtnt_t *ptr, address_t addr, int frompid);
 void recordwtnts(jia_msg_t *req);
 wtnt_t *appendbarrwtnts(jia_msg_t *msg, wtnt_t *ptr);
 wtnt_t *appendlockwtnts(jia_msg_t *msg, wtnt_t *ptr, int acqscope);
+wtnt_t *appendstackwtnts(jia_msg_t *msg, wtnt_t *ptr);
 
 /* synlockbarr */
 void acquire(int lock);
 void grantlock(int lock, int toproc, int acqscope);
 void grantbarr(int lock);
 void clearlocks();
-void broadcast(jia_msg_t *msg);
+void broadcast(jia_msg_t *msg, int index);
 
 /* syncv */
 void grantcondv(int condv, int toproc);

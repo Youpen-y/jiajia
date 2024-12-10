@@ -37,168 +37,94 @@
 
 #ifndef JIACOMM_H
 #define JIACOMM_H
+#pragma once
 
 #include "global.h"
 #include "init.h"
+#include "msg.h"
+#include "semaphore.h"
 
-#define TIMEOUT 1000   /* used to wait for ack */
+#define TIMEOUT 100   /* used to wait for ack */
 #define MAX_RETRIES 64 /* number of retransmissions */
 
-#define Msgheadsize 32                   /* fixed header of msg */
-#define Maxmsgsize (40960 - Msgheadsize) /* data size of msg */
-#define Maxqueue                                                               \
-    32 /* size of input and output queue for communication (>= 2*maxhosts)*/
+extern msg_queue_t inqueue;
+extern msg_queue_t outqueue;
 
-/* msg operation (type) */
-#define DIFF        0
-#define DIFFGRANT   1
-#define GETP        2
-#define GETPGRANT   3
-#define ACQ         4
-#define ACQGRANT    5
-#define INVLD       6
-#define BARR        7
-#define BARRGRANT   8
-#define REL         9
-#define WTNT        10
-#define JIAEXIT     11
-#define WAIT        12
-#define WAITGRANT   13
-#define STAT        14
-#define STATGRANT   15
-#define ERRMSG      16
+/* fd type */
+enum FDCR_MODE{
+    FDCR_SEND,  // send fd
+    FDCR_RECV,  // recv fd
+    FDCR_ACK    // ack fd
+};
 
-#define SETCV       17
-#define RESETCV     18
-#define WAITCV      19
-#define CVGRANT     20
-#define MSGBODY     21
-#define MSGTAIL     22
-#define LOADREQ     23
-#define LOADGRANT   24
-#define BCAST       100
-
-typedef struct jia_msg {
-    unsigned int op;      /* operation type */
-    unsigned int frompid; /* from pid */
-    unsigned int topid;   /* to pid */
-    unsigned int temp;    /* Useless (flag to indicate read or write request)*/
-    unsigned int seqno;   /* sequence number */
-    unsigned int index;   /* msg index in msg array */
-    unsigned int scope;   /* Inca. no.  used as tag in msg. passing */
-    unsigned int size;    /* data size */
-    /* header is 32 bytes */
-
-    unsigned char data[Maxmsgsize];
-} jia_msg_t;
-
-typedef jia_msg_t *msgp_t;
-
-typedef struct CommManager {
-    int         snd_fds[Maxhosts];      // send file descriptor
-    fd_set      snd_set;             // send fd_set, use with `select`
-    int         snd_maxfd;              // max_fd, use with `select`
-    unsigned    snd_seq[Maxhosts]; // sequence number that used to acknowledge
-
-    int         rcv_fds[Maxhosts];      // read file descriptor
-    fd_set      rcv_set;             // read fd_set
-    int         rcv_maxfd;              // max_fd, use with `select`
-    unsigned    rcv_seq[Maxhosts]; // sequence number
-} CommManager;
-
+/* ack type */
 typedef struct {
-    jia_msg_t *msgarray;
-    int       *msgbusy;
-    int        size;
-} msg_buffer_t;
-
-// extern variables
-extern msg_buffer_t msg_buffer;
+    int          seqno;     // sequence number
+    int          sid;       // the ack is returned by the host sid
+} ack_t;
 
 
-#define inqh inqueue[inhead]    // inqueue msg head
-#define inqt inqueue[intail]    // inqueue msg tail
-#define outqh outqueue[outhead] // outqueue msg head
-#define outqt outqueue[outtail] // outqueue msg tail
-#define STATOP(op) if(statflag){op};
+/**
+ * @brief init_msg_queue - initialize msg queue with specified size
+ * 
+ * @param queue msg queue
+ * @param size if size < 0, use default size (i.e. system_setting.msg_queue_size)
+ * @return int 0 if success, -1 if failed
+ */
+int init_msg_queue(msg_queue_t *queue, int size);
+
+
+/**
+ * @brief enqueue - enqueue msg
+ * 
+ * @param queue msg queue
+ * @param msg msg
+ * @return int 0 if success, -1 if failed 
+ */
+int enqueue(msg_queue_t *queue, jia_msg_t *msg);
+
+/**
+ * @brief dequeue - dequeue msg
+ * 
+ * @param queue msg queue
+ * @param msg msg
+ * @return 0 if success, -1 if failed
+ */
+int dequeue(msg_queue_t *queue, jia_msg_t *msg);
+
+/**
+ * @brief free_queue - free queue
+ * 
+ * @param queue msg queue
+ */
+void free_msg_queue(msg_queue_t *queue);
+
+/* communication manager */
+typedef struct comm_manager {
+    int         snd_fds;  // send file descriptor
+    unsigned    snd_seq[Maxhosts];  // sequence number that used to acknowledge
+    unsigned short snd_server_port; // snd server port is destination host's port
+
+    int ack_fds;
+    unsigned ack_seq[Maxhosts];
+    unsigned short ack_port;
+
+    int         rcv_fds[Maxhosts];  // read file descriptor
+    unsigned    rcv_seq[Maxhosts];  // sequence number
+    unsigned short rcv_ports[Maxhosts];
+} comm_manager_t;
+
+extern comm_manager_t comm_manager;
+
+
 
 /* function declaration  */
 
 /**
  * @brief initcomm -- initialize communication setting
  *
- * step1: initialize msg array and correpsonding flag to indicate busy or free
- *
- * step2: initialize pointer that indicate head, tail and count of inqueue and
- * outqueue
- *
- * step3: register signal handler (SIGIO, SIGINT)
- *
- * step4: initialize comm ports (reqports, repports)
- *
- * step5: initialize comm manager (commreq, commrep)
  */
 void initcomm();
-
-
-/**
- * @brief init_msg_buffer -- initialize msg array and corresponding flag that indicate busy or free
- * 
- */
-void init_msg_buffer();
-
-
-/**
- * @brief free_msg_buffer -- free msg array and corresponding flag that indicate busy or free
- * 
- */
-void free_msg_buffer();
-
-
-/**
- * @brief req_fdcreate -- creat socket file descriptor used to send and recv
- * request
- *
- * @param i the index of host
- * @param flag 1 means sin_port = 0, random port; others means specified
- * sin_port = reqports[jia_pid][i]
- * @return int socket file descriptor
- * creat socket file descriptor(fd) used to send and recv request and bind it to
- * an address (ip/port combination)
- */
-int req_fdcreate(int i, int flag);
-
-/**
- * @brief rep_fdcreate -- create socket file descriptor(fd) used to send and
- * recv reply
- *
- * @param i the index of host [0, hostc)
- * @param flag equals to 1 means fd with random port, 0 means fd with specified
- * port(repports[jia_pid][i])
- * @return int socket file descriptor(fd)
- */
-int rep_fdcreate(int i, int flag);
-
-
-/**
- * @brief sigio_handler -- IO signal handler
- * 
- */
-#if defined SOLARIS || defined IRIX62
-void sigio_handler(int sig, siginfo_t *sip, ucontext_t *uap);
-#endif /* SOLARIS */
-#ifdef LINUX
-void sigio_handler();
-#endif
-#ifdef AIX41
-void sigio_handler();
-#endif /* AIX41 */
-
-/**
- * @brief sigint_handler -- interrupt signal handler
- * 
- */
-void sigint_handler();
 
 /**
  * @brief asendmsg() -- send msg to outqueue[outtail], and call outsend()
@@ -213,11 +139,6 @@ void asendmsg(jia_msg_t *msg);
  */
 void msgserver();
 
-/**
- * @brief outsend -- outsend the outqueue[outhead] msg
- *
- */
-void outsend();
 
 /**
  * @brief bsendmsg -- broadcast msg
@@ -227,6 +148,19 @@ void outsend();
 void bsendmsg(jia_msg_t *msg);
 
 void bcastserver(jia_msg_t *msg);
+
+/**
+ * @brief fd_create -- creat socket file descriptor used to send and recv
+ * request
+ *
+ * @param i the index of host
+ * @param flag 1 means sin_port = 0, random port; others means specified
+ * sin_port = reqports[jia_pid][i]
+ * @return int socket file descriptor
+ * creat socket file descriptor(fd) used to send and recv request and bind it to
+ * an address (ip/port combination)
+ */
+static int fd_create(int i, enum FDCR_MODE flag);
 
 
 #endif /* JIACOMM_H */

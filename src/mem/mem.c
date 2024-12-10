@@ -38,38 +38,24 @@
 #include "mem.h"
 #include "comm.h"
 #include "tools.h"
-#include "utils.h"
 #include "setting.h"
 #include "stat.h"
 
 /* user */
-extern jiahome_t home[Homepages];       /* host owned page */
+extern jiahome_t home[Homepages];        /* host owned page */
 extern jiacache_t cache[Cachepages];     /* host cached page */
 extern jiapage_t page[Maxmempages];      /* global page space */
 extern unsigned long globaladdr;         /* [0, Maxmemsize)*/
 
 /* server */
-extern volatile int getpwait;
-extern volatile int diffwait;
+extern _Atomic volatile int getpwait;
+extern _Atomic volatile int diffwait;
 
 /* mmsync */
 extern jia_msg_t *diffmsg[Maxhosts]; /* store every host's diff msgs */
 extern long jiamapfd; /* file descriptor of the file that mapped to process's virtual
                   address space */
 extern int repcnt[Setnum]; /* record the last replacement index of every set */
-
-
-int homehost(address_t addr){
-    return page[((unsigned long)(addr)-system_setting.global_start_addr) / Pagesize].homepid;
-}
-
-unsigned int homepage(address_t addr){
-    return page[((unsigned long)(addr)-system_setting.global_start_addr) / Pagesize].homei;
-}
-
-unsigned int cachepage(address_t addr){
-    return page[((unsigned long)(addr)-system_setting.global_start_addr) / Pagesize].cachei;
-}
 
 
 /**
@@ -123,7 +109,7 @@ void initmem() {
 
     globaladdr = 0;
 
-#if defined SOLARIS || defined IRIX62
+#ifdef SOLARIS
     jiamapfd = open("/dev/zero", O_RDWR, 0);
 
     {
@@ -149,21 +135,11 @@ void initmem() {
         sigemptyset(&act.sa_mask);
         // act.sa_flags = SA_NOMASK;
         // act.sa_flags = SA_NODEFER;  /* SA_NOMASK is obsolete */
-        act.sa_flags = SA_NODEFER | SA_SIGINFO;
+        act.sa_flags = SA_NODEFER | SA_SIGINFO | SA_RESTART;
         if (sigaction(SIGSEGV, &act, NULL))
             local_assert(0, "segv sigaction problem");
     }
 #endif
-
-#ifdef AIX41
-    {
-        struct sigvec vec;
-
-        vec.sv_handler = (void_func_handler)sigsegv_handler;
-        vec.sv_flags = SV_INTERRUPT;
-        sigvec(SIGSEGV, &vec, NULL);
-    }
-#endif /* SOLARIS */
 
     for (i = 0; i < Setnum; i++) { // TODO: consider multiple sets
         repcnt[i] = 0;
@@ -198,14 +174,10 @@ void memprotect(void *addr, size_t len, int prot) {
 void memmap(void *addr, size_t len, int prot) {
     void *mapad;
 
-#if defined SOLARIS || defined IRIX62 || defined LINUX
+#if defined SOLARIS || defined LINUX
     // map file descriptor jiamapfd refered file to process virtual memory
     // [addr, addr+length-1] with protection level prot
     mapad = mmap(addr, len, prot, MAP_PRIVATE | MAP_FIXED, jiamapfd, 0);
-#endif
-#ifdef AIX41
-    mapad =
-        mmap(addr, len, prot, MAP_PRIVATE | MAP_FIXED | MAP_ANONYMOUS, -1, 0);
 #endif
 
     if (mapad != addr) {

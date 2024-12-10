@@ -5,7 +5,6 @@
 
 typedef struct Stats {
     unsigned int kernelflag;
-
     unsigned int msgsndbytes;       /*msg send bytes*/
     unsigned int msgrcvbytes;       /*msg recv bytes*/
     unsigned int msgrcvcnt;         /*msg recv count*/
@@ -16,6 +15,7 @@ typedef struct Stats {
     unsigned int synsigiocnt;       /*syn SIGIO count*/
     unsigned int segvsigiocnt;      /*segv SIGIO count*/
     unsigned int sigiocnt;          /*total SIGIO count*/
+
     unsigned int barrcnt;           /*barriers count*/
     unsigned int lockcnt;           /*lock count*/
     unsigned int getpcnt;           /*getp msg count*/
@@ -24,9 +24,9 @@ typedef struct Stats {
     unsigned int mwdiffcnt;         /*MWdiffs count*/
     unsigned int repROcnt;          /*Replaced RO pages*/
     unsigned int repRWcnt;          /*Replaced RW pages*/
-    unsigned int migincnt;
-    unsigned int migoutcnt;
-    unsigned int resentcnt;
+    unsigned int migincnt;          /*Mig page home in*/
+    unsigned int migoutcnt;         /*Mig page home out*/
+    unsigned int resendcnt;         /*Resend msg count*/
 
     unsigned int segvLtime;
     unsigned int segvRtime;
@@ -39,23 +39,19 @@ typedef struct Stats {
     
     unsigned int endifftime;
     unsigned int dedifftime;
-    
-/*Follow used by Shi*/
-    unsigned int asendtime;
-    unsigned int difftime;
+    unsigned int difftime;      /*endifftime + dedifftime*/
+
     unsigned int busytime;
     unsigned int datatime;
     unsigned int syntime;
     unsigned int othertime;
     unsigned int segvtime;
-    unsigned int commtime;
+    unsigned int commtime;          /*not use now*/
     unsigned int commsofttime;
     unsigned int commhardtime;
     unsigned int largecnt;          /*large msg count*/
     unsigned int smallcnt;          /*small msg count*/
-    unsigned int overlapsigiotime;
-    unsigned int overlapsigiocnt;
-    unsigned int waittime;
+    unsigned int waittime;          /*not use now*/
 } jiastat_t;
 
 
@@ -63,7 +59,7 @@ extern jiastat_t jiastat;
 extern jiastat_t allstats[Maxhosts];
 extern int statflag;
 extern unsigned int interruptflag;
-extern volatile int waitstat;
+extern _Atomic volatile int waitstat;
 
 
 /* function declarations */

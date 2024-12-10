@@ -27,7 +27,6 @@
  *         Author: Weiwu Hu, Weisong Shi, Zhimin Tang                  *
  **********************************************************************/
 
-#include "utils.h"
 #ifndef NULL_LIB
 #include "load.h"
 #include "comm.h"
@@ -38,15 +37,14 @@
 #include "setting.h"
 #include "stat.h"
 #include "tools.h"
+#include "msg.h"
 
 extern void freemsg(jia_msg_t *);
 extern void asendmsg(jia_msg_t *msg);
-extern void broadcast(jia_msg_t *msg);
+extern void broadcast(jia_msg_t *msg, int index);
 extern float jia_clock();
 extern void appendmsg(jia_msg_t *, unsigned char *, int);
 
-// extern int jia_pid;
-// extern int hostc;
 extern int LOAD_BAL;
 
 float caltime, starttime, endtime;
@@ -66,9 +64,11 @@ void initload() {
 }
 
 void jia_loadbalance() {
+    // send LOADREQ msg to master
     jia_msg_t *req;
 
-    req = newmsg();
+    int index = freemsg_lock(&msg_buffer);
+    req = &(msg_buffer.buffer[index].msg);
     req->frompid = system_setting.jia_pid;
     req->topid = 0;
     req->op = LOADREQ;
@@ -76,12 +76,12 @@ void jia_loadbalance() {
     appendmsg(req, (unsigned char *)(&caltime), Intbytes);
 
     loadwait = 1;
-    asendmsg(req);
+
+    move_msg_to_outqueue(&msg_buffer, index, &outqueue);
+    freemsg_unlock(&msg_buffer, index);
 
     while (loadwait)
         ;
-
-    freemsg(req);
 }
 
 void jia_newload() {
@@ -101,6 +101,7 @@ void jia_newload() {
     sigma = ex2 - ex * ex;
 
     if (sigma / (ex * ex) < (Delta * Delta)) {
+    
     } else {
         Ptotal = 0.0;
         for (i = 0; i < system_setting.hostc; i++) {
@@ -115,7 +116,7 @@ void jia_newload() {
 }
 
 void loadserver(jia_msg_t *req) {
-    int datai, hosti;
+    int datai, hosti, index;
     jia_msg_t *grant;
 
     jia_assert((req->op == LOADREQ), "Incorrect LOADREQ msg");
@@ -129,7 +130,8 @@ void loadserver(jia_msg_t *req) {
     if (loadcnt == system_setting.hostc) {
         loadcnt = 0;
         jia_newload();
-        grant = newmsg();
+        index = freemsg_lock(&msg_buffer);
+        grant = &(msg_buffer.buffer[index].msg);
         grant->frompid = system_setting.jia_pid;
         grant->op = LOADGRANT;
         grant->size = 0;
@@ -139,8 +141,9 @@ void loadserver(jia_msg_t *req) {
                       sizeof(loadstat[hosti].power));
         }
 
-        broadcast(grant);
-        freemsg(grant);
+        broadcast(grant, index);
+
+        freemsg_unlock(&msg_buffer, index);
     }
 }
 
@@ -159,17 +162,8 @@ void loadgrantserver(jia_msg_t *grant) {
     loadwait = 0;
 }
 
-/**
- * @brief jia_loadcheck() - check and record computation power of each processor
- * in the system
- *
- * @note Total computation power of all processors are always normalized to 1
- *
- * Processor computation power = Old computation power / computation time since
- * last jia_loadcheck() call
- */
 void jia_loadcheck() {
-    if (LOAD_BAL == ON) { // Load Blancing technique is trun on
+    if (LOAD_BAL == ON) {
         endtime = jia_clock();
         caltime += (endtime - starttime);
         jia_loadbalance();

@@ -1,6 +1,6 @@
 #include "setting.h"
 #include "errno.h"
-#include "utils.h"
+#include "tools.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -15,7 +15,18 @@
 #define HOST_CONF_FILE ".jiahosts"
 #define ptr_from_int64(p) (void *)(unsigned long long)(p)
 
-setting_t system_setting = {0};     // there, we can set default system configuration
+setting_t system_setting = {
+   .hostc = 0,
+   .hosts = NULL,
+   .jia_pid = 0,
+   .optionc = 0,
+   .options = {0},
+   .system_mode = MEMORY_MODE,
+   .comm_type = udp,
+   .global_start_addr = 0,
+   .msg_buffer_size = 48,
+   .msg_queue_size = 32,
+};     // there, we can set default system configuration
 
 void trim(char* str) {
     char* start = str;
@@ -91,6 +102,8 @@ int get_options(setting_t *setting){
             setting->global_start_addr = strtoull(setting->options[i].value, NULL, 0);
         } else if(strcmp(setting->options[i].key, "msg_buffer_size") == 0) {
             setting->msg_buffer_size = atoi(setting->options[i].value);
+        } else if(strcmp(setting->options[i].key, "msg_queue_size") == 0) {
+            setting->msg_queue_size = atoi(setting->options[i].value);
         } else {
             printf("Unknown config option: %s = %s\n", setting->options[i].key, setting->options[i].value);
             setting->optionc--;

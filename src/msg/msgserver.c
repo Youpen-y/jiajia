@@ -34,35 +34,97 @@
  *         Edmonton, Alberta T6G 2H1 CANADA                            *
  * =================================================================== *
  **********************************************************************/
-
-#include "comm.h"
-#include "global.h"
-#include "init.h"
-#include "jia.h"
-#include "mem.h"
-#include "syn.h"
+#ifndef NULL_LIB
 #include "tools.h"
-#include "utils.h"
-#include "setting.h"
-#include "stat.h"
 
-/**
- * @brief grantcondv -- append condv to CVGRANT msg and send it to toproc
- *
- * @param condv condition variable
- * @param toproc destination host
- */
-void grantcondv(int condv, int toproc) {
-    jia_msg_t *grant;
+extern volatile int recvwait;
+extern jia_msg_t msgbuf[Maxmsgbufs]; /* message buffer */
+extern unsigned long msgseqno;
+extern msg_buffer_t msg_buffer;
 
-    grant = newmsg();
-    grant->op = CVGRANT;
-    grant->frompid = system_setting.jia_pid;
-    grant->topid = toproc;
-    grant->size = 0;
-    appendmsg(grant, ltos(condv), Intbytes);
 
-    asendmsg(grant);
+void msgrecvserver(jia_msg_t *req) {
+    int i = 0;
+    int empty;
 
-    freemsg(grant);
+    /** step 1: find one free msgbuf whose op != ERRMSG*/
+    msgseqno++;
+    while ((msgbuf[i].op != ERRMSG) && (i < Maxmsgbufs))
+        i++;
+
+    /** step 2: memcpy msg to the free msgbuf*/
+    if (i < Maxmsgbufs) { 
+        msgbuf[i].op = req->op;
+        msgbuf[i].frompid = req->frompid;
+        msgbuf[i].topid = req->topid;
+        msgbuf[i].scope = req->scope; // This is tag
+        msgbuf[i].seqno = msgseqno;
+        msgbuf[i].size = req->size;
+        memcpy(msgbuf[i].data, req->data, req->size);
+        recvwait = 0;
+    } else {
+        local_assert(0, "Message Buffer Overflow!");
+    }
 }
+
+/*
+ *  (no matter what root's jiapid is, its mypid in this tree is 0)
+ *  (example for hostc=8)
+ *
+ *  3   2   1   0   level
+ *  0---0---0---0
+ *  |   |   |---1
+ *  |   |
+ *  |   |---2---2
+ *  |       |---3
+ *  |
+ *  |---4---4---4
+ *      |   |---5
+ *      |
+ *      |---6---6
+ *          |---7
+ */
+void bcastserver(jia_msg_t *msg) {
+    int mypid, child1, child2;
+    int rootlevel, root, level;
+
+    int jia_pid = system_setting.jia_pid;
+    int hostc = system_setting.hostc;
+
+    /** step 1: get root and current level
+     * (ensure current host's child1 and child2) */
+    rootlevel = msg->temp;
+    root = (rootlevel >> 16) & 0xffff;
+    level = rootlevel & 0xffff;
+    level--;
+
+    /** step 2: mypid is current host's position in broadcast tree */
+    mypid =
+        ((jia_pid - root) >= 0) ? (jia_pid - root) : (jia_pid - root + hostc);
+    child1 = mypid;
+    child2 = mypid + (1 << level);
+
+    /** step 3: broadcast msg to child1 and child2 */
+    if (level == 0) {
+        /* if level==0, msg must be handled and stop broadcast in the last level
+         */
+        msg->op -= BCAST;
+    }
+    msg->temp = ((root & 0xffff) << 16) | (level & 0xffff);
+    msg->frompid = jia_pid;
+    if (child2 < hostc) {
+        msg->topid = (child2 + root) % hostc;
+        move_msg_to_outqueue(&msg_buffer,
+                             ((void *)msg - (void *)&msg_buffer.buffer) /
+                                 sizeof(slot_t),
+                             &outqueue);
+    }
+    msg->topid = (child1 + root) % hostc;
+    move_msg_to_outqueue(
+        &msg_buffer,
+        ((void *)msg - (void *)&msg_buffer.buffer) / sizeof(slot_t), &outqueue);
+}
+
+#else /* NULL_LIB */
+
+#endif /* NULL_LIB */

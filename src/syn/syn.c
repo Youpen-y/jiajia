@@ -42,23 +42,18 @@
 #include "jia.h"
 #include "mem.h"
 #include "tools.h"
-#include "utils.h"
 #include "setting.h"
 #include "stat.h"
-
-/* jiajia */
-// extern int jia_pid;
-// extern host_t hosts[Maxhosts];
-// extern int hostc;
+#include <stdatomic.h>
 
 /* mem */
 extern jiapage_t page[Maxmempages];
 extern jiacache_t cache[Cachepages];
 extern jiahome_t home[Homepages];
-extern volatile int diffwait;
+extern _Atomic volatile int diffwait;
 
 /* tools */
-extern int H_MIG, AD_WD, W_VEC;
+extern int H_MIG, AD_WD, W_VEC, B_CAST;
 
 #ifdef DOSTAT
 extern int statflag;
@@ -68,14 +63,15 @@ extern jiastat_t jiastat;
 /* syn */
 // lock array, according to the hosts allocate lock(eg.
 // host0: 0, 2,... 62; host1 = 1, 3, ..., 63)
-jialock_t locks[Maxlocks + 1];
+jialock_t locks[Maxlocks + 1];  // the last one is a barrier(hidelock)
 jiastack_t lockstack[Maxstacksize]; // lock stack
-
+jiacv_t condvars[Maxcvs];
 int stackptr;
-volatile int waitwait, acqwait, barrwait, cvwait;
+
+_Atomic volatile int waitwait, acqwait, barrwait, cvwait;
 volatile int noclearlocks;
 volatile int waitcounter;
-jiacv_t condvars[Maxcvs];
+
 
 /**
  * @brief initsyn -- initialize the sync setting
@@ -84,7 +80,8 @@ jiacv_t condvars[Maxcvs];
 void initsyn() {
     int i, j, k;
 
-    for (i = 0; i <= Maxlocks; i++) { // initialize locks setting
+    /** step 1: init locks */
+    for (i = 0; i <= Maxlocks; i++) {
         locks[i].acqc = 0;
         locks[i].scope = 0;
         locks[i].myscope = -1;
@@ -98,15 +95,17 @@ void initsyn() {
             locks[i].wtntp = WNULL;
     }
 
+    /** step 2: init lockstack */
     for (i = 0; i < Maxstacksize; i++) {
         lockstack[i].lockid = 0;
         lockstack[i].wtntp = newwtnt();
     }
 
     stackptr = 0;
-    top.lockid = hidelock;
+    top.lockid = hidelock;  // lockstack[0].lockid = 64
     noclearlocks = 0;
 
+    /** step 3: init condition variables */
     for (i = 0; i < Maxcvs; i++) {
         condvars[i].waitc = 0;
         for (j = 0; j < Maxhosts; j++) {
@@ -118,32 +117,35 @@ void initsyn() {
 }
 
 /**
- * @brief endinterval -- end an interval, save the changes and send them to
+ * @brief endinterval -- end an interval, save the diffs and wtnts of lock and send them to
  * their home page
  *
- * @param synop syn operation
+ * @param synop syn operation ACQ/BARR
  */
 void endinterval(int synop) {
-    // register advise compiler store these variables into registers
     register int cachei;
     register int pagei;
     register int hpages;
-    VERBOSE_LOG(3, "Enter endinterval!\n");
+    log_info(3, "Enter endinterval!");
 
-    // step 1: send all cache diffs
+    /** step 1: save the diffs between cached page's and their twin */
     for (cachei = 0; cachei < Cachepages; cachei++) {
-        if (cache[cachei].wtnt == 1) { // when cached page wtnt == 1, save it
+        if (cache[cachei].wtnt == 1) { // 
             savepage(cachei);
         }
     }
+
+    /** step 2: send diffs to their host */
     senddiffs();
 
-    // step 2: save all home page wtnts
-    // TODO: for what?
+    /** step 3: save all home page wtnts */
     hpages = system_setting.hosts[system_setting.jia_pid].homesize / Pagesize; // page number of jia_pid host
     for (pagei = 0; pagei < hpages; pagei++) {
-        if ((home[pagei].wtnt & 1) != 0) { // bit1 == 1
+        // home[pagei].wtnt & 1: home host has written this homepage
+        if ((home[pagei].wtnt & 1) != 0) { 
+            // home[pagei].rdnt != 0: remote host has valid copy of this homepage(cachepage)
             if (home[pagei].rdnt != 0) {
+                // remote host && home host has different copy, so we will savewtnts to record it
                 savewtnt(top.wtntp, home[pagei].addr, Maxhosts);
                 if (synop == BARR)
                     home[pagei].rdnt = 0;
@@ -162,17 +164,17 @@ void endinterval(int synop) {
                 addwtvect(pagei, wv, system_setting.jia_pid);
             }
 
-        } /*if*/
-    }     /*for*/
-    while (diffwait)
+        }
+    }
+    while (atomic_load(&diffwait))
         ; // wait all diffs were handled
-    VERBOSE_LOG(3, "Out of endinterval!\n");
+    log_info(3, "Out of endinterval!");
 }
 
 /**
  * @brief startinterval -- start an interval
  *
- * @param synop
+ * @param synop: ACQ/REL/BARR
  */
 void startinterval(int synop) {
     register int cachei;
@@ -180,6 +182,7 @@ void startinterval(int synop) {
     register int hpages;
     char swcnt;
 
+    /** step 1: */
     for (cachei = 0; cachei < Cachepages; cachei++) {
         if (cache[cachei].wtnt == 1) {
             cache[cachei].wtnt = 0;
@@ -189,10 +192,11 @@ void startinterval(int synop) {
         }
     }
 
+    /** step 2: */
     hpages = system_setting.hosts[system_setting.jia_pid].homesize / Pagesize;
     if ((synop != BARR) || (AD_WD != ON)) {
         for (pagei = 0; pagei < hpages; pagei++)
-            if ((home[pagei].wtnt & 1) != 0) {
+            if (home[pagei].wtnt & 1) {
                 home[pagei].wtnt &= 0xfe;
                 memprotect((caddr_t)home[pagei].addr, Pagesize, PROT_READ);
             }
@@ -249,68 +253,425 @@ void startinterval(int synop) {
     }         /*else*/
 }
 
+
+/************lock Part****************/
+
 /**
- * @brief invalidate --
+ * @brief clearlocks() -- free the write notice space that used by lock
  *
- * @param req
  */
-void invalidate(jia_msg_t *req) {
-    int cachei, seti;
+void clearlocks() {
+    int i;
+
+    for (i = system_setting.jia_pid; i < Maxlocks; i += system_setting.hostc) {
+        freewtntspace(locks[i].wtntp);
+    }
+}
+
+/**
+ * @brief acquire() -- send ACQ msg to lock%hostc to acquire the lock
+ *
+ * @param lock
+ *
+ * acq msg data: | lock |
+ */
+void acquire(int lock) {
+    jia_msg_t *req;
+    int index;
+
+    index = freemsg_lock(&msg_buffer);
+    req = &msg_buffer.buffer[index].msg;
+    req->op = ACQ;
+    req->frompid = system_setting.jia_pid;
+    req->topid = lock % system_setting.hostc; // it seems that lock was divided circularly
+    req->scope = locks[lock].myscope;
+    req->size = 0;
+    appendmsg(req, ltos(lock), Intbytes);
+
+    move_msg_to_outqueue(&msg_buffer, index, &outqueue);
+    freemsg_unlock(&msg_buffer, index);
+    while (atomic_load(&acqwait))
+        ;
+    log_info(3, "acquire lock!!!");
+}
+
+/**
+ * @brief pushstack -- push lock into lockstack
+ *
+ * @param lock lock id
+ */
+void pushstack(int lock) {
+    stackptr++;
+    jia_assert((stackptr < Maxstacksize), "Too many continuous ACQUIRES!");
+
+    top.lockid = lock;
+}
+
+/**
+ * @brief popstack -- pop the top lock in lockstack
+ *
+ * (save the unlucky one's write notice pairs (wtnts[i], from[i]) to the new top
+ * one)
+ *
+ */
+void popstack() {
+    int wtnti;
+    wtnt_t *wnptr;
+
+    stackptr--;
+    jia_assert((stackptr >= -1), "More unlocks than locks!");
+
+    if (stackptr >= 0) {
+        wnptr = lockstack[stackptr + 1].wtntp;
+        while (wnptr != WNULL) {
+            for (wtnti = 0; wtnti < wnptr->wtntc; wtnti++)
+                savewtnt(top.wtntp, wnptr->wtnts[wtnti], wnptr->from[wtnti]);
+            wnptr = wnptr->more;
+        }
+    }
+
+    freewtntspace(lockstack[stackptr + 1].wtntp);
+}
+
+/**
+ * @brief grantlock -- grant the acquire lock msg request
+ *
+ * @param lock
+ * @param toproc
+ * @param acqscope
+ *
+ * ACQGRANT msg data : | lock | addr1 | ... | addrn |
+ */
+void grantlock(int lock, int toproc, int acqscope) {
+    jia_msg_t *grant;
+    wtnt_t *wnptr;
+    int index;
+
+    index = freemsg_lock(&msg_buffer);
+    grant = &msg_buffer.buffer[index].msg;
+    grant->frompid = system_setting.jia_pid;
+    grant->topid = toproc;
+    grant->scope = locks[lock].scope;
+    grant->size = 0;
+
+    appendmsg(grant, ltos(lock), Intbytes);
+
+    wnptr = locks[lock].wtntp;
+    wnptr = appendlockwtnts(grant, wnptr, acqscope);
+    while (wnptr != WNULL) { // current msg is full, but still wtnts  left
+        grant->op = INVLD;
+        // asendmsg(grant);
+        move_msg_to_outqueue(&msg_buffer, index, &outqueue);
+        grant->size = Intbytes;
+        wnptr = appendlockwtnts(grant, wnptr, acqscope);
+    }
+
+    grant->op = ACQGRANT;
+
+    move_msg_to_outqueue(&msg_buffer, index, &outqueue);
+    freemsg_unlock(&msg_buffer, index);
+}
+
+/**
+ * @brief appendlockwtnts -- append lock's wtnts to msg
+ *
+ * @param msg
+ * @param ptr
+ * @param acqscope
+ * @return wtnt_t*
+ */
+wtnt_t *appendlockwtnts(jia_msg_t *msg, wtnt_t *ptr, int acqscope) {
+    int wtnti;
+    int full;
+    wtnt_t *wnptr;
+
+    full = 0;
+    wnptr = ptr;
+
+    /* wnptr is not NULL and a msg is not full */
+    while ((wnptr != WNULL) && (full == 0)) {
+        if ((msg->size + (wnptr->wtntc * (sizeof(unsigned char *)))) <
+            Maxmsgsize) {
+            for (wtnti = 0; wtnti < wnptr->wtntc; wtnti++) 
+                if ((wnptr->from[wtnti] > acqscope) &&
+                    // if homehost(wnptr->wtnts[wtnti]) == msg->topid), not
+                    // send(remote host is the owner of this copy)
+                    (homehost(wnptr->wtnts[wtnti]) != msg->topid))
+                    appendmsg(msg, ltos(wnptr->wtnts[wtnti]),
+                              sizeof(unsigned char *));
+            wnptr = wnptr->more;
+        } else {
+            full = 1;
+        }
+    }
+    return (wnptr);
+}
+
+/************Barrier Part****************/
+
+/**
+ * @brief grantbarr -- grant barr request msg
+ *
+ * @param lock
+ *
+ * grantbarr msg data: | lock(4bytes)  | maybe (addr (8bytes)) , from(4bytes)
+ */
+void grantbarr(int lock) {
+    jia_msg_t *grant;
+    wtnt_t *wnptr;
+    int hosti, index;
+
+    // grant = newmsg();
+    index = freemsg_lock(&msg_buffer);
+    grant = &msg_buffer.buffer[index].msg;
+
+    grant->frompid = system_setting.jia_pid;
+    grant->topid = system_setting.jia_pid;
+    grant->scope = locks[lock].scope;
+    grant->size = 0;
+
+    appendmsg(grant, ltos(lock), Intbytes); // encapsulate the lock
+
+    wnptr = locks[lock].wtntp; // get lock's write notice list's head
+    wnptr = appendbarrwtnts(grant,
+                            wnptr); // append lock's write notice contents(addr,
+                                    // from) to msg if possible
+    while (wnptr != WNULL) {
+        grant->op = INVLD;
+        broadcast(grant, index);
+        grant->size = Intbytes; // lock
+        wnptr = appendbarrwtnts(grant, wnptr);
+    }
+    grant->op = BARRGRANT;
+    broadcast(grant, index);
+    freemsg_unlock(&msg_buffer, index);
+}
+
+/**
+ * @brief broadcast -- broadcast msg to all hosts
+ *
+ * @param msg msg that will be broadcast
+ * @param index index of msg in msg_buffer
+ */
+void broadcast(jia_msg_t *msg, int index) {
+    int hosti;
+
+    if (B_CAST == OFF) {
+        for (hosti = 0; hosti < system_setting.hostc; hosti++) {
+            msg->topid = hosti;
+            // asendmsg(msg);
+            move_msg_to_outqueue(&msg_buffer, index, &outqueue);
+        }
+    } else {
+        bsendmsg(msg);
+    }
+}
+
+/**
+ * @brief appendbarrwtnts -- append wtnt_t ptr's pair (wtnts, from) to msg
+ *
+ * @param msg grantbarr msg
+ * @param ptr lock's write notice's pointer
+ * @return wtnt_t*
+ */
+wtnt_t *appendbarrwtnts(jia_msg_t *msg, wtnt_t *ptr) {
+    int wtnti;
+    int full;
+    wtnt_t *wnptr;
+
+    full = 0;
+    wnptr = ptr;
+    while ((wnptr != WNULL) && (full == 0)) {
+        if ((msg->size + (wnptr->wtntc *
+                          (Intbytes + sizeof(unsigned char *)))) < Maxmsgsize) {
+            for (wtnti = 0; wtnti < wnptr->wtntc; wtnti++) {
+                appendmsg(msg, ltos(wnptr->wtnts[wtnti]),
+                          sizeof(unsigned char *));
+                appendmsg(msg, ltos(wnptr->from[wtnti]), Intbytes);
+            }
+            wnptr = wnptr->more;
+        } else {
+            full = 1;
+        }
+    }
+    return (wnptr);
+}
+
+/************condv Part****************/
+
+/**
+ * @brief grantcondv -- append condv to CVGRANT msg and send it to toproc
+ *
+ * @param condv condition variable
+ * @param toproc destination host
+ */
+void grantcondv(int condv, int toproc) {
+    int index;
+    jia_msg_t *grant;
+
+    index = freemsg_lock(&msg_buffer);
+    grant = &msg_buffer.buffer[index].msg;
+    grant->op = CVGRANT;
+    grant->frompid = system_setting.jia_pid;
+    grant->topid = toproc;
+    grant->size = 0;
+    appendmsg(grant, ltos(condv), Intbytes);
+
+    move_msg_to_outqueue(&msg_buffer, index, &outqueue);
+    freemsg_unlock(&msg_buffer, index);
+}
+
+/************wtnt Part(record, send and wtnt stack)****************/
+
+/**
+ * @brief savewtnt -- save write notice about the page of the addr to ptr
+ *
+ * @param ptr lockstack[stackptr]'s wtnt_t pointer
+ * @param addr the original address of cached page
+ * @param frompid
+ */
+void savewtnt(wtnt_t *ptr, address_t addr, int frompid) {
+    int wtnti;
+    int exist;
+    wtnt_t *wnptr;
+
+    exist = 0;
+    wnptr = ptr;
+
+    /**
+     * step 1:
+     * check if there is already an address same to the addr in the WTNT list.
+     */
+    while ((exist == 0) && (wnptr != WNULL)) {
+        wtnti = 0;
+        while ((wtnti < wnptr->wtntc) &&
+               (((unsigned long)addr / Pagesize) !=
+                ((unsigned long)wnptr->wtnts[wtnti] / Pagesize))) {
+            wtnti++;
+        }
+
+        // Traversing wtnt list to find addr
+        if (wtnti >= wnptr->wtntc)
+            wnptr = wnptr->more;
+        else
+            exist = 1;
+    }
+
+    /**
+     * step 2:
+     * existed: Change its frompid.
+     * not existed: newwtnt() && record new addr
+     */
+    if (exist == 0) {
+        wnptr = ptr;
+        while (wnptr->wtntc >= Maxwtnts) {
+            if (wnptr->more == WNULL)
+                wnptr->more = newwtnt();
+            wnptr = wnptr->more;
+        }
+        wnptr->wtnts[wnptr->wtntc] = addr;
+        wnptr->from[wnptr->wtntc] = frompid;
+        wnptr->wtntc++;
+    } else {
+        if (ptr == locks[hidelock].wtntp) { /*barrier*/
+            wnptr->from[wtnti] = Maxhosts;
+        } else {
+            wnptr->from[wtnti] = frompid; /*lock or stack*/
+        }
+    }
+}
+
+/**
+ * @brief recordwtnts -- record write notices in msg req's data
+ *
+ * @param req request msg
+ */
+void recordwtnts(jia_msg_t *req) {
     int lock;
     int datai;
-    address_t addr;
-    int migtag;
-    int from;
-    int homei, pagei;
 
     lock = (int)stol(req->data); // get the lock
-    datai = Intbytes;
+    if (lock != hidelock) {      /*lock*/
+        for (datai = Intbytes; datai < req->size;
+             datai += sizeof(unsigned char *))
+            savewtnt(locks[lock].wtntp, (address_t)stol(req->data + datai),
+                     locks[lock].scope);
+    } else { /*barrier*/
+        for (datai = Intbytes; datai < req->size;
+             datai += sizeof(unsigned char *))
+            savewtnt(locks[lock].wtntp, (address_t)stol(req->data + datai),
+                     req->frompid);
+    }
+}
 
-    while (datai < req->size) {
-        // get the addr
-        addr = (address_t)stol(req->data + datai); 
-        if (H_MIG == ON) {
-            migtag = ((unsigned long)addr) % Pagesize;
-            addr = (address_t)(((unsigned long)addr / Pagesize) * Pagesize);
+/**
+ * @brief sendwtnts() -- send wtnts
+ *
+ * @param operation BARR or REL
+ *
+ * BARR or REL message's data : | top.lockid(4bytes) | addr1 | ... | addrn |
+ */
+void sendwtnts(int operation) {
+    int wtnti, index;
+    jia_msg_t *req;
+    wtnt_t *wnptr; // write notice pointer
+
+    log_info(3, "Enter sendwtnts!");
+
+    index = freemsg_lock(&msg_buffer);
+    req = &(msg_buffer.buffer[index].msg);
+    req->frompid = system_setting.jia_pid;
+    req->topid = top.lockid % system_setting.hostc;
+    req->size = 0;
+    req->scope = (operation == BARR) ? locks[hidelock].myscope
+                                    : locks[top.lockid].myscope;
+    appendmsg(req, ltos(top.lockid),
+              Intbytes); // note here, after ltos transformation(8bytes),
+                         // truncation here
+
+    wnptr = top.wtntp;
+    wnptr = appendstackwtnts(req, wnptr);
+
+    /**
+     * send wtnt(,Packing for delivery)
+     * in the end send msg in which op==REL to finish this wtnt msg stream
+     */
+    while (wnptr != WNULL) {
+        req->op = WTNT;
+        move_msg_to_outqueue(&msg_buffer, index, &outqueue);
+        req->size = Intbytes; // TODO: Need to check
+        wnptr = appendstackwtnts(req, wnptr);
+    }
+    req->op = operation;
+    move_msg_to_outqueue(&msg_buffer, index, &outqueue);
+    freemsg_unlock(&msg_buffer, index);
+
+    log_info(3, "Out of sendwtnts!");
+}
+
+/**
+ * @brief appendstackwtnts -- append wtnt_t wtnts(i.e addr) to msg as many as
+ * possible
+ *
+ * @param msg msg that include ptr->wtnts
+ * @param ptr write notice pointer
+ * @return wtnt_t*
+ */
+wtnt_t *appendstackwtnts(jia_msg_t *msg, wtnt_t *ptr) {
+    int full; // flag indicate that msg full or not
+    wtnt_t *wnptr;
+
+    full = 0;
+    wnptr = ptr;
+    while ((wnptr != WNULL) && (full == 0)) {
+        if ((msg->size + (wnptr->wtntc * (sizeof(unsigned char *)))) <
+            Maxmsgsize) {
+            appendmsg(msg, wnptr->wtnts,
+                      (wnptr->wtntc) * (sizeof(unsigned char *)));
+            wnptr = wnptr->more;
+        } else {
+            full = 1;
         }
-        datai += sizeof(unsigned char *);
-
-        // TODO: Barrier or Lock?
-        if (lock == hidelock) { /*Barrier*/
-            from = (int)stol(req->data + datai);
-            datai += Intbytes;
-        } else { /*Lock*/
-            from = Maxhosts;
-        }
-
-        // invalidate all pages that are not on this host(cache)
-        if ((from != system_setting.jia_pid) && (homehost(addr) != system_setting.jia_pid)) {
-            cachei = (int)cachepage(addr);
-            if (cachei < Cachepages) {
-                if (cache[cachei].state != INV) {
-                    if (cache[cachei].state == RW)
-                        freetwin(&(cache[cachei].twin));
-                    cache[cachei].wtnt = 0;
-                    cache[cachei].state = INV;
-                    memprotect((caddr_t)cache[cachei].addr, Pagesize,
-                               PROT_NONE);
-#ifdef DOSTAT
-                    STATOP(jiastat.invcnt++;)
-#endif
-                }
-            }
-        }
-
-        if ((H_MIG == ON) && (lock == hidelock) && (from != Maxhosts) &&
-            (migtag != 0)) {
-            migpage((unsigned long)addr, homehost(addr), from);
-        }
-
-        if ((AD_WD == ON) && (lock == hidelock) &&
-            (homehost(addr) == system_setting.jia_pid) && (from != system_setting.jia_pid)) {
-            homei = homepage(addr);
-            home[homei].wtnt |= 4;
-        }
-
-    } /*while*/
+    }
+    return (wnptr);
 }

@@ -41,6 +41,7 @@
 
 #include "comm.h" // jia_msg_t
 #include "setting.h"
+#include <signal.h>
 
 
 #define RESERVE_TWIN_SPACE
@@ -52,9 +53,9 @@
 #define Homepages 16384 /* maximum number of home pages in a host */
 #define Homesize (Homepages * Pagesize)
 #define Cachesize (Pagesize * Cachepages)
-#define Setnum 1 /* num of entries in a set */
+#define Setnum 1 /* num of set */
 #define Setpages                                                               \
-    Cachepages / Setnum /* change Setpages so that have multiple sets */
+    Cachepages / Setnum /* page num of a set */
 
 #define DIFFNULL ((jia_msg_t *)NULL)
 typedef unsigned char *address_t;
@@ -86,6 +87,7 @@ typedef struct {
 } jiahome_t;
 
 typedef enum { UNMAP, INV, RO, RW } pagestate_t;
+typedef enum {RANDOM, CIRCULAR, LRU} repscheme_t;   // cache replacement scheme
 
 typedef struct {
     pagestate_t state; /*cache state: UNMAP, INV, RO, RW*/
@@ -166,10 +168,13 @@ static inline int xor (address_t addr) {
 extern jiapage_t page[Maxmempages]; /* global page space */
 
 
-int homehost(address_t addr);
+#define homehost(addr) \
+    page[((unsigned long long)(addr)-system_setting.global_start_addr) / Pagesize].homepid
 
-unsigned int homepage(address_t addr);
+#define homepage(addr) \
+    page[((unsigned long long)(addr)-system_setting.global_start_addr) / Pagesize].homei
 
-unsigned int cachepage(address_t addr);
+#define cachepage(addr) \
+    page[((unsigned long long)(addr)-system_setting.global_start_addr) / Pagesize].cachei
 
 #endif /*JIAMEM_H*/

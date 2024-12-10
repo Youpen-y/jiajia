@@ -43,9 +43,10 @@
 #include "mem.h"
 #include "syn.h"
 #include "tools.h"
-#include "utils.h"
 #include "setting.h"
 #include "stat.h"
+#include "msg.h"
+#include <stdatomic.h>
 
 #ifdef DOSTAT
 extern int statflag;
@@ -55,12 +56,9 @@ extern jiastat_t jiastat;
 /* syn */
 extern float caltime, starttime, endtime;
 extern int H_MIG, LOAD_BAL, W_VEC;
-extern volatile int waitwait, cvwait, acqwait, barrwait;
+extern _Atomic volatile int waitwait, cvwait, acqwait, barrwait;
 extern int stackptr;
 extern jiastack_t lockstack[Maxstacksize]; // lock stack
-
-static void pushstack(int lock);
-static void popstack();
 
 /************Lock Part****************/
 
@@ -96,7 +94,8 @@ void jia_lock(int lock) {
 
     endinterval(ACQ);
 
-    acqwait = 1;
+    //acqwait = 1;
+    atomic_store(&acqwait, 1);
     acquire(lock);
 
     startinterval(ACQ);
@@ -115,7 +114,7 @@ void jia_lock(int lock) {
 }
 
 /**
- * @brief jia_unlock --
+ * @brief jia_unlock -- unlock the lock
  *
  * @param lock
  */
@@ -183,24 +182,23 @@ void jia_barrier() {
 
    jia_assert((stackptr == 0), "barrier can not be used in CS!");
 
-    VERBOSE_LOG(3, "\nEnter jia barrier\n");
+    log_info(3, "Enter jia barrier: %d", jiastat.barrcnt);
     endinterval(BARR);
 
     if (H_MIG == ON) {
         migcheckcache();
     }
 
-    barrwait = 1;
+    //barrwait = 1;
+    atomic_store(&barrwait, 1);
     sendwtnts(BARR);
     freewtntspace(top.wtntp);
-    while (barrwait)
+    while (atomic_load(&barrwait))
         ;
-    VERBOSE_LOG(3, "555555555555555\n");
     if ((H_MIG == ON) && (W_VEC == ON)) {
         jia_wait();
     }
     startinterval(BARR);
-    VERBOSE_LOG(3, "66666666666666\n");
     if (LOAD_BAL == ON)
         starttime = jia_clock();
 
@@ -210,7 +208,7 @@ void jia_barrier() {
         jiastat.kernelflag = 0;
     }
 #endif
-    VERBOSE_LOG(3, "jia_barrier completed\n");
+    log_info(3, "jia_barrier completed\n");
 }
 
 
@@ -223,6 +221,7 @@ void jia_barrier() {
  */
 void jia_wait() {
     jia_msg_t *req;
+    int index;
 
     if (system_setting.hostc == 1)
         return;
@@ -232,16 +231,22 @@ void jia_wait() {
         caltime += (endtime - starttime);
     }
 
-    req = newmsg();
+    // construct WAIT msg
+    index = freemsg_lock(&msg_buffer);
+    req = &(msg_buffer.buffer[index].msg);
     req->frompid = system_setting.jia_pid;
     req->topid = 0;
     req->op = WAIT;
     req->size = 0;
 
-    waitwait = 1;
-    asendmsg(req);
-    freemsg(req);
-    while (waitwait)
+    atomic_store(&waitwait, 1);
+
+    // send WAIT msg
+    move_msg_to_outqueue(&msg_buffer, index, &outqueue);
+    freemsg_unlock(&msg_buffer, index);
+
+    // busywaiting until waitwait is clear by waitgrantserver
+    while (atomic_load(&waitwait))
         ;
 
     if (LOAD_BAL == ON)
@@ -253,6 +258,7 @@ void jia_wait() {
 
 void jia_setcv(int cvnum) {
     jia_msg_t *req;
+    int index;
 
     if (system_setting.hostc == 1)
         return;
@@ -260,20 +266,24 @@ void jia_setcv(int cvnum) {
     jia_assert(((cvnum >= 0) && (cvnum < Maxcvs)),
            "condv %d should range from 0 to %d", cvnum, Maxcvs - 1);
 
-    req = newmsg();
+    // req = newmsg();
+    index = freemsg_lock(&msg_buffer);
+    req = &(msg_buffer.buffer[index].msg);
     req->op = SETCV;
     req->frompid = system_setting.jia_pid;
     req->topid = cvnum % system_setting.hostc;
     req->size = 0;
     appendmsg(req, ltos(cvnum), Intbytes);
 
-    asendmsg(req);
-
-    freemsg(req);
+    // asendmsg(req);
+    // freemsg(req);
+    move_msg_to_outqueue(&msg_buffer, index, &outqueue);
+    freemsg_unlock(&msg_buffer, index);
 }
 
 void jia_resetcv(int cvnum) {
     jia_msg_t *req;
+    int index;
 
     if (system_setting.hostc == 1)
         return;
@@ -281,21 +291,24 @@ void jia_resetcv(int cvnum) {
     jia_assert(((cvnum >= 0) && (cvnum < Maxcvs)),
            "condv %d should range from 0 to %d", cvnum, Maxcvs - 1);
 
-    req = newmsg();
+    // req = newmsg();
+    index = freemsg_lock(&msg_buffer);
+    req = &(msg_buffer.buffer[index].msg);
     req->op = RESETCV;
     req->frompid = system_setting.jia_pid;
     req->topid = cvnum % system_setting.hostc;
     req->size = 0;
     appendmsg(req, ltos(cvnum), Intbytes);
 
-    asendmsg(req);
-
-    freemsg(req);
+    // asendmsg(req);
+    // freemsg(req);
+    move_msg_to_outqueue(&msg_buffer, index, &outqueue);
+    freemsg_unlock(&msg_buffer, index);
 }
 
 void jia_waitcv(int cvnum) {
     jia_msg_t *req;
-    int lockid;
+    int lockid, index;
 
     if (system_setting.hostc == 1)
         return;
@@ -303,59 +316,26 @@ void jia_waitcv(int cvnum) {
     jia_assert(((cvnum >= 0) && (cvnum < Maxcvs)),
            "condv %d should range from 0 to %d", cvnum, Maxcvs - 1);
 
-    req = newmsg();
+    // req = newmsg();
+    index = freemsg_lock(&msg_buffer);
+    req = &(msg_buffer.buffer[index].msg);
     req->op = WAITCV;
     req->frompid = system_setting.jia_pid;
     req->topid = cvnum % system_setting.hostc;
     req->size = 0;
     appendmsg(req, ltos(cvnum), Intbytes);
 
-    cvwait = 1;
+    //cvwait = 1;
+    atomic_store(&cvwait, 1);
 
-    asendmsg(req);
-
-    freemsg(req);
-    while (cvwait)
+    // asendmsg(req);
+    // freemsg(req);
+    move_msg_to_outqueue(&msg_buffer, index, &outqueue);
+    freemsg_unlock(&msg_buffer, index);
+    while (atomic_load(&cvwait))
         ;
 }
 
-/**
- * @brief pushstack -- push lock into lockstack
- *
- * @param lock lock id
- */
-void pushstack(int lock) {
-    stackptr++;
-    jia_assert((stackptr < Maxstacksize), "Too many continuous ACQUIRES!");
-
-    top.lockid = lock;
-}
-
-/**
- * @brief popstack -- pop the top lock in lockstack
- *
- * (save the unlucky one's write notice pairs (wtnts[i], from[i]) to the new top
- * one)
- *
- */
-void popstack() {
-    int wtnti;
-    wtnt_t *wnptr;
-
-    stackptr--;
-    jia_assert((stackptr >= -1), "More unlocks than locks!");
-
-    if (stackptr >= 0) {
-        wnptr = lockstack[stackptr + 1].wtntp;
-        while (wnptr != WNULL) {
-            for (wtnti = 0; wtnti < wnptr->wtntc; wtnti++)
-                savewtnt(top.wtntp, wnptr->wtnts[wtnti], wnptr->from[wtnti]);
-            wnptr = wnptr->more;
-        }
-    }
-
-    freewtntspace(lockstack[stackptr + 1].wtntp);
-}
 
 #else /* NULL_LIB */
 void jia_lock(int lock) {}
