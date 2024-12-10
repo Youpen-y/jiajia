@@ -5,6 +5,7 @@
 #include "mem.h"
 #include "syn.h"
 #include <comm.h>
+#include <pthread.h>
 
 typedef void (* void_func_handler)();
 
@@ -50,6 +51,9 @@ void free_system_resources();
 static int verbose_log = 3;
 static int verbose_out = 3;
 extern FILE *logfile;
+extern pthread_t server_tid;
+extern pthread_t client_tid;
+extern pthread_t listen_tid;
 static char *clientstr = "[Thread client]";
 static char *serverstr = "[Thread server]";
 static char *listenstr = "[Thread listen]";

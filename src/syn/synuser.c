@@ -43,7 +43,6 @@
 #include "mem.h"
 #include "syn.h"
 #include "tools.h"
-#include "utils.h"
 #include "setting.h"
 #include "stat.h"
 #include "msg.h"

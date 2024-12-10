@@ -35,10 +35,8 @@
  * =================================================================== *
  **********************************************************************/
 
-
-#include <libgen.h>
 #ifndef NULL_LIB
-#include "utils.h"
+#include <libgen.h>
 #include <bits/types/clockid_t.h>
 #include <stdlib.h>
 #include <unistd.h>

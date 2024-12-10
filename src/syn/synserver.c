@@ -42,16 +42,17 @@
 #include "mem.h"
 #include "syn.h"
 #include "tools.h"
-#include "utils.h"
 #include "setting.h"
 #include "stat.h"
 #include "msg.h"
 #include <stdatomic.h>
 
-/* syn */
+/* mem */
 extern jiacache_t cache[Cachepages];
 extern jiahome_t home[Homepages];
 extern jiacv_t condvars[Maxcvs];
+
+/* syn */
 extern volatile int waitcounter;
 extern _Atomic volatile int waitwait, cvwait, acqwait, barrwait;
 extern volatile int noclearlocks;
@@ -59,6 +60,7 @@ extern volatile int noclearlocks;
 // host0: 0, 2,... 62; host1 = 1, 3, ..., 63)
 extern jialock_t locks[Maxlocks + 1];
 
+/* tools */
 extern int H_MIG, AD_WD;
 
 /************Conditional Variable Part****************/

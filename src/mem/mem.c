@@ -38,7 +38,6 @@
 #include "mem.h"
 #include "comm.h"
 #include "tools.h"
-#include "utils.h"
 #include "setting.h"
 #include "stat.h"
 

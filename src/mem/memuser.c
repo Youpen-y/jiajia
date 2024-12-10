@@ -36,7 +36,6 @@
  **********************************************************************/
 
 #ifndef NULL_LIB
-#include "utils.h"
 #include "tools.h"
 #include "mem.h"
 #include "setting.h"

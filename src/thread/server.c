@@ -1,7 +1,6 @@
 #include "thread.h"
 #include "global.h"
 #include "comm.h"
-#include "utils.h"
 #include "mem.h"
 #include "syn.h"
 #include "load.h"

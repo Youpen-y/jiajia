@@ -42,7 +42,6 @@
 #include "jia.h"
 #include "mem.h"
 #include "tools.h"
-#include "utils.h"
 #include "setting.h"
 #include "stat.h"
 #include <stdatomic.h>

@@ -45,7 +45,6 @@
 #include "setting.h"
 #include "stat.h"  // clearstat
 #include "tools.h" // newmsg, freemsg, appendmsg
-#include "utils.h"
 #include <stdatomic.h>
 
 extern unsigned long globaladdr;

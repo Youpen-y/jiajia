@@ -43,7 +43,6 @@
 #include "stat.h"
 #include "syn.h"
 #include "tools.h"
-#include "utils.h"
 #include <stdatomic.h>
 #include <execinfo.h>
 #include <stddef.h>

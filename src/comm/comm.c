@@ -44,7 +44,6 @@
 #include "setting.h"
 #include "syn.h" // acqserver, inverver, relserver, wtntserver, barrserver, barrgrantserver, acqgrantserver
 #include "tools.h" // jiaexitserver, jia_current_time, newmsg, printmsg, get_usecs, emptyprintf
-#include "utils.h"
 // waitgrantserver, waitserver, setcvserver, resetcvserver, waitcvserver,
 // cvgrantserver,
 #include "load.h" // loadserver, loadgrantserver,

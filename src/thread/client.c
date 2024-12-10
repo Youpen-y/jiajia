@@ -4,7 +4,6 @@
 #include "stat.h"
 #include "thread.h"
 #include "tools.h"
-#include "utils.h"
 #include <asm-generic/errno.h>
 #include <errno.h>
 #include <stdbool.h>

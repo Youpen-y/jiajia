@@ -4,7 +4,6 @@
 #include "msg.h"
 #include "setting.h"
 #include "tools.h"
-#include "utils.h"
 #include <stdatomic.h>
 
 jiastat_t jiastat;

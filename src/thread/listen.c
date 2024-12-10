@@ -4,7 +4,6 @@
 #include "stat.h"
 #include "thread.h"
 #include "tools.h"
-#include "utils.h"
 #include <errno.h>
 #include <signal.h>
 #include <stdbool.h>

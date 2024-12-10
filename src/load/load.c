@@ -27,7 +27,6 @@
  *         Author: Weiwu Hu, Weisong Shi, Zhimin Tang                  *
  **********************************************************************/
 
-#include "utils.h"
 #ifndef NULL_LIB
 #include "load.h"
 #include "comm.h"

@@ -37,7 +37,6 @@
 #ifndef NULL_LIB
 #include <stdatomic.h>
 #include "tools.h"
-#include "utils.h"
 
 extern char errstr[Linesize];
 
