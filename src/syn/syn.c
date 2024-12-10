@@ -66,12 +66,12 @@ extern jiastat_t jiastat;
 // host0: 0, 2,... 62; host1 = 1, 3, ..., 63)
 jialock_t locks[Maxlocks + 1];  // the last one is a barrier(hidelock)
 jiastack_t lockstack[Maxstacksize]; // lock stack
+jiacv_t condvars[Maxcvs];
 int stackptr;
 
 _Atomic volatile int waitwait, acqwait, barrwait, cvwait;
 volatile int noclearlocks;
 volatile int waitcounter;
-jiacv_t condvars[Maxcvs];
 
 
 /**
@@ -334,8 +334,195 @@ void popstack() {
     freewtntspace(lockstack[stackptr + 1].wtntp);
 }
 
+/**
+ * @brief grantlock -- grant the acquire lock msg request
+ *
+ * @param lock
+ * @param toproc
+ * @param acqscope
+ *
+ * ACQGRANT msg data : | lock | addr1 | ... | addrn |
+ */
+void grantlock(int lock, int toproc, int acqscope) {
+    jia_msg_t *grant;
+    wtnt_t *wnptr;
+    int index;
 
-/************wtnt Part****************/
+    index = freemsg_lock(&msg_buffer);
+    grant = &msg_buffer.buffer[index].msg;
+    grant->frompid = system_setting.jia_pid;
+    grant->topid = toproc;
+    grant->scope = locks[lock].scope;
+    grant->size = 0;
+
+    appendmsg(grant, ltos(lock), Intbytes);
+
+    wnptr = locks[lock].wtntp;
+    wnptr = appendlockwtnts(grant, wnptr, acqscope);
+    while (wnptr != WNULL) { // current msg is full, but still wtnts  left
+        grant->op = INVLD;
+        // asendmsg(grant);
+        move_msg_to_outqueue(&msg_buffer, index, &outqueue);
+        grant->size = Intbytes;
+        wnptr = appendlockwtnts(grant, wnptr, acqscope);
+    }
+
+    grant->op = ACQGRANT;
+
+    move_msg_to_outqueue(&msg_buffer, index, &outqueue);
+    freemsg_unlock(&msg_buffer, index);
+}
+
+/**
+ * @brief appendlockwtnts -- append lock's wtnts to msg
+ *
+ * @param msg
+ * @param ptr
+ * @param acqscope
+ * @return wtnt_t*
+ */
+wtnt_t *appendlockwtnts(jia_msg_t *msg, wtnt_t *ptr, int acqscope) {
+    int wtnti;
+    int full;
+    wtnt_t *wnptr;
+
+    full = 0;
+    wnptr = ptr;
+
+    /* wnptr is not NULL and a msg is not full */
+    while ((wnptr != WNULL) && (full == 0)) {
+        if ((msg->size + (wnptr->wtntc * (sizeof(unsigned char *)))) <
+            Maxmsgsize) {
+            for (wtnti = 0; wtnti < wnptr->wtntc; wtnti++) 
+                if ((wnptr->from[wtnti] > acqscope) &&
+                    // if homehost(wnptr->wtnts[wtnti]) == msg->topid), not
+                    // send(remote host is the owner of this copy)
+                    (homehost(wnptr->wtnts[wtnti]) != msg->topid))
+                    appendmsg(msg, ltos(wnptr->wtnts[wtnti]),
+                              sizeof(unsigned char *));
+            wnptr = wnptr->more;
+        } else {
+            full = 1;
+        }
+    }
+    return (wnptr);
+}
+
+/************Barrier Part****************/
+
+/**
+ * @brief grantbarr -- grant barr request msg
+ *
+ * @param lock
+ *
+ * grantbarr msg data: | lock(4bytes)  | maybe (addr (8bytes)) , from(4bytes)
+ */
+void grantbarr(int lock) {
+    jia_msg_t *grant;
+    wtnt_t *wnptr;
+    int hosti, index;
+
+    // grant = newmsg();
+    index = freemsg_lock(&msg_buffer);
+    grant = &msg_buffer.buffer[index].msg;
+
+    grant->frompid = system_setting.jia_pid;
+    grant->topid = system_setting.jia_pid;
+    grant->scope = locks[lock].scope;
+    grant->size = 0;
+
+    appendmsg(grant, ltos(lock), Intbytes); // encapsulate the lock
+
+    wnptr = locks[lock].wtntp; // get lock's write notice list's head
+    wnptr = appendbarrwtnts(grant,
+                            wnptr); // append lock's write notice contents(addr,
+                                    // from) to msg if possible
+    while (wnptr != WNULL) {
+        grant->op = INVLD;
+        broadcast(grant, index);
+        grant->size = Intbytes; // lock
+        wnptr = appendbarrwtnts(grant, wnptr);
+    }
+    grant->op = BARRGRANT;
+    broadcast(grant, index);
+    freemsg_unlock(&msg_buffer, index);
+}
+
+/**
+ * @brief broadcast -- broadcast msg to all hosts
+ *
+ * @param msg msg that will be broadcast
+ * @param index index of msg in msg_buffer
+ */
+void broadcast(jia_msg_t *msg, int index) {
+    int hosti;
+
+    if (B_CAST == OFF) {
+        for (hosti = 0; hosti < system_setting.hostc; hosti++) {
+            msg->topid = hosti;
+            // asendmsg(msg);
+            move_msg_to_outqueue(&msg_buffer, index, &outqueue);
+        }
+    } else {
+        bsendmsg(msg);
+    }
+}
+
+/**
+ * @brief appendbarrwtnts -- append wtnt_t ptr's pair (wtnts, from) to msg
+ *
+ * @param msg grantbarr msg
+ * @param ptr lock's write notice's pointer
+ * @return wtnt_t*
+ */
+wtnt_t *appendbarrwtnts(jia_msg_t *msg, wtnt_t *ptr) {
+    int wtnti;
+    int full;
+    wtnt_t *wnptr;
+
+    full = 0;
+    wnptr = ptr;
+    while ((wnptr != WNULL) && (full == 0)) {
+        if ((msg->size + (wnptr->wtntc *
+                          (Intbytes + sizeof(unsigned char *)))) < Maxmsgsize) {
+            for (wtnti = 0; wtnti < wnptr->wtntc; wtnti++) {
+                appendmsg(msg, ltos(wnptr->wtnts[wtnti]),
+                          sizeof(unsigned char *));
+                appendmsg(msg, ltos(wnptr->from[wtnti]), Intbytes);
+            }
+            wnptr = wnptr->more;
+        } else {
+            full = 1;
+        }
+    }
+    return (wnptr);
+}
+
+/************condv Part****************/
+
+/**
+ * @brief grantcondv -- append condv to CVGRANT msg and send it to toproc
+ *
+ * @param condv condition variable
+ * @param toproc destination host
+ */
+void grantcondv(int condv, int toproc) {
+    int index;
+    jia_msg_t *grant;
+
+    index = freemsg_lock(&msg_buffer);
+    grant = &msg_buffer.buffer[index].msg;
+    grant->op = CVGRANT;
+    grant->frompid = system_setting.jia_pid;
+    grant->topid = toproc;
+    grant->size = 0;
+    appendmsg(grant, ltos(condv), Intbytes);
+
+    move_msg_to_outqueue(&msg_buffer, index, &outqueue);
+    freemsg_unlock(&msg_buffer, index);
+}
+
+/************wtnt Part(record, send and wtnt stack)****************/
 
 /**
  * @brief savewtnt -- save write notice about the page of the addr to ptr
@@ -482,71 +669,6 @@ wtnt_t *appendstackwtnts(jia_msg_t *msg, wtnt_t *ptr) {
             Maxmsgsize) {
             appendmsg(msg, wnptr->wtnts,
                       (wnptr->wtntc) * (sizeof(unsigned char *)));
-            wnptr = wnptr->more;
-        } else {
-            full = 1;
-        }
-    }
-    return (wnptr);
-}
-
-/**
- * @brief appendlockwtnts -- append lock's wtnts to msg
- *
- * @param msg
- * @param ptr
- * @param acqscope
- * @return wtnt_t*
- */
-wtnt_t *appendlockwtnts(jia_msg_t *msg, wtnt_t *ptr, int acqscope) {
-    int wtnti;
-    int full;
-    wtnt_t *wnptr;
-
-    full = 0;
-    wnptr = ptr;
-
-    /* wnptr is not NULL and a msg is not full */
-    while ((wnptr != WNULL) && (full == 0)) {
-        if ((msg->size + (wnptr->wtntc * (sizeof(unsigned char *)))) <
-            Maxmsgsize) {
-            for (wtnti = 0; wtnti < wnptr->wtntc; wtnti++) 
-                if ((wnptr->from[wtnti] > acqscope) &&
-                    // if homehost(wnptr->wtnts[wtnti]) == msg->topid), not
-                    // send(remote host is the owner of this copy)
-                    (homehost(wnptr->wtnts[wtnti]) != msg->topid))
-                    appendmsg(msg, ltos(wnptr->wtnts[wtnti]),
-                              sizeof(unsigned char *));
-            wnptr = wnptr->more;
-        } else {
-            full = 1;
-        }
-    }
-    return (wnptr);
-}
-
-/**
- * @brief appendbarrwtnts -- append wtnt_t ptr's pair (wtnts, from) to msg
- *
- * @param msg grantbarr msg
- * @param ptr lock's write notice's pointer
- * @return wtnt_t*
- */
-wtnt_t *appendbarrwtnts(jia_msg_t *msg, wtnt_t *ptr) {
-    int wtnti;
-    int full;
-    wtnt_t *wnptr;
-
-    full = 0;
-    wnptr = ptr;
-    while ((wnptr != WNULL) && (full == 0)) {
-        if ((msg->size + (wnptr->wtntc *
-                          (Intbytes + sizeof(unsigned char *)))) < Maxmsgsize) {
-            for (wtnti = 0; wtnti < wnptr->wtntc; wtnti++) {
-                appendmsg(msg, ltos(wnptr->wtnts[wtnti]),
-                          sizeof(unsigned char *));
-                appendmsg(msg, ltos(wnptr->from[wtnti]), Intbytes);
-            }
             wnptr = wnptr->more;
         } else {
             full = 1;

@@ -3,7 +3,7 @@ ARCH=linux
 MODE=IPoIB_LOCKFREE1
 TIMEOUT=30
 
-CLEAN=false
+CLEAN=true
 ALLTEST=true
 RUN=true
 tests=("lu" "ep")
