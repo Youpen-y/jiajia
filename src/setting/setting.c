@@ -1,6 +1,7 @@
 #include "setting.h"
 #include "errno.h"
 #include "utils.h"
+#include "tools.h"
 
 #include <stdio.h>
 #include <stdlib.h>

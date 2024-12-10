@@ -35,11 +35,13 @@
  * =================================================================== *
  **********************************************************************/
 
+
+#include <libgen.h>
+#ifndef NULL_LIB
 #include "utils.h"
 #include <bits/types/clockid_t.h>
 #include <stdlib.h>
 #include <unistd.h>
-#ifndef NULL_LIB
 #include "comm.h"
 #include "global.h"
 #include "init.h"
@@ -59,6 +61,7 @@ extern unsigned long globaladdr;
 extern int firsttime;
 extern float caltime;
 
+FILE *logfile = NULL;
 char errstr[Linesize]; /* buffer for error info */
 
 jia_msg_t assertmsg;
@@ -271,6 +274,76 @@ void jia_error(char *str, ...) {
 }
 
 /************ print ****************/
+
+int open_logfile(char *filename, int argc, char **argv) {
+    char name[30];
+    if (system_setting.jia_pid == 0) {
+        logfile = fopen(filename, "w+");
+    } else {
+        sprintf(name, "./jianode/%s/%s", basename(argv[0]), filename);
+        logfile = fopen(name, "w+");
+    }
+    if (logfile == NULL) {
+        printf("Cannot open logfile %s\n", filename);
+        return -1;
+    }
+    return 0;
+}
+
+char* op2name(int op){
+    switch (op) {
+    case DIFF:
+        return "DIFF";
+    case DIFFGRANT:
+        return "DIFFGRANT";
+    case GETP:
+        return "GETP";
+    case GETPGRANT:
+        return "GETPGRANT";
+    case ACQ:
+        return "ACQ";
+    case ACQGRANT:
+        return "ACQGRANT";
+    case INVLD:
+        return "INVALID";
+    case BARR:
+        return "BARR";
+    case BARRGRANT:
+        return "BARRGRANT";
+    case REL:
+        return "REL";
+    case WTNT:
+        return "WTNT";
+    case JIAEXIT:
+        return "JIAEXIT";
+    case WAIT:
+        return "WAIT";
+    case WAITGRANT:
+        return "WAITGRANT";
+    case STAT:
+        return "STAT";
+    case STATGRANT:
+        return "STATGRANT";
+    case SETCV:
+        return "SETCV";
+    case RESETCV:
+        return "RESETCV";
+    case WAITCV:
+        return "WAITCV";
+    case CVGRANT:
+        return "CVGRANT";
+    case MSGBODY:
+    case MSGTAIL:
+        return "MSG";
+    case LOADREQ:
+        return "LOADREQ";
+    case LOADGRANT:
+        return "LOADGRANT";
+
+    default:
+        return "NULL";
+    }
+}
 
 /**
  * @brief printmsg() -- print message pointed by msg (if verbose >= 3)
