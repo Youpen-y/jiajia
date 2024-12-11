@@ -11,7 +11,7 @@
 #include <sys/select.h>
 #include <unistd.h>
 
-#define RETRYNUM 100
+#define RETRYNUM 10
 static bool success = false;
 static jia_msg_t msg;
 pthread_t client_tid;

@@ -62,7 +62,7 @@ comm_manager_t comm_manager;
 msg_queue_t inqueue;
 msg_queue_t outqueue;
 
-unsigned short start_port;
+long start_port;
 
 static int init_comm_manager();
 static int fd_create(int i, enum FDCR_MODE flag);
@@ -234,17 +234,17 @@ int init_msg_queue(msg_queue_t *msg_queue, int size) {
     }
 
     /** step 4: initialize semaphores (or atomic count)*/
-    // if (sem_init(&(msg_queue->busy_count), 0, 0) != 0 ||
-    //     sem_init(&(msg_queue->free_count), 0, size) != 0) {
-    //     perror("msg_queue sem init");
-    //     pthread_mutex_destroy(&(msg_queue->head_lock));
-    //     pthread_mutex_destroy(&(msg_queue->tail_lock));
-    //     free(msg_queue->queue);
-    //     return -1;
-    // }
+    if (sem_init(&(msg_queue->busy_count), 0, 0) != 0 ||
+        sem_init(&(msg_queue->free_count), 0, size) != 0) {
+        perror("msg_queue sem init");
+        pthread_mutex_destroy(&(msg_queue->head_lock));
+        pthread_mutex_destroy(&(msg_queue->tail_lock));
+        free(msg_queue->queue);
+        return -1;
+    }
 
-    atomic_init(&msg_queue->busy_count, 0);
-    atomic_init(&msg_queue->free_count, size);
+    // atomic_init(&msg_queue->busy_count, 0);
+    // atomic_init(&msg_queue->free_count, size);
 
     /** step 5:init slot's state */
     for (int i = 0; i < size; i++) {
@@ -264,34 +264,34 @@ int enqueue(msg_queue_t *msg_queue, jia_msg_t *msg) {
     }
     char *queue = (msg_queue == &outqueue) ? "outqueue" : "inqueue";
 
-    log_info(4, "pre %s enqueue free_count value: %d", queue,
-             msg_queue->free_count);
-    // int semvalue;
-    // sem_getvalue(&msg_queue->free_count, &semvalue);
-    // log_info(4, "pre %s enqueue free_count value: %d", queue, semvalue);
-    // // wait for free slot
-    // if (sem_wait(&msg_queue->free_count) != 0) {
-    //     log_err("sem_wait error");
-    //     return -1;
-    // }
-    // sem_getvalue(&msg_queue->free_count, &semvalue);
-    // log_info(4, "enter %s enqueue! free_count value: %d", queue, semvalue);
-    /**
-     * step 1: get current value
-     * step 2: we will atomic sub busy_count iff current value > 0
-     */
-    while (1) {
-        current_value = atomic_load(&msg_queue->free_count);
-        if (current_value > 0) {
-            if (atomic_compare_exchange_weak(&msg_queue->free_count,
-                                             &current_value,
-                                             current_value - 1)) {
-                break;
-            }
-        }
+    // log_info(4, "pre %s enqueue free_count value: %d", queue,
+    //          msg_queue->free_count);
+    int semvalue;
+    sem_getvalue(&msg_queue->free_count, &semvalue);
+    log_info(4, "pre %s enqueue free_count value: %d", queue, semvalue);
+    // wait for free slot
+    if (sem_wait(&msg_queue->free_count) != 0) {
+        log_err("sem_wait error");
+        return -1;
     }
-    log_info(4, "enter %s enqueue! free_count value: %d", queue,
-             current_value - 1);
+    sem_getvalue(&msg_queue->free_count, &semvalue);
+    log_info(4, "enter %s enqueue! free_count value: %d", queue, semvalue);
+    // /**
+    //  * step 1: get current value
+    //  * step 2: we will atomic sub busy_count iff current value > 0
+    //  */
+    // while (1) {
+    //     current_value = atomic_load(&msg_queue->free_count);
+    //     if (current_value > 0) {
+    //         if (atomic_compare_exchange_weak(&msg_queue->free_count,
+    //                                          &current_value,
+    //                                          current_value - 1)) {
+    //             break;
+    //         }
+    //     }
+    // }
+    // log_info(4, "enter %s enqueue! free_count value: %d", queue,
+    //          current_value - 1);
 
     // lock tail and update tail pointer
     pthread_mutex_lock(&(msg_queue->tail_lock));
@@ -303,13 +303,14 @@ int enqueue(msg_queue_t *msg_queue, jia_msg_t *msg) {
     memcpy(&(slot->msg), msg, sizeof(jia_msg_t)); // copy msg to slot
     slot->state = SLOT_BUSY;                      // set slot state to busy
 
-    // sem_post(&(msg_queue->busy_count));
-    // sem_getvalue(&msg_queue->busy_count, &semvalue);
-    unsigned old_value = msg_queue->busy_count;
-    msg_queue->busy_count++;
+    sem_post(&(msg_queue->busy_count));
+    sem_getvalue(&msg_queue->busy_count, &semvalue);
+    log_info(4, "after %s enqueue busy_count value: %d", queue, semvalue);
+    // unsigned old_value = msg_queue->busy_count;
+    // msg_queue->busy_count++;
+    // log_info(4, "after %s enqueue busy_count value: %d", queue, old_value);
 
     pthread_mutex_unlock(&(msg_queue->tail_lock));
-    log_info(4, "after %s enqueue busy_count value: %d", queue, old_value);
     return 0;
 }
 
@@ -322,33 +323,33 @@ int dequeue(msg_queue_t *msg_queue, jia_msg_t *msg) {
     char *queue = (msg_queue == &outqueue) ? "outqueue" : "inqueue";
 
     // sem or atomic instruction
-    log_info(4, "pre %s dequeue busy_count value: %d", queue,
-             msg_queue->busy_count);
-    // int semvalue;
-    // sem_getvalue(&msg_queue->busy_count, &semvalue);
-    // log_info(4, "pre %s dequeue busy_count value: %d", queue, semvalue);
-    // // wait for busy slot
-    // if (sem_wait(&msg_queue->busy_count) != 0) {
-    //     return -1;
-    // }
-    // sem_getvalue(&msg_queue->busy_count, &semvalue);
-    // log_info(4, "enter %s dequeue! busy_count value: %d", queue, semvalue);
+    // log_info(4, "pre %s dequeue busy_count value: %d", queue,
+    //          msg_queue->busy_count);
+    int semvalue;
+    sem_getvalue(&msg_queue->busy_count, &semvalue);
+    log_info(4, "pre %s dequeue busy_count value: %d", queue, semvalue);
+    // wait for busy slot
+    if (sem_wait(&msg_queue->busy_count) != 0) {
+        return -1;
+    }
+    sem_getvalue(&msg_queue->busy_count, &semvalue);
+    log_info(4, "enter %s dequeue! busy_count value: %d", queue, semvalue);
     /**
      * step 1: get current value
      * step 2: we will atomic sub busy_count iff current value > 0
      */
-    while (1) {
-        current_value = atomic_load(&msg_queue->busy_count);
-        if (current_value > 0) {
-            if (atomic_compare_exchange_weak(&msg_queue->busy_count,
-                                             &current_value,
-                                             current_value - 1)) {
-                break;
-            }
-        }
-    }
-    log_info(4, "enter %s dequeue! busy_count value: %d", queue,
-             current_value - 1);
+    // while (1) {
+    //     current_value = atomic_load(&msg_queue->busy_count);
+    //     if (current_value > 0) {
+    //         if (atomic_compare_exchange_weak(&msg_queue->busy_count,
+    //                                          &current_value,
+    //                                          current_value - 1)) {
+    //             break;
+    //         }
+    //     }
+    // }
+    // log_info(4, "enter %s dequeue! busy_count value: %d", queue,
+    //          current_value - 1);
 
     // lock head and update head pointer
     pthread_mutex_lock(&(msg_queue->head_lock));
@@ -360,13 +361,16 @@ int dequeue(msg_queue_t *msg_queue, jia_msg_t *msg) {
     memcpy(msg, &(slot->msg), sizeof(jia_msg_t)); // copy msg from slot
     slot->state = SLOT_FREE;                      // set slot state to free
 
-    // sem_post(&(msg_queue->free_count));
-    // sem_getvalue(&msg_queue->free_count, &semvalue);
-    unsigned old_value = msg_queue->free_count;
-    msg_queue->free_count++;
+    sem_post(&(msg_queue->free_count));
+    sem_getvalue(&msg_queue->free_count, &semvalue);
+    log_info(4, "after %s dequeue free_count value: %d", queue, semvalue);
+
+    // unsigned old_value = msg_queue->free_count;
+    // msg_queue->free_count++;
+    // log_info(4, "after %s dequeue free_count value: %d", queue, old_value + 1);
 
     pthread_mutex_unlock(&(msg_queue->head_lock));
-    log_info(4, "after %s dequeue free_count value: %d", queue, old_value + 1);
+
     return 0;
 }
 
@@ -376,8 +380,8 @@ void free_msg_queue(msg_queue_t *msg_queue) {
     }
 
     // destory semaphores
-    // sem_destroy(&(msg_queue->busy_count));
-    // sem_destroy(&(msg_queue->free_count));
+    sem_destroy(&(msg_queue->busy_count));
+    sem_destroy(&(msg_queue->free_count));
 
     // destory head mutex and tail mutex
     pthread_mutex_destroy(&(msg_queue->head_lock));

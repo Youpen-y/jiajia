@@ -1,6 +1,6 @@
 #!/bin/bash
 ARCH=linux
-MODE=IPoIB_LOCKFREE1
+MODE=ETH1
 TIMEOUT=30
 
 CLEAN=true
@@ -57,7 +57,8 @@ fi
 # 创建libjia库
 echo -e "\nmake libjia.a..."
 if $CLEAN; then
-    make clean -C ./lib/$ARCH
+    rm -f ./lib/$ARCH/*.o ./lib/$ARCH/*.d ./lib/$ARCH/*.a
+    # make clean -C ./lib/$ARCH
 fi
 make all -C ./lib/$ARCH
 sleep 1
@@ -80,10 +81,10 @@ for dir in apps/*/ ; do
 done
 sleep 1
 
-# 拷贝 system.conf 文件到所有文件夹下
-echo -e "\ncopy system.conf..."
+# 拷贝 .jiaconf 文件到所有文件夹下
+echo -e "\ncopy .jiaconf..."
 for dir in apps/*/; do
-        cp apps/system.conf "${dir%/}"/$ARCH/
+        cp apps/.jiaconf "${dir%/}"/$ARCH/
 done
 sleep 1
 

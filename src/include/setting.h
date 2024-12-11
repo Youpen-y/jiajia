@@ -15,7 +15,7 @@
 #define MAX_OPTIONS_NUM 100
 
 /* system configuration file path */
-#define SYSTEM_CONF_PATH "system.conf"
+#define SYSTEM_CONF_PATH ".jiaconf"
 
 /* configuration option */
 typedef struct config_option {
@@ -59,7 +59,7 @@ extern setting_t system_setting;
 
 
 /**
- * @brief Init the system setting from system.conf
+ * @brief Init the system setting from .jiaconf
  *
  * @param setting system setting object
  * @return int 0 if success, -1 if failed
@@ -67,7 +67,7 @@ extern setting_t system_setting;
 int init_setting(setting_t *setting);
 
 /**
- * @brief Get the options from system.conf
+ * @brief Get the options from .jiaconf
  *
  * @param setting system setting object
  * @return int 0 if success, -1 if failed

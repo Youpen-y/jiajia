@@ -131,10 +131,10 @@ typedef struct msg_queue {
     volatile unsigned               head;         // head
     volatile unsigned               tail;         // tail
 
-    // sem_t             busy_count;   // busy slot count
-    // sem_t             free_count;   // free slot count
-    _Atomic volatile unsigned  busy_count;
-    _Atomic volatile unsigned  free_count;
+    sem_t             busy_count;   // busy slot count
+    sem_t             free_count;   // free slot count
+    // _Atomic volatile unsigned  busy_count;
+    // _Atomic volatile unsigned  free_count;
 } msg_queue_t;
 
 // extern variables

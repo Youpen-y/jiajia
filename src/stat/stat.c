@@ -89,7 +89,7 @@ void statserver(jia_msg_t *rep) {
         grant->frompid = system_setting.jia_pid;
         grant->size = 0;
         grant->op = STATGRANT;
-        for (i = 0; i < system_setting.hostc; i++) {
+        for (i = system_setting.hostc-1; i >= 0; i--) {
             grant->topid = i;
             move_msg_to_outqueue(&msg_buffer, index, &outqueue);
         }
