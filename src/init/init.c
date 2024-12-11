@@ -44,7 +44,6 @@
 #include "tools.h"
 #include <libgen.h>
 
-
 extern void initmem();
 extern void initsyn();
 extern void initcomm();
@@ -76,6 +75,7 @@ void jia_init(int argc, char **argv) {
 
     // step 1:init system_setting
     init_setting(&system_setting);
+
     if (system_setting.jia_pid == 0) {
         print_setting(&system_setting);
         VERBOSE_LOG(3, "\n***JIAJIA---Software DSM***");
@@ -100,13 +100,13 @@ void jia_init(int argc, char **argv) {
     setrlimit(RLIMIT_DATA,
               &rl); /* set maximum size of process's data segment */
 
-    // step 4:redirect slave's io (stdout&&stderr)
-    if (system_setting.jia_pid != 0)
-        redirect_slave_io(argc, argv); /*redirect slave's output*/
-
 #ifdef DEBUG
     setbuf(logfile, NULL);
 #endif
+
+    // step 4:redirect slave's io (stdout&&stderr)
+    if (system_setting.jia_pid != 0)
+        redirect_slave_io(argc, argv); /*redirect slave's output*/
 
     // step 5:init system resources
     initmem();
@@ -165,9 +165,12 @@ static void copyfiles(int argc, char **argv) {
                     system_setting.hosts[i].username,
                     system_setting.hosts[i].ip);
 
-        sprintf(cmd, "scp .jiahosts system.conf %s %s@%s:~/jianode/%s",
-                basename(argv[0]), system_setting.hosts[i].username,
-                system_setting.hosts[i].ip, basename(argv[0]));
+        sprintf(cmd, "scp .jiahosts .jiaconf %s@%s:~/",
+                system_setting.hosts[i].username, system_setting.hosts[i].ip);
+        ret = system(cmd);
+        sprintf(cmd, "scp %s %s@%s:~/jianode/%s/", basename(argv[0]),
+                system_setting.hosts[i].username, system_setting.hosts[i].ip,
+                basename(argv[0]));
         ret = system(cmd);
         local_assert(ret == 0, "Copy system files failed");
     }

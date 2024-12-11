@@ -80,10 +80,10 @@ for dir in apps/*/ ; do
 done
 sleep 1
 
-# 拷贝 system.conf 文件到所有文件夹下
-echo -e "\ncopy system.conf..."
+# 拷贝 .jiaconf 文件到所有文件夹下
+echo -e "\ncopy .jiaconf..."
 for dir in apps/*/; do
-        cp apps/system.conf "${dir%/}"/$ARCH/
+        cp apps/.jiaconf "${dir%/}"/$ARCH/
 done
 sleep 1
 

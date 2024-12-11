@@ -14,7 +14,7 @@ static struct context *create_context(struct ibv_device *ib_dev, int size, int r
     if (!ctx)
         return NULL;
 
-    ctx->size = size;
+    //ctx->size = size;
     ctx->rx_depth = rx_depth;
     ctx->buf = malloc(size);
     if (!ctx->buf) {
@@ -110,54 +110,54 @@ clean_ctx:
     return NULL;
 }
 
-static int post_recv(struct context *ctx, int n)
-{
-    struct ibv_sge list = {
-        .addr   = (uintptr_t) ctx->buf,
-        .length = ctx->size,
-        .lkey   = ctx->mr->lkey
-    };
-    struct ibv_recv_wr wr = {
-        .wr_id      = 0,
-        .sg_list    = &list,
-        .num_sge    = 1,
-    };
-    struct ibv_recv_wr *bad_wr;
-    int i;
+// static int post_recv(struct context *ctx, int n)
+// {
+//     // struct ibv_sge list = {
+//     //     .addr   = (uintptr_t) ctx->buf,
+//     //     .length = ctx->size,
+//     //     .lkey   = ctx->mr->lkey
+//     // };
+//     struct ibv_recv_wr wr = {
+//         .wr_id      = 0,
+//         .sg_list    = &list,
+//         .num_sge    = 1,
+//     };
+//     struct ibv_recv_wr *bad_wr;
+//     int i;
 
-    for (i = 0; i < n; ++i) {
-        if (ibv_post_recv(ctx->qp, &wr, &bad_wr))
-            break;
-    }
+//     for (i = 0; i < n; ++i) {
+//         if (ibv_post_recv(ctx->qp, &wr, &bad_wr))
+//             break;
+//     }
 
-    return i;
-}
+//     return i;
+// }
 
-static int post_send(struct context *ctx, struct ibv_ah *ah, uint32_t remote_qpn, struct message *msg)
-{
-    struct ibv_sge list = {
-        .addr   = (uintptr_t) msg,
-        .length = sizeof(*msg),
-        .lkey   = ctx->mr->lkey
-    };
-    struct ibv_send_wr wr = {
-        .wr_id      = 0,
-        .sg_list    = &list,
-        .num_sge    = 1,
-        .opcode     = IBV_WR_SEND,
-        .send_flags = IBV_SEND_SIGNALED,
-        .wr         = {
-            .ud = {
-                 .ah          = ah,
-                 .remote_qpn  = remote_qpn,
-                 .remote_qkey = 0x11111111
-             }
-        }
-    };
-    struct ibv_send_wr *bad_wr;
+// static int post_send(struct context *ctx, struct ibv_ah *ah, uint32_t remote_qpn, struct message *msg)
+// {
+//     struct ibv_sge list = {
+//         .addr   = (uintptr_t) msg,
+//         .length = sizeof(*msg),
+//         .lkey   = ctx->mr->lkey
+//     };
+//     struct ibv_send_wr wr = {
+//         .wr_id      = 0,
+//         .sg_list    = &list,
+//         .num_sge    = 1,
+//         .opcode     = IBV_WR_SEND,
+//         .send_flags = IBV_SEND_SIGNALED,
+//         .wr         = {
+//             .ud = {
+//                  .ah          = ah,
+//                  .remote_qpn  = remote_qpn,
+//                  .remote_qkey = 0x11111111
+//              }
+//         }
+//     };
+//     struct ibv_send_wr *bad_wr;
 
-    return ibv_post_send(ctx->qp, &wr, &bad_wr);
-}
+//     return ibv_post_send(ctx->qp, &wr, &bad_wr);
+// }
 
 
 #endif
