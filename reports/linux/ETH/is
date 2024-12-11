@@ -1,0 +1,87 @@
+/home/szx/jianode/is/is: invalid option -- 'P'
+/home/szx/jianode/is/is: invalid option -- 'P'
+/home/szx/jianode/is/is: invalid option -- 'P'
+Performed 10 rankings in time:  0.291
+===============================================
+system setting info on host [0]
+jia_pid (current host id) : 0
+hostc   (total host count): 4
+host 0: 10.90.50.178 segzix 	***
+host 1: 10.90.50.196 szx 	***
+host 2: 10.90.50.192 szx 	***
+host 3: 10.90.50.80 szx 	***
+optionc: 5
+option 0: system_mode = hybrid
+option 1: comm_type = udp
+option 2: global_start_addr = 0x400000000000
+option 3: msg_buffer_size = 16
+option 4: msg_queue_size = 32
+===============================================
+
+***JIAJIA---Software DSM***
+***Cachepages = 1024  Pagesize=4096***
+
+*********Total of 4 hosts found!**********
+
+Start to copy system files to slaves!
+Copy files to szx@10.90.50.196.
+Copy files to szx@10.90.50.192.
+Copy files to szx@10.90.50.80.
+Remote copy succeed!
+
+Start to create processes on slaves!
+
+Starting CMD ssh szx@10.90.50.196 '~/jianode/is/is -P 4294959792d &' on host 10.90.50.196
+Starting CMD ssh szx@10.90.50.192 '~/jianode/is/is -P 4294959792d &' on host 10.90.50.192
+Starting CMD ssh szx@10.90.50.80 '~/jianode/is/is -P 4294959792d &' on host 10.90.50.80
+key 0x7a5c10a00010, rank 0x7a5c10400010
+
+Shared Memory (4096-byte pages) : 8388608 (total) 1 (used)
+Print stats
+#################  JIAJIA STATISTICS  ##################
+           hosts -->        0        1        2        3      total
+--------------------------------------------------------
+Msgs Sent          =      247       98       96       93       534 
+Msgs Received      =      279       83       83       83       528 
+Bytes Sent         =   108416    32156    31852    31892    204316 
+Bytes Received     =   132752    85252    85332    85332    388668 
+SEGVs (local)      =       20        0        0        0        20 
+SEGVs (remote)     =        0       21       21       21        63 
+SIGIOs (total)     =        0        0        0        0         0 
+SIGIOs (user)      =        0        0        0        0         0 
+SIGIOs (Syn.)      =        0        0        0        0         0 
+SIGIOs (SEGV)      =        0        0        0        0         0 
+Barriers           =       32       32       32       32        32 
+Locks              =       10       10       10       10        40 
+Getp Reqs          =        0       20       20       20        60 
+Diff Msgs.         =       60        0        0        0        60 
+MWdiffs            =       60        0        0        0        60 
+Invalidate         =        0       20       20       20        60 
+Replaced RO pages  =        0        0        0        0         0 
+Replaced RW pages  =        0        0        0        0         0 
+Mig in pages       =        0        0        0        0         0 
+Mig out pages      =        0        0        0        0         0 
+Resent Msgs        =        0        5        3        0         8 
+Large message      =       60        0        0        0        60 
+Small message      =      283       88       86       83       540 
+-------------------------------------------------------- (ms) 
+Barrier time       =   413.25   859.97   636.57   155.85 
+Lock time          =   118.08    26.97    65.97    98.35 
+Unlock time        =     0.18    12.22    16.09    12.81 
+SEGV time (local)  =     0.27     0.00     0.00     0.00 
+SEGV time (remote) =     0.00    30.40    29.52    29.94 
+SIGIO time (user)  =     0.00     0.00     0.00     0.00 
+SIGIO time (Syn.)  =     0.00     0.00     0.00     0.00 
+SIGIO time (SEGV)  =     0.00     0.00     0.00     0.00 
+Encode diff time   =     0.00     0.05     0.10     0.30 
+Decode diff time   =     0.53     0.00     0.00     0.00 
+Wait time          =     0.00     0.00     0.00     0.00 
+--------------------------------------------------------
+SEGV time          =    12.27    43.00    42.12    42.54 
+Syn. time          =   531.50   899.15   718.63   267.02 
+Server time        =     0.00     0.00     0.00     0.00 
+########################################################
+
+real	0m3.665s
+user	0m1.144s
+sys	0m0.156s

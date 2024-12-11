@@ -1,0 +1,149 @@
+tsp:
+	-n: number of hosts
+	-s: start node
+	-f: size (filename)
+	-r: size to recursively solve
+	-d: debug mode
+	-D: debug the priority queue
+	-S: run silently
+/home/szx/jianode/tsp/tsp: invalid option -- 'P'
+/home/szx/jianode/tsp/tsp: invalid option -- 'P'
+/home/szx/jianode/tsp/tsp: invalid option -- 'P'
+MinTourLen: 2000000 (old: 0): 
+MinTourLen: 507 (old: 0): 
+MinTourLen: 481 (old: 0): 
+MinTourLen: 434 (old: 0): 
+MinTourLen: 426 (old: 0): 
+MinTourLen: 411 (old: 0): 
+MinTourLen: 410 (old: 0): 
+MinTourLen: 409 (old: 0): 
+MinTourLen: 404 (old: 0): 
+MinTourLen: 398 (old: 0): 
+MinTourLen: 393 (old: 0): 
+MinTourLen: 392 (old: 0): 
+MinTourLen: 378 (old: 0): 
+MinTourLen: 372 (old: 0): 
+MinTourLen: 370 (old: 0): 
+MinTourLen: 355 (old: 0): 
+MinTourLen: 345 (old: 0): 
+MinTourLen: 343 (old: 0): 
+MinTourLen: 340 (old: 0): 
+MinTourLen: 336 (old: 0): 
+MinTourLen: 320 (old: 0): 
+MinTourLen: 317 (old: 0): 
+MinTourLen: 316 (old: 0): 
+MinTourLen: 308 (old: 0): 
+MinTourLen: 307 (old: 0): 
+MinTourLen: 301 (old: 0): 
+MinTourLen: 296 (old: 0): 
+MinTourLen: 290 (old: 0): 
+MinTourLen: 283 (old: 0): 
+MinTourLen: 273 (old: 0): 
+MinTourLen: 269 (old: 0): 
+MinTourLen: 267 (old: 0): 
+MinTourLen: 252 (old: 0): 
+MinTourLen: 251 (old: 0): 
+MinTourLen: 249 (old: 0): 
+MinTourLen: 241 (old: 0): 
+MinTourLen: 234 (old: 0): 
+MinTourLen: 222 (old: 0): 
+MinTourLen: 200 (old: 0): 
+MinTourLen: 190 (old: 0): 
+MinTourLen: 185 (old: 0): 
+Elapsed time: 11.59 seconds
+
+-----------------
+
+===============================================
+system setting info on host [0]
+jia_pid (current host id) : 0
+hostc   (total host count): 4
+host 0: 10.90.50.178 segzix 	***
+host 1: 10.90.50.196 szx 	***
+host 2: 10.90.50.192 szx 	***
+host 3: 10.90.50.80 szx 	***
+optionc: 5
+option 0: system_mode = hybrid
+option 1: comm_type = udp
+option 2: global_start_addr = 0x400000000000
+option 3: msg_buffer_size = 16
+option 4: msg_queue_size = 32
+===============================================
+
+***JIAJIA---Software DSM***
+***Cachepages = 1024  Pagesize=4096***
+
+*********Total of 4 hosts found!**********
+
+Start to copy system files to slaves!
+Copy files to szx@10.90.50.196.
+Copy files to szx@10.90.50.192.
+Copy files to szx@10.90.50.80.
+Remote copy succeed!
+
+Start to create processes on slaves!
+
+Starting CMD ssh szx@10.90.50.196 '~/jianode/tsp/tsp -P 12527 &' on host 10.90.50.196
+Starting CMD ssh szx@10.90.50.192 '~/jianode/tsp/tsp -P 12527 &' on host 10.90.50.192
+Starting CMD ssh szx@10.90.50.80 '~/jianode/tsp/tsp -P 12527 &' on host 10.90.50.80
+Elapsed time: 11.59 seconds
+
+-----------------
+
+	[MINIMUM TOUR LENGTH: 149]
+
+MINIMUM TOUR:
+
+	 0 - 18 - 10 -  3 -  6 - 15 - 12 -  7 -  5 -  2
+	13 - 17 -  1 - 14 -  8 - 11 -  9 - 16 -  4 -  0
+
+
+Shared Memory (4096-byte pages) : 8388608 (total) 197 (used)
+Print stats
+#################  JIAJIA STATISTICS  ##################
+           hosts -->        0        1        2        3      total
+--------------------------------------------------------
+Msgs Sent          =     9295     3495     3301     3235     19326 
+Msgs Received      =     9079     3952     3212     3081     19324 
+Bytes Sent         = 34635428   340164   253332   233132  35462056 
+Bytes Received     =   665068 11793616 11536792 11498896  35494372 
+SEGVs (local)      =     1084        0        0        0      1084 
+SEGVs (remote)     =        0     2942     2874     2833      8649 
+SIGIOs (total)     =        0        0        0        0         0 
+SIGIOs (user)      =        0        0        0        0         0 
+SIGIOs (Syn.)      =        0        0        0        0         0 
+SIGIOs (SEGV)      =        0        0        0        0         0 
+Barriers           =        2        2        2        2         2 
+Locks              =      215      164      156      153       688 
+Getp Reqs          =        0     2829     2778     2770      8377 
+Diff Msgs.         =      478        0        0        0       478 
+MWdiffs            =     8367        0        0        0      8367 
+Invalidate         =        0     2828     2777     2769      8374 
+Replaced RO pages  =        0        0        0        0         0 
+Replaced RW pages  =        0        0        0        0         0 
+Mig in pages       =        0        0        0        0         0 
+Mig out pages      =        0        0        0        0         0 
+Resent Msgs        =        1        0        0        1         2 
+Large message      =     8377        4        2        2      8385 
+Small message      =      912     3283     3073     3003     10271 
+-------------------------------------------------------- (ms) 
+Barrier time       =    13.27    15.47     4.95    10.43 
+Lock time          = 11121.33  7475.83  7347.13  7677.88 
+Unlock time        =     9.14   237.13   252.47   227.80 
+SEGV time (local)  =    15.59     0.00     0.00     0.00 
+SEGV time (remote) =     0.00  3365.76  3233.65  3152.98 
+SIGIO time (user)  =     0.00     0.00     0.00     0.00 
+SIGIO time (Syn.)  =     0.00     0.00     0.00     0.00 
+SIGIO time (SEGV)  =     0.00     0.00     0.00     0.00 
+Encode diff time   =     0.00     7.03    12.80    12.43 
+Decode diff time   =    96.47     0.00     0.00     0.00 
+Wait time          =     0.00     0.00     0.00     0.00 
+--------------------------------------------------------
+SEGV time          =   665.99  5130.96  4958.05  4852.78 
+Syn. time          = 11143.74  7728.43  7604.56  7916.11 
+Server time        =     0.00     0.00     0.00     0.00 
+########################################################
+
+real	0m14.250s
+user	0m12.099s
+sys	0m1.377s
