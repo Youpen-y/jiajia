@@ -203,9 +203,9 @@ static int startprocs(int argc, char **argv) {
 #endif /* NFS */
 
     /* produce a random start_port from [10000, 29999]*/
-    start_port = getpid();
-    local_assert((start_port != -1), "getpid() error");
-    start_port = 10000 + (start_port * Maxhosts * Maxhosts * 4) % 20000;
+    int pid = getpid();
+    local_assert((pid != -1), "getpid() error");
+    start_port = 10000 + (pid % 20000);
 
 #ifdef LINUX
     // cmd on every host
@@ -236,7 +236,7 @@ static int startprocs(int argc, char **argv) {
         for (int i = 1; i < argc; i++) {
             sprintf(cmd, "%s %s", cmd, argv[i]);
         }
-        sprintf(shell, "%s -P %ud &", shell, start_port);
+        sprintf(shell, "%s -P %hd &", shell, start_port);
 
         // strcat cmd && shell to execute
         sprintf(cmd, "%s '%s'", cmd, shell);

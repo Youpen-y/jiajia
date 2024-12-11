@@ -62,7 +62,7 @@ comm_manager_t comm_manager;
 msg_queue_t inqueue;
 msg_queue_t outqueue;
 
-unsigned short start_port;
+long start_port;
 
 static int init_comm_manager();
 static int fd_create(int i, enum FDCR_MODE flag);

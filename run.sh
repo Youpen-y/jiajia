@@ -1,6 +1,6 @@
 #!/bin/bash
 ARCH=linux
-MODE=IPoIB_LOCKFREE1
+MODE=ETH1
 TIMEOUT=30
 
 CLEAN=true
@@ -57,7 +57,8 @@ fi
 # 创建libjia库
 echo -e "\nmake libjia.a..."
 if $CLEAN; then
-    make clean -C ./lib/$ARCH
+    rm -f ./lib/$ARCH/*.o ./lib/$ARCH/*.d ./lib/$ARCH/*.a
+    # make clean -C ./lib/$ARCH
 fi
 make all -C ./lib/$ARCH
 sleep 1
