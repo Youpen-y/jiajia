@@ -1,0 +1,691 @@
+tsp:
+	-n: number of hosts
+	-s: start node
+	-f: size (filename)
+	-r: size to recursively solve
+	-d: debug mode
+	-D: debug the priority queue
+	-S: run silently
+/home/yangyupeng/jianode/tsp/tsp: invalid option -- 'P'
+/home/yangyupeng/jianode/tsp/tsp: invalid option -- 'P'
+/home/yangyupeng/jianode/tsp/tsp: invalid option -- 'P'
+/home/yangyupeng/jianode/tsp/tsp: invalid option -- 'P'
+/home/yangyupeng/jianode/tsp/tsp: invalid option -- 'P'
+MinTourLen: 2000000 (old: 0): 
+MinTourLen: 507 (old: 0): 
+MinTourLen: 481 (old: 0): 
+MinTourLen: 434 (old: 0): 
+MinTourLen: 426 (old: 0): 
+MinTourLen: 411 (old: 0): 
+MinTourLen: 410 (old: 0): 
+MinTourLen: 409 (old: 0): 
+MinTourLen: 404 (old: 0): 
+MinTourLen: 398 (old: 0): 
+MinTourLen: 393 (old: 0): 
+MinTourLen: 392 (old: 0): 
+MinTourLen: 378 (old: 0): 
+MinTourLen: 372 (old: 0): 
+MinTourLen: 370 (old: 0): 
+MinTourLen: 355 (old: 0): 
+MinTourLen: 345 (old: 0): 
+MinTourLen: 343 (old: 0): 
+MinTourLen: 340 (old: 0): 
+MinTourLen: 336 (old: 0): 
+MinTourLen: 320 (old: 0): 
+MinTourLen: 317 (old: 0): 
+MinTourLen: 316 (old: 0): 
+MinTourLen: 308 (old: 0): 
+MinTourLen: 307 (old: 0): 
+MinTourLen: 301 (old: 0): 
+MinTourLen: 296 (old: 0): 
+MinTourLen: 290 (old: 0): 
+MinTourLen: 283 (old: 0): 
+MinTourLen: 273 (old: 0): 
+MinTourLen: 269 (old: 0): 
+MinTourLen: 267 (old: 0): 
+MinTourLen: 252 (old: 0): 
+MinTourLen: 251 (old: 0): 
+MinTourLen: 249 (old: 0): 
+MinTourLen: 238 (old: 0): 
+MinTourLen: 234 (old: 0): 
+MinTourLen: 189 (old: 0): 
+MinTourLen: 184 (old: 0): 
+MinTourLen: 150 (old: 0): 
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2070 msg.seqno: 2070]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2071 msg.seqno: 2071]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2072 msg.seqno: 2072]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2073 msg.seqno: 2073]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2074 msg.seqno: 2074]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2075 msg.seqno: 2075]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2076 msg.seqno: 2076]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2077 msg.seqno: 2077]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2078 msg.seqno: 2114]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2115 msg.seqno: 2115]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2116 msg.seqno: 2116]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2117 msg.seqno: 2117]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2118 msg.seqno: 2118]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2119 msg.seqno: 2119]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2120 msg.seqno: 2120]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2121 msg.seqno: 2121]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2122 msg.seqno: 2122]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2123 msg.seqno: 2123]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2124 msg.seqno: 2078]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2079 msg.seqno: 2124]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2125 msg.seqno: 2125]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2126 msg.seqno: 2126]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2127 msg.seqno: 2127]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2128 msg.seqno: 2128]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2129 msg.seqno: 2129]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2130 msg.seqno: 2130]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2131 msg.seqno: 2131]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2132 msg.seqno: 2132]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2133 msg.seqno: 2133]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2134 msg.seqno: 2134]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2135 msg.seqno: 2350]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2351 msg.seqno: 2351]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2352 msg.seqno: 1963]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 1964 msg.seqno: 1964]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 1965 msg.seqno: 1965]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 1966 msg.seqno: 1966]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 1967 msg.seqno: 1967]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 1968 msg.seqno: 1968]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 1969 msg.seqno: 1969]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 1970 msg.seqno: 1970]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 1971 msg.seqno: 1971]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 1972 msg.seqno: 1972]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 1973 msg.seqno: 1973]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 1974 msg.seqno: 1974]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 1975 msg.seqno: 1975]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 1976 msg.seqno: 1976]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 1977 msg.seqno: 1977]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 1978 msg.seqno: 1975]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 1976 msg.seqno: 1976]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 1977 msg.seqno: 1977]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 1978 msg.seqno: 1978]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 1979 msg.seqno: 1979]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 1980 msg.seqno: 1980]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 1981 msg.seqno: 1981]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 1982 msg.seqno: 1982]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 1983 msg.seqno: 1983]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 1984 msg.seqno: 1984]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 1985 msg.seqno: 1985]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 1986 msg.seqno: 1986]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 1987 msg.seqno: 1987]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 1988 msg.seqno: 1988]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 1989 msg.seqno: 1989]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 1990 msg.seqno: 1990]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 1991 msg.seqno: 1991]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 1992 msg.seqno: 1992]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 1993 msg.seqno: 1993]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 1994 msg.seqno: 2352]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2353 msg.seqno: 2353]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2354 msg.seqno: 2354]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2355 msg.seqno: 2355]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2356 msg.seqno: 2356]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2357 msg.seqno: 2357]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2358 msg.seqno: 2358]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2359 msg.seqno: 2359]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2360 msg.seqno: 2360]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2361 msg.seqno: 2361]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2362 msg.seqno: 2362]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2363 msg.seqno: 2363]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2364 msg.seqno: 2364]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2365 msg.seqno: 2365]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2366 msg.seqno: 2366]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2367 msg.seqno: 2367]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2368 msg.seqno: 2368]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2369 msg.seqno: 2369]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2370 msg.seqno: 2370]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2371 msg.seqno: 2079]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2080 msg.seqno: 2080]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2081 msg.seqno: 2081]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2082 msg.seqno: 2082]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2083 msg.seqno: 2083]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2084 msg.seqno: 2084]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2085 msg.seqno: 2085]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2086 msg.seqno: 2086]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2087 msg.seqno: 2087]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2088 msg.seqno: 2088]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2089 msg.seqno: 2089]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2090 msg.seqno: 2090]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2091 msg.seqno: 2091]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2092 msg.seqno: 2092]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2093 msg.seqno: 2093]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2094 msg.seqno: 2094]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2095 msg.seqno: 2095]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2096 msg.seqno: 2135]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2136 msg.seqno: 2136]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2137 msg.seqno: 2137]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2138 msg.seqno: 2138]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2139 msg.seqno: 2139]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2140 msg.seqno: 2140]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2141 msg.seqno: 2141]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2142 msg.seqno: 2142]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2143 msg.seqno: 2143]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2144 msg.seqno: 2144]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2145 msg.seqno: 2145]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2146 msg.seqno: 2146]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2147 msg.seqno: 2147]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2148 msg.seqno: 2148]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2149 msg.seqno: 2149]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2150 msg.seqno: 2150]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2151 msg.seqno: 2151]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2152 msg.seqno: 2152]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2153 msg.seqno: 2153]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2154 msg.seqno: 2371]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2372 msg.seqno: 2372]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2373 msg.seqno: 1978]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 1979 msg.seqno: 1979]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 1980 msg.seqno: 1980]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 1981 msg.seqno: 1981]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 1982 msg.seqno: 1982]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 1983 msg.seqno: 1983]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 1984 msg.seqno: 1984]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 1985 msg.seqno: 1985]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 1986 msg.seqno: 1986]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 1987 msg.seqno: 1987]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 1988 msg.seqno: 1988]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 1989 msg.seqno: 1989]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 1990 msg.seqno: 1990]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 1991 msg.seqno: 1991]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 1992 msg.seqno: 1992]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 1993 msg.seqno: 1993]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 1994 msg.seqno: 1994]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 1995 msg.seqno: 1995]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 1996 msg.seqno: 1996]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 1997 msg.seqno: 1997]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 1998 msg.seqno: 1994]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 1995 msg.seqno: 1995]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 1996 msg.seqno: 1996]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 1997 msg.seqno: 1997]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 1998 msg.seqno: 1998]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 1999 msg.seqno: 1999]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2000 msg.seqno: 2000]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2001 msg.seqno: 2001]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2002 msg.seqno: 2002]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2003 msg.seqno: 2003]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2004 msg.seqno: 2004]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2005 msg.seqno: 2005]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2006 msg.seqno: 2006]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2007 msg.seqno: 2007]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2008 msg.seqno: 2008]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2009 msg.seqno: 2009]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2010 msg.seqno: 2010]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2011 msg.seqno: 2011]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2012 msg.seqno: 2373]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2374 msg.seqno: 2374]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2375 msg.seqno: 2375]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2376 msg.seqno: 2376]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2377 msg.seqno: 2377]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2378 msg.seqno: 2378]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2379 msg.seqno: 2379]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2380 msg.seqno: 2380]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2381 msg.seqno: 2381]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2382 msg.seqno: 2382]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2383 msg.seqno: 2383]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2384 msg.seqno: 2384]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2385 msg.seqno: 2385]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2386 msg.seqno: 2386]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2387 msg.seqno: 2387]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2388 msg.seqno: 2388]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2389 msg.seqno: 2389]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2390 msg.seqno: 2390]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2391 msg.seqno: 2096]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2097 msg.seqno: 2097]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2098 msg.seqno: 2098]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2099 msg.seqno: 2099]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2100 msg.seqno: 2100]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2101 msg.seqno: 2101]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2102 msg.seqno: 2102]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2103 msg.seqno: 2103]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2104 msg.seqno: 2104]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2105 msg.seqno: 2105]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2106 msg.seqno: 2106]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2107 msg.seqno: 2107]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2108 msg.seqno: 2108]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2109 msg.seqno: 2109]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2110 msg.seqno: 2110]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2111 msg.seqno: 2111]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2112 msg.seqno: 2154]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2155 msg.seqno: 2155]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2156 msg.seqno: 2156]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2157 msg.seqno: 2157]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2158 msg.seqno: 2158]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2159 msg.seqno: 2159]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2160 msg.seqno: 2160]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2161 msg.seqno: 2161]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2162 msg.seqno: 2162]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2163 msg.seqno: 2163]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2164 msg.seqno: 2164]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2165 msg.seqno: 2165]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2166 msg.seqno: 2166]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2167 msg.seqno: 2167]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2168 msg.seqno: 2168]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2169 msg.seqno: 2169]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2170 msg.seqno: 2170]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2171 msg.seqno: 2391]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2392 msg.seqno: 2392]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2393 msg.seqno: 1998]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 1999 msg.seqno: 1999]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2000 msg.seqno: 2000]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2001 msg.seqno: 2001]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2002 msg.seqno: 2002]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2003 msg.seqno: 2003]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2004 msg.seqno: 2004]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2005 msg.seqno: 2005]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2006 msg.seqno: 2006]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2007 msg.seqno: 2007]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2008 msg.seqno: 2008]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2009 msg.seqno: 2009]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2010 msg.seqno: 2010]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2011 msg.seqno: 2011]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2012 msg.seqno: 2012]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2013 msg.seqno: 2013]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2014 msg.seqno: 2012]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2013 msg.seqno: 2013]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2014 msg.seqno: 2014]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2015 msg.seqno: 2015]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2016 msg.seqno: 2016]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2017 msg.seqno: 2017]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2018 msg.seqno: 2018]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2019 msg.seqno: 2019]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2020 msg.seqno: 2020]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2021 msg.seqno: 2021]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2022 msg.seqno: 2022]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2023 msg.seqno: 2023]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2024 msg.seqno: 2024]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2025 msg.seqno: 2025]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2026 msg.seqno: 2026]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2027 msg.seqno: 2027]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2028 msg.seqno: 2028]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2029 msg.seqno: 2029]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2030 msg.seqno: 2030]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2031 msg.seqno: 2031]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2032 msg.seqno: 2393]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2394 msg.seqno: 2394]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2395 msg.seqno: 2395]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2396 msg.seqno: 2396]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2397 msg.seqno: 2397]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2398 msg.seqno: 2398]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2399 msg.seqno: 2399]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2400 msg.seqno: 2400]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2401 msg.seqno: 2401]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2402 msg.seqno: 2402]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2403 msg.seqno: 2403]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2404 msg.seqno: 2404]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2405 msg.seqno: 2405]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2406 msg.seqno: 2406]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2407 msg.seqno: 2407]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2408 msg.seqno: 2112]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2113 msg.seqno: 2113]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2114 msg.seqno: 2114]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2115 msg.seqno: 2115]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2116 msg.seqno: 2116]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2117 msg.seqno: 2117]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2118 msg.seqno: 2118]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2119 msg.seqno: 2119]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2120 msg.seqno: 2120]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2121 msg.seqno: 2121]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2122 msg.seqno: 2122]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2123 msg.seqno: 2123]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2124 msg.seqno: 2124]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2125 msg.seqno: 2125]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2126 msg.seqno: 2171]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2172 msg.seqno: 2172]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2173 msg.seqno: 2173]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2174 msg.seqno: 2174]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2175 msg.seqno: 2175]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2176 msg.seqno: 2176]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2177 msg.seqno: 2177]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2178 msg.seqno: 2178]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2179 msg.seqno: 2179]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2180 msg.seqno: 2180]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2181 msg.seqno: 2181]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2182 msg.seqno: 2182]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2183 msg.seqno: 2183]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2184 msg.seqno: 2184]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2185 msg.seqno: 2185]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2186 msg.seqno: 2186]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2187 msg.seqno: 2187]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2188 msg.seqno: 2188]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2189 msg.seqno: 2189]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2190 msg.seqno: 2190]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2191 msg.seqno: 2191]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2192 msg.seqno: 2192]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2193 msg.seqno: 2193]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2194 msg.seqno: 2194]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2195 msg.seqno: 2195]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2196 msg.seqno: 2196]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2197 msg.seqno: 2197]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2198 msg.seqno: 2198]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2199 msg.seqno: 2199]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2200 msg.seqno: 2200]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2201 msg.seqno: 2201]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2202 msg.seqno: 2202]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2203 msg.seqno: 2203]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2204 msg.seqno: 2204]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2205 msg.seqno: 2205]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2206 msg.seqno: 2206]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2207 msg.seqno: 2207]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2208 msg.seqno: 2208]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2209 msg.seqno: 2209]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2210 msg.seqno: 2210]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2211 msg.seqno: 2211]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2212 msg.seqno: 2212]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2213 msg.seqno: 2213]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2214 msg.seqno: 2214]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2215 msg.seqno: 2215]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2216 msg.seqno: 2216]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2217 msg.seqno: 2217]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2218 msg.seqno: 2218]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2219 msg.seqno: 2219]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2220 msg.seqno: 2220]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2221 msg.seqno: 2221]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2222 msg.seqno: 2222]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2223 msg.seqno: 2223]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2224 msg.seqno: 2224]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2225 msg.seqno: 2225]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2226 msg.seqno: 2226]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2227 msg.seqno: 2227]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2228 msg.seqno: 2228]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2229 msg.seqno: 2229]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2230 msg.seqno: 2230]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2231 msg.seqno: 2231]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2232 msg.seqno: 2232]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2233 msg.seqno: 2233]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2234 msg.seqno: 2234]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2235 msg.seqno: 2235]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2236 msg.seqno: 2236]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2237 msg.seqno: 2237]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2238 msg.seqno: 2238]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2239 msg.seqno: 2408]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2409 msg.seqno: 2409]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2410 msg.seqno: 2014]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2015 msg.seqno: 2015]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2016 msg.seqno: 2016]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2017 msg.seqno: 2017]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2018 msg.seqno: 2018]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2019 msg.seqno: 2019]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2020 msg.seqno: 2020]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2021 msg.seqno: 2021]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2022 msg.seqno: 2022]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2023 msg.seqno: 2023]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2024 msg.seqno: 2024]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2025 msg.seqno: 2025]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2026 msg.seqno: 2026]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2027 msg.seqno: 2027]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2028 msg.seqno: 2028]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2029 msg.seqno: 2029]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2030 msg.seqno: 2030]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2031 msg.seqno: 2031]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2032 msg.seqno: 2032]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2033 msg.seqno: 2033]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2034 msg.seqno: 2034]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2035 msg.seqno: 2035]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2036 msg.seqno: 2036]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2037 msg.seqno: 2037]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2038 msg.seqno: 2038]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2039 msg.seqno: 2039]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2040 msg.seqno: 2040]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2041 msg.seqno: 2041]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2042 msg.seqno: 2042]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2043 msg.seqno: 2043]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2044 msg.seqno: 2044]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2045 msg.seqno: 2045]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2046 msg.seqno: 2046]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2047 msg.seqno: 2047]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2048 msg.seqno: 2048]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2049 msg.seqno: 2049]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2050 msg.seqno: 2050]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2051 msg.seqno: 2051]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2052 msg.seqno: 2052]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2053 msg.seqno: 2053]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2054 msg.seqno: 2054]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2055 msg.seqno: 2055]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2056 msg.seqno: 2056]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2057 msg.seqno: 2057]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2058 msg.seqno: 2058]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2059 msg.seqno: 2059]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2060 msg.seqno: 2060]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2061 msg.seqno: 2061]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2062 msg.seqno: 2062]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2063 msg.seqno: 2063]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2064 msg.seqno: 2064]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2065 msg.seqno: 2065]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2066 msg.seqno: 2066]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2067 msg.seqno: 2067]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2068 msg.seqno: 2068]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2069 msg.seqno: 2069]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2070 msg.seqno: 2070]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2071 msg.seqno: 2071]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2072 msg.seqno: 2072]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2073 msg.seqno: 2073]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2074 msg.seqno: 2074]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2075 msg.seqno: 2032]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2033 msg.seqno: 2033]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2034 msg.seqno: 2034]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2035 msg.seqno: 2410]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2411 msg.seqno: 2411]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2412 msg.seqno: 2412]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2413 msg.seqno: 2126]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2127 msg.seqno: 2127]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2128 msg.seqno: 2128]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2129 msg.seqno: 2239]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2240 msg.seqno: 2240]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2241 msg.seqno: 2241]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2242 msg.seqno: 2413]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2414 msg.seqno: 2035]
+Elapsed time: 32.92 seconds
+
+-----------------
+
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2036 msg.seqno: 2414]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2415 msg.seqno: 2242]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2243 msg.seqno: 2036]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2037 msg.seqno: 2129]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2130 msg.seqno: 2075]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2076 msg.seqno: 2415]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2416 msg.seqno: 2243]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2244 msg.seqno: 2130]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2131 msg.seqno: 2037]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2038 msg.seqno: 2076]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2077 msg.seqno: 2077]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:59:client_thread: errno: None) send msg failed[msg: 5d0e96667340]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2078 msg.seqno: 2038]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:59:client_thread: errno: None) send msg failed[msg: 5d0e96667340]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2039 msg.seqno: 2131]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:59:client_thread: errno: None) send msg failed[msg: 5d0e96667340]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2132 msg.seqno: 2244]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:59:client_thread: errno: None) send msg failed[msg: 5d0e96667340]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:138:outsend: errno: None) seqno not match[ack.seqno: 2245 msg.seqno: 2416]
+[[31mERROR[0m] [Thread client] (../../src/thread/client.c:59:client_thread: errno: None) send msg failed[msg: 5d0e96667340]
+===============================================
+system setting info on host [0]
+jia_pid (current host id) : 0
+hostc   (total host count): 6
+host 0: 10.208.130.245 yangyupeng 	***
+host 1: 10.208.130.247 yangyupeng 	***
+host 2: 10.208.130.249 yangyupeng 	***
+host 3: 10.208.129.87 yangyupeng 	***
+host 4: 10.208.129.89 yangyupeng 	***
+host 5: 10.208.129.90 yangyupeng 	***
+optionc: 5
+option 0: system_mode = hybrid
+option 1: comm_type = udp
+option 2: global_start_addr = 0x400000000000
+option 3: msg_buffer_size = 16
+option 4: msg_queue_size = 32
+===============================================
+
+***JIAJIA---Software DSM***
+***Cachepages = 1024  Pagesize=4096***
+
+*********Total of 6 hosts found!**********
+
+Start to copy system files to slaves!
+Copy files to yangyupeng@10.208.130.247.
+Copy files to yangyupeng@10.208.130.249.
+Copy files to yangyupeng@10.208.129.87.
+Copy files to yangyupeng@10.208.129.89.
+Copy files to yangyupeng@10.208.129.90.
+Remote copy succeed!
+
+Start to create processes on slaves!
+
+Starting CMD ssh yangyupeng@10.208.130.247 '~/jianode/tsp/tsp -P 26823 &' on host 10.208.130.247
+Starting CMD ssh yangyupeng@10.208.130.249 '~/jianode/tsp/tsp -P 26823 &' on host 10.208.130.249
+Starting CMD ssh yangyupeng@10.208.129.87 '~/jianode/tsp/tsp -P 26823 &' on host 10.208.129.87
+Starting CMD ssh yangyupeng@10.208.129.89 '~/jianode/tsp/tsp -P 26823 &' on host 10.208.129.89
+Starting CMD ssh yangyupeng@10.208.129.90 '~/jianode/tsp/tsp -P 26823 &' on host 10.208.129.90
+Elapsed time: 32.92 seconds
+
+-----------------
+
+	[MINIMUM TOUR LENGTH: 149]
+
+MINIMUM TOUR:
+
+	 0 - 18 - 10 -  3 -  6 - 15 - 12 -  7 -  5 -  2
+	13 - 17 -  1 - 14 -  8 - 11 -  9 - 16 -  4 -  0
+
+
+Shared Memory (4096-byte pages) : 8388608 (total) 197 (used)
+																																																																																																																								Print stats
+##########################  JIAJIA STATISTICS  ###########################
+           hosts -->        0        1        2        3        4        5      total
+--------------------------------------------------------------------------
+Msgs Sent          =    11315     2738     2426     2332     2253     2282     23346 
+Msgs Received      =    10734     3243     2386     2230     2145     2179     22917 
+Bytes Sent         = 43104332   327444   172412   172404   165992   167092  44109676 
+Bytes Received     =   771096  8655024  8470444  8403996  7973040  8163724  42437324 
+SEGVs (local)      =      734        0        0        0        0        0       734 
+SEGVs (remote)     =        0     2137     2090     2068     1957     2018     10270 
+SIGIOs (total)     =        0        0        0        0        0        0         0 
+SIGIOs (user)      =        0        0        0        0        0        0         0 
+SIGIOs (Syn.)      =        0        0        0        0        0        0         0 
+SIGIOs (SEGV)      =        0        0        0        0        0        0         0 
+Barriers           =        2        2        2        2        2        2         2 
+Locks              =      155      117      113      101      106      103       695 
+Getp Reqs          =        0     2066     2038     2023     1918     1965     10010 
+Diff Msgs.         =      562        0        0        0        0        0       562 
+MWdiffs            =     9805        0        0        0        0        0      9805 
+Invalidate         =        0     2065     2037     2022     1917     1964     10005 
+Replaced RO pages  =        0        0        0        0        0        0         0 
+Replaced RW pages  =        0        0        0        0        0        0         0 
+Mig in pages       =        0        0        0        0        0        0         0 
+Mig out pages      =        0        0        0        0        0        0         0 
+Resent Msgs        =      430        0        0        0        0        0       430 
+Large message      =    10407        4        2        2        1        3     10419 
+Small message      =      903     2365     2290     2167     2092     2118     11935 
+-------------------------------------------------------------------------- (ms) 
+Barrier time       =    15.92    48.20    20.77    29.89    59.36    72.90 
+Lock time          = 32374.16 29891.67 29988.60 20388.38 26313.94 23456.68 
+Unlock time        =     5.12   195.65   186.89   658.28   384.55   542.24 
+SEGV time (local)  =     6.05     0.00     0.00     0.00     0.00     0.00 
+SEGV time (remote) =     0.00  2380.36  2317.80 10895.95  5656.47  7954.43 
+SIGIO time (user)  =     0.00     0.00     0.00     0.00     0.00     0.00 
+SIGIO time (Syn.)  =     0.00     0.00     0.00     0.00     0.00     0.00 
+SIGIO time (SEGV)  =     0.00     0.00     0.00     0.00     0.00     0.00 
+Encode diff time   =     0.00     9.91    10.38    12.52    12.12    18.32 
+Decode diff time   =   163.81     0.00     0.00     0.00     0.00     0.00 
+Wait time          =     0.00     0.00     0.00     0.00     0.00     0.00 
+--------------------------------------------------------------------------
+SEGV time          =   446.45  3662.56  3571.80 12136.75  6830.67  9165.23 
+Syn. time          = 32395.20 30135.52 30196.26 21076.56 26757.86 24071.82 
+Server time        =     0.00     0.00     0.00     0.00     0.00     0.00 
+##########################################################################
+===============================================
+system setting info on host [0]
+jia_pid (current host id) : 0
+hostc   (total host count): 6
+host 0: 10.208.130.245 yangyupeng 	***
+host 1: 10.208.130.247 yangyupeng 	***
+host 2: 10.208.130.249 yangyupeng 	***
+host 3: 10.208.129.87 yangyupeng 	***
+host 4: 10.208.129.89 yangyupeng 	***
+host 5: 10.208.129.90 yangyupeng 	***
+optionc: 5
+option 0: system_mode = hybrid
+option 1: comm_type = udp
+option 2: global_start_addr = 0x400000000000
+option 3: msg_buffer_size = 16
+option 4: msg_queue_size = 32
+===============================================
+
+***JIAJIA---Software DSM***
+***Cachepages = 1024  Pagesize=4096***
+
+*********Total of 6 hosts found!**********
+
+Start to copy system files to slaves!
+Copy files to yangyupeng@10.208.130.247.
+Copy files to yangyupeng@10.208.130.249.
+Copy files to yangyupeng@10.208.129.87.
+Copy files to yangyupeng@10.208.129.89.
+Copy files to yangyupeng@10.208.129.90.
+Remote copy succeed!
+
+Start to create processes on slaves!
+
+Starting CMD ssh yangyupeng@10.208.130.247 '~/jianode/tsp/tsp -P 27208 &' on host 10.208.130.247
+Starting CMD ssh yangyupeng@10.208.130.249 '~/jianode/tsp/tsp -P 27208 &' on host 10.208.130.249
+Starting CMD ssh yangyupeng@10.208.129.87 '~/jianode/tsp/tsp -P 27208 &' on host 10.208.129.87
+Starting CMD ssh yangyupeng@10.208.129.89 '~/jianode/tsp/tsp -P 27208 &' on host 10.208.129.89
+Starting CMD ssh yangyupeng@10.208.129.90 '~/jianode/tsp/tsp -P 27208 &' on host 10.208.129.90
+Elapsed time: 33.45 seconds
+
+-----------------
+
+	[MINIMUM TOUR LENGTH: 149]
+
+MINIMUM TOUR:
+
+	 0 - 18 - 10 -  3 -  6 - 15 - 12 -  7 -  5 -  2
+	13 - 17 -  1 - 14 -  8 - 11 -  9 - 16 -  4 -  0
+
+
+Shared Memory (4096-byte pages) : 8388608 (total) 197 (used)
+Print stats
+##########################  JIAJIA STATISTICS  ###########################
+           hosts -->        0        1        2        3        4        5      total
+--------------------------------------------------------------------------
+Msgs Sent          =    10701     2617     2360     2324     2252     2312     22566 
+Msgs Received      =    10556     3119     2318     2221     2145     2209     22568 
+Bytes Sent         = 40758000   301940   167276   180256   161020   172480  41740972 
+Bytes Received     =   756760  8130132  8201820  8357404  7980404  8296076  41722596 
+SEGVs (local)      =      780        0        0        0        0        0       780 
+SEGVs (remote)     =        0     2004     2025     2073     1961     2052     10115 
+SIGIOs (total)     =        0        0        0        0        0        0         0 
+SIGIOs (user)      =        0        0        0        0        0        0         0 
+SIGIOs (Syn.)      =        0        0        0        0        0        0         0 
+SIGIOs (SEGV)      =        0        0        0        0        0        0         0 
+Barriers           =        2        2        2        2        2        2         2 
+Locks              =      149      120      112      103      105      103       692 
+Getp Reqs          =        0     1939     1973     2012     1920     1997      9841 
+Diff Msgs.         =      559        0        0        0        0        0       559 
+MWdiffs            =     9651        0        0        0        0        0      9651 
+Invalidate         =        0     1938     1972     2011     1919     1996      9836 
+Replaced RO pages  =        0        0        0        0        0        0         0 
+Replaced RW pages  =        0        0        0        0        0        0         0 
+Mig in pages       =        0        0        0        0        0        0         0 
+Mig out pages      =        0        0        0        0        0        0         0 
+Resent Msgs        =        0        0        0        0        0        0         0 
+Large message      =     9841        3        1        4        1        2      9852 
+Small message      =      854     2250     2223     2163     2089     2148     11727 
+-------------------------------------------------------------------------- (ms) 
+Barrier time       =    37.01    59.38    55.35    14.40    67.81    45.89 
+Lock time          = 32851.35 30569.91 30509.79 21598.83 26782.23 22999.27 
+Unlock time        =     5.90   191.30   194.59   714.21   378.47   638.37 
+SEGV time (local)  =     8.03     0.00     0.00     0.00     0.00     0.00 
+SEGV time (remote) =     0.00  2221.19  2293.57 10235.46  5779.52  8929.22 
+SIGIO time (user)  =     0.00     0.00     0.00     0.00     0.00     0.00 
+SIGIO time (Syn.)  =     0.00     0.00     0.00     0.00     0.00     0.00 
+SIGIO time (SEGV)  =     0.00     0.00     0.00     0.00     0.00     0.00 
+Encode diff time   =     0.00    11.67    11.79    27.46    11.30    17.44 
+Decode diff time   =   178.28     0.00     0.00     0.00     0.00     0.00 
+Wait time          =     0.00     0.00     0.00     0.00     0.00     0.00 
+--------------------------------------------------------------------------
+SEGV time          =   476.03  3423.59  3508.57 11479.26  6956.12 10160.42 
+Syn. time          = 32894.25 30820.59 30759.74 22327.44 27228.51 23683.53 
+Server time        =     0.00     0.00     0.00     0.00     0.00     0.00 
+##########################################################################

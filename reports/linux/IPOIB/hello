@@ -1,0 +1,59 @@
+===============================================
+system setting info on host [0]
+jia_pid (current host id) : 0
+hostc   (total host count): 2
+host 0: 10.90.50.80 yongy 	***
+host 1: 10.90.50.196 yyp 	***
+optionc: 5
+option 0: system_mode = hybrid
+option 1: comm_type = udp
+option 2: global_start_addr = 0x400000000000
+option 3: msg_buffer_size = 16
+option 4: msg_queue_size = 32
+===============================================
+Hello from master, Number of processes is: 2
+
+Shared Memory (4096-byte pages) : 8388608 (total) 0 (used)
+########  JIAJIA STATISTICS  #########
+           hosts -->        0        1      total
+--------------------------------------
+Msgs Sent          =        1        1         2 
+Msgs Received      =        1        1         2 
+Bytes Sent         =       32       32        64 
+Bytes Received     =       32       32        64 
+SEGVs (local)      =        0        0         0 
+SEGVs (remote)     =        0        0         0 
+SIGIOs (total)     =        0        0         0 
+SIGIOs (user)      =        0        0         0 
+SIGIOs (Syn.)      =        0        0         0 
+SIGIOs (SEGV)      =        0        0         0 
+Barriers           =        0        0         0 
+Locks              =        0        0         0 
+Getp Reqs          =        0        0         0 
+Diff Msgs.         =        0        0         0 
+MWdiffs            =        0        0         0 
+Invalidate         =        0        0         0 
+Replaced RO pages  =        0        0         0 
+Replaced RW pages  =        0        0         0 
+Mig in pages       =        0        0         0 
+Mig out pages      =        0        0         0 
+Resent Msgs        =        0        0         0 
+Large message      =        0        0         0 
+Small message      =        3        1         4 
+-------------------------------------- (ms) 
+Barrier time       =     0.00     0.00 
+Lock time          =     0.00     0.00 
+Unlock time        =     0.00     0.00 
+SEGV time (local)  =     0.00     0.00 
+SEGV time (remote) =     0.00     0.00 
+SIGIO time (user)  =     0.00     0.00 
+SIGIO time (Syn.)  =     0.00     0.00 
+SIGIO time (SEGV)  =     0.00     0.00 
+Encode diff time   =     0.00     0.00 
+Decode diff time   =     0.00     0.00 
+Wait time          =     0.00     0.00 
+--------------------------------------
+SEGV time          =     0.00     0.00 
+Syn. time          =     0.00     0.00 
+Server time        =     0.00     0.00 
+######################################

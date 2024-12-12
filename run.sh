@@ -1,7 +1,7 @@
 #!/bin/bash
 ARCH=linux
-MODE=ETH1
-TIMEOUT=30
+MODE=ETH-6hosts
+TIMEOUT=50
 
 CLEAN=true
 ALLTEST=true
