@@ -19,6 +19,7 @@ typedef struct Stats {
     unsigned int barrcnt;           /*barriers count*/
     unsigned int lockcnt;           /*lock count*/
     unsigned int getpcnt;           /*getp msg count*/
+    unsigned int prefetchcnt;       /*prefetch pages count*/
     unsigned int diffcnt;           /*diff msg count*/
     unsigned int invcnt;            /*inv msg count*/
     unsigned int mwdiffcnt;         /*MWdiffs count*/

@@ -41,6 +41,7 @@ void statserver(jia_msg_t *rep) {
     allstats[rep->frompid].barrcnt = stat->barrcnt;
     allstats[rep->frompid].lockcnt = stat->lockcnt;
     allstats[rep->frompid].getpcnt = stat->getpcnt;
+    allstats[rep->frompid].prefetchcnt = stat->prefetchcnt;
     allstats[rep->frompid].diffcnt = stat->diffcnt;
     allstats[rep->frompid].invcnt = stat->invcnt;
     allstats[rep->frompid].mwdiffcnt = stat->mwdiffcnt;

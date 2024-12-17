@@ -1,6 +1,7 @@
 #if !defined(SETTING_H)
 #define SETTING_H
-#include <errno.h>
+// #include <errno.h>
+#include <stdbool.h>
 
 /* max line length */
 #define MAX_LINE_LEN 256
@@ -19,8 +20,8 @@
 
 /* configuration option */
 typedef struct config_option {
-  char key[MAX_KEY_LEN];
-  char value[MAX_VALUE_LEN];
+    char key[MAX_KEY_LEN];
+    char value[MAX_VALUE_LEN];
 } config_option_t;
 
 /* system mode */
@@ -30,33 +31,37 @@ enum system_mode { MEMORY_MODE, COMPUTE_MODE, HYBRID_MODE };
 enum comm_type { tcp, udp, rdma };
 
 typedef struct host {
-  int id;            // host id
-  char ip[16];       // host ip
-  char username[32]; // host username
-  char password[32]; // host password
-  int homesize;
-  int riofd;
-  int rerrfd;
+    int id;            // host id
+    char ip[16];       // host ip
+    char username[32]; // host username
+    char password[32]; // host password
+    int homesize;
+    int riofd;
+    int rerrfd;
 } host_t;
 
 /* system configuration */
 typedef struct setting {
-  enum system_mode system_mode;         // system mode
-  enum comm_type comm_type;             // communication mode
-  unsigned long long global_start_addr; // global start address
+    enum system_mode system_mode;         // system mode
+    enum comm_type comm_type;             // communication mode
+    unsigned long long global_start_addr; // global start address
 
-  int msg_buffer_size; // message buffer size
-  int msg_queue_size;  // messsage inqueue size
+    int msg_buffer_size; // message buffer size
+    int msg_queue_size;  // messsage inqueue size
 
-  int jia_pid;                              // current host id
-  host_t *hosts;                            // host array
-  int hostc;                                // host count
-  config_option_t options[MAX_OPTIONS_NUM]; // options array
-  int optionc;                              // options count
+    int jia_pid;                              // current host id
+    host_t *hosts;                            // host array
+    int hostc;                                // host count
+    config_option_t options[MAX_OPTIONS_NUM]; // options array
+    int optionc;                              // options count
+
+    // prefetch optimization
+    bool prefetch_flag;     // prefetch switch
+    int prefetch_pages;     // num of pages that prefetched
+    int max_checking_pages; // the max num of pages that will be checked
 } setting_t;
 
 extern setting_t system_setting;
-
 
 /**
  * @brief Init the system setting from .jiaconf
@@ -106,12 +111,11 @@ void print_setting(const setting_t *setting);
  */
 void free_setting(setting_t *setting);
 
-
 /**
  * @brief trim -- trim leading and trailing whitespace of str
- * 
- * @param str 
+ *
+ * @param str
  */
-static void trim(char* str);
+static void trim(char *str);
 
 #endif /* SETTING_H */

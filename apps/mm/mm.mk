@@ -2,7 +2,7 @@
 # Application specific rules and defines...
 #*********************************************************
 
-CPPFLAGS = -I../../../src/include -O2
+CPPFLAGS = -I../../../src/include -O0
 CFLAGS = -g
 OBJS 	= mm.o
 VPATH = ../src 

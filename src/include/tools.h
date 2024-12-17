@@ -9,7 +9,20 @@
 
 typedef void (* void_func_handler)();
 
-extern char errstr[Linesize];
+typedef struct optimization {
+    char name[20];
+    bool flag;
+} optimization_t;
+
+struct prefetech_opt_t {
+    optimization_t base;
+    int prefetch_pages;     // num of pages that will be prefetched
+
+    /* when prefetching pages, need to checking whether the home of the next page
+    is current host. */
+    int max_checking_pages;  // limit the pages that will be checked
+};
+
 
 /* Function Declaration */
 void inittools();
@@ -54,10 +67,14 @@ extern FILE *logfile;
 extern pthread_t server_tid;
 extern pthread_t client_tid;
 extern pthread_t listen_tid;
+extern char errstr[Linesize];
 static char *clientstr = "[Thread client]";
 static char *serverstr = "[Thread server]";
 static char *listenstr = "[Thread listen]";
 static char *mainstr = "[Thread  main ]";
+
+// optimization techniques
+extern struct prefetech_opt_t prefetch_optimization;
 
 #define LOCKFREE
 

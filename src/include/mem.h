@@ -122,6 +122,9 @@ void addwtvect(int homei, wtvect_t wv, int from);
 void memmap(void *addr, size_t len, int prot);
 void memunmap(void *addr, size_t len);
 
+/* cache */
+int findposition(address_t addr);
+
 /**
  * @brief s2l --
  *

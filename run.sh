@@ -1,7 +1,7 @@
 #!/bin/bash
 ARCH=linux
-MODE=ETH1
-TIMEOUT=30
+MODE=test0
+TIMEOUT=50
 
 CLEAN=true
 ALLTEST=true
@@ -11,7 +11,7 @@ tests=("lu" "ep")
 run_app() {
     # 进入文件夹并在reports下创建对应的log文件
     if [ ! -f ./reports/$ARCH/$MODE/"$1" ]; then
-        echo "touch reports/$ARCH/$MODE/$1 file..."
+        echo "touch reports/$ARCH/$MODE/$1 file..." >&2
         touch ./reports/$ARCH/$MODE/"$1"
     fi
 
@@ -98,7 +98,14 @@ if $RUN; then
             echo -e "\nrunning ${dir%/}..."
             # shellcheck disable=SC2046
             pid=$(run_app $(basename "${dir%/}"))
-            listen "$pid"
+            
+	    
+	    if [[ ! "$pid" =~ ^[0-9]+$ ]]; then
+		    echo "Error: Invalid PID returned for ${dir%/}"
+		    continue
+	    fi
+	    
+	    listen "$pid"
 
             # 等待5秒后继续运行下一个程序
             sleep 1
