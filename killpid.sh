@@ -1,15 +1,9 @@
 #!/bin/bash
-
-# use hello as default program
-if [[ -n "$1" ]]; then
-	program=$1
-else
-	program="hello"
-fi
+# shellcheck disable=SC2086
 
 programs=("ep" "hello" "is" "lu" "mm" "pi" "sor" "tsp" "water")
-#servers=("cpuserver2" "cpuserver3" "cpuserver4" "cpuserver5" "cpuserver6")
-servers=("yyp196" "yyp192")
+servers=("cpuserver2" "cpuserver3" "cpuserver4" "cpuserver5" "cpuserver6")
+#servers=("yyp196" "yyp192")
 
 for server in "${servers[@]}"; do
 	if [ -n "$1" ]; then

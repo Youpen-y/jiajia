@@ -99,13 +99,7 @@ if $RUN; then
             # shellcheck disable=SC2046
             pid=$(run_app $(basename "${dir%/}"))
             
-	    
-	    if [[ ! "$pid" =~ ^[0-9]+$ ]]; then
-		    echo "Error: Invalid PID returned for ${dir%/}"
-		    continue
-	    fi
-	    
-	    listen "$pid"
+	        listen "$pid"
 
             # 等待5秒后继续运行下一个程序
             sleep 1
