@@ -12,6 +12,7 @@
 #include <arpa/inet.h>
 #include <stdbool.h>
 #include <unistd.h>
+#include <endian.h> 
 
 #define Msgsize 200     // temp value, used inlined message size in rdma
 
@@ -258,8 +259,8 @@ int init_rdma_context(struct jia_context *ctx, int batching_num) {
         memset(&dest_info[system_setting.jia_pid].gid, 0, sizeof(dest_info[system_setting.jia_pid].gid));
     }
 
-    dest_info[system_setting.jia_pid].gid.global.subnet_prefix = ntohl(dest_info[system_setting.jia_pid].gid.global.subnet_prefix);
-    dest_info[system_setting.jia_pid].gid.global.interface_id = ntohl(dest_info[system_setting.jia_pid].gid.global.interface_id);
+    dest_info[system_setting.jia_pid].gid.global.subnet_prefix = be64toh(dest_info[system_setting.jia_pid].gid.global.subnet_prefix);
+    dest_info[system_setting.jia_pid].gid.global.interface_id = be64toh(dest_info[system_setting.jia_pid].gid.global.interface_id);
     log_info(3, "Local address: LID 0x%04x, QPN 0x%06x, PSN 0x%06x, GID %016llx:%016llx", dest_info[system_setting.jia_pid].lid, dest_info[system_setting.jia_pid].qpn, dest_info[system_setting.jia_pid].psn, dest_info[system_setting.jia_pid].gid.global.subnet_prefix, dest_info[system_setting.jia_pid].gid.global.interface_id);
 
     ctx->tcp_port = start_port;
