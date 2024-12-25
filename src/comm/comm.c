@@ -329,22 +329,6 @@ int dequeue(msg_queue_t *msg_queue, jia_msg_t *msg) {
     }
     sem_getvalue(&msg_queue->busy_count, &semvalue);
     log_info(4, "enter %s dequeue! busy_count value: %d", queue, semvalue);
-    /**
-     * step 1: get current value
-     * step 2: we will atomic sub busy_count iff current value > 0
-     */
-    // while (1) {
-    //     current_value = atomic_load(&msg_queue->busy_count);
-    //     if (current_value > 0) {
-    //         if (atomic_compare_exchange_weak(&msg_queue->busy_count,
-    //                                          &current_value,
-    //                                          current_value - 1)) {
-    //             break;
-    //         }
-    //     }
-    // }
-    // log_info(4, "enter %s dequeue! busy_count value: %d", queue,
-    //          current_value - 1);
 
     // lock head and update head pointer
     pthread_mutex_lock(&(msg_queue->head_lock));
