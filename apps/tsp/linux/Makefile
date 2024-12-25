@@ -7,6 +7,6 @@ CFLAGS = -Wunused-result
 
 ARCH = linux
 #LDFLAGS = -lnsl -lcurses
-LDFLAGS = 
+LDFLAGS = -libverbs
 
 include ../tsp.mk

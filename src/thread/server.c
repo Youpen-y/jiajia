@@ -10,7 +10,7 @@
 
 pthread_t server_tid;
 static jia_msg_t msg;
-static void msg_handle(jia_msg_t *msg);
+void msg_handle(jia_msg_t *msg);
 
 void *server_thread(void *args)
 {
@@ -29,95 +29,4 @@ void *server_thread(void *args)
     }
 }
 
-/**
- * @brief msg_handle - handle msg
- * 
- * @param msg 
- * @note msg_handle called by server_thread
- */
-static void msg_handle(jia_msg_t *msg) {
-    log_info(3, "In servermsg!");
 
-    switch (msg->op) {
-    case DIFF:
-        diffserver(msg);
-        break;
-    case DIFFGRANT:
-        diffgrantserver(msg);
-        break;
-    case GETP:
-        getpserver(msg);
-        break;
-    case GETPGRANT:
-        getpgrantserver(msg);
-        break;
-    case ACQ:
-        acqserver(msg);
-        break;
-    case ACQGRANT:
-        acqgrantserver(msg);
-        break;
-    case INVLD:
-        invserver(msg);
-        break;
-    case BARR:
-        barrserver(msg);
-        break;
-    case BARRGRANT:
-        barrgrantserver(msg);
-        break;
-    case REL:
-        relserver(msg);
-        break;
-    case WTNT:
-        wtntserver(msg);
-        break;
-    case JIAEXIT:
-        jiaexitserver(msg);
-        break;
-    case WAIT:
-        waitserver(msg);
-        break;
-    case WAITGRANT:
-        waitgrantserver(msg);
-        break;
-    case STAT:
-        statserver(msg);
-        break;
-    case STATGRANT:
-        statgrantserver(msg);
-        break;
-    case SETCV:
-        setcvserver(msg);
-        break;
-    case RESETCV:
-        resetcvserver(msg);
-        break;
-    case WAITCV:
-        waitcvserver(msg);
-        break;
-    case CVGRANT:
-        cvgrantserver(msg);
-        break;
-    case MSGBODY:
-    case MSGTAIL:
-        msgrecvserver(msg);
-        break;
-    case LOADREQ:
-        loadserver(msg);
-        break;
-    case LOADGRANT:
-        loadgrantserver(msg);
-        break;
-
-    default:
-        if (msg->op >= BCAST) {
-            bcastserver(msg);
-        } else {
-            printmsg(msg);
-            local_assert(0, "msgserver(): Incorrect Message!");
-        }
-        break;
-    }
-    log_info(3, "Out servermsg!\n");
-}

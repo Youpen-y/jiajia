@@ -35,8 +35,11 @@
  * =================================================================== *
  **********************************************************************/
 #ifndef NULL_LIB
-#include <stdatomic.h>
 #include "tools.h"
+#include "stat.h"
+#include "msg.h"
+#include "load.h"
+#include <stdatomic.h>
 
 extern char errstr[Linesize];
 
@@ -178,10 +181,14 @@ int move_msg_to_outqueue(msg_buffer_t *buffer,
                          int index,
                          msg_queue_t *outqueue) {
     slot_t *slot = &msg_buffer.buffer[index];
-    int ret = enqueue(outqueue, &slot->msg);
-    if (ret == -1) {
-        perror("enqueue");
-        return ret;
+    if (slot->msg.topid == system_setting.jia_pid) {
+        msg_handle(&slot->msg);
+    } else {
+        int ret = enqueue(outqueue, &slot->msg);
+        if (ret == -1) {
+            perror("enqueue");
+            return ret;
+        }
     }
     return 0;
 }
@@ -278,6 +285,99 @@ void bsendmsg(jia_msg_t *msg) {
     // 8 bytes for (root(4 bytes)|level(4 bytes))
     msg->temp = ((root & 0xffff) << 16) | (level & 0xffff);
     bcastserver(msg);
+}
+
+/**
+ * @brief msg_handle - handle msg
+ * 
+ * @param msg 
+ * @note msg_handle called by server_thread
+ */
+void msg_handle(jia_msg_t *msg) {
+    log_info(3, "In servermsg!");
+
+    switch (msg->op) {
+    case DIFF:
+        diffserver(msg);
+        break;
+    case DIFFGRANT:
+        diffgrantserver(msg);
+        break;
+    case GETP:
+        getpserver(msg);
+        break;
+    case GETPGRANT:
+        getpgrantserver(msg);
+        break;
+    case ACQ:
+        acqserver(msg);
+        break;
+    case ACQGRANT:
+        acqgrantserver(msg);
+        break;
+    case INVLD:
+        invserver(msg);
+        break;
+    case BARR:
+        barrserver(msg);
+        break;
+    case BARRGRANT:
+        barrgrantserver(msg);
+        break;
+    case REL:
+        relserver(msg);
+        break;
+    case WTNT:
+        wtntserver(msg);
+        break;
+    case JIAEXIT:
+        jiaexitserver(msg);
+        break;
+    case WAIT:
+        waitserver(msg);
+        break;
+    case WAITGRANT:
+        waitgrantserver(msg);
+        break;
+    case STAT:
+        statserver(msg);
+        break;
+    case STATGRANT:
+        statgrantserver(msg);
+        break;
+    case SETCV:
+        setcvserver(msg);
+        break;
+    case RESETCV:
+        resetcvserver(msg);
+        break;
+    case WAITCV:
+        waitcvserver(msg);
+        break;
+    case CVGRANT:
+        cvgrantserver(msg);
+        break;
+    case MSGBODY:
+    case MSGTAIL:
+        msgrecvserver(msg);
+        break;
+    case LOADREQ:
+        loadserver(msg);
+        break;
+    case LOADGRANT:
+        loadgrantserver(msg);
+        break;
+
+    default:
+        if (msg->op >= BCAST) {
+            bcastserver(msg);
+        } else {
+            printmsg(msg);
+            local_assert(0, "msgserver(): Incorrect Message!");
+        }
+        break;
+    }
+    log_info(3, "Out servermsg!\n");
 }
 
 #else /* NULL_LIB */

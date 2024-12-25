@@ -121,7 +121,12 @@ extern comm_manager_t comm_manager;
 /* function declaration  */
 
 /**
- * @brief initcomm -- initialize communication setting
+ * @register_sigint_handler -- register signal handler
+ */
+void register_sigint_handler();
+
+/**
+ * @brief initcomm -- initialize udp communication
  *
  */
 void initcomm();

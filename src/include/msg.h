@@ -38,7 +38,6 @@
 #ifndef JIAMSG_H
 #define JIAMSG_H
 
-#include "global.h"
 #include "semaphore.h"
 #define Maxmsgbufs     48
 #define Maxmsgno       0x40000000
@@ -126,6 +125,7 @@ typedef struct msg_queue {
     slot_t *queue;    // msg queue
     int               size;     // size of queue(must be power of 2)
 
+    pthread_mutex_t   lock;         // lock for queue
     pthread_mutex_t   head_lock;    // lock for head
     pthread_mutex_t   tail_lock;    // lock for tail
     volatile unsigned               head;         // head
@@ -195,6 +195,15 @@ void freemsg_unlock(msg_buffer_t *buffer, int index);
  * @return int 
  */
 int move_msg_to_outqueue(msg_buffer_t *buffer, int index, msg_queue_t *outqueue);
+
+
+/**
+ * @brief msg_handle - handle msg
+ * 
+ * @param msg 
+ * @note msg_handle called by server_thread
+ */
+void msg_handle(jia_msg_t *msg);
 
 
 /**

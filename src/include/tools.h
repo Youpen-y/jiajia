@@ -1,10 +1,12 @@
 #ifndef TOOLS_H
 #define TOOLS_H
+#include "rdma_comm.h"
 #pragma once
 
 #include "mem.h"
 #include "syn.h"
 #include <comm.h>
+#include <infiniband/verbs.h>
 #include <pthread.h>
 
 typedef void (* void_func_handler)();
@@ -43,6 +45,13 @@ void newtwin(address_t *twin);
 void freetwin(address_t *twin);
 void emptyprintf();
 unsigned int get_usecs();
+
+
+// RDMA related functions
+/**
+ * @brief print_port_info -- print ib port information
+ */
+void print_port_info(struct ibv_port_attr *port_attr);
 
 
 /**

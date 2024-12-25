@@ -39,19 +39,15 @@
 #include <pthread.h>
 #include <semaphore.h>
 #include <sys/socket.h>
-#include "comm.h" // statgrantserver,
-#include "mem.h"  // diffserver, getserver, diffgrantserver, getpgrantserver
+#include "comm.h"
 #include "setting.h"
-#include "syn.h" // acqserver, inverver, relserver, wtntserver, barrserver, barrgrantserver, acqgrantserver
-#include "tools.h" // jiaexitserver, jia_current_time, newmsg, printmsg, get_usecs, emptyprintf
-// waitgrantserver, waitserver, setcvserver, resetcvserver, waitcvserver,
-// cvgrantserver,
-#include "load.h" // loadserver, loadgrantserver,
-#include "msg.h"  // msgrecvserver
-#include "stat.h" // statserver
+#include "tools.h"
+#include "msg.h"
+#include "stat.h"
 #include "thread.h"
 #include <stdatomic.h>
 
+long start_port;
 
 // global variables
 
@@ -62,13 +58,10 @@ comm_manager_t comm_manager;
 msg_queue_t inqueue;
 msg_queue_t outqueue;
 
-long start_port;
-
 static int init_comm_manager();
 static int fd_create(int i, enum FDCR_MODE flag);
 static void sigint_handler();
 static void sigio_handler();
-static void register_sigint_handler();
 
 // function definitions
 
@@ -82,7 +75,7 @@ void initcomm() {
         VERBOSE_LOG(3, "************Initialize Communication!*******\n");
     }
     VERBOSE_LOG(3, "current jia_pid = %d\n", system_setting.jia_pid);
-    VERBOSE_LOG(3, " start_port = %u \n", start_port);
+    VERBOSE_LOG(3, " start_port = %ld \n", start_port);
 
     /* step 1: init msg buffer */
     init_msg_buffer(&msg_buffer, system_setting.msg_buffer_size);
@@ -157,7 +150,7 @@ static int fd_create(int i, enum FDCR_MODE flag) {
  * @brief register_sigint_handler -- register sigint signal handler
  *
  */
-static void register_sigint_handler() {
+void register_sigint_handler() {
     struct sigaction act;
 
     act.sa_handler = (void_func_handler)sigint_handler;
@@ -226,7 +219,8 @@ int init_msg_queue(msg_queue_t *msg_queue, int size) {
     msg_queue->tail = 0;
 
     /** step 3: initialize head mutex and tail mutex */ 
-    if (pthread_mutex_init(&(msg_queue->head_lock), NULL) != 0 ||
+    if (pthread_mutex_init(&(msg_queue->lock), NULL) != 0 ||
+        pthread_mutex_init(&(msg_queue->head_lock), NULL) != 0 ||
         pthread_mutex_init(&(msg_queue->tail_lock), NULL) != 0) {
         perror("msg_queue mutex init");
         free(msg_queue->queue);
@@ -237,6 +231,7 @@ int init_msg_queue(msg_queue_t *msg_queue, int size) {
     if (sem_init(&(msg_queue->busy_count), 0, 0) != 0 ||
         sem_init(&(msg_queue->free_count), 0, size) != 0) {
         perror("msg_queue sem init");
+        pthread_mutex_destroy(&(msg_queue->lock));
         pthread_mutex_destroy(&(msg_queue->head_lock));
         pthread_mutex_destroy(&(msg_queue->tail_lock));
         free(msg_queue->queue);
