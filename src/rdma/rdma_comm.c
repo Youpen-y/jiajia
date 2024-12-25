@@ -28,6 +28,13 @@ void *tcp_server_thread(void *arg) {
     if (server_fd < 0) {
         log_err("Failed to create server socket");
     }
+
+    int opt = 1;
+    if (setsockopt(server_fd, SOL_SOCKET, SO_REUSEADDR | SO_REUSEPORT, &opt, sizeof(opt)) < 0) {
+        perror("setsockopt SO_REUSEADDR/SO_REUSEPORT failed");
+        exit(EXIT_FAILURE);
+    }
+
     struct sockaddr_in server_addr = {0};
     server_addr.sin_family = AF_INET;
     server_addr.sin_addr.s_addr = inet_addr((char *)system_setting.hosts[system_setting.jia_pid].ip);
@@ -43,7 +50,7 @@ void *tcp_server_thread(void *arg) {
         exit(EXIT_FAILURE);
     }
 
-    printf("<%d: %d>, Server listening on <%s, %d>...\n", ctx.tcp_port, server_id, system_setting.hosts[system_setting.jia_pid].ip, ctx.tcp_port + server_id);
+    printf("Server listening on <%s, %d>...\n", system_setting.hosts[system_setting.jia_pid].ip, ctx.tcp_port + server_id);
 
     struct sockaddr_in client_addr = {0};
     socklen_t addrlen = sizeof(client_addr);
@@ -81,29 +88,25 @@ void *tcp_client_thread(void *arg) {
         log_err("Failed to create client socket");
     }
 
+    if (setsockopt(client_fd, SOL_SOCKET, SO_SNDTIMEO, (const char *)&timeout, sizeof(timeout)) < 0) {
+        perror("setsockopt failed");
+        close(client_fd);
+    }
+
     struct sockaddr_in server_addr = {0};
     server_addr.sin_family = AF_INET;
-    // server_addr.sin_addr.s_addr = inet_addr(system_setting.hosts[client_id].ip);
-    if (inet_pton(AF_INET, system_setting.hosts[client_id].ip, &server_addr.sin_addr) <= 0) {
-        perror("Invalid address");
-        fprintf(stdout, "%s\n", system_setting.hosts[client_id].ip);
-        close(client_fd);
-        exit(-1);
-    }
-
+    server_addr.sin_addr.s_addr = inet_addr(system_setting.hosts[client_id].ip);
     server_addr.sin_port = htons(ctx.tcp_port + system_setting.jia_pid);
 
-    int count = 0;
-    while (connect(client_fd, (struct sockaddr *)&server_addr, sizeof(server_addr)) < 0 && count < 100) {
-        printf("\nConnection host %d Failed, retrying ... \n", client_id);
-        perror("Connected failed:");
-        count++;
+    struct timeval timeout;
+    timeout.tv_sec = 2;  // 超时秒数
+    timeout.tv_usec = 0; // 微秒部分
+
+    while(connect(client_fd, (struct sockaddr *)&server_addr, sizeof(server_addr)) < 0) {
+        if (errno == EINPROGRESS || errno == EWOULDBLOCK) {
+            printf("Connection timed out\n");
+        }
     }
-    if (count == 100) {
-        printf("Client: count = %d, Connect failed\n", count);
-        free_rdma_resources(&ctx);
-    }
-    printf("Client: count = %d, Connect to host %d, sending initial sync message\n", count, client_id);
 
     bool flag = false;
     while (1) {
