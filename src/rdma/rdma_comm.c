@@ -88,11 +88,6 @@ void *tcp_client_thread(void *arg) {
         log_err("Failed to create client socket");
     }
 
-    if (setsockopt(client_fd, SOL_SOCKET, SO_SNDTIMEO, (const char *)&timeout, sizeof(timeout)) < 0) {
-        perror("setsockopt failed");
-        close(client_fd);
-    }
-
     struct sockaddr_in server_addr = {0};
     server_addr.sin_family = AF_INET;
     server_addr.sin_addr.s_addr = inet_addr(system_setting.hosts[client_id].ip);
@@ -101,6 +96,11 @@ void *tcp_client_thread(void *arg) {
     struct timeval timeout;
     timeout.tv_sec = 2;  // 超时秒数
     timeout.tv_usec = 0; // 微秒部分
+
+    if (setsockopt(client_fd, SOL_SOCKET, SO_SNDTIMEO, (const char *)&timeout, sizeof(timeout)) < 0) {
+        perror("setsockopt failed");
+        close(client_fd);
+    }
 
     while(connect(client_fd, (struct sockaddr *)&server_addr, sizeof(server_addr)) < 0) {
         if (errno == EINPROGRESS || errno == EWOULDBLOCK) {
