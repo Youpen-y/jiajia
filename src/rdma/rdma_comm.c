@@ -2,21 +2,22 @@
 #include "global.h"
 #include "setting.h"
 #include "tools.h"
+#include <arpa/inet.h>
+#include <endian.h>
 #include <infiniband/verbs.h>
 #include <pthread.h>
+#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <sys/socket.h>
 #include <sys/types.h>
 #include <time.h>
-#include <sys/socket.h>
-#include <arpa/inet.h>
-#include <stdbool.h>
 #include <unistd.h>
-#include <endian.h> 
 
-#define Msgsize 200     // temp value, used inlined message size in rdma
+#define Msgsize 200 // temp value, used inlined message size in rdma
 
 extern long start_port;
+extern int ack_send, ack_recv;
 int batching_num = 8;
 
 jia_context_t ctx;
@@ -31,17 +32,20 @@ void *tcp_server_thread(void *arg) {
     }
 
     int opt = 1;
-    if (setsockopt(server_fd, SOL_SOCKET, SO_REUSEADDR | SO_REUSEPORT, &opt, sizeof(opt)) < 0) {
+    if (setsockopt(server_fd, SOL_SOCKET, SO_REUSEADDR | SO_REUSEPORT, &opt,
+                   sizeof(opt)) < 0) {
         perror("setsockopt SO_REUSEADDR/SO_REUSEPORT failed");
         exit(EXIT_FAILURE);
     }
 
     struct sockaddr_in server_addr = {0};
     server_addr.sin_family = AF_INET;
-    server_addr.sin_addr.s_addr = inet_addr((char *)system_setting.hosts[system_setting.jia_pid].ip);
+    server_addr.sin_addr.s_addr =
+        inet_addr((char *)system_setting.hosts[system_setting.jia_pid].ip);
     server_addr.sin_port = htons(ctx.tcp_port + server_id);
 
-    if (bind(server_fd, (struct sockaddr *)&server_addr, sizeof(server_addr)) < 0) {
+    if (bind(server_fd, (struct sockaddr *)&server_addr, sizeof(server_addr)) <
+        0) {
         perror("bind failed");
         exit(EXIT_FAILURE);
     }
@@ -51,11 +55,14 @@ void *tcp_server_thread(void *arg) {
         exit(EXIT_FAILURE);
     }
 
-    printf("Server listening on <%s, %d>...\n", system_setting.hosts[system_setting.jia_pid].ip, ctx.tcp_port + server_id);
+    printf("Server listening on <%s, %d>...\n",
+           system_setting.hosts[system_setting.jia_pid].ip,
+           ctx.tcp_port + server_id);
 
     struct sockaddr_in client_addr = {0};
     socklen_t addrlen = sizeof(client_addr);
-    int new_socket = accept(server_fd, (struct sockaddr *)&client_addr, &addrlen);
+    int new_socket =
+        accept(server_fd, (struct sockaddr *)&client_addr, &addrlen);
     if (new_socket < 0) {
         perror("accept");
         exit(EXIT_FAILURE);
@@ -65,7 +72,8 @@ void *tcp_server_thread(void *arg) {
 
     bool flag = true;
     while (1) {
-        ssize_t bytes_read = recv(new_socket, &dest_info[server_id], sizeof(jia_dest_t), 0);
+        ssize_t bytes_read =
+            recv(new_socket, &dest_info[server_id], sizeof(jia_dest_t), 0);
         if (bytes_read == sizeof(jia_dest_t)) {
             send(new_socket, &flag, sizeof(bool), 0);
             break;
@@ -75,7 +83,11 @@ void *tcp_server_thread(void *arg) {
         }
     }
 
-    printf("[%d]\t0x%04x\t0x%06x\t0x%06x\t%016llx:%016llx\n", server_id, dest_info[server_id].lid, dest_info[server_id].qpn, dest_info[server_id].psn, dest_info[server_id].gid.global.subnet_prefix, dest_info[server_id].gid.global.interface_id);
+    printf("[%d]\t0x%04x\t0x%06x\t0x%06x\t%016llx:%016llx\n", server_id,
+           dest_info[server_id].lid, dest_info[server_id].qpn,
+           dest_info[server_id].psn,
+           dest_info[server_id].gid.global.subnet_prefix,
+           dest_info[server_id].gid.global.interface_id);
 
     close(new_socket);
     close(server_fd);
@@ -98,12 +110,14 @@ void *tcp_client_thread(void *arg) {
     timeout.tv_sec = 2;  // 超时秒数
     timeout.tv_usec = 0; // 微秒部分
 
-    if (setsockopt(client_fd, SOL_SOCKET, SO_SNDTIMEO, (const char *)&timeout, sizeof(timeout)) < 0) {
+    if (setsockopt(client_fd, SOL_SOCKET, SO_SNDTIMEO, (const char *)&timeout,
+                   sizeof(timeout)) < 0) {
         perror("setsockopt failed");
         close(client_fd);
     }
 
-    while(connect(client_fd, (struct sockaddr *)&server_addr, sizeof(server_addr)) < 0) {
+    while (connect(client_fd, (struct sockaddr *)&server_addr,
+                   sizeof(server_addr)) < 0) {
         if (errno == EINPROGRESS || errno == EWOULDBLOCK) {
             printf("Connection timed out\n");
         }
@@ -111,9 +125,10 @@ void *tcp_client_thread(void *arg) {
 
     bool flag = false;
     while (1) {
-        send(client_fd, &dest_info[system_setting.jia_pid], sizeof(jia_dest_t), 0);
+        send(client_fd, &dest_info[system_setting.jia_pid], sizeof(jia_dest_t),
+             0);
         if (recv(client_fd, &flag, sizeof(bool), 0) == 1 && flag) {
-            printf("server returned %s\n", flag==true?"true":"false");
+            printf("server returned %s\n", flag == true ? "true" : "false");
             break;
         }
     }
@@ -150,49 +165,38 @@ void exchange_dest_info() {
     }
 
     printf("jia_pid\tlid\tqpn\tpsn\tgid.subnet_prefix:gid.interface_id\n");
-    for(int i = 0; i < system_setting.hostc; i++) {
-        printf("[%d]\t0x%04x\t0x%06x\t0x%06x\t%016llx:%016llx\n", i, dest_info[i].lid, dest_info[i].qpn, dest_info[i].psn, dest_info[i].gid.global.subnet_prefix, dest_info[i].gid.global.interface_id);
+    for (int i = 0; i < system_setting.hostc; i++) {
+        printf("[%d]\t0x%04x\t0x%06x\t0x%06x\t%016llx:%016llx\n", i,
+               dest_info[i].lid, dest_info[i].qpn, dest_info[i].psn,
+               dest_info[i].gid.global.subnet_prefix,
+               dest_info[i].gid.global.interface_id);
     }
 }
 
-int init_rdma_context(struct jia_context *ctx, int batching_num) {
-    struct ibv_device **dev_list;
-    struct ibv_device *dev;
-
-    dev_list = ibv_get_device_list(NULL);
-    if (!dev_list) {
-        log_info(3, "No RDMA device available");
-        return -1;
-    }
-
-    dev = dev_list[0];  // use the first device
-    ctx->context = ibv_open_device(dev);
-    if (!dev) {
-        log_info(3, "Open first device failed");
-    }
-
+void init_comm_qp_context(struct jia_context *ctx) {
+    /* step 1: create completion channel */
     ctx->send_channel = ibv_create_comp_channel(ctx->context);
     ctx->recv_channel = ibv_create_comp_channel(ctx->context);
 
-    ctx->pd = ibv_alloc_pd(ctx->context);
-    
-    ctx->send_mr = (struct ibv_mr **)malloc(sizeof(struct ibv_mr * ) * system_setting.msg_queue_size);
-    ctx->recv_mr = (struct ibv_mr **)malloc(sizeof(struct ibv_mr *) * system_setting.msg_queue_size);
-
-    ctx->outqueue = &outqueue;
-    ctx->inqueue = &inqueue;
-
+    /* step 2: register memory region */
+    ctx->send_mr = (struct ibv_mr **)malloc(sizeof(struct ibv_mr *) *
+                                            system_setting.msg_queue_size);
+    ctx->recv_mr = (struct ibv_mr **)malloc(sizeof(struct ibv_mr *) *
+                                            system_setting.msg_queue_size);
     for (int i = 0; i < system_setting.msg_queue_size; i++) {
-        ctx->send_mr[i] = ibv_reg_mr(ctx->pd, &ctx->outqueue->queue[i].msg, sizeof(jia_msg_t), IBV_ACCESS_LOCAL_WRITE);
-        ctx->recv_mr[i] = ibv_reg_mr(ctx->pd, &ctx->inqueue->queue[i].msg, sizeof(jia_msg_t), IBV_ACCESS_LOCAL_WRITE);
+        ctx->send_mr[i] = ibv_reg_mr(ctx->pd, &ctx->outqueue->queue[i].msg,
+                                     sizeof(jia_msg_t), IBV_ACCESS_LOCAL_WRITE);
+        ctx->recv_mr[i] = ibv_reg_mr(ctx->pd, &ctx->inqueue->queue[i].msg,
+                                     sizeof(jia_msg_t), IBV_ACCESS_LOCAL_WRITE);
     }
 
-    ctx->send_cq = ibv_create_cq(ctx->context, system_setting.msg_queue_size, NULL, ctx->send_channel, 0);
-    ctx->recv_cq = ibv_create_cq(ctx->context, system_setting.msg_queue_size, NULL, ctx->recv_channel, 0);
+    /* step 3: create completion queue */
+    ctx->send_cq = ibv_create_cq(ctx->context, system_setting.msg_queue_size,
+                                 NULL, ctx->send_channel, 0);
+    ctx->recv_cq = ibv_create_cq(ctx->context, system_setting.msg_queue_size,
+                                 NULL, ctx->recv_channel, 0);
 
-    ctx->ib_port = 2;   // this can be set from a config file
-
-    ctx->batching_num = batching_num;
+    /* step 4: create QP && change QP's state to RTS */
     {
         struct ibv_qp_attr attr;
         struct ibv_qp_init_attr init_attr = {
@@ -200,24 +204,24 @@ int init_rdma_context(struct jia_context *ctx, int batching_num) {
             .send_cq = ctx->send_cq,
             .recv_cq = ctx->recv_cq,
             .srq = NULL,
-            .cap = {
-                .max_send_wr = system_setting.msg_queue_size,
-                .max_recv_wr = system_setting.msg_queue_size,
-                .max_send_sge = 1,
-                .max_recv_sge = 1,
-               .max_inline_data = 0,
-            },
+            .cap =
+                {
+                      .max_send_wr = system_setting.msg_queue_size,
+                      .max_recv_wr = system_setting.msg_queue_size,
+                      .max_send_sge = 1,
+                      .max_recv_sge = 1,
+                      .max_inline_data = 60,
+                      },
             .qp_type = IBV_QPT_UD,
             .sq_sig_all = 1
         };
-
         ctx->qp = ibv_create_qp(ctx->pd, &init_attr);
 
         ibv_query_qp(ctx->qp, &attr, IBV_QP_CAP, &init_attr);
-		if (init_attr.cap.max_inline_data >= Msgsize) {
+        if (init_attr.cap.max_inline_data >= Msgsize) {
             // use inline data for little messages
-			ctx->send_flags |= IBV_SEND_INLINE;
-		}
+            ctx->send_flags |= IBV_SEND_INLINE;
+        }
 
         attr.qp_state = IBV_QPS_INIT;
         attr.pkey_index = 0;
@@ -225,25 +229,19 @@ int init_rdma_context(struct jia_context *ctx, int batching_num) {
         attr.qkey = 0x11111111;
 
         if (ibv_modify_qp(ctx->qp, &attr,
-                IBV_QP_STATE              |
-                IBV_QP_PKEY_INDEX         |
-                IBV_QP_PORT               |
-                IBV_QP_QKEY)) {
+                          IBV_QP_STATE | IBV_QP_PKEY_INDEX | IBV_QP_PORT |
+                              IBV_QP_QKEY)) {
             log_err("Failed to modify QP to INIT");
         }
 
         attr.qp_state = IBV_QPS_RTR;
-        if (ibv_modify_qp(ctx->qp, &attr,
-                IBV_QP_STATE              |
-                IBV_QP_QKEY)) {
+        if (ibv_modify_qp(ctx->qp, &attr, IBV_QP_STATE | IBV_QP_QKEY)) {
             log_err("Failed to modify QP to RTR");
         }
 
         attr.qp_state = IBV_QPS_RTS;
         attr.sq_psn = 0;
-        if (ibv_modify_qp(ctx->qp, &attr,
-                IBV_QP_STATE              |
-                IBV_QP_SQ_PSN)) {
+        if (ibv_modify_qp(ctx->qp, &attr, IBV_QP_STATE | IBV_QP_SQ_PSN)) {
             log_err("Failed to modify QP to RTS");
         }
     }
@@ -253,32 +251,39 @@ int init_rdma_context(struct jia_context *ctx, int batching_num) {
     dest_info[system_setting.jia_pid].lid = ctx->portinfo.lid;
     dest_info[system_setting.jia_pid].qpn = ctx->qp->qp_num;
     dest_info[system_setting.jia_pid].psn = 0;
-    
-    if (ibv_query_gid(ctx->context, ctx->ib_port, 0, &dest_info[system_setting.jia_pid].gid)) {
+
+    if (ibv_query_gid(ctx->context, ctx->ib_port, 0,
+                      &dest_info[system_setting.jia_pid].gid)) {
         log_err("Failed to query gid");
-        memset(&dest_info[system_setting.jia_pid].gid, 0, sizeof(dest_info[system_setting.jia_pid].gid));
+        memset(&dest_info[system_setting.jia_pid].gid, 0,
+               sizeof(dest_info[system_setting.jia_pid].gid));
     }
 
-    dest_info[system_setting.jia_pid].gid.global.subnet_prefix = be64toh(dest_info[system_setting.jia_pid].gid.global.subnet_prefix);
-    dest_info[system_setting.jia_pid].gid.global.interface_id = be64toh(dest_info[system_setting.jia_pid].gid.global.interface_id);
-    log_info(3, "Local address: LID 0x%04x, QPN 0x%06x, PSN 0x%06x, GID %016llx:%016llx", dest_info[system_setting.jia_pid].lid, dest_info[system_setting.jia_pid].qpn, dest_info[system_setting.jia_pid].psn, dest_info[system_setting.jia_pid].gid.global.subnet_prefix, dest_info[system_setting.jia_pid].gid.global.interface_id);
-
-    ctx->tcp_port = start_port;
-    exchange_dest_info();
+    dest_info[system_setting.jia_pid].gid.global.subnet_prefix =
+        be64toh(dest_info[system_setting.jia_pid].gid.global.subnet_prefix);
+    dest_info[system_setting.jia_pid].gid.global.interface_id =
+        be64toh(dest_info[system_setting.jia_pid].gid.global.interface_id);
+    log_info(3,
+             "Local address: LID 0x%04x, QPN 0x%06x, PSN 0x%06x, GID "
+             "%016llx:%016llx",
+             dest_info[system_setting.jia_pid].lid,
+             dest_info[system_setting.jia_pid].qpn,
+             dest_info[system_setting.jia_pid].psn,
+             dest_info[system_setting.jia_pid].gid.global.subnet_prefix,
+             dest_info[system_setting.jia_pid].gid.global.interface_id);
 
     // create ah
-    ctx->ah = (struct ibv_ah **)malloc(sizeof(struct ibv_ah *) * system_setting.hostc);
+    ctx->ah = (struct ibv_ah **)malloc(sizeof(struct ibv_ah *) *
+                                       system_setting.hostc);
     for (int i = 0; i < system_setting.hostc; i++) {
         if (i == system_setting.jia_pid) {
             continue;
         }
-        struct ibv_ah_attr attr = {
-            .is_global = 0,
-            .dlid = dest_info[i].lid,
-            .sl = 0,
-            .src_path_bits = 0,
-            .port_num = ctx->ib_port
-        };
+        struct ibv_ah_attr attr = {.is_global = 0,
+                                   .dlid = dest_info[i].lid,
+                                   .sl = 0,
+                                   .src_path_bits = 0,
+                                   .port_num = ctx->ib_port};
 
         if (dest_info[i].gid.global.interface_id) {
             attr.is_global = 1;
@@ -289,6 +294,106 @@ int init_rdma_context(struct jia_context *ctx, int batching_num) {
 
         ctx->ah[i] = ibv_create_ah(ctx->pd, &attr);
     }
+}
+
+void init_ack_qp_context(struct jia_context *ctx) {
+    ctx->ack_send_channel = ibv_create_comp_channel(ctx->context);
+    ctx->ack_recv_channel = ibv_create_comp_channel(ctx->context);
+
+    ctx->ack_send_cq =
+        ibv_create_cq(ctx->context, 1, NULL, ctx->ack_send_channel, 0);
+    ctx->ack_recv_cq =
+        ibv_create_cq(ctx->context, 1, NULL, ctx->ack_recv_channel, 0);
+
+    ctx->ack_send_mr =
+        ibv_reg_mr(ctx->pd, &ack_send, sizeof(int), IBV_ACCESS_LOCAL_WRITE);
+    ctx->ack_recv_mr =
+        ibv_reg_mr(ctx->pd, &ack_recv, sizeof(int), IBV_ACCESS_LOCAL_WRITE);
+
+    ctx->send_cq =
+        ibv_create_cq(ctx->context, 1, NULL, ctx->ack_send_channel, 0);
+    ctx->recv_cq =
+        ibv_create_cq(ctx->context, 1, NULL, ctx->ack_recv_channel, 0);
+
+    {
+        struct ibv_qp_attr attr;
+        struct ibv_qp_init_attr init_attr = {
+            .qp_context = ctx->context,
+            .send_cq = ctx->ack_send_cq,
+            .recv_cq = ctx->ack_recv_cq,
+            .srq = NULL,
+            .cap =
+                {
+                      .max_send_wr = 1,
+                      .max_recv_wr = 1,
+                      .max_send_sge = 1,
+                      .max_recv_sge = 1,
+                      .max_inline_data = 0,
+                      },
+            .qp_type = IBV_QPT_UD,
+            .sq_sig_all = 1
+        };
+
+        ctx->ack_qp = ibv_create_qp(ctx->pd, &init_attr);
+
+        attr.qp_state = IBV_QPS_INIT;
+        attr.pkey_index = 0;
+        attr.port_num = ctx->ib_port;
+        attr.qkey = 0x11111111;
+
+        if (ibv_modify_qp(ctx->qp, &attr,
+                          IBV_QP_STATE | IBV_QP_PKEY_INDEX | IBV_QP_PORT |
+                              IBV_QP_QKEY)) {
+            log_err("Failed to modify QP to INIT");
+        }
+
+        attr.qp_state = IBV_QPS_RTR;
+        if (ibv_modify_qp(ctx->qp, &attr, IBV_QP_STATE | IBV_QP_QKEY)) {
+            log_err("Failed to modify QP to RTR");
+        }
+
+        attr.qp_state = IBV_QPS_RTS;
+        attr.sq_psn = 0;
+        if (ibv_modify_qp(ctx->qp, &attr, IBV_QP_STATE | IBV_QP_SQ_PSN)) {
+            log_err("Failed to modify QP to RTS");
+        }
+    }
+
+    dest_info[system_setting.jia_pid].ack_qpn = ctx->ack_qp->qp_num;
+}
+
+int init_rdma_context(struct jia_context *ctx, int batching_num) {
+    struct ibv_device **dev_list;
+    struct ibv_device *dev;
+
+    /* step 1: get device list && get device context */
+    dev_list = ibv_get_device_list(NULL);
+    if (!dev_list) {
+        log_info(3, "No RDMA device available");
+    }
+    dev = dev_list[0]; // use the first device
+    ctx->context = ibv_open_device(dev);
+    if (!dev) {
+        log_info(3, "Open first device failed");
+    }
+
+    /* step 2: init ctx common parameters */
+    ctx->pd = ibv_alloc_pd(ctx->context);
+    ctx->outqueue = &outqueue;
+    ctx->inqueue = &inqueue;
+    ctx->ib_port = 2; // this can be set from a config file
+    ctx->batching_num = batching_num;
+    ctx->tcp_port = start_port;
+
+    /* step 3: init communication QP context */
+    init_comm_qp_context(ctx);
+
+    /* step 4: init ACK QP context */
+    init_ack_qp_context(ctx);
+
+    /* step 5: exchange QP's info with other hosts */
+    exchange_dest_info();
+
     return 0;
 }
 
@@ -298,7 +403,7 @@ void init_rdma_comm() {
     }
     VERBOSE_LOG(3, "current jia_pid = %d\n", system_setting.jia_pid);
     VERBOSE_LOG(3, " start_port = %ld \n", start_port);
-    
+
     /* step 1: init msg buffer */
     init_msg_buffer(&msg_buffer, system_setting.msg_buffer_size);
 
@@ -318,8 +423,7 @@ void init_rdma_comm() {
     register_sigint_handler();
 }
 
-
-void free_rdma_resources(struct jia_context *ctx){
+void free_rdma_resources(struct jia_context *ctx) {
     if (ibv_destroy_qp(ctx->qp)) {
         log_err("Couldn't destroy QP\n");
     }

@@ -8,15 +8,24 @@
 
 typedef struct jia_context {
 	struct ibv_context	*context;
+	struct ibv_pd		*pd;
+	struct ibv_ah		**ah;
+
 	struct ibv_comp_channel *send_channel;
     struct ibv_comp_channel *recv_channel;
-	struct ibv_pd		*pd;
 	struct ibv_mr		**send_mr;
     struct ibv_mr       **recv_mr;
 	struct ibv_cq		*send_cq;
     struct ibv_cq       *recv_cq;
 	struct ibv_qp		*qp;
-	struct ibv_ah		**ah;
+
+	struct ibv_comp_channel *ack_send_channel;
+    struct ibv_comp_channel *ack_recv_channel;
+	struct ibv_mr		*ack_send_mr;
+    struct ibv_mr       *ack_recv_mr;
+	struct ibv_cq		*ack_send_cq;
+    struct ibv_cq       *ack_recv_cq;
+	struct ibv_qp		*ack_qp;
 
 	// port related
     int			 			ib_port;	// ib port number
@@ -38,6 +47,7 @@ typedef struct jia_dest {
 	int lid;
 	int qpn;
 	int psn;
+	int ack_qpn;
 	union ibv_gid gid;
 } jia_dest_t;
 

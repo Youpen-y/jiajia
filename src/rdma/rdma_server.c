@@ -2,25 +2,40 @@
 #include "rdma_comm.h"
 #include <pthread.h>
 #include <semaphore.h>
+#include <stdatomic.h>
 
-extern pthread_cond_t cond;
+extern pthread_cond_t cond_listen;
+pthread_cond_t cond_server = PTHREAD_COND_INITIALIZER;
+pthread_mutex_t lock_server = PTHREAD_MUTEX_INITIALIZER;
 pthread_t rdma_server_tid;
 jia_msg_t msg;
 
 void *rdma_server(void *arg) {
     int value = 0;
     while (1) {
-        sem_wait(&ctx.inqueue->busy_count);
+        /* step 1: lock and enter inqueue to check if busy slot number is
+         * greater than ctx.batching_num */
+        pthread_mutex_lock(&lock_server);
 
+        /* step 2: wait until busy num is satisfied */
+        if (atomic_load(&(ctx.inqueue->busy_value)) == 0) {
+            pthread_cond_wait(&cond_server, &lock_server);
+        }
+
+        /* step 3: handle msg and then sub busy_value */
         if (ctx.inqueue->queue[ctx.inqueue->head].state == SLOT_BUSY) {
-            dequeue(ctx.inqueue, &msg);
-            msg_handle(&msg);
+            msg_handle(&(ctx.inqueue->queue[ctx.inqueue->head].msg));
         }
         ctx.inqueue->head = (ctx.inqueue->head + 1) % ctx.inqueue->size;
-        sem_post(&ctx.inqueue->free_count);
-        sem_getvalue(&ctx.inqueue->free_count, &value);
-        if (value == ctx.batching_num) {
-            pthread_cond_signal(&cond);
+        atomic_fetch_sub(&(ctx.inqueue->busy_value), 1);
+        atomic_fetch_add(&(ctx.inqueue->free_value), 1);
+
+        /* step 4: cond signal ctx.inqueue's enqueue */
+        if (atomic_load(&(ctx.inqueue->free_value)) >= ctx.batching_num) {
+            pthread_cond_signal(&cond_listen);
         }
+
+        /* step 5: unlock ctx.inqueue */
+        pthread_mutex_unlock(&lock_server);
     }
 }
