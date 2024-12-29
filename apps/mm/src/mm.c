@@ -30,7 +30,7 @@ void worker()
     for (i=start;i<end;i++){
         temp=0.0;
         for (k=0;k<N;k++)
-          temp+=a[i][k]*b[j][k];
+          temp+=a[i][k]*b[k][j];
         c[i][j]=temp;
         if (i==start)
           printf("c[%d][%d]=%f\n",i,j,c[i][j]);

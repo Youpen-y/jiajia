@@ -1,4 +1,4 @@
-/********************************************************
+/***********************************************************************
  *                                                                     *
  *   The JIAJIA Software Distributed Shared Memory System              *
  *                                                                     *
@@ -25,20 +25,42 @@
  *   improvements that they make and grant CHPC redistribution rights. *
  *                                                                     *
  *         Author: Weiwu Hu, Weisong Shi, Zhimin Tang                  *
+ * =================================================================== *
+ *   This software is ported to SP2 by                                 *
+ *                                                                     *
+ *         M. Rasit Eskicioglu                                         *
+ *         University of Alberta                                       *
+ *         Dept. of Computing Science                                  *
+ *         Edmonton, Alberta T6G 2H1 CANADA                            *
+ * =================================================================== *
  **********************************************************************/
 
-#ifndef JIALOAD_H
-#define JIALOAD_H
-
+#include "comm.h"
 #include "global.h"
-#define Lperiod 120
-#define Delta 0.05
+#include "init.h"
+#include "jia.h"
+#include "mem.h"
+#include "syn.h"
+#include "tools.h"
+#include "utils.h"
 
-typedef struct loadtype {
-    float power;
-    float time;
-    int begin;
-    int end;
-} jiaload_t;
+/**
+ * @brief grantcondv -- append condv to CVGRANT msg and send it to toproc
+ *
+ * @param condv condition variable
+ * @param toproc destination host
+ */
+void grantcondv(int condv, int toproc) {
+    jia_msg_t *grant;
 
-#endif /*JIAMEM_H*/
+    grant = newmsg();
+    grant->op = CVGRANT;
+    grant->frompid = jia_pid;
+    grant->topid = toproc;
+    grant->size = 0;
+    appendmsg(grant, ltos(condv), Intbytes);
+
+    asendmsg(grant);
+
+    freemsg(grant);
+}

@@ -57,11 +57,14 @@
 #define DIFFNULL ((jia_msg_t *)NULL)
 
 #define homehost(addr)                                                         \
-    page[((unsigned long)(addr)-Startaddr) / Pagesize]                         \
+    page[((unsigned long)(addr) - Startaddr) / Pagesize]                       \
         .homepid /* get home host according to addr */
 #define homepage(addr)                                                         \
-    page[((unsigned long)(addr)-Startaddr) / Pagesize]                         \
+    page[((unsigned long)(addr) - Startaddr) / Pagesize]                       \
         .homei /* get home page index according to addr */
+#define cachepage(addr)                                                        \
+    page[((unsigned long)(addr) - Startaddr) / Pagesize]                       \
+        .cachei /* get home page index according to addr */
 #define SIZ2MULSIZ(size)                                                       \
     ((size % Pagesize) == 0) ? (size) : ((size / Pagesize + 1) * Pagesize)
 

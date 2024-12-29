@@ -35,10 +35,10 @@
  * =================================================================== *
  **********************************************************************/
 
-#include "utils.h"
-#include "tools.h"
-#include "mem.h"
 #include "comm.h"
+#include "mem.h"
+#include "tools.h"
+#include "utils.h"
 
 /* jiajia */
 extern int jia_pid;
@@ -61,7 +61,6 @@ extern int H_MIG, B_CAST, W_VEC;
 extern jiastat_t jiastat;
 extern int statflag;
 #endif
-
 
 /**
  * @brief diffserver -- msg diff server
@@ -152,7 +151,6 @@ void diffserver(jia_msg_t *req) {
     freemsg(rep);
 }
 
-
 /**
  * @brief diffgrantserver -- msg diffgrant server
  *
@@ -164,7 +162,6 @@ void diffgrantserver(jia_msg_t *rep) {
 
     diffwait--;
 }
-
 
 /**
  * @brief getpserver -- getp msg server
@@ -181,7 +178,8 @@ void getpserver(jia_msg_t *req) {
 
     paddr = (address_t)stol(req->data); // getp message data is the page's addr
                                         /*
-                                         VERBOSE_LOG(3, "getpage=0x%x from host %d\n",(unsigned long) paddr,req->frompid);
+                                         VERBOSE_LOG(3, "getpage=0x%x from host %d\n",(unsigned long)
+                                         paddr,req->frompid);
                                         */
     if ((H_MIG == ON) && (homehost(paddr) != jia_pid)) {
         /*This is a new home, the home[] data structure may
@@ -236,7 +234,6 @@ void getpserver(jia_msg_t *req) {
     freemsg(rep);
 }
 
-
 /**
  * @brief getpgrantserver -- getpgrant msg server
  *
@@ -265,7 +262,8 @@ void getpgrantserver(jia_msg_t *rep) {
             }
         }
     } else {
-        VERBOSE_LOG(3, "addr is %p , rep->data+datai = %p\n", addr, rep->data + datai);
+        VERBOSE_LOG(3, "addr is %p , rep->data+datai = %p\n", addr,
+                    rep->data + datai);
         memcpy((unsigned char *)addr, rep->data + datai,
                Pagesize); // TODO:possible bug
         VERBOSE_LOG(3, "I have copy the page from remote home to %p\n", addr);

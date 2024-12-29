@@ -36,9 +36,9 @@
  **********************************************************************/
 
 #ifndef NULL_LIB
-#include "utils.h"
-#include "tools.h"
 #include "mem.h"
+#include "tools.h"
+#include "utils.h"
 
 /* jiajia */
 extern int jia_pid;
@@ -48,7 +48,7 @@ extern int hostc;
 jiahome_t home[Homepages + 1];    /* host owned page */
 jiacache_t cache[Cachepages + 1]; /* host cached page */
 jiapage_t page[Maxmempages];      /* global page space */
-unsigned long globaladdr; /* [0, Maxmemsize)*/
+unsigned long globaladdr;         /* [0, Maxmemsize)*/
 
 /**
  * @brief jia_alloc3 -- allocates size bytes cyclically across all hosts, each
@@ -172,8 +172,8 @@ unsigned long jia_alloc3b(int size, int *block, int starthost) {
 
 #ifdef JIA_DEBUG
 #endif
-        VERBOSE_LOG(3, "Map 0x%x bytes in home %4d! globaladdr = 0x%lx\n", mapsize,
-               homepid, globaladdr);
+        VERBOSE_LOG(3, "Map 0x%x bytes in home %4d! globaladdr = 0x%lx\n",
+                    mapsize, homepid, globaladdr);
 
         hosts[homepid].homesize += mapsize;
         globaladdr += mapsize;

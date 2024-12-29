@@ -3,7 +3,6 @@
 #*********************************************************
 
 CC = cc
-#CFLAGS = -dn
 
 ARCH = linux
 #LDFLAGS = -lnsl -lcurses -lm

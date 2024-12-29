@@ -6,6 +6,7 @@ CC	= gcc
 CPPFLAGS = -I../../../src/include
 OBJS 	= lu.o
 
+CFLAGS = -g
 VPATH = ../src 
 JIALIB = ../../../lib/$(ARCH)
 
@@ -16,7 +17,7 @@ JIALIB = ../../../lib/$(ARCH)
 TARGET 	= ./lu
 
 $(TARGET):$(OBJS) $(JIALIB)/libjia.a
-	$(CC) $(CFLAGS) -o $@ $(OBJS) -L$(JIALIB) -ljia $(LDFLAGS)
+	$(CC) $(CPPFLAGS) $(CFLAGS) -o $@ $(OBJS) -L$(JIALIB) -ljia $(LDFLAGS)
 
 all:$(TARGET)
 

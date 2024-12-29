@@ -4,8 +4,7 @@
 #include <stdio.h>
 #include <string.h>
 
-extern FILE* config;
-
+extern FILE *config;
 
 /**
  * @brief my_getline -- get
@@ -34,7 +33,7 @@ int my_getline(int *wordc, char wordv[Maxwords][Wordsize]) {
 
     // for (wordi1=0;wordi1<Maxwords;wordi1++)
     //   wordv[wordi1][0]='\0';
-    
+
     // Parse strings to tokens
     wordi1 = 0;
     linei = 0;

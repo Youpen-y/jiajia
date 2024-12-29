@@ -38,6 +38,7 @@
 #include "comm.h"
 #include "jia.h"
 #include "mem.h"
+#include "syn.h"
 #include "tools.h"
 #include "utils.h"
 
@@ -54,6 +55,10 @@ extern volatile int diffwait;
 /* tools */
 extern int H_MIG, B_CAST, W_VEC;
 
+/* syn */
+extern jiastack_t lockstack[Maxstacksize]; // lock stack
+extern int stackptr;
+
 #ifdef DOSTAT
 extern jiastat_t jiastat;
 extern int statflag;
@@ -64,6 +69,7 @@ long jiamapfd; /* file descriptor of the file that mapped to process's virtual
                   address space */
 int repcnt[Setnum]; /* record the last replacement index of every set */
 
+static void savediff(int cachei);
 
 /**
  * @brief flushpage -- flush the cached page(reset the cache's info);
@@ -86,7 +92,6 @@ void flushpage(int cachei) {
     cache[cachei].wtnt = 0;
     cache[cachei].addr = 0;
 }
-
 
 /**
  * @brief getpage -- according to addr, get page from remote host (page's home)
@@ -111,17 +116,13 @@ void getpage(address_t addr, int flag) {
     appendmsg(req, ltos(addr), sizeof(unsigned char *));
     getpwait = 1;
     asendmsg(req);
-
     freemsg(req);
-    while (getpwait)
-        ;
 #ifdef DOSTAT
     if (statflag == 1) {
         jiastat.getpcnt++;
     }
 #endif
 }
-
 
 // TODO: implement LRU replacement
 /**
@@ -143,7 +144,6 @@ int replacei(int cachei) {
         return (repcnt[seti]);
     }
 }
-
 
 /**
  * @brief findposition -- find an available cache slot in cache
@@ -200,8 +200,7 @@ int findposition(address_t addr) {
         }
 #endif
     }
-    page[((unsigned long)addr - Startaddr) / Pagesize].cachei =
-        (unsigned short)(cachei + seti);
+    cachepage(addr) = (unsigned short)(cachei + seti);
     return (cachei + seti);
 }
 
@@ -215,7 +214,6 @@ void sigsegv_handler(int signo, siginfo_t *sip, ucontext_t *uap)
                          struct sigcontext *scp,
                          char *addr)
 #endif
-
 
 #ifdef LINUX
     // void sigsegv_handler(int signo, struct sigcontext sigctx)
@@ -353,7 +351,6 @@ void sigsegv_handler(int signo, siginfo_t *sip, ucontext_t *uap)
     VERBOSE_LOG(3, "Out sigsegv_handler\n\n");
 }
 
-
 /**
  * @brief encodediff() -- encode the diff of cache page(cachei) and its twin to
  * the paramater diff
@@ -393,6 +390,7 @@ int encodediff(int cachei, unsigned char *diff) {
             ;
 
         if (bytei < Pagesize) {
+            cnt = 0;
             start = bytei; // record the start byte index of the diff
 
             // how much diffunit is different
@@ -425,6 +423,15 @@ int encodediff(int cachei, unsigned char *diff) {
     return (size);
 }
 
+/**
+ * @brief savepage() -- save diff and wtnt
+ *
+ * @param cachei cached page index
+ */
+void savepage(int cachei) {
+    savediff(cachei);
+    savewtnt(top.wtntp, cache[cachei].addr, Maxhosts);
+}
 
 /**
  * @brief savediff() -- save the difference between cached page(cachei) and its
@@ -464,7 +471,6 @@ void savediff(int cachei) {
         appendmsg(diffmsg[hosti], diff, diffsize);
     }
 }
-
 
 /**
  * @brief senddiffs() -- send msg in diffmsg[hosti] to correponding hosti host

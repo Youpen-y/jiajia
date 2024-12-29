@@ -28,4 +28,4 @@ void freetwin(address_t *twin);
 void emptyprintf();
 unsigned int get_usecs();
 
-#endif  /* TOOLS_H */
+#endif /* TOOLS_H */

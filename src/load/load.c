@@ -29,13 +29,12 @@
 
 #include "utils.h"
 #ifndef NULL_LIB
-#include "load.h"
 #include "comm.h"
 #include "global.h"
 #include "init.h"
+#include "load.h"
 #include "mem.h"
 #include "syn.h"
-
 
 extern void assert(int cond, char *errstr);
 extern jia_msg_t *newmsg();
@@ -109,7 +108,8 @@ void jia_newload() {
         }
         for (i = 0; i < hostc; i++) {
             loadstat[i].power /= Ptotal;
-            VERBOSE_LOG(3, " loadstat[%d].power = %.2f\n", i, loadstat[i].power);
+            VERBOSE_LOG(3, " loadstat[%d].power = %.2f\n", i,
+                        loadstat[i].power);
         }
     }
 }

@@ -96,7 +96,7 @@ void gethosts() {
 
     // open .jiahosts file
     if ((config = fopen(".jiahosts", "r")) == 0) {
-        VERBOSE_LOG(3,"Cannot open .jiahosts file\n");
+        VERBOSE_LOG(3, "Cannot open .jiahosts file\n");
         exit(1);
     }
 
@@ -215,9 +215,9 @@ int startprocs(int argc, char **argv) {
 #endif /* NFS */
 
     /* produce a random Startport from [10000, 29999]*/
-    Startport = getpid();
-    assert0((Startport != -1), "getpid() error");
-    Startport = 10000 + (Startport * Maxhosts * Maxhosts * 4) % 20000;
+    int pid = getpid();
+    assert0((pid != -1), "getpid() error");
+    Startport = 10000 + (pid % 20000);
 
 #ifdef LINUX
     // cmd on every host
@@ -256,9 +256,9 @@ int startprocs(int argc, char **argv) {
             strcat(cmd, " ");
         }
         strcat(cmd, "-P");
-        sprintf(cmd, "%s%d ", cmd, Startport);
+        sprintf(cmd, "%s%ld ", cmd, Startport);
 
-        VERBOSE_LOG(3,"Starting CMD %s on host %s\n", cmd, hosts[hosti].name);
+        VERBOSE_LOG(3, "Starting CMD %s on host %s\n", cmd, hosts[hosti].name);
         sp = getservbyname("exec", "tcp");
         assert0((sp != NULL), "exec/tcp: unknown service!");
         hostname = hosts[hosti].name;
@@ -325,7 +325,7 @@ int mypid() {
  * @param argv
  */
 void jiacreat(int argc, char **argv) {
-    // logfile = fopen("./jiajia.log", "w");
+    logfile = fopen("./jiajia.log", "w+");
 
     // step 1: get hosts info
     gethosts();
@@ -344,7 +344,6 @@ void jiacreat(int argc, char **argv) {
 #ifndef NFS
         copyfiles(argc, argv);
 #endif /* NFS */
-        sleep(1);
 
         // step 4: start proc on slaves
         startprocs(argc, argv);
@@ -352,7 +351,7 @@ void jiacreat(int argc, char **argv) {
         // slave does
         int c;
         optind = 1;
-        int i=0;
+        int i = 0;
         while ((c = getopt(argc, argv, "P:")) != -1) {
             switch (c) {
             case 'P': {
@@ -371,10 +370,11 @@ void barrier0() {
 
     if (jia_pid == 0) {
         for (hosti = 1; hosti < hostc; hosti++) {
-            VERBOSE_LOG(3,"Poll host %d: stream %4d----", hosti, hosts[hosti].riofd);
+            VERBOSE_LOG(3, "Poll host %d: stream %4d----", hosti,
+                        hosts[hosti].riofd);
             read(hosts[hosti].riofd, buf, 3);
             buf[3] = '\0';
-            VERBOSE_LOG(3,"%s Host %4d arrives!\n", buf, hosti);
+            VERBOSE_LOG(3, "%s Host %4d arrives!\n", buf, hosti);
 #ifdef NFS
             write(hosts[hosti].riofd, "ok!", 3);
 #endif
@@ -429,16 +429,17 @@ void redirstdio(int argc, char **argv) {
 void jia_init(int argc, char **argv) {
     unsigned long timel, time1;
     struct rlimit rl;
+    if (jia_pid == 0) {
+        VERBOSE_LOG(3, "\n***JIAJIA---Software DSM***");
+        VERBOSE_LOG(3, "\n***Cachepages = %4d  Pagesize=%d***\n",
+                    Cachepages, Pagesize);
+    }
 
-    VERBOSE_LOG(3, "\n***JIAJIA---Software DSM***\n***  \
-                Cachepages = %4d  Pagesize=%d***\n\n",
-                Cachepages, Pagesize);
     strcpy(argv0, argv[0]);
     disable_sigio();
     jia_lock_index = 0;
     jiacreat(argc, argv);
 #if defined SOLARIS || defined LINUX
-    sleep(2);
     rl.rlim_cur = Maxfileno;
     rl.rlim_max = Maxfileno;
     setrlimit(RLIMIT_NOFILE, &rl); /* set maximum number of files that can be
@@ -466,7 +467,6 @@ void jia_init(int argc, char **argv) {
 #ifndef LINUX
     barrier0();
 #else
-    sleep(2);
 #endif
 
     if (jia_pid != 0) { // slave does
@@ -478,10 +478,7 @@ void jia_init(int argc, char **argv) {
     time1 = jia_clock();
 
     if (jia_pid == 0)
-        VERBOSE_LOG(3,"End of Initialization\n");
-
-    if (jia_pid != 0)
-        sleep(1);
+        VERBOSE_LOG(3, "End of Initialization\n");
 }
 
 #ifdef DOSTAT
@@ -499,7 +496,7 @@ int jia_pid = 0;
 int hostc = 1;
 
 void jia_init(int argc, char **argv) {
-    VERBOSE_LOG(3,"This is JIAJIA-NULL\n");
+    VERBOSE_LOG(3, "This is JIAJIA-NULL\n");
 }
 #endif /* NULL_LIB */
 

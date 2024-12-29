@@ -35,10 +35,11 @@
  * =================================================================== *
  **********************************************************************/
 
-#include "mem.h"
 #include "comm.h"
+#include "mem.h"
 #include "tools.h"
 #include "utils.h"
+#include <signal.h>
 
 /* jiajia */
 extern int jia_pid;
@@ -57,8 +58,8 @@ extern volatile int diffwait;
 
 /* mmsync */
 extern jia_msg_t *diffmsg[Maxhosts]; /* store every host's diff msgs */
-extern long jiamapfd; /* file descriptor of the file that mapped to process's virtual
-                  address space */
+extern long jiamapfd; /* file descriptor of the file that mapped to process's
+                  virtual address space */
 extern int repcnt[Setnum]; /* record the last replacement index of every set */
 
 /**
@@ -138,7 +139,7 @@ void initmem() {
         sigemptyset(&act.sa_mask);
         // act.sa_flags = SA_NOMASK;
         // act.sa_flags = SA_NODEFER;  /* SA_NOMASK is obsolete */
-        act.sa_flags = SA_NODEFER | SA_SIGINFO;
+        act.sa_flags = SA_NODEFER | SA_SIGINFO | SA_RESTART;
         if (sigaction(SIGSEGV, &act, NULL))
             assert0(0, "segv sigaction problem");
     }

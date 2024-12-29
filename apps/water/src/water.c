@@ -52,7 +52,7 @@ void CNSTNT(int N, double *C);
 int main(int argc, char **argv)
 {
   FILE *fp;
-  char *input_file = "../waterfiles/sample.in";
+  char *input_file = "./waterfiles/sample.in";
   int mol, pid, func, c, dir, atom, tsteps = 0;
   double XTT, MDMAIN();
   double VIR;
@@ -141,7 +141,6 @@ int main(int argc, char **argv)
 
       /* allocate space for main (VAR) data structure as well as
            synchronization variables */
-  sleep(jiapid);
 	gl = (struct GlobalMemory *) jia_alloc2p(gmem_size,0);
 	VAR = (molecule_type *) jia_alloc2p(mol_size*NMOL,0);
 	VAR_DISPVM = (shared_type *) jia_alloc2p(sizeof(shared_type)*NMOL,0);

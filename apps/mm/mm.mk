@@ -3,7 +3,7 @@
 #*********************************************************
 
 CPPFLAGS = -I../../../src/include -O2
-
+CFLAGS = -g
 OBJS 	= mm.o
 VPATH = ../src 
 JIALIB = ../../../lib/$(ARCH)
@@ -15,7 +15,7 @@ JIALIB = ../../../lib/$(ARCH)
 TARGET 	= ./mm
 
 $(TARGET):$(OBJS) $(JIALIB)/libjia.a
-	$(CC) $(CFLAGS) -o $@ $(OBJS) -L$(JIALIB) -ljia $(LDFLAGS)
+	$(CC) $(CPPFLAGS) $(CFLAGS) -o $@ $(OBJS) -L$(JIALIB) -ljia $(LDFLAGS)
 
 all:$(TARGET)
 

@@ -44,7 +44,6 @@
 #include "msg.h"
 #include "syn.h"
 
-
 extern jia_msg_t *newmsg();
 extern void freemsg(jia_msg_t *);
 extern void printmsg(jia_msg_t *msg, int right);

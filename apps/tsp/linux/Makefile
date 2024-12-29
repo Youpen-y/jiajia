@@ -3,7 +3,6 @@
 #*********************************************************
 
 CC = cc
-CFLAGS = -Wunused-result
 
 ARCH = linux
 #LDFLAGS = -lnsl -lcurses

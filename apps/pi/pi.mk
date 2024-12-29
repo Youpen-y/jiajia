@@ -2,7 +2,8 @@
 # Application specific rules and defines...
 #*********************************************************
 
-CFLAGS += -I../../../src/include -O2 -g
+CPPFLAGS += -I../../../src/include
+CFLAGS += -g
 
 OBJS 	= pi.o
 VPATH = ../src 
@@ -15,7 +16,7 @@ JIALIB = ../../../lib/$(ARCH)
 TARGET 	= ./pi
 
 $(TARGET):$(OBJS) $(JIALIB)/libjia.a
-	$(CC) $(CFLAGS) -o $@ $(OBJS) -L$(JIALIB) -ljia $(LDFLAGS)
+	$(CC) $(CPPFLAGS) $(CFLAGS) -o $@ $(OBJS) -L$(JIALIB) -ljia $(LDFLAGS)
 
 all:$(TARGET)
 

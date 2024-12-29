@@ -3,7 +3,15 @@ boot.ps1
 **.o
 **.d
 **.a
-apps/*/*/*
+**/.jiahosts
+apps/.jiahosts
+!apps/*/src/*
+!apps/*/*/*files
 !**/Makefile
-.clang-format
 rebuild.sh
+clean.sh
+lib.mk
+pi.mk
+jiajia*.log
+jiajia.log*
+merge.log

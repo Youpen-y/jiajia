@@ -149,7 +149,7 @@ void assert(int cond, char *format, ...) {
  */
 void jiaexitserver(jia_msg_t *req) {
     VERBOSE_LOG(3, "Assert error from host %d --- %s\n", req->frompid,
-           (char *)req->data);
+                (char *)req->data);
     fflush(stderr);
     fflush(stdout);
     exit(-1);
@@ -295,11 +295,14 @@ void printmsg(jia_msg_t *msg, int right) {
             SPACE(right);
             VERBOSE_LOG(3, "msg.size    = %d\n", msg->size);
             SPACE(right);
-            VERBOSE_LOG(3, "msg.data(addr) = %p\n", stol(msg->data)); // addr(8bytes)
+            VERBOSE_LOG(3, "msg.data(addr) = %p\n",
+                        stol(msg->data)); // addr(8bytes)
             SPACE(right);
-            VERBOSE_LOG(3, "msg.data(totalsize)    = %p\n", bytestoi(msg->data + 8));
+            VERBOSE_LOG(3, "msg.data(totalsize)    = %p\n",
+                        bytestoi(msg->data + 8));
             SPACE(right);
-            VERBOSE_LOG(3, "msg.data(start|count)    = %p\n", bytestoi(msg->data + 12));
+            VERBOSE_LOG(3, "msg.data(start|count)    = %p\n",
+                        bytestoi(msg->data + 12));
             break;
         case DIFFGRANT:
             VERBOSE_LOG(3, "msg.op      = DIFFGRANT\n");
@@ -426,7 +429,8 @@ void printmsg(jia_msg_t *msg, int right) {
             SPACE(right);
             VERBOSE_LOG(3, "msg.size    = %d\n", msg->size);
             SPACE(right);
-            VERBOSE_LOG(3, "msg.data    = %p\n", bytestoi(msg->data)); // lock (4bytes)
+            VERBOSE_LOG(3, "msg.data    = %p\n",
+                        bytestoi(msg->data)); // lock (4bytes)
             SPACE(right);
             VERBOSE_LOG(3, "msg.data    = %p\n", stol(msg->data + 4));
             SPACE(right);
@@ -447,11 +451,13 @@ void printmsg(jia_msg_t *msg, int right) {
             SPACE(right);
             VERBOSE_LOG(3, "msg.size    = %d\n", msg->size);
             SPACE(right);
-            VERBOSE_LOG(3, "msg.data    = %p\n", bytestoi(msg->data)); // lock (4bytes)
+            VERBOSE_LOG(3, "msg.data    = %p\n",
+                        bytestoi(msg->data)); // lock (4bytes)
             SPACE(right);
             VERBOSE_LOG(3, "msg.data    = %p\n", stol(msg->data + 4));
             SPACE(right);
-            VERBOSE_LOG(3, "msg.data(from)    = %p\n", bytestoi(msg->data + 12));
+            VERBOSE_LOG(3, "msg.data(from)    = %p\n",
+                        bytestoi(msg->data + 12));
             break;
         case WAIT:
             VERBOSE_LOG(3, "msg.op      = WAIT     \n");
@@ -498,11 +504,13 @@ void printmsg(jia_msg_t *msg, int right) {
             SPACE(right);
             VERBOSE_LOG(3, "msg.size    = %d\n", msg->size);
             SPACE(right);
-            VERBOSE_LOG(3, "msg.data    = %p\n", bytestoi(msg->data)); // lock (4bytes)
+            VERBOSE_LOG(3, "msg.data    = %p\n",
+                        bytestoi(msg->data)); // lock (4bytes)
             SPACE(right);
             VERBOSE_LOG(3, "msg.data    = %p\n", stol(msg->data + 4));
             SPACE(right);
-            VERBOSE_LOG(3, "msg.data(from)    = %p\n", bytestoi(msg->data + 12));
+            VERBOSE_LOG(3, "msg.data(from)    = %p\n",
+                        bytestoi(msg->data + 12));
             break;
         case WTNT:
             VERBOSE_LOG(3, "msg.op      = WTNT     \n");
@@ -519,7 +527,8 @@ void printmsg(jia_msg_t *msg, int right) {
             SPACE(right);
             VERBOSE_LOG(3, "msg.size    = %d\n", msg->size);
             SPACE(right);
-            VERBOSE_LOG(3, "msg.data    = %p\n", bytestoi(msg->data)); // lock (4bytes)
+            VERBOSE_LOG(3, "msg.data    = %p\n",
+                        bytestoi(msg->data)); // lock (4bytes)
             SPACE(right);
             VERBOSE_LOG(3, "msg.data    = %p\n", stol(msg->data + 4));
             SPACE(right);
@@ -527,9 +536,33 @@ void printmsg(jia_msg_t *msg, int right) {
             break;
         case STAT:
             VERBOSE_LOG(3, "msg.op      = STAT     \n");
+            SPACE(right);
+            VERBOSE_LOG(3, "msg.frompid = %d\n", msg->frompid);
+            SPACE(right);
+            VERBOSE_LOG(3, "msg.topid   = %d\n", msg->topid);
+            SPACE(right);
+            VERBOSE_LOG(3, "msg.temp     =%d\n", msg->temp);
+            SPACE(right);
+            VERBOSE_LOG(3, "msg.seqno   = %d\n", msg->seqno);
+            SPACE(right);
+            VERBOSE_LOG(3, "msg.index   = %d\n", msg->index);
+            SPACE(right);
+            VERBOSE_LOG(3, "msg.size    = %d\n", msg->size);
             break;
         case STATGRANT:
             VERBOSE_LOG(3, "msg.op      = STATGRANT\n");
+            SPACE(right);
+            VERBOSE_LOG(3, "msg.frompid = %d\n", msg->frompid);
+            SPACE(right);
+            VERBOSE_LOG(3, "msg.topid   = %d\n", msg->topid);
+            SPACE(right);
+            VERBOSE_LOG(3, "msg.temp     =%d\n", msg->temp);
+            SPACE(right);
+            VERBOSE_LOG(3, "msg.seqno   = %d\n", msg->seqno);
+            SPACE(right);
+            VERBOSE_LOG(3, "msg.index   = %d\n", msg->index);
+            SPACE(right);
+            VERBOSE_LOG(3, "msg.size    = %d\n", msg->size);
             break;
         case JIAEXIT:
             VERBOSE_LOG(3, "msg.op      = JIAEXIT  \n");

@@ -34,12 +34,14 @@
  *         Edmonton, Alberta T6G 2H1 CANADA                            *
  * =================================================================== *
  **********************************************************************/
-
-#include "utils.h"
 #ifndef NULL_LIB
 #include "comm.h"
+#include "load.h"
 #include "mem.h"
+#include "msg.h"
+#include "syn.h"
 #include "tools.h"
+#include "utils.h"
 
 #define BEGINCS                                                                \
     {                                                                          \
