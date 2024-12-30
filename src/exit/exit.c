@@ -108,6 +108,7 @@ void jia_exit() {
                 total.barrcnt = allstats[i].barrcnt;
                 total.lockcnt += allstats[i].lockcnt;
                 total.getpcnt += allstats[i].getpcnt;
+                total.prefetchcnt += allstats[i].prefetchcnt;
                 total.diffcnt += allstats[i].diffcnt;
                 total.invcnt += allstats[i].invcnt;
                 total.mwdiffcnt += allstats[i].mwdiffcnt;
@@ -203,6 +204,10 @@ void jia_exit() {
             for (i = 0; i < hostc; i++)
                 printf("%8d ", allstats[i].getpcnt);
             printf(" %8d ", total.getpcnt);
+            printf("\nPrefetch Pages     = ");
+            for (i = 0; i < hostc; i++)
+                printf("%8d ", allstats[i].prefetchcnt);
+            printf(" %8d ", total.prefetchcnt);
             printf("\nDiff Msgs.         = ");
             for (i = 0; i < hostc; i++)
                 printf("%8d ", allstats[i].diffcnt);

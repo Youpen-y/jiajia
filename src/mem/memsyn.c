@@ -36,7 +36,6 @@
  **********************************************************************/
 
 #include "comm.h"
-#include "jia.h"
 #include "mem.h"
 #include "msg.h"
 #include "setting.h"
@@ -114,7 +113,6 @@ void getpage(address_t addr, int flag) {
     homeid = homehost(addr);
     jia_assert((homeid != system_setting.jia_pid),
                "This should not have happened 2!");
-    // req = newmsg();
 
     int index = freemsg_lock(&msg_buffer);
     req = &msg_buffer.buffer[index].msg;
@@ -126,7 +124,6 @@ void getpage(address_t addr, int flag) {
     req->size = 0;
     // append address of request page to data[0..7]
     appendmsg(req, ltos(addr), sizeof(unsigned char *));
-    //getpwait = 1;
     atomic_store(&getpwait, 1);
     move_msg_to_outqueue(&msg_buffer, index, &outqueue);
     freemsg_unlock(&msg_buffer, index);
@@ -230,6 +227,7 @@ int findposition(address_t addr) {
         }
 #endif
     } else if (cache[cachei + seti].state == RW) {
+        return -1;
         savepage(cachei + seti);
         senddiffs();
         while (diffwait)
@@ -246,11 +244,11 @@ int findposition(address_t addr) {
 }
 
 #ifdef SOLARIS
-void sigsegv_handler(int signo, siginfo_t *sip, ucontext_t *uap)
+void (int signo, siginfo_t *sip, ucontext_t *uap)
 #endif
 
 #ifdef LINUX
-    void sigsegv_handler(int signo, siginfo_t *sip, void *context)
+void sigsegv_handler(int signo, siginfo_t *sip, void *context)
 #endif
 {
     address_t faultaddr;
@@ -335,7 +333,7 @@ void sigsegv_handler(int signo, siginfo_t *sip, ucontext_t *uap)
         /**
          * cachei != Cachepages: page's cache has exist
          * cachei == Cachepages: should be mmapped
-         * note: first protect it as writable, and then make changes based on
+         * note: first prsigsegv_handlerotect it as writable, and then make changes based on
          * writefault later. first writable permission is for getpgrantserver's
          * copy(to faultaddr)
          */
@@ -361,13 +359,13 @@ void sigsegv_handler(int signo, siginfo_t *sip, ucontext_t *uap)
             cache[cachei].wtnt = 1;
             // new twin to store origin data for compare and senddiffs later
             newtwin(&(cache[cachei].twin));
-            while (atomic_load(&getpwait))
+            while (atomic_load(&getpwait))  // after send GETP msg, main thread stuck here until get GETPGRANT
                 ;
             memcpy(cache[cachei].twin, faultaddr, Pagesize);
         } else {
             cache[cachei].addr = faultaddr;
             cache[cachei].state = RO;
-            while (atomic_load(&getpwait))
+            while (atomic_load(&getpwait))  // or main thread stuck here until get GETPGRANT
                 ;
             memprotect((caddr_t)faultaddr, (size_t)Pagesize, PROT_READ);
         }
@@ -484,7 +482,6 @@ void savediff(int cachei) {
             .addr); // according to cachei addr get the page's home host index
     if (diffmsg[hosti] == DIFFNULL) { // hosti host's diffmsg is NULL
         index = freemsg_lock(&msg_buffer);
-        // diffmsg[hosti] = newmsg();
         diffmsg[hosti] = &msg_buffer.buffer[index].msg;
         diffmsg[hosti]->op = DIFF;
         diffmsg[hosti]->frompid = system_setting.jia_pid;
@@ -528,6 +525,6 @@ void senddiffs() {
         }
     }
 
-    while (atomic_load(&diffwait))
-        ; // diffwait is detected after senddiffs() called
+    // while (atomic_load(&diffwait))
+    //     ; // diffwait is detected after senddiffs() called
 }

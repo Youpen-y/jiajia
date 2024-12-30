@@ -19,3 +19,25 @@ msg_queue_size = 32
 
 
 
+# optimization techniques
+
+###### PREFTECH ######
+###### prefetch pages when send GETP msg to remote host
+# 1. prefetch: control switch, on/off
+prefetch = on
+
+# 2. prefetch_pages: extra fetched pages except the target
+# the prefetched pages will be packed in one msg (only one), which means <= 8
+prefetch_pages = 4
+
+# 3. max_checking_pages:
+# when prefetching pages, will check whether the home of 
+# subsequent pages is current host or not.
+# max_checking_pages limits the num of pages that will be checked.
+# i.e. no guarantee that will be prefetch `prefetch_pages` pages. ( <= )
+max_checking_pages = 10
+######################
+
+
+
+

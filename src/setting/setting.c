@@ -2,45 +2,49 @@
 #include "errno.h"
 #include "tools.h"
 
+#include <ctype.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <ctype.h>
+
 
 #include <arpa/inet.h>
-#include <sys/types.h>
 #include <ifaddrs.h>
+#include <sys/types.h>
+
 
 #define Maxhosts 16
 #define HOST_CONF_FILE ".jiahosts"
 #define ptr_from_int64(p) (void *)(unsigned long long)(p)
 
 setting_t system_setting = {
-   .hostc = 0,
-   .hosts = NULL,
-   .jia_pid = 0,
-   .optionc = 0,
-   .options = {0},
-   .system_mode = MEMORY_MODE,
-   .comm_type = udp,
-   .global_start_addr = 0,
-   .msg_buffer_size = 48,
-   .msg_queue_size = 32,
-};     // there, we can set default system configuration
+    .hostc = 0,
+    .hosts = NULL,
+    .jia_pid = 0,
+    .optionc = 0,
+    .options = {0},
+    .system_mode = MEMORY_MODE,
+    .comm_type = udp,
+    .global_start_addr = 0,
+    .msg_buffer_size = 48,
+    .msg_queue_size = 32,
+}; // there, we can set default system configuration
 
-void trim(char* str) {
-    char* start = str;
-    char* end = str + strlen(str) - 1;
+void trim(char *str) {
+    char *start = str;
+    char *end = str + strlen(str) - 1;
 
     // trim leading and trailing whitespace
-    while(isspace((unsigned char)*start)) start++;
-    while(end > start && isspace((unsigned char)*end)) end--;
+    while (isspace((unsigned char)*start))
+        start++;
+    while (end > start && isspace((unsigned char)*end))
+        end--;
 
     *(end + 1) = '\0';
     memmove(str, start, end - start + 2);
 }
 
-int get_options(setting_t *setting){
+int get_options(setting_t *setting) {
     FILE *fp;
 
     if ((fp = fopen(SYSTEM_CONF_PATH, "r")) == NULL) {
@@ -49,7 +53,7 @@ int get_options(setting_t *setting){
     }
 
     char line[MAX_LINE_LEN];
-    
+
     while (fgets(line, MAX_LINE_LEN, fp)) {
         // remove newline characters from the end of the line
         line[strcspn(line, "\n")] = 0;
@@ -79,33 +83,49 @@ int get_options(setting_t *setting){
         }
     }
 
-    for(int i = 0; i < setting->optionc; i++) {
-        if(strcmp(setting->options[i].key, "system_mode") == 0){
-            if(strcmp(setting->options[i].value, "memory") == 0){
+    for (int i = 0; i < setting->optionc; i++) {
+        if (strcmp(setting->options[i].key, "system_mode") == 0) {
+            if (strcmp(setting->options[i].value, "memory") == 0) {
                 setting->system_mode = MEMORY_MODE;
-            } else if(strcmp(setting->options[i].value, "compute") == 0){
+            } else if (strcmp(setting->options[i].value, "compute") == 0) {
                 setting->system_mode = COMPUTE_MODE;
-            } else if(strcmp(setting->options[i].value, "hybrid") == 0){
+            } else if (strcmp(setting->options[i].value, "hybrid") == 0) {
                 setting->system_mode = HYBRID_MODE;
             } else {
                 printf("unknown system mode: %s\n", setting->options[i].value);
             }
-        } else if(strcmp(setting->options[i].key, "comm_type") == 0){
-            if(strcmp(setting->options[i].value, "tcp") == 0){
+        } else if (strcmp(setting->options[i].key, "comm_type") == 0) {
+            if (strcmp(setting->options[i].value, "tcp") == 0) {
                 setting->comm_type = tcp;
-            } else if(strcmp(setting->options[i].value, "udp") == 0){
+            } else if (strcmp(setting->options[i].value, "udp") == 0) {
                 setting->comm_type = udp;
-            } else if(strcmp(setting->options[i].value, "rdma") == 0){
+            } else if (strcmp(setting->options[i].value, "rdma") == 0) {
                 setting->comm_type = rdma;
             }
-        } else if(strcmp(setting->options[i].key, "global_start_addr") == 0){
-            setting->global_start_addr = strtoull(setting->options[i].value, NULL, 0);
-        } else if(strcmp(setting->options[i].key, "msg_buffer_size") == 0) {
+        } else if (strcmp(setting->options[i].key, "global_start_addr") == 0) {
+            setting->global_start_addr =
+                strtoull(setting->options[i].value, NULL, 0);
+        } else if (strcmp(setting->options[i].key, "msg_buffer_size") == 0) {
             setting->msg_buffer_size = atoi(setting->options[i].value);
-        } else if(strcmp(setting->options[i].key, "msg_queue_size") == 0) {
+        } else if (strcmp(setting->options[i].key, "msg_queue_size") == 0) {
             setting->msg_queue_size = atoi(setting->options[i].value);
+        } else if (strcmp(setting->options[i].key, "prefetch") == 0) {
+            if (strcmp(setting->options[i].value, "on") == 0) {
+                setting->prefetch_flag = true;
+            } else {
+                setting->prefetch_flag = false;
+            }
+        } else if (strcmp(setting->options[i].key, "prefetch_pages") == 0) {
+            if (!setting->prefetch_flag) {
+                setting->prefetch_pages = 0;
+            } else {
+                setting->prefetch_pages = atoi(setting->options[i].value) % 9;  // limit it's range to [0..8]
+            }
+        } else if (strcmp(setting->options[i].key, "max_checking_pages") == 0) {
+            setting->max_checking_pages = atoi(setting->options[i].value);
         } else {
-            printf("Unknown config option: %s = %s\n", setting->options[i].key, setting->options[i].value);
+            printf("Unknown config option: %s = %s\n", setting->options[i].key,
+                   setting->options[i].value);
             setting->optionc--;
         }
     }
@@ -113,8 +133,8 @@ int get_options(setting_t *setting){
     return 0;
 }
 
-int get_hosts(setting_t *setting){
-    setting->hosts = (host_t*)malloc(sizeof(host_t) * Maxhosts);
+int get_hosts(setting_t *setting) {
+    setting->hosts = (host_t *)malloc(sizeof(host_t) * Maxhosts);
 
     if (setting->hosts == NULL) {
         fprintf(stderr, "func-get_hosts: malloc failed\n");
@@ -142,9 +162,9 @@ int get_hosts(setting_t *setting){
         }
 
         // parse the line into the host structure
-        if (sscanf(line, "%15[0-9.] %31[^ ] %31[^ ]", \
-                   setting->hosts[setting->hostc].ip, \
-                   setting->hosts[setting->hostc].username, \
+        if (sscanf(line, "%15[0-9.] %31[^ ] %31[^ ]",
+                   setting->hosts[setting->hostc].ip,
+                   setting->hosts[setting->hostc].username,
                    setting->hosts[setting->hostc].password) == 3) {
             setting->hosts[setting->hostc].id = setting->hostc;
             setting->hostc++;
@@ -153,7 +173,7 @@ int get_hosts(setting_t *setting){
         }
 
         // check if we have reached the maximum number of hosts
-        if (setting->hostc >= Maxhosts){
+        if (setting->hostc >= Maxhosts) {
             break;
         }
     }
@@ -162,7 +182,7 @@ int get_hosts(setting_t *setting){
     return 0;
 }
 
-int get_id(setting_t *setting){
+int get_id(setting_t *setting) {
     struct ifaddrs *ifap, *ifa;
     int found = 0;
 
@@ -177,66 +197,68 @@ int get_id(setting_t *setting){
         }
 
         char ipstr[128];
-        inet_ntop(ifa->ifa_addr->sa_family, &((struct sockaddr_in *)ifa->ifa_addr)->sin_addr, ipstr, sizeof ipstr);
+        inet_ntop(ifa->ifa_addr->sa_family,
+                  &((struct sockaddr_in *)ifa->ifa_addr)->sin_addr, ipstr,
+                  sizeof ipstr);
 
-        for(int i = 0; i < setting->hostc; i++) {
-            if(strcmp(setting->hosts[i].ip, ipstr) == 0) {
+        for (int i = 0; i < setting->hostc; i++) {
+            if (strcmp(setting->hosts[i].ip, ipstr) == 0) {
                 setting->jia_pid = i;
                 found = 1;
                 break;
             }
         }
-        if(found == 1) {
+        if (found == 1) {
             break;
         }
     }
-    
+
     freeifaddrs(ifap);
     return found == 1 ? 0 : -1;
 }
 
-
-int init_setting(setting_t *setting){
+int init_setting(setting_t *setting) {
     int ret;
 
     ret = get_options(setting);
-    if (ret!= 0) {
+    if (ret != 0) {
         fprintf(stderr, "func-get_setting: get_options failed\n");
         return -1;
     }
 
     ret = get_hosts(setting);
-    if (ret!= 0) {
+    if (ret != 0) {
         fprintf(stderr, "func-get_setting: get_hosts failed\n");
         return -1;
     }
 
     ret = get_id(setting);
-    if (ret!= 0) {
+    if (ret != 0) {
         fprintf(stderr, "func-get_setting: get_id failed\n");
         return -1;
     }
     return 0;
 }
 
-void free_setting(setting_t *setting){
+void free_setting(setting_t *setting) {
     free(setting->hosts);
-    
+
     // ...
 }
 
-
-void print_setting(const setting_t *setting){
+void print_setting(const setting_t *setting) {
     printf("===============================================\n");
     printf("system setting info on host [%d]\n", system_setting.jia_pid);
     printf("jia_pid (current host id) : %d\n", setting->jia_pid);
     printf("hostc   (total host count): %d\n", setting->hostc);
-    for(int i = 0; i < setting->hostc; i++) {
-        printf("host %d: %s %s \t***\n", i, setting->hosts[i].ip, setting->hosts[i].username);
+    for (int i = 0; i < setting->hostc; i++) {
+        printf("host %d: %s %s \t***\n", i, setting->hosts[i].ip,
+               setting->hosts[i].username);
     }
     printf("optionc: %d\n", setting->optionc);
-    for(int i = 0; i < setting->optionc; i++) {
-        printf("option %d: %s = %s\n", i, setting->options[i].key, setting->options[i].value);
+    for (int i = 0; i < setting->optionc; i++) {
+        printf("option %d: %s = %s\n", i, setting->options[i].key,
+               setting->options[i].value);
     }
     printf("===============================================\n");
 }

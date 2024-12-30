@@ -35,11 +35,9 @@
  * =================================================================== *
  **********************************************************************/
 
+#include <string.h>
 #ifndef NULL_LIB
-#include <libgen.h>
-#include <bits/types/clockid_t.h>
-#include <stdlib.h>
-#include <unistd.h>
+#include "tools.h"
 #include "comm.h"
 #include "global.h"
 #include "init.h"
@@ -48,8 +46,12 @@
 #include "setting.h"
 #include "stat.h"
 #include "syn.h"
-#include "tools.h"
+#include <bits/types/clockid_t.h>
+#include <libgen.h>
+#include <stdbool.h>
+#include <stdlib.h>
 #include <time.h>
+#include <unistd.h>
 
 extern jiastack_t lockstack[Maxstacksize];
 extern int totalhome;
@@ -73,6 +75,16 @@ int LOAD_BAL = OFF; // LOAD_BAL: load balancing flag(ON/OFF)
 int W_VEC = OFF;    // W_VEC: write vector flag(ON/OFF)
 int RDMA_SUPPORT = OFF;
 
+// default prefetch optimization technique setting
+struct prefetech_opt_t prefetch_optimization = {
+    .base = {
+        .flag = false,
+        .name = "prefetch"
+    },
+    .prefetch_pages = 0,
+    .max_checking_pages = 0
+};
+
 /************ other tools ****************/
 
 /* initial setting that default optimization method is OFF */
@@ -83,6 +95,11 @@ void inittools() {
     LOAD_BAL = OFF;
     W_VEC = OFF;
     RDMA_SUPPORT = OFF; // TODO: RDMA_SUPPORT
+
+    /** prefetch optimization */
+    prefetch_optimization.base.flag = system_setting.prefetch_flag;
+    prefetch_optimization.prefetch_pages = system_setting.prefetch_pages;
+    prefetch_optimization.max_checking_pages = system_setting.max_checking_pages;
 }
 
 /**
@@ -288,7 +305,7 @@ int open_logfile(char *filename, int argc, char **argv) {
     return 0;
 }
 
-char* op2name(int op){
+char *op2name(int op) {
     switch (op) {
     case DIFF:
         return "DIFF";
@@ -824,11 +841,12 @@ unsigned long start_sec = 0;
 unsigned long start_time_sec = 0;
 unsigned long start_time_usec = 0;
 unsigned long start_msec = 0;
-float jia_clock() {extern void setwtvect(int homei, wtvect_t wv);
-    }
-    return (float)(((val.tv_sec * 1000000.0 + val.tv_usec) -
-                    (start_time_sec * 1000000.0 + start_time_usec)) /
-                   1000000.0);
+float jia_clock() {
+    extern void setwtvect(int homei, wtvect_t wv);
+}
+return (float)(((val.tv_sec * 1000000.0 + val.tv_usec) -
+                (start_time_sec * 1000000.0 + start_time_usec)) /
+               1000000.0);
 }
 
 void jia_error(char *errstr) {
