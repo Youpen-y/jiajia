@@ -1,0 +1,9 @@
+is 0m4.207s
+ep 0m13.076s
+tsp 0m12.766s
+hello 0m3.492s
+mm 0m7.363s
+water 0m3.671s
+lu 0m5.927s
+sor 0m4.986s
+pi 0m2.830s

@@ -1,0 +1,33 @@
+scp: /home/yangyupeng/jianode/sor//sor: Text file busy
+Assert0 error from host 0 ---
+Copy system files failedUnix Error: Success
+===============================================
+system setting info on host [0]
+jia_pid (current host id) : 0
+hostc   (total host count): 4
+host 0: 10.208.130.245 yangyupeng 	***
+host 1: 10.208.130.247 yangyupeng 	***
+host 2: 10.208.130.249 yangyupeng 	***
+host 3: 10.208.129.87 yangyupeng 	***
+optionc: 8
+option 0: system_mode = hybrid
+option 1: comm_type = udp
+option 2: global_start_addr = 0x400000000000
+option 3: msg_buffer_size = 16
+option 4: msg_queue_size = 32
+option 5: prefetch = on
+option 6: prefetch_pages = 8
+option 7: max_checking_pages = 10
+===============================================
+
+***JIAJIA---Software DSM***
+***Cachepages = 1024  Pagesize=4096***
+
+*********Total of 4 hosts found!**********
+
+Start to copy system files to slaves!
+Copy files to yangyupeng@10.208.130.247.
+
+real	0m1.661s
+user	0m0.206s
+sys	0m0.061s

@@ -1,0 +1,107 @@
+/home/yyp/jianode/water/water: invalid option -- 'P'
+/home/yyp/jianode/water/water: invalid option -- 'P'
+
+TEMPERATURE                =   298.00 K
+DENSITY                    =  0.99800 G/C.C.
+NUMBER OF MOLECULES        =      288
+NUMBER OF PROCESSORS       =        3
+TIME STEP                  = 1.50e-16 SEC
+ORDER USED TO SOLVE F=MA   =        6 
+NO. OF TIME STEPS          =        5 
+FREQUENCY OF DATA SAVING   =       -1 
+FREQUENCY TO WRITE RST FILE=     3000 
+SPHERICAL CUTOFF RADIUS    =  10.2570 ANGSTROM
+***** NEW RUN STARTING FROM COORDINATES OF WATERS
+         1        5.95324      0.00528     28.28801      0.06081
+           34.307       1182.71116       -102.76671
+         2       14.52687      0.02992     19.69674      0.06203
+           34.316       2034.35800        -94.77733
+         3       21.34639      0.09227     12.74081      0.06397
+           34.243       2769.84436        -87.04731
+         4       26.37908      0.21914      7.66636      0.06660
+           34.331       3387.54411        -80.56737
+         5       27.64032      0.53864     -5.81920      0.06911
+           22.429       3808.27752        -74.99403
+
+Exited Happily with XTT 22.4289
+Elapsed time: 3.40 seconds
+===============================================
+system setting info on host [0]
+jia_pid (current host id) : 0
+hostc   (total host count): 3
+host 0: 10.90.50.80 yongy 	***
+host 1: 10.90.50.196 yyp 	***
+host 2: 10.90.50.192 yyp 	***
+optionc: 5
+option 0: system_mode = hybrid
+option 1: comm_type = udp
+option 2: global_start_addr = 0x400000000000
+option 3: msg_buffer_size = 16
+option 4: msg_queue_size = 32
+===============================================
+
+***JIAJIA---Software DSM***
+***Cachepages = 1024  Pagesize=4096***
+
+*********Total of 3 hosts found!**********
+
+Start to copy system files to slaves!
+Copy files to yyp@10.90.50.196.
+Copy files to yyp@10.90.50.192.
+Remote copy succeed!
+
+Start to create processes on slaves!
+
+Starting CMD ssh yyp@10.90.50.196 '~/jianode/water/water -P 9680d &' on host 10.90.50.196
+Starting CMD ssh yyp@10.90.50.192 '~/jianode/water/water -P 9680d &' on host 10.90.50.192
+Using 3 procs on 5 steps of 288 mols
+
+Shared Memory (4096-byte pages) : 8388608 (total) 30 (used)
+Print stats
+############  JIAJIA STATISTICS  ##############
+           hosts -->        0        1        2      total
+-----------------------------------------------
+Msgs Sent          =      669      430      380      1479 
+Msgs Received      =      685      429      365      1479 
+Bytes Sent         =   604576   236272   203360   1044208 
+Bytes Received     =   477052   352784   326444   1156280 
+SEGVs (local)      =      125        0        0       125 
+SEGVs (remote)     =        0      240      230       470 
+SIGIOs (total)     =        0        0        0         0 
+SIGIOs (user)      =        0        0        0         0 
+SIGIOs (Syn.)      =        0        0        0         0 
+SIGIOs (SEGV)      =        0        0        0         0 
+Barriers           =       35       35       35        35 
+Locks              =       40       40       40       120 
+Getp Reqs          =        0      213      198       411 
+Diff Msgs.         =      142        0        0       142 
+MWdiffs            =      478        0        0       478 
+Invalidate         =        0      220      205       425 
+Replaced RO pages  =        0        0        0         0 
+Replaced RW pages  =        0        0        0         0 
+Mig in pages       =        0        0        0         0 
+Mig out pages      =        0        0        0         0 
+Resent Msgs        =        0        0        0         0 
+Large message      =      120       16       16       152 
+Small message      =      478      474      384      1336 
+----------------------------------------------- (ms) 
+Barrier time       =  3299.27  2885.01   329.65 
+Lock time          =    65.49   107.37   602.54 
+Unlock time        =     0.99    54.02   419.67 
+SEGV time (local)  =     1.93     0.00     0.00 
+SEGV time (remote) =     0.00   329.49   870.24 
+SIGIO time (user)  =     0.00     0.00     0.00 
+SIGIO time (Syn.)  =     0.00     0.00     0.00 
+SIGIO time (SEGV)  =     0.00     0.00     0.00 
+Encode diff time   =     0.00     0.68     1.43 
+Decode diff time   =     5.33     0.00     0.00 
+Wait time          =     0.00     0.00     0.00 
+-----------------------------------------------
+SEGV time          =    76.93   473.49  1008.24 
+Syn. time          =  3365.75  3046.40  1351.86 
+Server time        =     0.00     0.00     0.00 
+###############################################
+
+real	0m5.657s
+user	0m4.093s
+sys	0m0.235s

@@ -11,7 +11,7 @@
 #include <sys/select.h>
 #include <unistd.h>
 
-#define RETRYNUM 50 // when hosts increases, this number should increases too.
+#define RETRYNUM 100
 static bool success = false;
 static jia_msg_t msg;
 pthread_t client_tid;

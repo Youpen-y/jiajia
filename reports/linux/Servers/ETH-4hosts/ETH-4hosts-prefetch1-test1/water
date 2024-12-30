@@ -1,0 +1,115 @@
+/home/yangyupeng/jianode/water/water: invalid option -- 'P'
+/home/yangyupeng/jianode/water/water: invalid option -- 'P'
+/home/yangyupeng/jianode/water/water: invalid option -- 'P'
+
+TEMPERATURE                =   298.00 K
+DENSITY                    =  0.99800 G/C.C.
+NUMBER OF MOLECULES        =      288
+NUMBER OF PROCESSORS       =        4
+TIME STEP                  = 1.50e-16 SEC
+ORDER USED TO SOLVE F=MA   =        6 
+NO. OF TIME STEPS          =        5 
+FREQUENCY OF DATA SAVING   =       -1 
+FREQUENCY TO WRITE RST FILE=     3000 
+SPHERICAL CUTOFF RADIUS    =  10.2570 ANGSTROM
+***** NEW RUN STARTING FROM COORDINATES OF WATERS
+         1        5.95324      0.00528     28.28801      0.06081
+           34.307       1182.71116       -102.76671
+         2       14.52687      0.02992     19.69674      0.06203
+           34.316       2034.35800        -94.77733
+         3       21.34639      0.09227     12.74081      0.06397
+           34.243       2769.84436        -87.04731
+         4       26.37908      0.21914      7.66636      0.06660
+           34.331       3387.54411        -80.56737
+         5       27.64032      0.53864     -5.81920      0.06911
+           22.429       3808.27752        -74.99403
+
+Exited Happily with XTT 22.4289
+Elapsed time: 1.50 seconds
+===============================================
+system setting info on host [0]
+jia_pid (current host id) : 0
+hostc   (total host count): 4
+host 0: 10.208.130.245 yangyupeng 	***
+host 1: 10.208.130.247 yangyupeng 	***
+host 2: 10.208.130.249 yangyupeng 	***
+host 3: 10.208.129.87 yangyupeng 	***
+optionc: 8
+option 0: system_mode = hybrid
+option 1: comm_type = udp
+option 2: global_start_addr = 0x400000000000
+option 3: msg_buffer_size = 16
+option 4: msg_queue_size = 32
+option 5: prefetch = on
+option 6: prefetch_pages = 1
+option 7: max_checking_pages = 10
+===============================================
+
+***JIAJIA---Software DSM***
+***Cachepages = 1024  Pagesize=4096***
+
+*********Total of 4 hosts found!**********
+
+Start to copy system files to slaves!
+Copy files to yangyupeng@10.208.130.247.
+Copy files to yangyupeng@10.208.130.249.
+Copy files to yangyupeng@10.208.129.87.
+Remote copy succeed!
+
+Start to create processes on slaves!
+
+Starting CMD ssh yangyupeng@10.208.130.247 '~/jianode/water/water -P 12016 &' on host 10.208.130.247
+Starting CMD ssh yangyupeng@10.208.130.249 '~/jianode/water/water -P 12016 &' on host 10.208.130.249
+Starting CMD ssh yangyupeng@10.208.129.87 '~/jianode/water/water -P 12016 &' on host 10.208.129.87
+Using 4 procs on 5 steps of 288 mols
+
+Shared Memory (4096-byte pages) : 8388608 (total) 30 (used)
+Print stats
+#################  JIAJIA STATISTICS  ##################
+           hosts -->        0        1        2        3      total
+--------------------------------------------------------
+Msgs Sent          =     1156      458      496      433      2543 
+Msgs Received      =     1126      448      546      423      2543 
+Bytes Sent         =  5571448   155440   201900   170916   6099704 
+Bytes Received     =   592028  1978880  2171368  1772772   6515048 
+SEGVs (local)      =      105        0        0        0       105 
+SEGVs (remote)     =        0      255      269      234       758 
+SIGIOs (total)     =        0        0        0        0         0 
+SIGIOs (user)      =        0        0        0        0         0 
+SIGIOs (Syn.)      =        0        0        0        0         0 
+SIGIOs (SEGV)      =        0        0        0        0         0 
+Barriers           =       35       35       35       35        35 
+Locks              =       45       45       45       45       180 
+Getp Reqs          =        0      241      264      216       721 
+Prefetch Pages     =        0      236      259      211       706 
+Diff Msgs.         =      213        0        0        0       213 
+MWdiffs            =      769        0        0        0       769 
+Invalidate         =        0      245      272      222       739 
+Replaced RO pages  =        0        0        0        0         0 
+Replaced RW pages  =        0        0        0        0         0 
+Mig in pages       =        0        0        0        0         0 
+Mig out pages      =        0        0        0        0         0 
+Resent Msgs        =        0        0        0        0         0 
+Large message      =      730       21       21       21       793 
+Small message      =      418      447      530      422      1817 
+-------------------------------------------------------- (ms) 
+Barrier time       =  1289.84   503.45   338.23   220.33 
+Lock time          =   181.56   261.05   354.49   360.31 
+Unlock time        =     0.80    78.77    66.80   120.43 
+SEGV time (local)  =     1.35     0.00     0.00     0.00 
+SEGV time (remote) =     0.00   627.46   704.14   763.99 
+SIGIO time (user)  =     0.00     0.00     0.00     0.00 
+SIGIO time (Syn.)  =     0.00     0.00     0.00     0.00 
+SIGIO time (SEGV)  =     0.00     0.00     0.00     0.00 
+Encode diff time   =     0.00     2.94     2.51     1.40 
+Decode diff time   =    13.03     0.00     0.00     0.00 
+Wait time          =     0.00     0.00     0.00     0.00 
+--------------------------------------------------------
+SEGV time          =    64.35   780.46   865.54   904.39 
+Syn. time          =  1472.19   843.27   759.52   701.07 
+Server time        =     0.00     0.00     0.00     0.00 
+########################################################
+
+real	0m5.977s
+user	0m2.617s
+sys	0m0.440s

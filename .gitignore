@@ -10,7 +10,6 @@ apps/*/*/*
 !apps/*/*/*files
 !**/Makefile
 rebuild.sh
-reports
 clean.sh
 lib.mk
 pi.mk

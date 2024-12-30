@@ -1,0 +1,287 @@
+===============================================
+system setting info on host [0]
+jia_pid (current host id) : 0
+hostc   (total host count): 4
+host 0: 10.208.130.245 yangyupeng 	***
+host 1: 10.208.130.247 yangyupeng 	***
+host 2: 10.208.130.249 yangyupeng 	***
+host 3: 10.208.129.87 yangyupeng 	***
+optionc: 8
+option 0: system_mode = hybrid
+option 1: comm_type = udp
+option 2: global_start_addr = 0x400000000000
+option 3: msg_buffer_size = 16
+option 4: msg_queue_size = 32
+option 5: prefetch = on
+option 6: prefetch_pages = 4
+option 7: max_checking_pages = 10
+===============================================
+
+***JIAJIA---Software DSM***
+***Cachepages = 1024  Pagesize=4096***
+
+*********Total of 4 hosts found!**********
+
+Start to copy system files to slaves!
+Copy files to yangyupeng@10.208.130.247.
+Copy files to yangyupeng@10.208.130.249.
+Copy files to yangyupeng@10.208.129.87.
+Remote copy succeed!
+
+Start to create processes on slaves!
+
+Starting CMD ssh yangyupeng@10.208.130.247 '~/jianode/hello/hello -P 14869 &' on host 10.208.130.247
+Starting CMD ssh yangyupeng@10.208.130.249 '~/jianode/hello/hello -P 14869 &' on host 10.208.130.249
+Starting CMD ssh yangyupeng@10.208.129.87 '~/jianode/hello/hello -P 14869 &' on host 10.208.129.87
+Hello from master, Number of processes is: 4
+arr[0] = 4
+arr[1] = 4
+arr[2] = 4
+arr[3] = 4
+arr[4] = 4
+arr[5] = 4
+arr[6] = 4
+arr[7] = 4
+arr[8] = 4
+arr[9] = 4
+arr[10] = 4
+arr[11] = 4
+arr[12] = 4
+arr[13] = 4
+arr[14] = 4
+arr[15] = 4
+arr[16] = 4
+arr[17] = 4
+arr[18] = 4
+arr[19] = 4
+arr[20] = 4
+arr[21] = 4
+arr[22] = 4
+arr[23] = 4
+arr[24] = 4
+arr[25] = 4
+arr[26] = 4
+arr[27] = 4
+arr[28] = 4
+arr[29] = 4
+arr[30] = 4
+arr[31] = 4
+arr[32] = 4
+arr[33] = 4
+arr[34] = 4
+arr[35] = 4
+arr[36] = 4
+arr[37] = 4
+arr[38] = 4
+arr[39] = 4
+arr[40] = 4
+arr[41] = 4
+arr[42] = 4
+arr[43] = 4
+arr[44] = 4
+arr[45] = 4
+arr[46] = 4
+arr[47] = 4
+arr[48] = 4
+arr[49] = 4
+arr[50] = 4
+arr[51] = 4
+arr[52] = 4
+arr[53] = 4
+arr[54] = 4
+arr[55] = 4
+arr[56] = 4
+arr[57] = 4
+arr[58] = 4
+arr[59] = 4
+arr[60] = 4
+arr[61] = 4
+arr[62] = 4
+arr[63] = 4
+arr[64] = 4
+arr[65] = 4
+arr[66] = 4
+arr[67] = 4
+arr[68] = 4
+arr[69] = 4
+arr[70] = 4
+arr[71] = 4
+arr[72] = 4
+arr[73] = 4
+arr[74] = 4
+arr[75] = 4
+arr[76] = 4
+arr[77] = 4
+arr[78] = 4
+arr[79] = 4
+arr[80] = 4
+arr[81] = 4
+arr[82] = 4
+arr[83] = 4
+arr[84] = 4
+arr[85] = 4
+arr[86] = 4
+arr[87] = 4
+arr[88] = 4
+arr[89] = 4
+arr[90] = 4
+arr[91] = 4
+arr[92] = 4
+arr[93] = 4
+arr[94] = 4
+arr[95] = 4
+arr[96] = 4
+arr[97] = 4
+arr[98] = 4
+arr[99] = 4
+arr[100] = 4
+arr[101] = 4
+arr[102] = 4
+arr[103] = 4
+arr[104] = 4
+arr[105] = 4
+arr[106] = 4
+arr[107] = 4
+arr[108] = 4
+arr[109] = 4
+arr[110] = 4
+arr[111] = 4
+arr[112] = 4
+arr[113] = 4
+arr[114] = 4
+arr[115] = 4
+arr[116] = 4
+arr[117] = 4
+arr[118] = 4
+arr[119] = 4
+arr[120] = 4
+arr[121] = 4
+arr[122] = 4
+arr[123] = 4
+arr[124] = 4
+arr[125] = 4
+arr[126] = 4
+arr[127] = 4
+arr[128] = 4
+arr[129] = 4
+arr[130] = 4
+arr[131] = 4
+arr[132] = 4
+arr[133] = 4
+arr[134] = 4
+arr[135] = 4
+arr[136] = 4
+arr[137] = 4
+arr[138] = 4
+arr[139] = 4
+arr[140] = 4
+arr[141] = 4
+arr[142] = 4
+arr[143] = 4
+arr[144] = 4
+arr[145] = 4
+arr[146] = 4
+arr[147] = 4
+arr[148] = 4
+arr[149] = 4
+arr[150] = 4
+arr[151] = 4
+arr[152] = 4
+arr[153] = 4
+arr[154] = 4
+arr[155] = 4
+arr[156] = 4
+arr[157] = 4
+arr[158] = 4
+arr[159] = 4
+arr[160] = 4
+arr[161] = 4
+arr[162] = 4
+arr[163] = 4
+arr[164] = 4
+arr[165] = 4
+arr[166] = 4
+arr[167] = 4
+arr[168] = 4
+arr[169] = 4
+arr[170] = 4
+arr[171] = 4
+arr[172] = 4
+arr[173] = 4
+arr[174] = 4
+arr[175] = 4
+arr[176] = 4
+arr[177] = 4
+arr[178] = 4
+arr[179] = 4
+arr[180] = 4
+arr[181] = 4
+arr[182] = 4
+arr[183] = 4
+arr[184] = 4
+arr[185] = 4
+arr[186] = 4
+arr[187] = 4
+arr[188] = 4
+arr[189] = 4
+arr[190] = 4
+arr[191] = 4
+arr[192] = 4
+arr[193] = 4
+arr[194] = 4
+arr[195] = 4
+arr[196] = 4
+arr[197] = 4
+arr[198] = 4
+arr[199] = 4
+
+Shared Memory (4096-byte pages) : 8388608 (total) 196 (used)
+Print stats
+#################  JIAJIA STATISTICS  ##################
+           hosts -->        0        1        2        3      total
+--------------------------------------------------------
+Msgs Sent          =      193       73       70       66       402 
+Msgs Received      =      198       65       65       65       393 
+Bytes Sent         =  2259384     2612     2516     2388   2266900 
+Bytes Received     =  2426148   810552   810552   808984   4856236 
+SEGVs (local)      =      392        0        0        0       392 
+SEGVs (remote)     =        0      236      236      236       708 
+SIGIOs (total)     =        0        0        0        0         0 
+SIGIOs (user)      =        0        0        0        0         0 
+SIGIOs (Syn.)      =        0        0        0        0         0 
+SIGIOs (SEGV)      =        0        0        0        0         0 
+Barriers           =        1        1        1        1         1 
+Locks              =        1        1        1        1         4 
+Getp Reqs          =        0       40       40       40       120 
+Prefetch Pages     =        0      156      156      156       468 
+Diff Msgs.         =       66        0        0        0        66 
+MWdiffs            =      588        0        0        0       588 
+Invalidate         =        0      196      196      196       588 
+Replaced RO pages  =        0        0        0        0         0 
+Replaced RW pages  =        0        0        0        0         0 
+Mig in pages       =        0        0        0        0         0 
+Mig out pages      =        0        0        0        0         0 
+Resent Msgs        =        0        7        4        0        11 
+Large message      =      120       22       22       22       186 
+Small message      =       74       49       46       42       211 
+-------------------------------------------------------- (ms) 
+Barrier time       =   401.34   103.93     3.32   200.48 
+Lock time          =     0.82   883.99   647.82     3.97 
+Unlock time        =     0.54    33.76    35.08    68.67 
+SEGV time (local)  =     2.53     0.00     0.00     0.00 
+SEGV time (remote) =     0.00    56.88    63.19   128.60 
+SIGIO time (user)  =     0.00     0.00     0.00     0.00 
+SIGIO time (Syn.)  =     0.00     0.00     0.00     0.00 
+SIGIO time (SEGV)  =     0.00     0.00     0.00     0.00 
+Encode diff time   =     0.00     2.25     1.78     1.35 
+Decode diff time   =    11.82     0.00     0.00     0.00 
+Wait time          =     0.00     0.00     0.00     0.00 
+--------------------------------------------------------
+SEGV time          =   237.73   198.47   204.79   270.20 
+Syn. time          =   402.69  1021.68   686.22   273.12 
+Server time        =     0.00     0.00     0.00     0.00 
+########################################################
+
+real	0m4.574s
+user	0m1.137s
+sys	0m0.235s

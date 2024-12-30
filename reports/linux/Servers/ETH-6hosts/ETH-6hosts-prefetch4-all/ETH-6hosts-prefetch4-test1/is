@@ -1,0 +1,99 @@
+/home/yangyupeng/jianode/is/is: invalid option -- 'P'
+/home/yangyupeng/jianode/is/is: invalid option -- 'P'
+/home/yangyupeng/jianode/is/is: invalid option -- 'P'
+/home/yangyupeng/jianode/is/is: invalid option -- 'P'
+/home/yangyupeng/jianode/is/is: invalid option -- 'P'
+Performed 10 rankings in time:  0.854
+===============================================
+system setting info on host [0]
+jia_pid (current host id) : 0
+hostc   (total host count): 6
+host 0: 10.208.130.245 yangyupeng 	***
+host 1: 10.208.130.247 yangyupeng 	***
+host 2: 10.208.130.249 yangyupeng 	***
+host 3: 10.208.129.87 yangyupeng 	***
+host 4: 10.208.129.89 yangyupeng 	***
+host 5: 10.208.129.90 yangyupeng 	***
+optionc: 8
+option 0: system_mode = hybrid
+option 1: comm_type = udp
+option 2: global_start_addr = 0x400000000000
+option 3: msg_buffer_size = 16
+option 4: msg_queue_size = 32
+option 5: prefetch = on
+option 6: prefetch_pages = 4
+option 7: max_checking_pages = 10
+===============================================
+
+***JIAJIA---Software DSM***
+***Cachepages = 1024  Pagesize=4096***
+
+*********Total of 6 hosts found!**********
+
+Start to copy system files to slaves!
+Copy files to yangyupeng@10.208.130.247.
+Copy files to yangyupeng@10.208.130.249.
+Copy files to yangyupeng@10.208.129.87.
+Copy files to yangyupeng@10.208.129.89.
+Copy files to yangyupeng@10.208.129.90.
+Remote copy succeed!
+
+Start to create processes on slaves!
+
+Starting CMD ssh yangyupeng@10.208.130.247 '~/jianode/is/is -P 28945 &' on host 10.208.130.247
+Starting CMD ssh yangyupeng@10.208.130.249 '~/jianode/is/is -P 28945 &' on host 10.208.130.249
+Starting CMD ssh yangyupeng@10.208.129.87 '~/jianode/is/is -P 28945 &' on host 10.208.129.87
+Starting CMD ssh yangyupeng@10.208.129.89 '~/jianode/is/is -P 28945 &' on host 10.208.129.89
+Starting CMD ssh yangyupeng@10.208.129.90 '~/jianode/is/is -P 28945 &' on host 10.208.129.90
+key 0x77dd1bc00010, rank 0x77dd1b800010
+
+Shared Memory (4096-byte pages) : 8388608 (total) 1 (used)
+Print stats
+##########################  JIAJIA STATISTICS  ###########################
+           hosts -->        0        1        2        3        4        5      total
+--------------------------------------------------------------------------
+Msgs Sent          =      283      103      100       97      221       93       897 
+Msgs Received      =      337       83       83       83      211       83       880 
+Bytes Sent         =   387640    32028    32156    31864    10192    31576    525456 
+Bytes Received     =   215620    85332    85412    85412    90384    85412    647572 
+SEGVs (local)      =       20        0        0        0        0        0        20 
+SEGVs (remote)     =        0       21       21       21       21       21       105 
+SIGIOs (total)     =        0        0        0        0        0        0         0 
+SIGIOs (user)      =        0        0        0        0        0        0         0 
+SIGIOs (Syn.)      =        0        0        0        0        0        0         0 
+SIGIOs (SEGV)      =        0        0        0        0        0        0         0 
+Barriers           =       32       32       32       32       32       32        32 
+Locks              =       10       10       10       10       10       10        60 
+Getp Reqs          =        0       20       20       20       20       20       100 
+Prefetch Pages     =        0        0        0        0        0        0         0 
+Diff Msgs.         =      100        0        0        0        0        0       100 
+MWdiffs            =      100        0        0        0        0        0       100 
+Invalidate         =        0       20       20       20       20       20       100 
+Replaced RO pages  =        0        0        0        0        0        0         0 
+Replaced RW pages  =        0        0        0        0        0        0         0 
+Mig in pages       =        0        0        0        0        0        0         0 
+Mig out pages      =        0        0        0        0        0        0         0 
+Resent Msgs        =        0       10        7        4        0        0        21 
+Large message      =      100        0        0        0        0        0       100 
+Small message      =      215       93       90       87      275       83       843 
+-------------------------------------------------------------------------- (ms) 
+Barrier time       =  1451.62  2667.16  2414.64  1053.85  1774.01  1306.29 
+Lock time          =     1.34    12.10    35.86   310.45   105.70   173.02 
+Unlock time        =     0.27    12.54    12.35    55.33    29.70    29.70 
+SEGV time (local)  =     0.69     0.00     0.00     0.00     0.00     0.00 
+SEGV time (remote) =     0.00    34.04    25.03   127.53    76.90   102.86 
+SIGIO time (user)  =     0.00     0.00     0.00     0.00     0.00     0.00 
+SIGIO time (Syn.)  =     0.00     0.00     0.00     0.00     0.00     0.00 
+SIGIO time (SEGV)  =     0.00     0.00     0.00     0.00     0.00     0.00 
+Encode diff time   =     0.00     0.24     0.27     0.17     0.16     0.17 
+Decode diff time   =     2.57     0.00     0.00     0.00     0.00     0.00 
+Wait time          =     0.00     0.00     0.00     0.00     0.00     0.00 
+--------------------------------------------------------------------------
+SEGV time          =    12.69    46.64    37.63   140.13    89.50   115.46 
+Syn. time          =  1453.24  2691.80  2462.85  1419.63  1909.41  1509.01 
+Server time        =     0.00     0.00     0.00     0.00     0.00     0.00 
+##########################################################################
+
+real	0m8.777s
+user	0m3.160s
+sys	0m0.263s

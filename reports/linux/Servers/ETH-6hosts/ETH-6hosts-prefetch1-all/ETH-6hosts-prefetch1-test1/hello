@@ -1,0 +1,293 @@
+===============================================
+system setting info on host [0]
+jia_pid (current host id) : 0
+hostc   (total host count): 6
+host 0: 10.208.130.245 yangyupeng 	***
+host 1: 10.208.130.247 yangyupeng 	***
+host 2: 10.208.130.249 yangyupeng 	***
+host 3: 10.208.129.87 yangyupeng 	***
+host 4: 10.208.129.89 yangyupeng 	***
+host 5: 10.208.129.90 yangyupeng 	***
+optionc: 8
+option 0: system_mode = hybrid
+option 1: comm_type = udp
+option 2: global_start_addr = 0x400000000000
+option 3: msg_buffer_size = 16
+option 4: msg_queue_size = 32
+option 5: prefetch = on
+option 6: prefetch_pages = 1
+option 7: max_checking_pages = 10
+===============================================
+
+***JIAJIA---Software DSM***
+***Cachepages = 1024  Pagesize=4096***
+
+*********Total of 6 hosts found!**********
+
+Start to copy system files to slaves!
+Copy files to yangyupeng@10.208.130.247.
+Copy files to yangyupeng@10.208.130.249.
+Copy files to yangyupeng@10.208.129.87.
+Copy files to yangyupeng@10.208.129.89.
+Copy files to yangyupeng@10.208.129.90.
+Remote copy succeed!
+
+Start to create processes on slaves!
+
+Starting CMD ssh yangyupeng@10.208.130.247 '~/jianode/hello/hello -P 23975 &' on host 10.208.130.247
+Starting CMD ssh yangyupeng@10.208.130.249 '~/jianode/hello/hello -P 23975 &' on host 10.208.130.249
+Starting CMD ssh yangyupeng@10.208.129.87 '~/jianode/hello/hello -P 23975 &' on host 10.208.129.87
+Starting CMD ssh yangyupeng@10.208.129.89 '~/jianode/hello/hello -P 23975 &' on host 10.208.129.89
+Starting CMD ssh yangyupeng@10.208.129.90 '~/jianode/hello/hello -P 23975 &' on host 10.208.129.90
+Hello from master, Number of processes is: 6
+arr[0] = 6
+arr[1] = 6
+arr[2] = 6
+arr[3] = 6
+arr[4] = 6
+arr[5] = 6
+arr[6] = 6
+arr[7] = 6
+arr[8] = 6
+arr[9] = 6
+arr[10] = 6
+arr[11] = 6
+arr[12] = 6
+arr[13] = 6
+arr[14] = 6
+arr[15] = 6
+arr[16] = 6
+arr[17] = 6
+arr[18] = 6
+arr[19] = 6
+arr[20] = 6
+arr[21] = 6
+arr[22] = 6
+arr[23] = 6
+arr[24] = 6
+arr[25] = 6
+arr[26] = 6
+arr[27] = 6
+arr[28] = 6
+arr[29] = 6
+arr[30] = 6
+arr[31] = 6
+arr[32] = 6
+arr[33] = 6
+arr[34] = 6
+arr[35] = 6
+arr[36] = 6
+arr[37] = 6
+arr[38] = 6
+arr[39] = 6
+arr[40] = 6
+arr[41] = 6
+arr[42] = 6
+arr[43] = 6
+arr[44] = 6
+arr[45] = 6
+arr[46] = 6
+arr[47] = 6
+arr[48] = 6
+arr[49] = 6
+arr[50] = 6
+arr[51] = 6
+arr[52] = 6
+arr[53] = 6
+arr[54] = 6
+arr[55] = 6
+arr[56] = 6
+arr[57] = 6
+arr[58] = 6
+arr[59] = 6
+arr[60] = 6
+arr[61] = 6
+arr[62] = 6
+arr[63] = 6
+arr[64] = 6
+arr[65] = 6
+arr[66] = 6
+arr[67] = 6
+arr[68] = 6
+arr[69] = 6
+arr[70] = 6
+arr[71] = 6
+arr[72] = 6
+arr[73] = 6
+arr[74] = 6
+arr[75] = 6
+arr[76] = 6
+arr[77] = 6
+arr[78] = 6
+arr[79] = 6
+arr[80] = 6
+arr[81] = 6
+arr[82] = 6
+arr[83] = 6
+arr[84] = 6
+arr[85] = 6
+arr[86] = 6
+arr[87] = 6
+arr[88] = 6
+arr[89] = 6
+arr[90] = 6
+arr[91] = 6
+arr[92] = 6
+arr[93] = 6
+arr[94] = 6
+arr[95] = 6
+arr[96] = 6
+arr[97] = 6
+arr[98] = 6
+arr[99] = 6
+arr[100] = 6
+arr[101] = 6
+arr[102] = 6
+arr[103] = 6
+arr[104] = 6
+arr[105] = 6
+arr[106] = 6
+arr[107] = 6
+arr[108] = 6
+arr[109] = 6
+arr[110] = 6
+arr[111] = 6
+arr[112] = 6
+arr[113] = 6
+arr[114] = 6
+arr[115] = 6
+arr[116] = 6
+arr[117] = 6
+arr[118] = 6
+arr[119] = 6
+arr[120] = 6
+arr[121] = 6
+arr[122] = 6
+arr[123] = 6
+arr[124] = 6
+arr[125] = 6
+arr[126] = 6
+arr[127] = 6
+arr[128] = 6
+arr[129] = 6
+arr[130] = 6
+arr[131] = 6
+arr[132] = 6
+arr[133] = 6
+arr[134] = 6
+arr[135] = 6
+arr[136] = 6
+arr[137] = 6
+arr[138] = 6
+arr[139] = 6
+arr[140] = 6
+arr[141] = 6
+arr[142] = 6
+arr[143] = 6
+arr[144] = 6
+arr[145] = 6
+arr[146] = 6
+arr[147] = 6
+arr[148] = 6
+arr[149] = 6
+arr[150] = 6
+arr[151] = 6
+arr[152] = 6
+arr[153] = 6
+arr[154] = 6
+arr[155] = 6
+arr[156] = 6
+arr[157] = 6
+arr[158] = 6
+arr[159] = 6
+arr[160] = 6
+arr[161] = 6
+arr[162] = 6
+arr[163] = 6
+arr[164] = 6
+arr[165] = 6
+arr[166] = 6
+arr[167] = 6
+arr[168] = 6
+arr[169] = 6
+arr[170] = 6
+arr[171] = 6
+arr[172] = 6
+arr[173] = 6
+arr[174] = 6
+arr[175] = 6
+arr[176] = 6
+arr[177] = 6
+arr[178] = 6
+arr[179] = 6
+arr[180] = 6
+arr[181] = 6
+arr[182] = 6
+arr[183] = 6
+arr[184] = 6
+arr[185] = 6
+arr[186] = 6
+arr[187] = 6
+arr[188] = 6
+arr[189] = 6
+arr[190] = 6
+arr[191] = 6
+arr[192] = 6
+arr[193] = 6
+arr[194] = 6
+arr[195] = 6
+arr[196] = 6
+arr[197] = 6
+arr[198] = 6
+arr[199] = 6
+
+Shared Memory (4096-byte pages) : 8388608 (total) 196 (used)
+Print stats
+##########################  JIAJIA STATISTICS  ###########################
+           hosts -->        0        1        2        3        4        5      total
+--------------------------------------------------------------------------
+Msgs Sent          =      607      139      135      132      132      124      1269 
+Msgs Received      =      616      123      123      123      127      123      1235 
+Bytes Sent         =  3975704     5188     5060     4964    14388     4708   4010012 
+Bytes Received     =  4049548   812640   812640   812640   816704   811072   8115244 
+SEGVs (local)      =      392        0        0        0        0        0       392 
+SEGVs (remote)     =        0      294      294      294      294      294      1470 
+SIGIOs (total)     =        0        0        0        0        0        0         0 
+SIGIOs (user)      =        0        0        0        0        0        0         0 
+SIGIOs (Syn.)      =        0        0        0        0        0        0         0 
+SIGIOs (SEGV)      =        0        0        0        0        0        0         0 
+Barriers           =        1        1        1        1        1        1         1 
+Locks              =        1        1        1        1        1        1         6 
+Getp Reqs          =        0       98       98       98       98       98       490 
+Prefetch Pages     =        0       98       98       98       98       98       490 
+Diff Msgs.         =      110        0        0        0        0        0       110 
+MWdiffs            =      980        0        0        0        0        0       980 
+Invalidate         =        0      196      196      196      196      196       980 
+Replaced RO pages  =        0        0        0        0        0        0         0 
+Replaced RW pages  =        0        0        0        0        0        0         0 
+Mig in pages       =        0        0        0        0        0        0         0 
+Mig out pages      =        0        0        0        0        0        0         0 
+Resent Msgs        =        0       15       11        8        4        0        38 
+Large message      =      490       22       22       22       22       22       600 
+Small message      =      118      115      111      108      104      100       656 
+-------------------------------------------------------------------------- (ms) 
+Barrier time       =  1437.87     6.25   910.68   171.31   544.17  1075.74 
+Lock time          =     0.84  2702.07  1467.37  1644.59   929.18     5.88 
+Unlock time        =     0.82    32.31    31.18    71.21    68.48    68.13 
+SEGV time (local)  =     2.49     0.00     0.00     0.00     0.00     0.00 
+SEGV time (remote) =     0.00   125.72   128.64   295.57   293.30   293.26 
+SIGIO time (user)  =     0.00     0.00     0.00     0.00     0.00     0.00 
+SIGIO time (Syn.)  =     0.00     0.00     0.00     0.00     0.00     0.00 
+SIGIO time (SEGV)  =     0.00     0.00     0.00     0.00     0.00     0.00 
+Encode diff time   =     0.00     1.47     1.45     2.11     1.38     1.37 
+Decode diff time   =    19.41     0.00     0.00     0.00     0.00     0.00 
+Wait time          =     0.00     0.00     0.00     0.00     0.00     0.00 
+--------------------------------------------------------------------------
+SEGV time          =   237.69   302.12   305.04   471.97   469.69   469.66 
+Syn. time          =  1439.53  2740.64  2409.23  1887.11  1541.83  1149.76 
+Server time        =     0.00     0.00     0.00     0.00     0.00     0.00 
+##########################################################################
+
+real	0m8.706s
+user	0m2.663s
+sys	0m0.405s

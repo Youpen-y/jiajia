@@ -1,0 +1,94 @@
+===============================================
+system setting info on host [0]
+jia_pid (current host id) : 0
+hostc   (total host count): 6
+host 0: 10.208.130.245 yangyupeng 	***
+host 1: 10.208.130.247 yangyupeng 	***
+host 2: 10.208.130.249 yangyupeng 	***
+host 3: 10.208.129.87 yangyupeng 	***
+host 4: 10.208.129.89 yangyupeng 	***
+host 5: 10.208.129.90 yangyupeng 	***
+optionc: 8
+option 0: system_mode = hybrid
+option 1: comm_type = udp
+option 2: global_start_addr = 0x400000000000
+option 3: msg_buffer_size = 16
+option 4: msg_queue_size = 32
+option 5: prefetch = on
+option 6: prefetch_pages = 6
+option 7: max_checking_pages = 10
+===============================================
+
+***JIAJIA---Software DSM***
+***Cachepages = 1024  Pagesize=4096***
+
+*********Total of 6 hosts found!**********
+
+Start to copy system files to slaves!
+Copy files to yangyupeng@10.208.130.247.
+Copy files to yangyupeng@10.208.130.249.
+Copy files to yangyupeng@10.208.129.87.
+Copy files to yangyupeng@10.208.129.89.
+Copy files to yangyupeng@10.208.129.90.
+Remote copy succeed!
+
+Start to create processes on slaves!
+
+Starting CMD ssh yangyupeng@10.208.130.247 '~/jianode/pi/pi -P 20209 &' on host 10.208.130.247
+Starting CMD ssh yangyupeng@10.208.130.249 '~/jianode/pi/pi -P 20209 &' on host 10.208.130.249
+Starting CMD ssh yangyupeng@10.208.129.87 '~/jianode/pi/pi -P 20209 &' on host 10.208.129.87
+Starting CMD ssh yangyupeng@10.208.129.89 '~/jianode/pi/pi -P 20209 &' on host 10.208.129.89
+Starting CMD ssh yangyupeng@10.208.129.90 '~/jianode/pi/pi -P 20209 &' on host 10.208.129.90
+pi is approximately 3.1415846535738821, Error is 0.0000080000159111
+Elapsed time = 0.000000
+
+Shared Memory (4096-byte pages) : 8388608 (total) 1 (used)
+Print stats
+##########################  JIAJIA STATISTICS  ###########################
+           hosts -->        0        1        2        3        4        5      total
+--------------------------------------------------------------------------
+Msgs Sent          =       16       22       15       12       20        8        93 
+Msgs Received      =       19       16        7        7       19        7        75 
+Bytes Sent         =      512      704      492      384      712      256      3060 
+Bytes Received     =      796     4716     4368     4368     4820     4368     23436 
+SEGVs (local)      =        2        0        0        0        0        0         2 
+SEGVs (remote)     =        0        2        2        2        2        2        10 
+SIGIOs (total)     =        0        0        0        0        0        0         0 
+SIGIOs (user)      =        0        0        0        0        0        0         0 
+SIGIOs (Syn.)      =        0        0        0        0        0        0         0 
+SIGIOs (SEGV)      =        0        0        0        0        0        0         0 
+Barriers           =        3        3        3        3        3        3         3 
+Locks              =        1        1        1        1        1        1         6 
+Getp Reqs          =        0        1        1        1        1        1         5 
+Prefetch Pages     =        0        0        0        0        0        0         0 
+Diff Msgs.         =        5        0        0        0        0        0         5 
+MWdiffs            =        5        0        0        0        0        0         5 
+Invalidate         =        0        1        1        1        1        1         5 
+Replaced RO pages  =        0        0        0        0        0        0         0 
+Replaced RW pages  =        0        0        0        0        0        0         0 
+Mig in pages       =        0        0        0        0        0        0         0 
+Mig out pages      =        0        0        0        0        0        0         0 
+Resent Msgs        =        0       11        7        4        0        0        22 
+Large message      =        5        0        0        0        0        0         5 
+Small message      =       13       25       15       12       26        8        99 
+-------------------------------------------------------------------------- (ms) 
+Barrier time       =    55.94  1488.39  1141.37   779.22   441.80    26.50 
+Lock time          =     1.81     0.87     5.77    21.59    11.80    31.45 
+Unlock time        =     0.04     1.69     1.89     3.24     3.19     3.22 
+SEGV time (local)  =     0.02     0.00     0.00     0.00     0.00     0.00 
+SEGV time (remote) =     0.00     2.50     2.00     3.44     3.20     3.46 
+SIGIO time (user)  =     0.00     0.00     0.00     0.00     0.00     0.00 
+SIGIO time (Syn.)  =     0.00     0.00     0.00     0.00     0.00     0.00 
+SIGIO time (SEGV)  =     0.00     0.00     0.00     0.00     0.00     0.00 
+Encode diff time   =     0.00     0.01     0.01     0.01     0.01     0.01 
+Decode diff time   =     0.06     0.00     0.00     0.00     0.00     0.00 
+Wait time          =     0.00     0.00     0.00     0.00     0.00     0.00 
+--------------------------------------------------------------------------
+SEGV time          =     1.22     3.70     3.20     4.63     4.40     4.66 
+Syn. time          =    57.79  1490.95  1149.02   804.05   456.79    61.18 
+Server time        =     0.00     0.00     0.00     0.00     0.00     0.00 
+##########################################################################
+
+real	0m7.375s
+user	0m1.219s
+sys	0m0.285s

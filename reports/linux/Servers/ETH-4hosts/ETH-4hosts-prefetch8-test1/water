@@ -1,0 +1,20 @@
+/home/yangyupeng/jianode/water/water: invalid option -- 'P'
+/home/yangyupeng/jianode/water/water: invalid option -- 'P'
+/home/yangyupeng/jianode/water/water: invalid option -- 'P'
+
+TEMPERATURE                =   298.00 K
+DENSITY                    =  0.99800 G/C.C.
+NUMBER OF MOLECULES        =      288
+NUMBER OF PROCESSORS       =        4
+TIME STEP                  = 1.50e-16 SEC
+ORDER USED TO SOLVE F=MA   =        6 
+NO. OF TIME STEPS          =        5 
+FREQUENCY OF DATA SAVING   =       -1 
+FREQUENCY TO WRITE RST FILE=     3000 
+SPHERICAL CUTOFF RADIUS    =  10.2570 ANGSTROM
+***** NEW RUN STARTING FROM COORDINATES OF WATERS
+run.sh: line 11: 1868467 Segmentation fault      (core dumped) ./"$1"
+
+real	0m4.378s
+user	0m0.766s
+sys	0m0.192s

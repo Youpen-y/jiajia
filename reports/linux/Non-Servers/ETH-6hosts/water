@@ -1,0 +1,119 @@
+/home/yangyupeng/jianode/water/water: invalid option -- 'P'
+/home/yangyupeng/jianode/water/water: invalid option -- 'P'
+/home/yangyupeng/jianode/water/water: invalid option -- 'P'
+/home/yangyupeng/jianode/water/water: invalid option -- 'P'
+/home/yangyupeng/jianode/water/water: invalid option -- 'P'
+
+TEMPERATURE                =   298.00 K
+DENSITY                    =  0.99800 G/C.C.
+NUMBER OF MOLECULES        =      288
+NUMBER OF PROCESSORS       =        6
+TIME STEP                  = 1.50e-16 SEC
+ORDER USED TO SOLVE F=MA   =        6 
+NO. OF TIME STEPS          =        5 
+FREQUENCY OF DATA SAVING   =       -1 
+FREQUENCY TO WRITE RST FILE=     3000 
+SPHERICAL CUTOFF RADIUS    =  10.2570 ANGSTROM
+***** NEW RUN STARTING FROM COORDINATES OF WATERS
+         1        5.95324      0.00528     28.28801      0.06081
+           34.307       1182.71116       -102.76671
+         2       14.52687      0.02992     19.69674      0.06203
+           34.316       2034.35800        -94.77733
+         3       21.34639      0.09227     12.74081      0.06397
+           34.243       2769.84436        -87.04731
+         4       26.37908      0.21914      7.66636      0.06660
+           34.331       3387.54411        -80.56737
+         5       27.64032      0.53864     -5.81920      0.06911
+           22.429       3808.27752        -74.99403
+
+Exited Happily with XTT 22.4289
+Elapsed time: 4.04 seconds
+===============================================
+system setting info on host [0]
+jia_pid (current host id) : 0
+hostc   (total host count): 6
+host 0: 10.208.130.245 yangyupeng 	***
+host 1: 10.208.130.247 yangyupeng 	***
+host 2: 10.208.130.249 yangyupeng 	***
+host 3: 10.208.129.87 yangyupeng 	***
+host 4: 10.208.129.89 yangyupeng 	***
+host 5: 10.208.129.90 yangyupeng 	***
+optionc: 5
+option 0: system_mode = hybrid
+option 1: comm_type = udp
+option 2: global_start_addr = 0x400000000000
+option 3: msg_buffer_size = 16
+option 4: msg_queue_size = 32
+===============================================
+
+***JIAJIA---Software DSM***
+***Cachepages = 1024  Pagesize=4096***
+
+*********Total of 6 hosts found!**********
+
+Start to copy system files to slaves!
+Copy files to yangyupeng@10.208.130.247.
+Copy files to yangyupeng@10.208.130.249.
+Copy files to yangyupeng@10.208.129.87.
+Copy files to yangyupeng@10.208.129.89.
+Copy files to yangyupeng@10.208.129.90.
+Remote copy succeed!
+
+Start to create processes on slaves!
+
+Starting CMD ssh yangyupeng@10.208.130.247 '~/jianode/water/water -P 27035 &' on host 10.208.130.247
+Starting CMD ssh yangyupeng@10.208.130.249 '~/jianode/water/water -P 27035 &' on host 10.208.130.249
+Starting CMD ssh yangyupeng@10.208.129.87 '~/jianode/water/water -P 27035 &' on host 10.208.129.87
+Starting CMD ssh yangyupeng@10.208.129.89 '~/jianode/water/water -P 27035 &' on host 10.208.129.89
+Starting CMD ssh yangyupeng@10.208.129.90 '~/jianode/water/water -P 27035 &' on host 10.208.129.90
+Using 6 procs on 5 steps of 288 mols
+
+Shared Memory (4096-byte pages) : 8388608 (total) 30 (used)
+Print stats
+##########################  JIAJIA STATISTICS  ###########################
+           hosts -->        0        1        2        3        4        5      total
+--------------------------------------------------------------------------
+Msgs Sent          =     1818      499      501      487      627      451      4383 
+Msgs Received      =     1882      529      501      457      593      421      4383 
+Bytes Sent         =  2099632   156016   144392   165452   167672   166776   2899940 
+Bytes Received     =   772292   376476   339160   366396   376468   333812   2564604 
+SEGVs (local)      =      105        0        0        0        0        0       105 
+SEGVs (remote)     =        0      245      260      255      255      230      1245 
+SIGIOs (total)     =        0        0        0        0        0        0         0 
+SIGIOs (user)      =        0        0        0        0        0        0         0 
+SIGIOs (Syn.)      =        0        0        0        0        0        0         0 
+SIGIOs (SEGV)      =        0        0        0        0        0        0         0 
+Barriers           =       35       35       35       35       35       35        35 
+Locks              =       55       55       55       55       55       55       330 
+Getp Reqs          =        0      237      254      255      255      219      1220 
+Diff Msgs.         =      380        0        0        0        0        0       380 
+MWdiffs            =     1263        0        0        0        0        0      1263 
+Invalidate         =        0      241      259      262      262      224      1248 
+Replaced RO pages  =        0        0        0        0        0        0         0 
+Replaced RW pages  =        0        0        0        0        0        0         0 
+Mig in pages       =        0        0        0        0        0        0         0 
+Mig out pages      =        0        0        0        0        0        0         0 
+Resent Msgs        =        0        0        0        0        0        0         0 
+Large message      =      268       10       10       10       10       10       318 
+Small message      =     1077      513      500      471      525      435      3521 
+-------------------------------------------------------------------------- (ms) 
+Barrier time       =  3722.77  2260.50  1899.28   621.57  1005.28   714.48 
+Lock time          =   300.06   623.09   820.18  1006.77  1015.69  1005.53 
+Unlock time        =     1.04   197.43   161.90   263.31   189.44   313.96 
+SEGV time (local)  =     1.13     0.00     0.00     0.00     0.00     0.00 
+SEGV time (remote) =     0.00   942.70  1140.41  2081.56  1771.36  1928.70 
+SIGIO time (user)  =     0.00     0.00     0.00     0.00     0.00     0.00 
+SIGIO time (Syn.)  =     0.00     0.00     0.00     0.00     0.00     0.00 
+SIGIO time (SEGV)  =     0.00     0.00     0.00     0.00     0.00     0.00 
+Encode diff time   =     0.00     2.17     2.12     1.81     2.01     1.56 
+Decode diff time   =    23.84     0.00     0.00     0.00     0.00     0.00 
+Wait time          =     0.00     0.00     0.00     0.00     0.00     0.00 
+--------------------------------------------------------------------------
+SEGV time          =    64.13  1089.69  1296.41  2234.56  1924.36  2066.70 
+Syn. time          =  4023.87  3081.01  2881.37  1891.66  2210.42  2033.97 
+Server time        =     0.00     0.00     0.00     0.00     0.00     0.00 
+##########################################################################
+
+real	0m13.728s
+user	0m7.496s
+sys	0m3.780s

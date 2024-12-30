@@ -1,0 +1,152 @@
+tsp:
+	-n: number of hosts
+	-s: start node
+	-f: size (filename)
+	-r: size to recursively solve
+	-d: debug mode
+	-D: debug the priority queue
+	-S: run silently
+/home/yangyupeng/jianode/tsp/tsp: invalid option -- 'P'
+/home/yangyupeng/jianode/tsp/tsp: invalid option -- 'P'
+/home/yangyupeng/jianode/tsp/tsp: invalid option -- 'P'
+MinTourLen: 2000000 (old: 0): 
+MinTourLen: 507 (old: 0): 
+MinTourLen: 481 (old: 0): 
+MinTourLen: 434 (old: 0): 
+MinTourLen: 426 (old: 0): 
+MinTourLen: 411 (old: 0): 
+MinTourLen: 410 (old: 0): 
+MinTourLen: 409 (old: 0): 
+MinTourLen: 404 (old: 0): 
+MinTourLen: 398 (old: 0): 
+MinTourLen: 393 (old: 0): 
+MinTourLen: 392 (old: 0): 
+MinTourLen: 378 (old: 0): 
+MinTourLen: 372 (old: 0): 
+MinTourLen: 370 (old: 0): 
+MinTourLen: 355 (old: 0): 
+MinTourLen: 345 (old: 0): 
+MinTourLen: 343 (old: 0): 
+MinTourLen: 340 (old: 0): 
+MinTourLen: 336 (old: 0): 
+MinTourLen: 320 (old: 0): 
+MinTourLen: 317 (old: 0): 
+MinTourLen: 316 (old: 0): 
+MinTourLen: 308 (old: 0): 
+MinTourLen: 307 (old: 0): 
+MinTourLen: 301 (old: 0): 
+MinTourLen: 296 (old: 0): 
+MinTourLen: 290 (old: 0): 
+MinTourLen: 283 (old: 0): 
+MinTourLen: 273 (old: 0): 
+MinTourLen: 269 (old: 0): 
+MinTourLen: 267 (old: 0): 
+MinTourLen: 252 (old: 0): 
+MinTourLen: 251 (old: 0): 
+MinTourLen: 249 (old: 0): 
+MinTourLen: 238 (old: 0): 
+MinTourLen: 234 (old: 0): 
+MinTourLen: 187 (old: 0): 
+MinTourLen: 184 (old: 0): 
+MinTourLen: 150 (old: 0): 
+Elapsed time: 17.21 seconds
+
+-----------------
+
+===============================================
+system setting info on host [0]
+jia_pid (current host id) : 0
+hostc   (total host count): 4
+host 0: 10.208.130.245 yangyupeng 	***
+host 1: 10.208.130.247 yangyupeng 	***
+host 2: 10.208.130.249 yangyupeng 	***
+host 3: 10.208.129.87 yangyupeng 	***
+optionc: 8
+option 0: system_mode = hybrid
+option 1: comm_type = udp
+option 2: global_start_addr = 0x400000000000
+option 3: msg_buffer_size = 16
+option 4: msg_queue_size = 32
+option 5: prefetch = on
+option 6: prefetch_pages = 0
+option 7: max_checking_pages = 10
+===============================================
+
+***JIAJIA---Software DSM***
+***Cachepages = 1024  Pagesize=4096***
+
+*********Total of 4 hosts found!**********
+
+Start to copy system files to slaves!
+Copy files to yangyupeng@10.208.130.247.
+Copy files to yangyupeng@10.208.130.249.
+Copy files to yangyupeng@10.208.129.87.
+Remote copy succeed!
+
+Start to create processes on slaves!
+
+Starting CMD ssh yangyupeng@10.208.130.247 '~/jianode/tsp/tsp -P 10311 &' on host 10.208.130.247
+Starting CMD ssh yangyupeng@10.208.130.249 '~/jianode/tsp/tsp -P 10311 &' on host 10.208.130.249
+Starting CMD ssh yangyupeng@10.208.129.87 '~/jianode/tsp/tsp -P 10311 &' on host 10.208.129.87
+Elapsed time: 17.21 seconds
+
+-----------------
+
+	[MINIMUM TOUR LENGTH: 149]
+
+MINIMUM TOUR:
+
+	 0 - 18 - 10 -  3 -  6 - 15 - 12 -  7 -  5 -  2
+	13 - 17 -  1 - 14 -  8 - 11 -  9 - 16 -  4 -  0
+
+
+Shared Memory (4096-byte pages) : 8388608 (total) 197 (used)
+Print stats
+#################  JIAJIA STATISTICS  ##################
+           hosts -->        0        1        2        3      total
+--------------------------------------------------------
+Msgs Sent          =     9225     3434     3340     3206     19205 
+Msgs Received      =     9017     3887     3249     3052     19205 
+Bytes Sent         = 34444852   311836   250676   241836  35249200 
+Bytes Received     =   641124 11536080 11663780 11376996  35217980 
+SEGVs (local)      =     1107        0        0        0      1107 
+SEGVs (remote)     =        0     2842     2898     2826      8566 
+SIGIOs (total)     =        0        0        0        0         0 
+SIGIOs (user)      =        0        0        0        0         0 
+SIGIOs (Syn.)      =        0        0        0        0         0 
+SIGIOs (SEGV)      =        0        0        0        0         0 
+Barriers           =        2        2        2        2         2 
+Locks              =      208      167      163      154       692 
+Getp Reqs          =        0     2764     2806     2738      8308 
+Prefetch Pages     =        0        0        0        0         0 
+Diff Msgs.         =      492        0        0        0       492 
+MWdiffs            =     8290        0        0        0      8290 
+Invalidate         =        0     2763     2805     2737      8305 
+Replaced RO pages  =        0        0        0        0         0 
+Replaced RW pages  =        0        0        0        0         0 
+Mig in pages       =        0        0        0        0         0 
+Mig out pages      =        0        0        0        0         0 
+Resent Msgs        =        0        0        0        0         0 
+Large message      =     8308        1        2        4      8315 
+Small message      =      910     3240     3138     2968     10256 
+-------------------------------------------------------- (ms) 
+Barrier time       =    28.50    12.29     7.13    20.02 
+Lock time          = 16274.51 12786.74 12759.10  7971.92 
+Unlock time        =     7.82   290.55   285.15   527.36 
+SEGV time (local)  =    10.79     0.00     0.00     0.00 
+SEGV time (remote) =     0.00  3448.24  3519.78  7996.37 
+SIGIO time (user)  =     0.00     0.00     0.00     0.00 
+SIGIO time (Syn.)  =     0.00     0.00     0.00     0.00 
+SIGIO time (SEGV)  =     0.00     0.00     0.00     0.00 
+Encode diff time   =     0.00    18.37    14.78    16.78 
+Decode diff time   =   149.86     0.00     0.00     0.00 
+Wait time          =     0.00     0.00     0.00     0.00 
+--------------------------------------------------------
+SEGV time          =   674.99  5153.44  5258.58  9691.97 
+Syn. time          = 16310.84 13089.58 13051.38  8519.30 
+Server time        =     0.00     0.00     0.00     0.00 
+########################################################
+
+real	0m21.501s
+user	0m18.691s
+sys	0m2.229s

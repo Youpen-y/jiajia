@@ -1,0 +1,81 @@
+===============================================
+system setting info on host [0]
+jia_pid (current host id) : 0
+hostc   (total host count): 3
+host 0: 10.90.50.80 yongy 	***
+host 1: 10.90.50.196 yyp 	***
+host 2: 10.90.50.192 yyp 	***
+optionc: 5
+option 0: system_mode = hybrid
+option 1: comm_type = udp
+option 2: global_start_addr = 0x400000000000
+option 3: msg_buffer_size = 16
+option 4: msg_queue_size = 32
+===============================================
+
+***JIAJIA---Software DSM***
+***Cachepages = 1024  Pagesize=4096***
+
+*********Total of 3 hosts found!**********
+
+Start to copy system files to slaves!
+Copy files to yyp@10.90.50.196.
+Copy files to yyp@10.90.50.192.
+Remote copy succeed!
+
+Start to create processes on slaves!
+
+Starting CMD ssh yyp@10.90.50.196 '~/jianode/pi/pi -P 1328d &' on host 10.90.50.196
+Starting CMD ssh yyp@10.90.50.192 '~/jianode/pi/pi -P 1328d &' on host 10.90.50.192
+pi is approximately 3.1415906535889047, Error is 0.0000020000008885
+Elapsed time = 0.000000
+
+Shared Memory (4096-byte pages) : 8388608 (total) 1 (used)
+Print stats
+############  JIAJIA STATISTICS  ##############
+           hosts -->        0        1        2      total
+-----------------------------------------------
+Msgs Sent          =       10       11        8        29 
+Msgs Received      =       10       13        7        30 
+Bytes Sent         =      320      356      268       944 
+Bytes Received     =      412     4592     4364      9368 
+SEGVs (local)      =        2        0        0         2 
+SEGVs (remote)     =        0        2        2         4 
+SIGIOs (total)     =        0        0        0         0 
+SIGIOs (user)      =        0        0        0         0 
+SIGIOs (Syn.)      =        0        0        0         0 
+SIGIOs (SEGV)      =        0        0        0         0 
+Barriers           =        3        3        3         3 
+Locks              =        1        1        1         3 
+Getp Reqs          =        0        1        1         2 
+Diff Msgs.         =        2        0        0         2 
+MWdiffs            =        2        0        0         2 
+Invalidate         =        0        1        1         2 
+Replaced RO pages  =        0        0        0         0 
+Replaced RW pages  =        0        0        0         0 
+Mig in pages       =        0        0        0         0 
+Mig out pages      =        0        0        0         0 
+Resent Msgs        =        0        0        0         0 
+Large message      =        2        0        0         2 
+Small message      =       10       20        8        38 
+----------------------------------------------- (ms) 
+Barrier time       =    62.18   342.62    97.39 
+Lock time          =     3.84     1.43    15.43 
+Unlock time        =     0.07     1.42    13.31 
+SEGV time (local)  =     0.04     0.00     0.00 
+SEGV time (remote) =     0.00     1.42    10.03 
+SIGIO time (user)  =     0.00     0.00     0.00 
+SIGIO time (Syn.)  =     0.00     0.00     0.00 
+SIGIO time (SEGV)  =     0.00     0.00     0.00 
+Encode diff time   =     0.00     0.00     0.00 
+Decode diff time   =     0.02     0.00     0.00 
+Wait time          =     0.00     0.00     0.00 
+-----------------------------------------------
+SEGV time          =     1.24     2.62    11.23 
+Syn. time          =    66.09   345.47   126.12 
+Server time        =     0.00     0.00     0.00 
+###############################################
+
+real	0m2.091s
+user	0m0.422s
+sys	0m0.160s

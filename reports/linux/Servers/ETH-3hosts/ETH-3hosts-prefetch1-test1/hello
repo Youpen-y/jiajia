@@ -1,0 +1,284 @@
+===============================================
+system setting info on host [0]
+jia_pid (current host id) : 0
+hostc   (total host count): 3
+host 0: 10.208.130.245 yangyupeng 	***
+host 1: 10.208.130.247 yangyupeng 	***
+host 2: 10.208.130.249 yangyupeng 	***
+optionc: 8
+option 0: system_mode = hybrid
+option 1: comm_type = udp
+option 2: global_start_addr = 0x400000000000
+option 3: msg_buffer_size = 16
+option 4: msg_queue_size = 32
+option 5: prefetch = on
+option 6: prefetch_pages = 1
+option 7: max_checking_pages = 10
+===============================================
+
+***JIAJIA---Software DSM***
+***Cachepages = 1024  Pagesize=4096***
+
+*********Total of 3 hosts found!**********
+
+Start to copy system files to slaves!
+Copy files to yangyupeng@10.208.130.247.
+Copy files to yangyupeng@10.208.130.249.
+Remote copy succeed!
+
+Start to create processes on slaves!
+
+Starting CMD ssh yangyupeng@10.208.130.247 '~/jianode/hello/hello -P 19936 &' on host 10.208.130.247
+Starting CMD ssh yangyupeng@10.208.130.249 '~/jianode/hello/hello -P 19936 &' on host 10.208.130.249
+Hello from master, Number of processes is: 3
+arr[0] = 3
+arr[1] = 3
+arr[2] = 3
+arr[3] = 3
+arr[4] = 3
+arr[5] = 3
+arr[6] = 3
+arr[7] = 3
+arr[8] = 3
+arr[9] = 3
+arr[10] = 3
+arr[11] = 3
+arr[12] = 3
+arr[13] = 3
+arr[14] = 3
+arr[15] = 3
+arr[16] = 3
+arr[17] = 3
+arr[18] = 3
+arr[19] = 3
+arr[20] = 3
+arr[21] = 3
+arr[22] = 3
+arr[23] = 3
+arr[24] = 3
+arr[25] = 3
+arr[26] = 3
+arr[27] = 3
+arr[28] = 3
+arr[29] = 3
+arr[30] = 3
+arr[31] = 3
+arr[32] = 3
+arr[33] = 3
+arr[34] = 3
+arr[35] = 3
+arr[36] = 3
+arr[37] = 3
+arr[38] = 3
+arr[39] = 3
+arr[40] = 3
+arr[41] = 3
+arr[42] = 3
+arr[43] = 3
+arr[44] = 3
+arr[45] = 3
+arr[46] = 3
+arr[47] = 3
+arr[48] = 3
+arr[49] = 3
+arr[50] = 3
+arr[51] = 3
+arr[52] = 3
+arr[53] = 3
+arr[54] = 3
+arr[55] = 3
+arr[56] = 3
+arr[57] = 3
+arr[58] = 3
+arr[59] = 3
+arr[60] = 3
+arr[61] = 3
+arr[62] = 3
+arr[63] = 3
+arr[64] = 3
+arr[65] = 3
+arr[66] = 3
+arr[67] = 3
+arr[68] = 3
+arr[69] = 3
+arr[70] = 3
+arr[71] = 3
+arr[72] = 3
+arr[73] = 3
+arr[74] = 3
+arr[75] = 3
+arr[76] = 3
+arr[77] = 3
+arr[78] = 3
+arr[79] = 3
+arr[80] = 3
+arr[81] = 3
+arr[82] = 3
+arr[83] = 3
+arr[84] = 3
+arr[85] = 3
+arr[86] = 3
+arr[87] = 3
+arr[88] = 3
+arr[89] = 3
+arr[90] = 3
+arr[91] = 3
+arr[92] = 3
+arr[93] = 3
+arr[94] = 3
+arr[95] = 3
+arr[96] = 3
+arr[97] = 3
+arr[98] = 3
+arr[99] = 3
+arr[100] = 3
+arr[101] = 3
+arr[102] = 3
+arr[103] = 3
+arr[104] = 3
+arr[105] = 3
+arr[106] = 3
+arr[107] = 3
+arr[108] = 3
+arr[109] = 3
+arr[110] = 3
+arr[111] = 3
+arr[112] = 3
+arr[113] = 3
+arr[114] = 3
+arr[115] = 3
+arr[116] = 3
+arr[117] = 3
+arr[118] = 3
+arr[119] = 3
+arr[120] = 3
+arr[121] = 3
+arr[122] = 3
+arr[123] = 3
+arr[124] = 3
+arr[125] = 3
+arr[126] = 3
+arr[127] = 3
+arr[128] = 3
+arr[129] = 3
+arr[130] = 3
+arr[131] = 3
+arr[132] = 3
+arr[133] = 3
+arr[134] = 3
+arr[135] = 3
+arr[136] = 3
+arr[137] = 3
+arr[138] = 3
+arr[139] = 3
+arr[140] = 3
+arr[141] = 3
+arr[142] = 3
+arr[143] = 3
+arr[144] = 3
+arr[145] = 3
+arr[146] = 3
+arr[147] = 3
+arr[148] = 3
+arr[149] = 3
+arr[150] = 3
+arr[151] = 3
+arr[152] = 3
+arr[153] = 3
+arr[154] = 3
+arr[155] = 3
+arr[156] = 3
+arr[157] = 3
+arr[158] = 3
+arr[159] = 3
+arr[160] = 3
+arr[161] = 3
+arr[162] = 3
+arr[163] = 3
+arr[164] = 3
+arr[165] = 3
+arr[166] = 3
+arr[167] = 3
+arr[168] = 3
+arr[169] = 3
+arr[170] = 3
+arr[171] = 3
+arr[172] = 3
+arr[173] = 3
+arr[174] = 3
+arr[175] = 3
+arr[176] = 3
+arr[177] = 3
+arr[178] = 3
+arr[179] = 3
+arr[180] = 3
+arr[181] = 3
+arr[182] = 3
+arr[183] = 3
+arr[184] = 3
+arr[185] = 3
+arr[186] = 3
+arr[187] = 3
+arr[188] = 3
+arr[189] = 3
+arr[190] = 3
+arr[191] = 3
+arr[192] = 3
+arr[193] = 3
+arr[194] = 3
+arr[195] = 3
+arr[196] = 3
+arr[197] = 3
+arr[198] = 3
+arr[199] = 3
+
+Shared Memory (4096-byte pages) : 8388608 (total) 196 (used)
+Print stats
+############  JIAJIA STATISTICS  ##############
+           hosts -->        0        1        2      total
+-----------------------------------------------
+Msgs Sent          =      244      129      124       497 
+Msgs Received      =      247      124      123       494 
+Bytes Sent         =  1531756     7224     4708   1543688 
+Bytes Received     =  1621252   813460   811072   3245784 
+SEGVs (local)      =      392        0        0       392 
+SEGVs (remote)     =        0      294      294       588 
+SIGIOs (total)     =        0        0        0         0 
+SIGIOs (user)      =        0        0        0         0 
+SIGIOs (Syn.)      =        0        0        0         0 
+SIGIOs (SEGV)      =        0        0        0         0 
+Barriers           =        1        1        1         1 
+Locks              =        1        1        1         3 
+Getp Reqs          =        0       98       98       196 
+Prefetch Pages     =        0       98       98       196 
+Diff Msgs.         =       44        0        0        44 
+MWdiffs            =      392        0        0       392 
+Invalidate         =        0      196      196       392 
+Replaced RO pages  =        0        0        0         0 
+Replaced RW pages  =        0        0        0         0 
+Mig in pages       =        0        0        0         0 
+Mig out pages      =        0        0        0         0 
+Resent Msgs        =        0        4        0         4 
+Large message      =      196       22       22       240 
+Small message      =       50      104      100       254 
+----------------------------------------------- (ms) 
+Barrier time       =   162.53     2.19   168.66 
+Lock time          =   217.36   568.64     2.58 
+Unlock time        =     1.02    32.65    37.39 
+SEGV time (local)  =     2.51     0.00     0.00 
+SEGV time (remote) =     0.00   126.53   175.35 
+SIGIO time (user)  =     0.00     0.00     0.00 
+SIGIO time (Syn.)  =     0.00     0.00     0.00 
+SIGIO time (SEGV)  =     0.00     0.00     0.00 
+Encode diff time   =     0.00     2.04     1.59 
+Decode diff time   =     3.72     0.00     0.00 
+Wait time          =     0.00     0.00     0.00 
+-----------------------------------------------
+SEGV time          =   237.71   302.93   351.75 
+Syn. time          =   380.91   603.48   208.63 
+Server time        =     0.00     0.00     0.00 
+###############################################
+
+real	0m3.181s
+user	0m0.891s
+sys	0m0.197s

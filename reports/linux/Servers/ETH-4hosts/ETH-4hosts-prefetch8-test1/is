@@ -1,0 +1,91 @@
+/home/yangyupeng/jianode/is/is: invalid option -- 'P'
+/home/yangyupeng/jianode/is/is: invalid option -- 'P'
+/home/yangyupeng/jianode/is/is: invalid option -- 'P'
+Performed 10 rankings in time:  0.371
+===============================================
+system setting info on host [0]
+jia_pid (current host id) : 0
+hostc   (total host count): 4
+host 0: 10.208.130.245 yangyupeng 	***
+host 1: 10.208.130.247 yangyupeng 	***
+host 2: 10.208.130.249 yangyupeng 	***
+host 3: 10.208.129.87 yangyupeng 	***
+optionc: 8
+option 0: system_mode = hybrid
+option 1: comm_type = udp
+option 2: global_start_addr = 0x400000000000
+option 3: msg_buffer_size = 16
+option 4: msg_queue_size = 32
+option 5: prefetch = on
+option 6: prefetch_pages = 8
+option 7: max_checking_pages = 10
+===============================================
+
+***JIAJIA---Software DSM***
+***Cachepages = 1024  Pagesize=4096***
+
+*********Total of 4 hosts found!**********
+
+Start to copy system files to slaves!
+Copy files to yangyupeng@10.208.130.247.
+Copy files to yangyupeng@10.208.130.249.
+Copy files to yangyupeng@10.208.129.87.
+Remote copy succeed!
+
+Start to create processes on slaves!
+
+Starting CMD ssh yangyupeng@10.208.130.247 '~/jianode/is/is -P 18144 &' on host 10.208.130.247
+Starting CMD ssh yangyupeng@10.208.130.249 '~/jianode/is/is -P 18144 &' on host 10.208.130.249
+Starting CMD ssh yangyupeng@10.208.129.87 '~/jianode/is/is -P 18144 &' on host 10.208.129.87
+key 0x7fc0a7200010, rank 0x7fc0a6c00010
+
+Shared Memory (4096-byte pages) : 8388608 (total) 1 (used)
+Print stats
+#################  JIAJIA STATISTICS  ##################
+           hosts -->        0        1        2        3      total
+--------------------------------------------------------
+Msgs Sent          =      247      100       97       93       537 
+Msgs Received      =      278       83       83       83       527 
+Bytes Sent         =    96136    32180    31928    31848    192092 
+Bytes Received     =   132716    85332    85412    85412    388872 
+SEGVs (local)      =       20        0        0        0        20 
+SEGVs (remote)     =        0       21       21       21        63 
+SIGIOs (total)     =        0        0        0        0         0 
+SIGIOs (user)      =        0        0        0        0         0 
+SIGIOs (Syn.)      =        0        0        0        0         0 
+SIGIOs (SEGV)      =        0        0        0        0         0 
+Barriers           =       32       32       32       32        32 
+Locks              =       10       10       10       10        40 
+Getp Reqs          =        0       20       20       20        60 
+Prefetch Pages     =        0        0        0        0         0 
+Diff Msgs.         =       60        0        0        0        60 
+MWdiffs            =       60        0        0        0        60 
+Invalidate         =        0       20       20       20        60 
+Replaced RO pages  =        0        0        0        0         0 
+Replaced RW pages  =        0        0        0        0         0 
+Mig in pages       =        0        0        0        0         0 
+Mig out pages      =        0        0        0        0         0 
+Resent Msgs        =        0        7        4        0        11 
+Large message      =       60        0        0        0        60 
+Small message      =      283       90       87       83       543 
+-------------------------------------------------------- (ms) 
+Barrier time       =   307.75  1002.00   648.73   617.73 
+Lock time          =   103.04    26.47    60.07    92.69 
+Unlock time        =     0.16    12.91    12.52    29.34 
+SEGV time (local)  =     0.20     0.00     0.00     0.00 
+SEGV time (remote) =     0.00    39.26    37.56    57.88 
+SIGIO time (user)  =     0.00     0.00     0.00     0.00 
+SIGIO time (Syn.)  =     0.00     0.00     0.00     0.00 
+SIGIO time (SEGV)  =     0.00     0.00     0.00     0.00 
+Encode diff time   =     0.00     0.40     0.25     0.20 
+Decode diff time   =     0.68     0.00     0.00     0.00 
+Wait time          =     0.00     0.00     0.00     0.00 
+--------------------------------------------------------
+SEGV time          =    12.20    51.86    50.16    70.48 
+Syn. time          =   410.94  1041.38   721.32   739.77 
+Server time        =     0.00     0.00     0.00     0.00 
+########################################################
+
+real	0m5.750s
+user	0m2.317s
+sys	0m0.240s

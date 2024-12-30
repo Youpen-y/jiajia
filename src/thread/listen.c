@@ -4,8 +4,6 @@
 #include "stat.h"
 #include "thread.h"
 #include "tools.h"
-#include <errno.h>
-#include <signal.h>
 #include <stdbool.h>
 #include <stdlib.h>
 #include <sys/epoll.h>
@@ -33,7 +31,7 @@ void *listen_thread(void *args) {
     }
 
     while (1) {
-        int nfds = epoll_wait(epollfd, events, Maxhosts, -1);
+        int nfds = epoll_wait(epollfd, events, Maxhosts, 0);
 
         for (int i = 0; i < nfds; i++) {
             int sockfd = events[i].data.fd;

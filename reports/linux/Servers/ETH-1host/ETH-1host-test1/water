@@ -1,0 +1,32 @@
+Assert0 error from host 0 ---
+req_fdcreate()-->bind()Unix Error: Address already in use
+===============================================
+system setting info on host [0]
+jia_pid (current host id) : 0
+hostc   (total host count): 1
+host 0: 10.208.130.245 yangyupeng 	***
+optionc: 8
+option 0: system_mode = hybrid
+option 1: comm_type = udp
+option 2: global_start_addr = 0x400000000000
+option 3: msg_buffer_size = 16
+option 4: msg_queue_size = 32
+option 5: prefetch = on
+option 6: prefetch_pages = 4
+option 7: max_checking_pages = 10
+===============================================
+
+***JIAJIA---Software DSM***
+***Cachepages = 1024  Pagesize=4096***
+
+*********Total of 1 hosts found!**********
+
+Start to copy system files to slaves!
+Remote copy succeed!
+
+Start to create processes on slaves!
+
+
+real	0m0.086s
+user	0m0.057s
+sys	0m0.029s

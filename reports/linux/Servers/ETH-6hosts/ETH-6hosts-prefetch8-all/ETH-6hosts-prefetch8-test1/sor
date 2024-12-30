@@ -1,0 +1,715 @@
+/home/yangyupeng/jianode/sor/sor: invalid option -- 'P'
+/home/yangyupeng/jianode/sor/sor: invalid option -- 'P'
+/home/yangyupeng/jianode/sor/sor: invalid option -- 'P'
+/home/yangyupeng/jianode/sor/sor: invalid option -- 'P'
+/home/yangyupeng/jianode/sor/sor: invalid option -- 'P'
+===============================================
+system setting info on host [0]
+jia_pid (current host id) : 0
+hostc   (total host count): 6
+host 0: 10.208.130.245 yangyupeng 	***
+host 1: 10.208.130.247 yangyupeng 	***
+host 2: 10.208.130.249 yangyupeng 	***
+host 3: 10.208.129.87 yangyupeng 	***
+host 4: 10.208.129.89 yangyupeng 	***
+host 5: 10.208.129.90 yangyupeng 	***
+optionc: 8
+option 0: system_mode = hybrid
+option 1: comm_type = udp
+option 2: global_start_addr = 0x400000000000
+option 3: msg_buffer_size = 16
+option 4: msg_queue_size = 32
+option 5: prefetch = on
+option 6: prefetch_pages = 8
+option 7: max_checking_pages = 10
+===============================================
+
+***JIAJIA---Software DSM***
+***Cachepages = 1024  Pagesize=4096***
+
+*********Total of 6 hosts found!**********
+
+Start to copy system files to slaves!
+Copy files to yangyupeng@10.208.130.247.
+Copy files to yangyupeng@10.208.130.249.
+Copy files to yangyupeng@10.208.129.87.
+Copy files to yangyupeng@10.208.129.89.
+Copy files to yangyupeng@10.208.129.90.
+Remote copy succeed!
+
+Start to create processes on slaves!
+
+Starting CMD ssh yangyupeng@10.208.130.247 '~/jianode/sor/sor -P 18833 &' on host 10.208.130.247
+Starting CMD ssh yangyupeng@10.208.130.249 '~/jianode/sor/sor -P 18833 &' on host 10.208.130.249
+Starting CMD ssh yangyupeng@10.208.129.87 '~/jianode/sor/sor -P 18833 &' on host 10.208.129.87
+Starting CMD ssh yangyupeng@10.208.129.89 '~/jianode/sor/sor -P 18833 &' on host 10.208.129.89
+Starting CMD ssh yangyupeng@10.208.129.90 '~/jianode/sor/sor -P 18833 &' on host 10.208.129.90
+red_[0] value is 0x400000000000
+black_[0] value is 0x400000001000
+red_[1] value is 0x400000002000
+black_[1] value is 0x400000003000
+red_[2] value is 0x400000004000
+black_[2] value is 0x400000005000
+red_[3] value is 0x400000006000
+black_[3] value is 0x400000007000
+red_[4] value is 0x400000008000
+black_[4] value is 0x400000009000
+red_[5] value is 0x40000000a000
+black_[5] value is 0x40000000b000
+red_[6] value is 0x40000000c000
+black_[6] value is 0x40000000d000
+red_[7] value is 0x40000000e000
+black_[7] value is 0x40000000f000
+red_[8] value is 0x400000010000
+black_[8] value is 0x400000011000
+red_[9] value is 0x400000012000
+black_[9] value is 0x400000013000
+red_[10] value is 0x400000014000
+black_[10] value is 0x400000015000
+red_[11] value is 0x400000016000
+black_[11] value is 0x400000017000
+red_[12] value is 0x400000018000
+black_[12] value is 0x400000019000
+red_[13] value is 0x40000001a000
+black_[13] value is 0x40000001b000
+red_[14] value is 0x40000001c000
+black_[14] value is 0x40000001d000
+red_[15] value is 0x40000001e000
+black_[15] value is 0x40000001f000
+red_[16] value is 0x400000020000
+black_[16] value is 0x400000021000
+red_[17] value is 0x400000022000
+black_[17] value is 0x400000023000
+red_[18] value is 0x400000024000
+black_[18] value is 0x400000025000
+red_[19] value is 0x400000026000
+black_[19] value is 0x400000027000
+red_[20] value is 0x400000028000
+black_[20] value is 0x400000029000
+red_[21] value is 0x40000002a000
+black_[21] value is 0x40000002b000
+red_[22] value is 0x40000002c000
+black_[22] value is 0x40000002d000
+red_[23] value is 0x40000002e000
+black_[23] value is 0x40000002f000
+red_[24] value is 0x400000030000
+black_[24] value is 0x400000031000
+red_[25] value is 0x400000032000
+black_[25] value is 0x400000033000
+red_[26] value is 0x400000034000
+black_[26] value is 0x400000035000
+red_[27] value is 0x400000036000
+black_[27] value is 0x400000037000
+red_[28] value is 0x400000038000
+black_[28] value is 0x400000039000
+red_[29] value is 0x40000003a000
+black_[29] value is 0x40000003b000
+red_[30] value is 0x40000003c000
+black_[30] value is 0x40000003d000
+red_[31] value is 0x40000003e000
+black_[31] value is 0x40000003f000
+red_[32] value is 0x400000040000
+black_[32] value is 0x400000041000
+red_[33] value is 0x400000042000
+black_[33] value is 0x400000043000
+red_[34] value is 0x400000044000
+black_[34] value is 0x400000045000
+red_[35] value is 0x400000046000
+black_[35] value is 0x400000047000
+red_[36] value is 0x400000048000
+black_[36] value is 0x400000049000
+red_[37] value is 0x40000004a000
+black_[37] value is 0x40000004b000
+red_[38] value is 0x40000004c000
+black_[38] value is 0x40000004d000
+red_[39] value is 0x40000004e000
+black_[39] value is 0x40000004f000
+red_[40] value is 0x400000050000
+black_[40] value is 0x400000051000
+red_[41] value is 0x400000052000
+black_[41] value is 0x400000053000
+red_[42] value is 0x400000054000
+black_[42] value is 0x400000055000
+red_[43] value is 0x400000056000
+black_[43] value is 0x400000057000
+red_[44] value is 0x400000058000
+black_[44] value is 0x400000059000
+red_[45] value is 0x40000005a000
+black_[45] value is 0x40000005b000
+red_[46] value is 0x40000005c000
+black_[46] value is 0x40000005d000
+red_[47] value is 0x40000005e000
+black_[47] value is 0x40000005f000
+red_[48] value is 0x400000060000
+black_[48] value is 0x400000061000
+red_[49] value is 0x400000062000
+black_[49] value is 0x400000063000
+red_[50] value is 0x400000064000
+black_[50] value is 0x400000065000
+red_[51] value is 0x400000066000
+black_[51] value is 0x400000067000
+red_[52] value is 0x400000068000
+black_[52] value is 0x400000069000
+red_[53] value is 0x40000006a000
+black_[53] value is 0x40000006b000
+red_[54] value is 0x40000006c000
+black_[54] value is 0x40000006d000
+red_[55] value is 0x40000006e000
+black_[55] value is 0x40000006f000
+red_[56] value is 0x400000070000
+black_[56] value is 0x400000071000
+red_[57] value is 0x400000072000
+black_[57] value is 0x400000073000
+red_[58] value is 0x400000074000
+black_[58] value is 0x400000075000
+red_[59] value is 0x400000076000
+black_[59] value is 0x400000077000
+red_[60] value is 0x400000078000
+black_[60] value is 0x400000079000
+red_[61] value is 0x40000007a000
+black_[61] value is 0x40000007b000
+red_[62] value is 0x40000007c000
+black_[62] value is 0x40000007d000
+red_[63] value is 0x40000007e000
+black_[63] value is 0x40000007f000
+red_[64] value is 0x400000080000
+black_[64] value is 0x400000081000
+red_[65] value is 0x400000082000
+black_[65] value is 0x400000083000
+red_[66] value is 0x400000084000
+black_[66] value is 0x400000085000
+red_[67] value is 0x400000086000
+black_[67] value is 0x400000087000
+red_[68] value is 0x400000088000
+black_[68] value is 0x400000089000
+red_[69] value is 0x40000008a000
+black_[69] value is 0x40000008b000
+red_[70] value is 0x40000008c000
+black_[70] value is 0x40000008d000
+red_[71] value is 0x40000008e000
+black_[71] value is 0x40000008f000
+red_[72] value is 0x400000090000
+black_[72] value is 0x400000091000
+red_[73] value is 0x400000092000
+black_[73] value is 0x400000093000
+red_[74] value is 0x400000094000
+black_[74] value is 0x400000095000
+red_[75] value is 0x400000096000
+black_[75] value is 0x400000097000
+red_[76] value is 0x400000098000
+black_[76] value is 0x400000099000
+red_[77] value is 0x40000009a000
+black_[77] value is 0x40000009b000
+red_[78] value is 0x40000009c000
+black_[78] value is 0x40000009d000
+red_[79] value is 0x40000009e000
+black_[79] value is 0x40000009f000
+red_[80] value is 0x4000000a0000
+black_[80] value is 0x4000000a1000
+red_[81] value is 0x4000000a2000
+black_[81] value is 0x4000000a3000
+red_[82] value is 0x4000000a4000
+black_[82] value is 0x4000000a5000
+red_[83] value is 0x4000000a6000
+black_[83] value is 0x4000000a7000
+red_[84] value is 0x4000000a8000
+black_[84] value is 0x4000000a9000
+red_[85] value is 0x4000000aa000
+black_[85] value is 0x4000000ab000
+red_[86] value is 0x4000000ac000
+black_[86] value is 0x4000000ad000
+red_[87] value is 0x4000000ae000
+black_[87] value is 0x4000000af000
+red_[88] value is 0x4000000b0000
+black_[88] value is 0x4000000b1000
+red_[89] value is 0x4000000b2000
+black_[89] value is 0x4000000b3000
+red_[90] value is 0x4000000b4000
+black_[90] value is 0x4000000b5000
+red_[91] value is 0x4000000b6000
+black_[91] value is 0x4000000b7000
+red_[92] value is 0x4000000b8000
+black_[92] value is 0x4000000b9000
+red_[93] value is 0x4000000ba000
+black_[93] value is 0x4000000bb000
+red_[94] value is 0x4000000bc000
+black_[94] value is 0x4000000bd000
+red_[95] value is 0x4000000be000
+black_[95] value is 0x4000000bf000
+red_[96] value is 0x4000000c0000
+black_[96] value is 0x4000000c1000
+red_[97] value is 0x4000000c2000
+black_[97] value is 0x4000000c3000
+red_[98] value is 0x4000000c4000
+black_[98] value is 0x4000000c5000
+red_[99] value is 0x4000000c6000
+black_[99] value is 0x4000000c7000
+red_[100] value is 0x4000000c8000
+black_[100] value is 0x4000000c9000
+red_[101] value is 0x4000000ca000
+black_[101] value is 0x4000000cb000
+red_[102] value is 0x4000000cc000
+black_[102] value is 0x4000000cd000
+red_[103] value is 0x4000000ce000
+black_[103] value is 0x4000000cf000
+red_[104] value is 0x4000000d0000
+black_[104] value is 0x4000000d1000
+red_[105] value is 0x4000000d2000
+black_[105] value is 0x4000000d3000
+red_[106] value is 0x4000000d4000
+black_[106] value is 0x4000000d5000
+red_[107] value is 0x4000000d6000
+black_[107] value is 0x4000000d7000
+red_[108] value is 0x4000000d8000
+black_[108] value is 0x4000000d9000
+red_[109] value is 0x4000000da000
+black_[109] value is 0x4000000db000
+red_[110] value is 0x4000000dc000
+black_[110] value is 0x4000000dd000
+red_[111] value is 0x4000000de000
+black_[111] value is 0x4000000df000
+red_[112] value is 0x4000000e0000
+black_[112] value is 0x4000000e1000
+red_[113] value is 0x4000000e2000
+black_[113] value is 0x4000000e3000
+red_[114] value is 0x4000000e4000
+black_[114] value is 0x4000000e5000
+red_[115] value is 0x4000000e6000
+black_[115] value is 0x4000000e7000
+red_[116] value is 0x4000000e8000
+black_[116] value is 0x4000000e9000
+red_[117] value is 0x4000000ea000
+black_[117] value is 0x4000000eb000
+red_[118] value is 0x4000000ec000
+black_[118] value is 0x4000000ed000
+red_[119] value is 0x4000000ee000
+black_[119] value is 0x4000000ef000
+red_[120] value is 0x4000000f0000
+black_[120] value is 0x4000000f1000
+red_[121] value is 0x4000000f2000
+black_[121] value is 0x4000000f3000
+red_[122] value is 0x4000000f4000
+black_[122] value is 0x4000000f5000
+red_[123] value is 0x4000000f6000
+black_[123] value is 0x4000000f7000
+red_[124] value is 0x4000000f8000
+black_[124] value is 0x4000000f9000
+red_[125] value is 0x4000000fa000
+black_[125] value is 0x4000000fb000
+red_[126] value is 0x4000000fc000
+black_[126] value is 0x4000000fd000
+red_[127] value is 0x4000000fe000
+black_[127] value is 0x4000000ff000
+red_[128] value is 0x400000100000
+black_[128] value is 0x400000101000
+red_[129] value is 0x400000102000
+black_[129] value is 0x400000103000
+red_[130] value is 0x400000104000
+black_[130] value is 0x400000105000
+red_[131] value is 0x400000106000
+black_[131] value is 0x400000107000
+red_[132] value is 0x400000108000
+black_[132] value is 0x400000109000
+red_[133] value is 0x40000010a000
+black_[133] value is 0x40000010b000
+red_[134] value is 0x40000010c000
+black_[134] value is 0x40000010d000
+red_[135] value is 0x40000010e000
+black_[135] value is 0x40000010f000
+red_[136] value is 0x400000110000
+black_[136] value is 0x400000111000
+red_[137] value is 0x400000112000
+black_[137] value is 0x400000113000
+red_[138] value is 0x400000114000
+black_[138] value is 0x400000115000
+red_[139] value is 0x400000116000
+black_[139] value is 0x400000117000
+red_[140] value is 0x400000118000
+black_[140] value is 0x400000119000
+red_[141] value is 0x40000011a000
+black_[141] value is 0x40000011b000
+red_[142] value is 0x40000011c000
+black_[142] value is 0x40000011d000
+red_[143] value is 0x40000011e000
+black_[143] value is 0x40000011f000
+red_[144] value is 0x400000120000
+black_[144] value is 0x400000121000
+red_[145] value is 0x400000122000
+black_[145] value is 0x400000123000
+red_[146] value is 0x400000124000
+black_[146] value is 0x400000125000
+red_[147] value is 0x400000126000
+black_[147] value is 0x400000127000
+red_[148] value is 0x400000128000
+black_[148] value is 0x400000129000
+red_[149] value is 0x40000012a000
+black_[149] value is 0x40000012b000
+red_[150] value is 0x40000012c000
+black_[150] value is 0x40000012d000
+red_[151] value is 0x40000012e000
+black_[151] value is 0x40000012f000
+red_[152] value is 0x400000130000
+black_[152] value is 0x400000131000
+red_[153] value is 0x400000132000
+black_[153] value is 0x400000133000
+red_[154] value is 0x400000134000
+black_[154] value is 0x400000135000
+red_[155] value is 0x400000136000
+black_[155] value is 0x400000137000
+red_[156] value is 0x400000138000
+black_[156] value is 0x400000139000
+red_[157] value is 0x40000013a000
+black_[157] value is 0x40000013b000
+red_[158] value is 0x40000013c000
+black_[158] value is 0x40000013d000
+red_[159] value is 0x40000013e000
+black_[159] value is 0x40000013f000
+red_[160] value is 0x400000140000
+black_[160] value is 0x400000141000
+red_[161] value is 0x400000142000
+black_[161] value is 0x400000143000
+red_[162] value is 0x400000144000
+black_[162] value is 0x400000145000
+red_[163] value is 0x400000146000
+black_[163] value is 0x400000147000
+red_[164] value is 0x400000148000
+black_[164] value is 0x400000149000
+red_[165] value is 0x40000014a000
+black_[165] value is 0x40000014b000
+red_[166] value is 0x40000014c000
+black_[166] value is 0x40000014d000
+red_[167] value is 0x40000014e000
+black_[167] value is 0x40000014f000
+red_[168] value is 0x400000150000
+black_[168] value is 0x400000151000
+red_[169] value is 0x400000152000
+black_[169] value is 0x400000153000
+red_[170] value is 0x400000154000
+black_[170] value is 0x400000155000
+red_[171] value is 0x400000156000
+black_[171] value is 0x400000157000
+red_[172] value is 0x400000158000
+black_[172] value is 0x400000159000
+red_[173] value is 0x40000015a000
+black_[173] value is 0x40000015b000
+red_[174] value is 0x40000015c000
+black_[174] value is 0x40000015d000
+red_[175] value is 0x40000015e000
+black_[175] value is 0x40000015f000
+red_[176] value is 0x400000160000
+black_[176] value is 0x400000161000
+red_[177] value is 0x400000162000
+black_[177] value is 0x400000163000
+red_[178] value is 0x400000164000
+black_[178] value is 0x400000165000
+red_[179] value is 0x400000166000
+black_[179] value is 0x400000167000
+red_[180] value is 0x400000168000
+black_[180] value is 0x400000169000
+red_[181] value is 0x40000016a000
+black_[181] value is 0x40000016b000
+red_[182] value is 0x40000016c000
+black_[182] value is 0x40000016d000
+red_[183] value is 0x40000016e000
+black_[183] value is 0x40000016f000
+red_[184] value is 0x400000170000
+black_[184] value is 0x400000171000
+red_[185] value is 0x400000172000
+black_[185] value is 0x400000173000
+red_[186] value is 0x400000174000
+black_[186] value is 0x400000175000
+red_[187] value is 0x400000176000
+black_[187] value is 0x400000177000
+red_[188] value is 0x400000178000
+black_[188] value is 0x400000179000
+red_[189] value is 0x40000017a000
+black_[189] value is 0x40000017b000
+red_[190] value is 0x40000017c000
+black_[190] value is 0x40000017d000
+red_[191] value is 0x40000017e000
+black_[191] value is 0x40000017f000
+red_[192] value is 0x400000180000
+black_[192] value is 0x400000181000
+red_[193] value is 0x400000182000
+black_[193] value is 0x400000183000
+red_[194] value is 0x400000184000
+black_[194] value is 0x400000185000
+red_[195] value is 0x400000186000
+black_[195] value is 0x400000187000
+red_[196] value is 0x400000188000
+black_[196] value is 0x400000189000
+red_[197] value is 0x40000018a000
+black_[197] value is 0x40000018b000
+red_[198] value is 0x40000018c000
+black_[198] value is 0x40000018d000
+red_[199] value is 0x40000018e000
+black_[199] value is 0x40000018f000
+red_[200] value is 0x400000190000
+black_[200] value is 0x400000191000
+red_[201] value is 0x400000192000
+black_[201] value is 0x400000193000
+red_[202] value is 0x400000194000
+black_[202] value is 0x400000195000
+red_[203] value is 0x400000196000
+black_[203] value is 0x400000197000
+red_[204] value is 0x400000198000
+black_[204] value is 0x400000199000
+red_[205] value is 0x40000019a000
+black_[205] value is 0x40000019b000
+red_[206] value is 0x40000019c000
+black_[206] value is 0x40000019d000
+red_[207] value is 0x40000019e000
+black_[207] value is 0x40000019f000
+red_[208] value is 0x4000001a0000
+black_[208] value is 0x4000001a1000
+red_[209] value is 0x4000001a2000
+black_[209] value is 0x4000001a3000
+red_[210] value is 0x4000001a4000
+black_[210] value is 0x4000001a5000
+red_[211] value is 0x4000001a6000
+black_[211] value is 0x4000001a7000
+red_[212] value is 0x4000001a8000
+black_[212] value is 0x4000001a9000
+red_[213] value is 0x4000001aa000
+black_[213] value is 0x4000001ab000
+red_[214] value is 0x4000001ac000
+black_[214] value is 0x4000001ad000
+red_[215] value is 0x4000001ae000
+black_[215] value is 0x4000001af000
+red_[216] value is 0x4000001b0000
+black_[216] value is 0x4000001b1000
+red_[217] value is 0x4000001b2000
+black_[217] value is 0x4000001b3000
+red_[218] value is 0x4000001b4000
+black_[218] value is 0x4000001b5000
+red_[219] value is 0x4000001b6000
+black_[219] value is 0x4000001b7000
+red_[220] value is 0x4000001b8000
+black_[220] value is 0x4000001b9000
+red_[221] value is 0x4000001ba000
+black_[221] value is 0x4000001bb000
+red_[222] value is 0x4000001bc000
+black_[222] value is 0x4000001bd000
+red_[223] value is 0x4000001be000
+black_[223] value is 0x4000001bf000
+red_[224] value is 0x4000001c0000
+black_[224] value is 0x4000001c1000
+red_[225] value is 0x4000001c2000
+black_[225] value is 0x4000001c3000
+red_[226] value is 0x4000001c4000
+black_[226] value is 0x4000001c5000
+red_[227] value is 0x4000001c6000
+black_[227] value is 0x4000001c7000
+red_[228] value is 0x4000001c8000
+black_[228] value is 0x4000001c9000
+red_[229] value is 0x4000001ca000
+black_[229] value is 0x4000001cb000
+red_[230] value is 0x4000001cc000
+black_[230] value is 0x4000001cd000
+red_[231] value is 0x4000001ce000
+black_[231] value is 0x4000001cf000
+red_[232] value is 0x4000001d0000
+black_[232] value is 0x4000001d1000
+red_[233] value is 0x4000001d2000
+black_[233] value is 0x4000001d3000
+red_[234] value is 0x4000001d4000
+black_[234] value is 0x4000001d5000
+red_[235] value is 0x4000001d6000
+black_[235] value is 0x4000001d7000
+red_[236] value is 0x4000001d8000
+black_[236] value is 0x4000001d9000
+red_[237] value is 0x4000001da000
+black_[237] value is 0x4000001db000
+red_[238] value is 0x4000001dc000
+black_[238] value is 0x4000001dd000
+red_[239] value is 0x4000001de000
+black_[239] value is 0x4000001df000
+red_[240] value is 0x4000001e0000
+black_[240] value is 0x4000001e1000
+red_[241] value is 0x4000001e2000
+black_[241] value is 0x4000001e3000
+red_[242] value is 0x4000001e4000
+black_[242] value is 0x4000001e5000
+red_[243] value is 0x4000001e6000
+black_[243] value is 0x4000001e7000
+red_[244] value is 0x4000001e8000
+black_[244] value is 0x4000001e9000
+red_[245] value is 0x4000001ea000
+black_[245] value is 0x4000001eb000
+red_[246] value is 0x4000001ec000
+black_[246] value is 0x4000001ed000
+red_[247] value is 0x4000001ee000
+black_[247] value is 0x4000001ef000
+red_[248] value is 0x4000001f0000
+black_[248] value is 0x4000001f1000
+red_[249] value is 0x4000001f2000
+black_[249] value is 0x4000001f3000
+red_[250] value is 0x4000001f4000
+black_[250] value is 0x4000001f5000
+red_[251] value is 0x4000001f6000
+black_[251] value is 0x4000001f7000
+red_[252] value is 0x4000001f8000
+black_[252] value is 0x4000001f9000
+red_[253] value is 0x4000001fa000
+black_[253] value is 0x4000001fb000
+red_[254] value is 0x4000001fc000
+black_[254] value is 0x4000001fd000
+red_[255] value is 0x4000001fe000
+black_[255] value is 0x4000001ff000
+
+
+after master handle first, going to barrier in the next
+88888888888888
+iteration 0
+iteration 1
+iteration 2
+iteration 3
+iteration 4
+iteration 5
+iteration 6
+iteration 7
+iteration 8
+iteration 9
+iteration 10
+iteration 11
+iteration 12
+iteration 13
+iteration 14
+iteration 15
+iteration 16
+iteration 17
+iteration 18
+iteration 19
+iteration 20
+iteration 21
+iteration 22
+iteration 23
+iteration 24
+iteration 25
+iteration 26
+iteration 27
+iteration 28
+iteration 29
+iteration 30
+iteration 31
+iteration 32
+iteration 33
+iteration 34
+iteration 35
+iteration 36
+iteration 37
+iteration 38
+iteration 39
+iteration 40
+iteration 41
+iteration 42
+iteration 43
+iteration 44
+iteration 45
+iteration 46
+iteration 47
+iteration 48
+iteration 49
+iteration 50
+iteration 51
+iteration 52
+iteration 53
+iteration 54
+iteration 55
+iteration 56
+iteration 57
+iteration 58
+iteration 59
+iteration 60
+iteration 61
+iteration 62
+iteration 63
+iteration 64
+iteration 65
+iteration 66
+iteration 67
+iteration 68
+iteration 69
+iteration 70
+iteration 71
+iteration 72
+iteration 73
+iteration 74
+iteration 75
+iteration 76
+iteration 77
+iteration 78
+iteration 79
+iteration 80
+iteration 81
+iteration 82
+iteration 83
+iteration 84
+iteration 85
+iteration 86
+iteration 87
+iteration 88
+iteration 89
+iteration 90
+iteration 91
+iteration 92
+iteration 93
+iteration 94
+iteration 95
+iteration 96
+iteration 97
+iteration 98
+iteration 99
+Elapsed time: 128.00 seconds
+99999999999999
+
+Shared Memory (4096-byte pages) : 8388608 (total) 512 (used)
+Print stats
+##########################  JIAJIA STATISTICS  ###########################
+           hosts -->        0        1        2        3        4        5      total
+--------------------------------------------------------------------------
+Msgs Sent          =     1204     1397     1002     1002     1806      809      7220 
+Msgs Received      =     1208     1397     1002     1002     1805      809      7223 
+Bytes Sent         =  2104332  9358136  8615096  9889736 10735596 10073808  50776704 
+Bytes Received     =  9998748  8804712  8385516  9203292  9041396  2753856  48187520 
+SEGVs (local)      =      238      282      280      278      278      276      1632 
+SEGVs (remote)     =      199      599      600      600      800      607      3405 
+SIGIOs (total)     =        0        0        0        0        0        0         0 
+SIGIOs (user)      =        0        0        0        0        0        0         0 
+SIGIOs (Syn.)      =        0        0        0        0        0        0         0 
+SIGIOs (SEGV)      =        0        0        0        0        0        0         0 
+Barriers           =      201      201      201      201      201      201       201 
+Locks              =        0        0        0        0        0        0         0 
+Getp Reqs          =      199      399      200      200      200        7      1205 
+Prefetch Pages     =     1592     1700     1600     1600     1600       23      8115 
+Diff Msgs.         =      398      199      200      200      200      200      1397 
+MWdiffs            =      804      199      399      599      599      799      3399 
+Invalidate         =      619      409      209      209      208        6      1660 
+Replaced RO pages  =        0        0        0        0        0        0         0 
+Replaced RW pages  =        0        0        0        0        0        0         0 
+Mig in pages       =        0        0        0        0        0        0         0 
+Mig out pages      =        0        0        0        0        0        0         0 
+Resent Msgs        =        0        0        0        0        0        0         0 
+Large message      =      206      397      400      384      400      400      2187 
+Small message      =     1000      996      600      616      606      406      4224 
+-------------------------------------------------------------------------- (ms) 
+Barrier time       =  2261.19  1735.47  1844.76  2298.15  2026.67  2471.76 
+Lock time          =     0.00     0.00     0.00     0.00     0.00     0.00 
+Unlock time        =     0.00     0.00     0.00     0.00     0.00     0.00 
+SEGV time (local)  =     1.55     2.25     2.33     2.99     3.60     2.91 
+SEGV time (remote) =   248.07   771.64   672.08   199.69   469.46    31.21 
+SIGIO time (user)  =     0.00     0.00     0.00     0.00     0.00     0.00 
+SIGIO time (Syn.)  =     0.00     0.00     0.00     0.00     0.00     0.00 
+SIGIO time (SEGV)  =     0.00     0.00     0.00     0.00     0.00     0.00 
+Encode diff time   =     2.79     7.78     4.29     3.36     4.32     3.16 
+Decode diff time   =     6.44     0.11     2.36     6.74     6.86     8.17 
+Wait time          =     0.00     0.00     0.00     0.00     0.00     0.00 
+--------------------------------------------------------------------------
+SEGV time          =   511.82  1302.50  1202.41   729.49  1119.86   563.92 
+Syn. time          =  2261.19  1735.47  1844.76  2298.15  2026.67  2471.76 
+Server time        =     0.00     0.00     0.00     0.00     0.00     0.00 
+##########################################################################
+
+real	0m10.219s
+user	0m4.141s
+sys	0m0.578s

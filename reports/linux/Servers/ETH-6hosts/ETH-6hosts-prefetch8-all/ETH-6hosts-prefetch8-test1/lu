@@ -1,0 +1,158 @@
+===============================================
+system setting info on host [0]
+jia_pid (current host id) : 0
+hostc   (total host count): 6
+host 0: 10.208.130.245 yangyupeng 	***
+host 1: 10.208.130.247 yangyupeng 	***
+host 2: 10.208.130.249 yangyupeng 	***
+host 3: 10.208.129.87 yangyupeng 	***
+host 4: 10.208.129.89 yangyupeng 	***
+host 5: 10.208.129.90 yangyupeng 	***
+optionc: 8
+option 0: system_mode = hybrid
+option 1: comm_type = udp
+option 2: global_start_addr = 0x400000000000
+option 3: msg_buffer_size = 16
+option 4: msg_queue_size = 32
+option 5: prefetch = on
+option 6: prefetch_pages = 8
+option 7: max_checking_pages = 10
+===============================================
+
+***JIAJIA---Software DSM***
+***Cachepages = 1024  Pagesize=4096***
+
+*********Total of 6 hosts found!**********
+
+Start to copy system files to slaves!
+Copy files to yangyupeng@10.208.130.247.
+Copy files to yangyupeng@10.208.130.249.
+Copy files to yangyupeng@10.208.129.87.
+Copy files to yangyupeng@10.208.129.89.
+Copy files to yangyupeng@10.208.129.90.
+Remote copy succeed!
+
+Start to create processes on slaves!
+
+Starting CMD ssh yangyupeng@10.208.130.247 '~/jianode/lu/lu -P 18557 &' on host 10.208.130.247
+Starting CMD ssh yangyupeng@10.208.130.249 '~/jianode/lu/lu -P 18557 &' on host 10.208.130.249
+Starting CMD ssh yangyupeng@10.208.129.87 '~/jianode/lu/lu -P 18557 &' on host 10.208.129.87
+Starting CMD ssh yangyupeng@10.208.129.89 '~/jianode/lu/lu -P 18557 &' on host 10.208.129.89
+Starting CMD ssh yangyupeng@10.208.129.90 '~/jianode/lu/lu -P 18557 &' on host 10.208.129.90
+
+Blocked Dense LU Factorization
+     1024 by 1024 Matrix
+     6 Processors
+     32 by 32 Element Blocks
+
+
+ enter barrier!
+ out barrier!
+ enter barrier!
+ out barrier!
+ enter barrier!
+ out barrier!
+***************************
+ enter barrier!
+ out barrier!
+ enter barrier Oh!
+ out barrier!
+ Enter Slavestart!
+K=0
+K=1
+K=2
+K=3
+K=4
+K=5
+K=6
+K=7
+K=8
+K=9
+K=10
+K=11
+K=12
+K=13
+K=14
+K=15
+K=16
+K=17
+K=18
+K=19
+K=20
+K=21
+K=22
+K=23
+K=24
+K=25
+K=26
+K=27
+K=28
+K=29
+K=30
+K=31
+ Out Slavestart!
+Elapsed time: 2.42 seconds
+*************************************************************************
+                            PROCESS STATISTICS
+              Total      Diagonal     Perimeter      Interior       Barrier
+ Proc         Time         Time         Time           Time          Time
+    0             0             0             0             0             0
+
+                            TIMING INFORMATION
+Start time                        :       1734315776
+Initialization finish time        :       1734315776
+Overall finish time               :       1734315776
+Total time with initialization    :                0
+Total time without initialization :                0
+
+
+Shared Memory (4096-byte pages) : 8388608 (total) 2060 (used)
+Print stats
+##########################  JIAJIA STATISTICS  ###########################
+           hosts -->        0        1        2        3        4        5      total
+--------------------------------------------------------------------------
+Msgs Sent          =     1184     1136     1095     1158     1421     1110      7104 
+Msgs Received      =     1188     1136     1095     1158     1419     1110      7106 
+Bytes Sent         = 20270832 19778744 18483560 20446108 16109532 17120740  112209516 
+Bytes Received     = 18929724 17265776 17817516 17636072 17972804 18815084  108436976 
+SEGVs (local)      =      977      971      876     1031     1021      921      5797 
+SEGVs (remote)     =      510      465      480      475      484      507      2921 
+SIGIOs (total)     =        0        0        0        0        0        0         0 
+SIGIOs (user)      =        0        0        0        0        0        0         0 
+SIGIOs (Syn.)      =        0        0        0        0        0        0         0 
+SIGIOs (SEGV)      =        0        0        0        0        0        0         0 
+Barriers           =       68       68       68       68       68       68        68 
+Locks              =        0        0        0        0        0        0         0 
+Getp Reqs          =      510      465      480      475      484      507      2921 
+Prefetch Pages     =     4080     3720     3840     3800     3872     4056     23368 
+Diff Msgs.         =       49       49       48       49       47       46       288 
+MWdiffs            =      497      499      447      507      491      430      2871 
+Invalidate         =      692      550      569      559      561      596      3527 
+Replaced RO pages  =        0        0        0        0        0        0         0 
+Replaced RW pages  =        0        0        0        0        0        0         0 
+Mig in pages       =        0        0        0        0        0        0         0 
+Mig out pages      =        0        0        0        0        0        0         0 
+Resent Msgs        =        0        0        0        0        0        0         0 
+Large message      =      506      505      452      517      500      441      2921 
+Small message      =      644      596      612      606      781      633      3872 
+-------------------------------------------------------------------------- (ms) 
+Barrier time       =  1147.05  1243.52  1248.86  1458.28  1446.12  1409.52 
+Lock time          =     0.00     0.00     0.00     0.00     0.00     0.00 
+Unlock time        =     0.00     0.00     0.00     0.00     0.00     0.00 
+SEGV time (local)  =     8.69     5.57     5.48    12.45    19.01    10.84 
+SEGV time (remote) =   975.99   974.62   992.26   732.65   729.39   796.21 
+SIGIO time (user)  =     0.00     0.00     0.00     0.00     0.00     0.00 
+SIGIO time (Syn.)  =     0.00     0.00     0.00     0.00     0.00     0.00 
+SIGIO time (SEGV)  =     0.00     0.00     0.00     0.00     0.00     0.00 
+Encode diff time   =     2.63     1.50     1.64     2.29     2.12     2.19 
+Decode diff time   =     1.51     1.25     1.62     1.36     1.49     1.35 
+Wait time          =     0.00     0.00     0.00     0.00     0.00     0.00 
+--------------------------------------------------------------------------
+SEGV time          =  1876.88  1841.78  1811.34  1648.70  1651.40  1663.85 
+Syn. time          =  1147.05  1243.52  1248.86  1458.28  1446.12  1409.52 
+Server time        =     0.00     0.00     0.00     0.00     0.00     0.00 
+##########################################################################
+
+real	0m9.904s
+user	0m3.879s
+sys	0m0.574s
