@@ -1,5 +1,5 @@
-#include "rdma.h"
 #include "global.h"
+#include "rdma.h"
 #include "setting.h"
 #include "tools.h"
 #include <arpa/inet.h>
@@ -54,8 +54,8 @@ void *tcp_server_thread(void *arg) {
         exit(EXIT_FAILURE);
     }
     log_out(3, "Server listening on <%s, %d>...\n",
-             system_setting.hosts[system_setting.jia_pid].ip,
-             ctx.tcp_port + server_id);
+            system_setting.hosts[system_setting.jia_pid].ip,
+            ctx.tcp_port + server_id);
 
     /* step 3: accept ANY_ADDR to set new fd */
     struct sockaddr_in client_addr = {0};
@@ -82,10 +82,10 @@ void *tcp_server_thread(void *arg) {
         }
     }
     log_out(3, "[%d]\t0x%04x\t0x%06x\t0x%06x\t%016llx:%016llx\n", server_id,
-           dest_info[server_id].lid, dest_info[server_id].qpn,
-           dest_info[server_id].psn,
-           dest_info[server_id].gid.global.subnet_prefix,
-           dest_info[server_id].gid.global.interface_id);
+            dest_info[server_id].lid, dest_info[server_id].qpn,
+            dest_info[server_id].psn,
+            dest_info[server_id].gid.global.subnet_prefix,
+            dest_info[server_id].gid.global.interface_id);
 
     /* step 5: close fd */
     close(new_socket);
@@ -239,7 +239,7 @@ void init_comm_qp_context(struct jia_context *ctx) {
         }
 
         attr.qp_state = IBV_QPS_RTR;
-        if (ibv_modify_qp(ctx->qp, &attr, IBV_QP_STATE | IBV_QP_QKEY)) {
+        if (ibv_modify_qp(ctx->qp, &attr, IBV_QP_STATE)) {
             log_err("Failed to modify QP to RTR");
         }
 
@@ -346,20 +346,20 @@ void init_ack_qp_context(struct jia_context *ctx) {
         attr.pkey_index = 0;
         attr.port_num = ctx->ib_port;
         attr.qkey = 0x11111111;
-        if (ibv_modify_qp(ctx->qp, &attr,
+        if (ibv_modify_qp(ctx->ack_qp, &attr,
                           IBV_QP_STATE | IBV_QP_PKEY_INDEX | IBV_QP_PORT |
                               IBV_QP_QKEY)) {
             log_err("Failed to modify QP to INIT");
         }
 
         attr.qp_state = IBV_QPS_RTR;
-        if (ibv_modify_qp(ctx->qp, &attr, IBV_QP_STATE | IBV_QP_QKEY)) {
+        if (ibv_modify_qp(ctx->ack_qp, &attr, IBV_QP_STATE)) {
             log_err("Failed to modify QP to RTR");
         }
 
         attr.qp_state = IBV_QPS_RTS;
         attr.sq_psn = 0;
-        if (ibv_modify_qp(ctx->qp, &attr, IBV_QP_STATE | IBV_QP_SQ_PSN)) {
+        if (ibv_modify_qp(ctx->ack_qp, &attr, IBV_QP_STATE | IBV_QP_SQ_PSN)) {
             log_err("Failed to modify QP to RTS");
         }
     }
