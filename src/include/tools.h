@@ -1,6 +1,6 @@
 #ifndef TOOLS_H
 #define TOOLS_H
-#include "rdma_comm.h"
+#include "rdma.h"
 #pragma once
 
 #include "mem.h"

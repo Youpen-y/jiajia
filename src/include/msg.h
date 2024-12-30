@@ -125,7 +125,6 @@ typedef struct msg_queue {
     slot_t *queue;    // msg queue
     int               size;     // size of queue(must be power of 2)
 
-    pthread_mutex_t   lock;         // lock for queue
     pthread_mutex_t   head_lock;    // lock for head
     pthread_mutex_t   tail_lock;    // lock for tail
     volatile unsigned               head;         // head

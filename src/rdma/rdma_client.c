@@ -1,4 +1,4 @@
-#include "rdma_comm.h"
+#include "rdma.h"
 #include "setting.h"
 #include "stat.h"
 #include "tools.h"

@@ -1,5 +1,5 @@
 #include "comm.h"
-#include "rdma_comm.h"
+#include "rdma.h"
 #include <pthread.h>
 #include <semaphore.h>
 #include <stdatomic.h>

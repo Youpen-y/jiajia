@@ -126,12 +126,6 @@ extern comm_manager_t comm_manager;
 void register_sigint_handler();
 
 /**
- * @brief initcomm -- initialize udp communication
- *
- */
-void initcomm();
-
-/**
  * @brief asendmsg() -- send msg to outqueue[outtail], and call outsend()
  *
  * @param msg msg that will be sent

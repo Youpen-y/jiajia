@@ -30,6 +30,12 @@ void *server_thread(void *args);
  */
 void *listen_thread(void *args);
 
+/**
+ * @brief initcomm -- initialize udp communication
+ *
+ */
+void initcomm();
+
 extern pthread_t client_tid;
 extern pthread_t server_tid;
 extern pthread_t listen_tid;

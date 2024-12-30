@@ -46,7 +46,7 @@
 #include "setting.h"
 #include "stat.h"
 #include "syn.h"
-#include "rdma_comm.h"
+#include "rdma.h"
 #include <bits/types/clockid_t.h>
 #include <libgen.h>
 #include <stdbool.h>

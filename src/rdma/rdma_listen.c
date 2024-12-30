@@ -1,4 +1,4 @@
-#include "rdma_comm.h"
+#include "rdma.h"
 #include "tools.h"
 #include <bits/pthreadtypes.h>
 #include <infiniband/verbs.h>

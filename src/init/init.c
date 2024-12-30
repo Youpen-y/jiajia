@@ -42,7 +42,7 @@
 #include "setting.h"
 #include "stat.h"
 #include "tools.h"
-#include "rdma_comm.h"
+#include "rdma.h"
 #include <libgen.h>
 
 extern void initmem();
