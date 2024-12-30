@@ -64,26 +64,27 @@ int post_recv() {
 // thread
 
 void *rdma_listen(void *arg) {
+    while (1) {
+        /* step 1: lock and enter inqueue to check if free slot number is
+         * greater than ctx.batching_num */
+        pthread_mutex_lock(&lock_listen);
 
-    /* step 1: lock and enter inqueue to check if free slot number is greater
-     * than ctx.batching_num */
-    pthread_mutex_lock(&lock_listen);
+        /* step 2: wait until free num is satisfied and then sub free_value */
+        if (atomic_load(&(ctx.inqueue->free_value)) < ctx.batching_num) {
+            pthread_cond_wait(&cond_listen, &lock_listen);
+        }
 
-    /* step 2: wait until free num is satisfied and then sub free_value */
-    if (atomic_load(&(ctx.inqueue->free_value)) < ctx.batching_num) {
-        pthread_cond_wait(&cond_listen, &lock_listen);
+        /* step 3: ibv_post_recv wr and then update free_value and busy_value */
+        post_recv();
+        atomic_fetch_sub(&(ctx.inqueue->free_value), ctx.batching_num);
+        atomic_fetch_add(&(ctx.inqueue->busy_value), ctx.batching_num);
+
+        /* step 4: cond signal ctx.inqueue's dequeue */
+        if (atomic_load(&(ctx.inqueue->busy_value)) > 0) {
+            pthread_cond_signal(&cond_server);
+        }
+
+        /* step 5: unlock ctx.inqueue */
+        pthread_mutex_unlock(&lock_listen);
     }
-
-    /* step 3: ibv_post_recv wr and then update free_value and busy_value */
-    post_recv();
-    atomic_fetch_sub(&(ctx.inqueue->free_value), ctx.batching_num);
-    atomic_fetch_add(&(ctx.inqueue->busy_value), ctx.batching_num);
-
-    /* step 4: cond signal ctx.inqueue's dequeue */
-    if (atomic_load(&(ctx.inqueue->busy_value)) > 0) {
-        pthread_cond_signal(&cond_server);
-    }
-
-    /* step 5: unlock ctx.inqueue */
-    pthread_mutex_unlock(&lock_listen);
 }
