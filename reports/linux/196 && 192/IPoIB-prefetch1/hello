@@ -1,0 +1,281 @@
+===============================================
+system setting info on host [0]
+jia_pid (current host id) : 0
+hostc   (total host count): 2
+host 0: 192.168.103.1 yyp 	***
+host 1: 192.168.103.2 yyp 	***
+optionc: 8
+option 0: system_mode = hybrid
+option 1: comm_type = udp
+option 2: global_start_addr = 0x400000000000
+option 3: msg_buffer_size = 16
+option 4: msg_queue_size = 32
+option 5: prefetch = on
+option 6: prefetch_pages = 1
+option 7: max_checking_pages = 10
+===============================================
+
+***JIAJIA---Software DSM***
+***Cachepages = 1024  Pagesize=4096***
+
+*********Total of 2 hosts found!**********
+
+Start to copy system files to slaves!
+Copy files to yyp@192.168.103.2.
+Remote copy succeed!
+
+Start to create processes on slaves!
+
+Starting CMD ssh yyp@192.168.103.2 '~/jianode/hello/hello -P 26361 &' on host 192.168.103.2
+Hello from master, Number of processes is: 2
+arr[0] = 2
+arr[1] = 2
+arr[2] = 2
+arr[3] = 2
+arr[4] = 2
+arr[5] = 2
+arr[6] = 2
+arr[7] = 2
+arr[8] = 2
+arr[9] = 2
+arr[10] = 2
+arr[11] = 2
+arr[12] = 2
+arr[13] = 2
+arr[14] = 2
+arr[15] = 2
+arr[16] = 2
+arr[17] = 2
+arr[18] = 2
+arr[19] = 2
+arr[20] = 2
+arr[21] = 2
+arr[22] = 2
+arr[23] = 2
+arr[24] = 2
+arr[25] = 2
+arr[26] = 2
+arr[27] = 2
+arr[28] = 2
+arr[29] = 2
+arr[30] = 2
+arr[31] = 2
+arr[32] = 2
+arr[33] = 2
+arr[34] = 2
+arr[35] = 2
+arr[36] = 2
+arr[37] = 2
+arr[38] = 2
+arr[39] = 2
+arr[40] = 2
+arr[41] = 2
+arr[42] = 2
+arr[43] = 2
+arr[44] = 2
+arr[45] = 2
+arr[46] = 2
+arr[47] = 2
+arr[48] = 2
+arr[49] = 2
+arr[50] = 2
+arr[51] = 2
+arr[52] = 2
+arr[53] = 2
+arr[54] = 2
+arr[55] = 2
+arr[56] = 2
+arr[57] = 2
+arr[58] = 2
+arr[59] = 2
+arr[60] = 2
+arr[61] = 2
+arr[62] = 2
+arr[63] = 2
+arr[64] = 2
+arr[65] = 2
+arr[66] = 2
+arr[67] = 2
+arr[68] = 2
+arr[69] = 2
+arr[70] = 2
+arr[71] = 2
+arr[72] = 2
+arr[73] = 2
+arr[74] = 2
+arr[75] = 2
+arr[76] = 2
+arr[77] = 2
+arr[78] = 2
+arr[79] = 2
+arr[80] = 2
+arr[81] = 2
+arr[82] = 2
+arr[83] = 2
+arr[84] = 2
+arr[85] = 2
+arr[86] = 2
+arr[87] = 2
+arr[88] = 2
+arr[89] = 2
+arr[90] = 2
+arr[91] = 2
+arr[92] = 2
+arr[93] = 2
+arr[94] = 2
+arr[95] = 2
+arr[96] = 2
+arr[97] = 2
+arr[98] = 2
+arr[99] = 2
+arr[100] = 2
+arr[101] = 2
+arr[102] = 2
+arr[103] = 2
+arr[104] = 2
+arr[105] = 2
+arr[106] = 2
+arr[107] = 2
+arr[108] = 2
+arr[109] = 2
+arr[110] = 2
+arr[111] = 2
+arr[112] = 2
+arr[113] = 2
+arr[114] = 2
+arr[115] = 2
+arr[116] = 2
+arr[117] = 2
+arr[118] = 2
+arr[119] = 2
+arr[120] = 2
+arr[121] = 2
+arr[122] = 2
+arr[123] = 2
+arr[124] = 2
+arr[125] = 2
+arr[126] = 2
+arr[127] = 2
+arr[128] = 2
+arr[129] = 2
+arr[130] = 2
+arr[131] = 2
+arr[132] = 2
+arr[133] = 2
+arr[134] = 2
+arr[135] = 2
+arr[136] = 2
+arr[137] = 2
+arr[138] = 2
+arr[139] = 2
+arr[140] = 2
+arr[141] = 2
+arr[142] = 2
+arr[143] = 2
+arr[144] = 2
+arr[145] = 2
+arr[146] = 2
+arr[147] = 2
+arr[148] = 2
+arr[149] = 2
+arr[150] = 2
+arr[151] = 2
+arr[152] = 2
+arr[153] = 2
+arr[154] = 2
+arr[155] = 2
+arr[156] = 2
+arr[157] = 2
+arr[158] = 2
+arr[159] = 2
+arr[160] = 2
+arr[161] = 2
+arr[162] = 2
+arr[163] = 2
+arr[164] = 2
+arr[165] = 2
+arr[166] = 2
+arr[167] = 2
+arr[168] = 2
+arr[169] = 2
+arr[170] = 2
+arr[171] = 2
+arr[172] = 2
+arr[173] = 2
+arr[174] = 2
+arr[175] = 2
+arr[176] = 2
+arr[177] = 2
+arr[178] = 2
+arr[179] = 2
+arr[180] = 2
+arr[181] = 2
+arr[182] = 2
+arr[183] = 2
+arr[184] = 2
+arr[185] = 2
+arr[186] = 2
+arr[187] = 2
+arr[188] = 2
+arr[189] = 2
+arr[190] = 2
+arr[191] = 2
+arr[192] = 2
+arr[193] = 2
+arr[194] = 2
+arr[195] = 2
+arr[196] = 2
+arr[197] = 2
+arr[198] = 2
+arr[199] = 2
+
+Shared Memory (4096-byte pages) : 8388608 (total) 196 (used)
+Print stats
+########  JIAJIA STATISTICS  #########
+           hosts -->        0        1      total
+--------------------------------------
+Msgs Sent          =      123      125       248 
+Msgs Received      =      124      123       247 
+Bytes Sent         =   751248     4740    755988 
+Bytes Received     =   811036   811072   1622108 
+SEGVs (local)      =      392        0       392 
+SEGVs (remote)     =        0      294       294 
+SIGIOs (total)     =        0        0         0 
+SIGIOs (user)      =        0        0         0 
+SIGIOs (Syn.)      =        0        0         0 
+SIGIOs (SEGV)      =        0        0         0 
+Barriers           =        1        1         1 
+Locks              =        1        1         2 
+Getp Reqs          =        0       98        98 
+Prefetch Pages     =        0       98        98 
+Diff Msgs.         =       22        0        22 
+MWdiffs            =      196        0       196 
+Invalidate         =        0        0         0 
+Replaced RO pages  =        0        0         0 
+Replaced RW pages  =        0        0         0 
+Mig in pages       =        0        0         0 
+Mig out pages      =        0        0         0 
+Resent Msgs        =        0        1         1 
+Large message      =       98       22       120 
+Small message      =       30      101       131 
+-------------------------------------- (ms) 
+Barrier time       =   102.67     0.25 
+Lock time          =     0.50   101.00 
+Unlock time        =     0.35     3.91 
+SEGV time (local)  =     1.59     0.00 
+SEGV time (remote) =     0.00    19.22 
+SIGIO time (user)  =     0.00     0.00 
+SIGIO time (Syn.)  =     0.00     0.00 
+SIGIO time (SEGV)  =     0.00     0.00 
+Encode diff time   =     0.00     0.44 
+Decode diff time   =     0.57     0.00 
+Wait time          =     0.00     0.00 
+--------------------------------------
+SEGV time          =   236.79   195.62 
+Syn. time          =   103.52   105.15 
+Server time        =     0.00     0.00 
+######################################
+
+real	0m0.847s
+user	0m0.315s
+sys	0m0.114s

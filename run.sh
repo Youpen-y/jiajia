@@ -1,6 +1,6 @@
 #!/bin/bash
 ARCH=linux
-MODE=test0
+MODE=ETH-prefetch1
 TIMEOUT=50
 
 CLEAN=true

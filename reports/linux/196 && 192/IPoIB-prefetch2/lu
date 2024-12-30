@@ -1,0 +1,146 @@
+===============================================
+system setting info on host [0]
+jia_pid (current host id) : 0
+hostc   (total host count): 2
+host 0: 192.168.103.1 yyp 	***
+host 1: 192.168.103.2 yyp 	***
+optionc: 8
+option 0: system_mode = hybrid
+option 1: comm_type = udp
+option 2: global_start_addr = 0x400000000000
+option 3: msg_buffer_size = 16
+option 4: msg_queue_size = 32
+option 5: prefetch = on
+option 6: prefetch_pages = 2
+option 7: max_checking_pages = 10
+===============================================
+
+***JIAJIA---Software DSM***
+***Cachepages = 1024  Pagesize=4096***
+
+*********Total of 2 hosts found!**********
+
+Start to copy system files to slaves!
+Copy files to yyp@192.168.103.2.
+Remote copy succeed!
+
+Start to create processes on slaves!
+
+Starting CMD ssh yyp@192.168.103.2 '~/jianode/lu/lu -P 23056 &' on host 192.168.103.2
+
+Blocked Dense LU Factorization
+     1024 by 1024 Matrix
+     2 Processors
+     32 by 32 Element Blocks
+
+
+ enter barrier!
+ out barrier!
+ enter barrier!
+ out barrier!
+ enter barrier!
+ out barrier!
+***************************
+ enter barrier!
+ out barrier!
+ enter barrier Oh!
+ out barrier!
+ Enter Slavestart!
+K=0
+K=1
+K=2
+K=3
+K=4
+K=5
+K=6
+K=7
+K=8
+K=9
+K=10
+K=11
+K=12
+K=13
+K=14
+K=15
+K=16
+K=17
+K=18
+K=19
+K=20
+K=21
+K=22
+K=23
+K=24
+K=25
+K=26
+K=27
+K=28
+K=29
+K=30
+K=31
+ Out Slavestart!
+Elapsed time: 0.64 seconds
+*************************************************************************
+                            PROCESS STATISTICS
+              Total      Diagonal     Perimeter      Interior       Barrier
+ Proc         Time         Time         Time           Time          Time
+    0             0             0             0             0             0
+
+                            TIMING INFORMATION
+Start time                        :       1735530240
+Initialization finish time        :       1735530240
+Overall finish time               :       1735530240
+Total time with initialization    :                0
+Total time without initialization :                0
+
+
+Shared Memory (4096-byte pages) : 8388608 (total) 2052 (used)
+Print stats
+########  JIAJIA STATISTICS  #########
+           hosts -->        0        1      total
+--------------------------------------
+Msgs Sent          =     1522     1522      3044 
+Msgs Received      =     1521     1522      3043 
+Bytes Sent         =  8658660  8648676  17307336 
+Bytes Received     =  8562984  8766448  17329432 
+SEGVs (local)      =     2770     2745      5515 
+SEGVs (remote)     =      689      704      1393 
+SIGIOs (total)     =        0        0         0 
+SIGIOs (user)      =        0        0         0 
+SIGIOs (Syn.)      =        0        0         0 
+SIGIOs (SEGV)      =        0        0         0 
+Barriers           =       68       68        68 
+Locks              =        0        0         0 
+Getp Reqs          =      689      704      1393 
+Prefetch Pages     =     1378     1408      2786 
+Diff Msgs.         =       30       30        60 
+MWdiffs            =      672      689      1361 
+Invalidate         =      806      780      1586 
+Replaced RO pages  =        0        0         0 
+Replaced RW pages  =        0        0         0 
+Mig in pages       =        0        0         0 
+Mig out pages      =        0        0         0 
+Resent Msgs        =        0        0         0 
+Large message      =      704      689      1393 
+Small message      =      857      794      1651 
+-------------------------------------- (ms) 
+Barrier time       =   126.49   181.35 
+Lock time          =     0.00     0.00 
+Unlock time        =     0.00     0.00 
+SEGV time (local)  =    13.09    14.48 
+SEGV time (remote) =   118.75   120.56 
+SIGIO time (user)  =     0.00     0.00 
+SIGIO time (Syn.)  =     0.00     0.00 
+SIGIO time (SEGV)  =     0.00     0.00 
+Encode diff time   =     1.57     1.22 
+Decode diff time   =     0.26     0.38 
+Wait time          =     0.00     0.00 
+--------------------------------------
+SEGV time          =  2207.25  2204.43 
+Syn. time          =   126.49   181.35 
+Server time        =     0.00     0.00 
+######################################
+
+real	0m1.427s
+user	0m1.171s
+sys	0m0.617s

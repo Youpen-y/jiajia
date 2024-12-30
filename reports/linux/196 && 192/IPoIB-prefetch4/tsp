@@ -1,0 +1,140 @@
+tsp:
+	-n: number of hosts
+	-s: start node
+	-f: size (filename)
+	-r: size to recursively solve
+	-d: debug mode
+	-D: debug the priority queue
+	-S: run silently
+/home/yyp/jianode/tsp/tsp: invalid option -- 'P'
+MinTourLen: 2000000 (old: 0): 
+MinTourLen: 507 (old: 0): 
+MinTourLen: 481 (old: 0): 
+MinTourLen: 434 (old: 0): 
+MinTourLen: 426 (old: 0): 
+MinTourLen: 411 (old: 0): 
+MinTourLen: 410 (old: 0): 
+MinTourLen: 409 (old: 0): 
+MinTourLen: 404 (old: 0): 
+MinTourLen: 398 (old: 0): 
+MinTourLen: 393 (old: 0): 
+MinTourLen: 392 (old: 0): 
+MinTourLen: 378 (old: 0): 
+MinTourLen: 372 (old: 0): 
+MinTourLen: 370 (old: 0): 
+MinTourLen: 355 (old: 0): 
+MinTourLen: 345 (old: 0): 
+MinTourLen: 343 (old: 0): 
+MinTourLen: 340 (old: 0): 
+MinTourLen: 336 (old: 0): 
+MinTourLen: 320 (old: 0): 
+MinTourLen: 317 (old: 0): 
+MinTourLen: 316 (old: 0): 
+MinTourLen: 308 (old: 0): 
+MinTourLen: 307 (old: 0): 
+MinTourLen: 301 (old: 0): 
+MinTourLen: 296 (old: 0): 
+MinTourLen: 290 (old: 0): 
+MinTourLen: 283 (old: 0): 
+MinTourLen: 273 (old: 0): 
+MinTourLen: 269 (old: 0): 
+MinTourLen: 267 (old: 0): 
+MinTourLen: 238 (old: 0): 
+MinTourLen: 174 (old: 0): 
+MinTourLen: 165 (old: 0): 
+MinTourLen: 150 (old: 0): 
+Elapsed time: 1.05 seconds
+
+-----------------
+
+===============================================
+system setting info on host [0]
+jia_pid (current host id) : 0
+hostc   (total host count): 2
+host 0: 192.168.103.1 yyp 	***
+host 1: 192.168.103.2 yyp 	***
+optionc: 8
+option 0: system_mode = hybrid
+option 1: comm_type = udp
+option 2: global_start_addr = 0x400000000000
+option 3: msg_buffer_size = 16
+option 4: msg_queue_size = 32
+option 5: prefetch = on
+option 6: prefetch_pages = 4
+option 7: max_checking_pages = 10
+===============================================
+
+***JIAJIA---Software DSM***
+***Cachepages = 1024  Pagesize=4096***
+
+*********Total of 2 hosts found!**********
+
+Start to copy system files to slaves!
+Copy files to yyp@192.168.103.2.
+Remote copy succeed!
+
+Start to create processes on slaves!
+
+Starting CMD ssh yyp@192.168.103.2 '~/jianode/tsp/tsp -P 24024 &' on host 192.168.103.2
+Elapsed time: 1.05 seconds
+
+-----------------
+
+	[MINIMUM TOUR LENGTH: 149]
+
+MINIMUM TOUR:
+
+	 0 - 18 - 10 -  3 -  6 - 15 - 12 -  7 -  5 -  2
+	13 - 17 -  1 - 14 -  8 - 11 -  9 - 16 -  4 -  0
+
+
+Shared Memory (4096-byte pages) : 8388608 (total) 197 (used)
+Print stats
+########  JIAJIA STATISTICS  #########
+           hosts -->        0        1      total
+--------------------------------------
+Msgs Sent          =     2449     2171      4620 
+Msgs Received      =     2171     2449      4620 
+Bytes Sent         = 29916320   241368  30157688 
+Bytes Received     =   255724 30533312  30789036 
+SEGVs (local)      =     1863        0      1863 
+SEGVs (remote)     =        0     2347      2347 
+SIGIOs (total)     =        0        0         0 
+SIGIOs (user)      =        0        0         0 
+SIGIOs (Syn.)      =        0        0         0 
+SIGIOs (SEGV)      =        0        0         0 
+Barriers           =        2        2         2 
+Locks              =      337      340       677 
+Getp Reqs          =        0     1483      1483 
+Prefetch Pages     =        0     5932      5932 
+Diff Msgs.         =      344        0       344 
+MWdiffs            =     2331        0      2331 
+Invalidate         =        0     1546      1546 
+Replaced RO pages  =        0        0         0 
+Replaced RW pages  =        0        0         0 
+Mig in pages       =        0        0         0 
+Mig out pages      =        0        0         0 
+Resent Msgs        =        0        0         0 
+Large message      =     1483        7      1490 
+Small message      =     1072     2778      3850 
+-------------------------------------- (ms) 
+Barrier time       =     1.46     0.55 
+Lock time          =   141.69    38.62 
+Unlock time        =     6.28    63.29 
+SEGV time (local)  =     9.60     0.00 
+SEGV time (remote) =     0.00   219.30 
+SIGIO time (user)  =     0.00     0.00 
+SIGIO time (Syn.)  =     0.00     0.00 
+SIGIO time (SEGV)  =     0.00     0.00 
+Encode diff time   =     0.00     4.60 
+Decode diff time   =     6.54     0.00 
+Wait time          =     0.00     0.00 
+--------------------------------------
+SEGV time          =  1127.40  1627.50 
+Syn. time          =   149.44   102.45 
+Server time        =     0.00     0.00 
+######################################
+
+real	0m1.886s
+user	0m1.689s
+sys	0m0.892s

@@ -28,7 +28,7 @@ prefetch = on
 
 # 2. prefetch_pages: extra fetched pages except the target
 # the prefetched pages will be packed in one msg (only one), which means <= 8
-prefetch_pages = 4
+prefetch_pages = 1
 
 # 3. max_checking_pages:
 # when prefetching pages, will check whether the home of 
