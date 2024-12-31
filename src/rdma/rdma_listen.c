@@ -1,3 +1,5 @@
+#include "jia.h"
+#include "msg.h"
 #include "rdma.h"
 #include "tools.h"
 #include <bits/pthreadtypes.h>
@@ -43,18 +45,21 @@ int post_recv() {
         /* step 3.1: manage error */
         if (nc < 0) {
             log_err("ibv_poll_cq failed");
-            continue;
-        }
-        if (wc.status != IBV_WC_SUCCESS) {
-            log_err("Failed status %s (%d) for wr_id %d",
-                    ibv_wc_status_str(wc.status), wc.status, (int)wc.wr_id);
+            jia_exit();
+        } else if (nc == 0) {
             continue;
         } else {
-            ctx.inqueue->queue[ctx.inqueue->tail].state = SLOT_BUSY;
+            ctx.inqueue->tail = (ctx.inqueue->tail + 1) % ctx.inqueue->size;
+            if (wc.status != IBV_WC_SUCCESS) {
+                log_err("Failed status %s (%d) for wr_id %d",
+                        ibv_wc_status_str(wc.status), wc.status, (int)wc.wr_id);
+                continue;
+            } else {
+                ctx.inqueue->queue[ctx.inqueue->tail].state = SLOT_BUSY;
+            }
         }
 
-        /* step 3.2: update tail ptr and num_completions */
-        ctx.inqueue->tail = (ctx.inqueue->tail + 1) % ctx.inqueue->size;
+        /* step 3.2: update num_completions */
         num_completions++;
     }
     return 0;
