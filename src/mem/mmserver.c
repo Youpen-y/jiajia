@@ -265,7 +265,7 @@ void getpgrantserver(jia_msg_t *rep) {
         VERBOSE_LOG(3, "addr is %p , rep->data+datai = %p\n", addr,
                     rep->data + datai);
         memcpy((unsigned char *)addr, rep->data + datai,
-               Pagesize); // TODO:possible bug
+               Pagesize);
         VERBOSE_LOG(3, "I have copy the page from remote home to %p\n", addr);
     }
 

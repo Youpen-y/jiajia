@@ -5,8 +5,7 @@ TIMEOUT=20
 
 CLEAN=true
 ALLTEST=true
-RUN=false
-tests=("lu" "ep")
+RUN=true
 
 run_app() {
     # 进入文件夹并在reports下创建对应的log文件

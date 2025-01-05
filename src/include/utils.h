@@ -42,6 +42,4 @@ extern FILE *logfile;
                 __func__, ##__VA_ARGS__);                                      \
     }
 
-int my_getline(int *wordc, char wordv[Maxwords][Wordsize]);
-
 #endif

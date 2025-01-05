@@ -59,17 +59,17 @@
  * @brief struct host_t - info of host
  *
  */
-typedef struct host_t {
-    char name[Wordsize]; /* host name */
-    char user[Wordsize]; /* user account */
-    char dir[Wordsize];
-    char passwd[Wordsize]; /* user password */
-    char addr[Wordsize];   /* IP address */
-    int addrlen;           /* address length bytes*/
-    int homesize;          /* home usge size */
+
+typedef struct host {
+    int id;            // host id
+    char ip[16];       // host ip
+    char username[32]; // host username
+    char password[32]; // host password
+    int homesize;
     int riofd;
     int rerrfd;
 } host_t;
+
 
 #ifdef DOSTAT
 typedef struct Stats {

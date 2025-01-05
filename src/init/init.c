@@ -36,11 +36,13 @@
  **********************************************************************/
 
 #include "tools.h"
+#include <ifaddrs.h>
 #ifndef NULL_LIB
 #include "global.h"
 #include "init.h"
 #include "mem.h"
 #include "utils.h"
+#include <libgen.h>
 
 extern void initmem();
 extern void initsyn();
@@ -55,7 +57,7 @@ extern float jia_clock();
 
 extern unsigned int get_usecs();
 
-int my_getline(int *wordc, char wordv[Maxwords][Wordsize]);
+void createdir(int argc, char **argv);
 void gethosts();
 int mypid();
 void copyfiles(int argc, char **argv);
@@ -89,61 +91,55 @@ int statflag;
  *
  */
 void gethosts() {
-    int endoffile = 0;
-    int wordc, linec = 0, uniquehost;
-    char wordv[Maxwords][Wordsize];
-    struct hostent *hostp;
-
-    // open .jiahosts file
-    if ((config = fopen(".jiahosts", "r")) == 0) {
-        VERBOSE_LOG(3, "Cannot open .jiahosts file\n");
+    FILE *fp;
+    fp = fopen(".jiahosts", "r");
+    if (fp == NULL) {
+        VERBOSE_LOG(3, "Cannot open.jiahosts file\n");
         exit(1);
     }
 
-    while (!endoffile) {
-        // getline(must be 0 or 3 words)
-        endoffile = my_getline(&wordc, wordv);
-        assert0(((wordc == Wordnum) || (wordc == 0)),
-                "Line %4d: incorrect host specification!", linec);
+    char line[Linesize];
+    hostc = 0;
+    while (fgets(line, Linesize, fp)) {
+        // remove '\n' at the end of line
+        line[strcspn(line, "\n")] = 0;
 
-        if (wordc) {
-
-            /** TODO gethostbyname() has been obsolete, use
-             *  getaddrinfo, get-nameinfo, gai_strerror instead
-             */
-            // get host's info by hostname
-            hostp = gethostbyname(wordv[0]);
-            VERBOSE_LOG(3, "Host[%d]: %s [%s]\n", hostc, hostp->h_name,
-                        inet_ntoa(*(struct in_addr *)hostp->h_addr_list[0]));
-            assert0((hostp != NULL), "Line %4d: incorrect host %s!", linec,
-                    wordv[0]);
-
-            // copy hostp's info to hosts[hostc]
-            strcpy(hosts[hostc].name, hostp->h_name);
-            memcpy(hosts[hostc].addr, hostp->h_addr, hostp->h_length);
-            hosts[hostc].addrlen = hostp->h_length;
-            strcpy(hosts[hostc].user, wordv[1]);
-            strcpy(hosts[hostc].passwd, wordv[2]);
-
-            // check if the hosts[hostc] is unique
-            for (int i = 0; i < hostc; i++) {
-#ifdef NFS
-                uniquehost = (strcmp(hosts[hostc].name, hosts[i].name) != 0);
-#else  /* NFS */
-                uniquehost = ((strcmp(hosts[hostc].addr, hosts[i].addr) != 0) ||
-                              (strcmp(hosts[hostc].user, hosts[i].user) != 0));
-#endif /*NFS */
-                assert0(uniquehost,
-                        "Line %4d: repeated specification of the same host!",
-                        linec);
-            }
-            hostc++;
+        // skip empty lines and comments
+        if (strlen(line) == 1 || line[0] == '\0' || line[0] == '#') {
+            continue;
         }
-        linec++;
+
+        // parse the line into the host structure
+        if (sscanf(line, "%15[0-9.] %31[^ ] %31[^ ]",
+                   hosts[hostc].ip,
+                   hosts[hostc].username,
+                   hosts[hostc].password) == 3) {
+            hosts[hostc].id = hostc;
+            hostc++;
+        } else {
+            fprintf(stderr, "func-get_hosts: invalid line: %s\n", line);
+        }
+
+        // check if the hostc exceeds the Maxhosts
+        if (hostc >= Maxhosts) {
+            fprintf(stderr, "func-get_hosts: hostc exceeds the Maxhosts!\n");
+            break;
+        }
     }
 
-    assert0((hostc <= Maxhosts), "Too many hosts!");
-    fclose(config);
+    fclose(fp);
+}
+
+void createdir(int argc, char **argv) {
+    char cmd[Linesize];
+
+    for (int i = 1; i < hostc; i++) {
+        sprintf(cmd,
+                "ssh %s@%s \"[ ! -d 'jianode/%s' ] && mkdir -p 'jianode/%s'\"",
+                hosts[i].username, hosts[i].ip,
+                basename(argv[0]), argv[0]);
+        system(cmd);
+    }
 }
 
 /**
@@ -153,39 +149,25 @@ void gethosts() {
  * @param argv same as main's argv
  */
 void copyfiles(int argc, char **argv) {
-    // replace rcp with scp
-    int hosti, rcpyes;
+    int i, ret;
     char cmd[Linesize];
 
-    VERBOSE_LOG(3, "******Start to copy system files to slaves!******\n");
+    VERBOSE_LOG(3, "Start to copy system files to slaves!\n");
 
-    for (hosti = 1; hosti < hostc; hosti++) {
-        VERBOSE_LOG(3, "Copy files to %s@%s.\n", hosts[hosti].user,
-                    hosts[hosti].name);
+    // copy necessary files to slaves
+    for (i = 1; i < hostc; i++) {
+        VERBOSE_LOG(3, "Copy files to %s@%s.\n",
+                    hosts[i].username,
+                    hosts[i].ip);
 
-        /* copy .jiahosts to slaves */
-        cmd[0] = '\0';
-        strcat(cmd, "scp .jiahosts ");
-        strcat(cmd, hosts[hosti].user);
-        strcat(cmd, "@");
-        strcat(cmd, hosts[hosti].name);
-        strcat(cmd, ":");
-        rcpyes = system(cmd);
-        assert0((rcpyes == 0), "Cannot scp .jiahosts to %s!\n",
-                hosts[hosti].name);
-
-        /* copy program to slaves */
-        cmd[0] = '\0';
-        strcat(cmd, "scp ");
-        strcat(cmd, argv[0]);
-        strcat(cmd, " ");
-        strcat(cmd, hosts[hosti].user);
-        strcat(cmd, "@");
-        strcat(cmd, hosts[hosti].name);
-        strcat(cmd, ":");
-        rcpyes = system(cmd);
-        assert0((rcpyes == 0), "Cannot scp %s to %s!\n", argv[0],
-                hosts[hosti].name);
+        sprintf(cmd, "scp .jiahosts %s@%s:~/",
+                hosts[i].username, hosts[i].ip);
+        ret = system(cmd);
+        sprintf(cmd, "scp %s %s@%s:~/jianode/%s/", basename(argv[0]),
+                hosts[i].username, hosts[i].ip,
+                basename(argv[0]));
+        ret = system(cmd);
+        assert0(ret == 0, "Copy system files failed");
     }
     VERBOSE_LOG(3, "Remote copy succeed!\n\n");
 }
@@ -199,22 +181,23 @@ void copyfiles(int argc, char **argv) {
  */
 int startprocs(int argc, char **argv) {
     struct servent *sp;
+    int hosti;
+    char cmd[Linesize], *hostname;
+    char shell[Linesize];
 
 #ifdef NFS
     char *pwd;
 #endif /* NFS*/
-    int hosti;
-    char cmd[Linesize], *hostname;
 
-    VERBOSE_LOG(3, "******Start to create processes on slaves!******\n\n");
+    VERBOSE_LOG(3, "Start to create processes on slaves!\n\n");
 
 #ifdef NFS
     sprintf(errstr, "Failed to get current working directory");
     pwd = getenv("PWD");
-    assert0((pwd != NULL), errstr);
+    local_assert((pwd != NULL), errstr);
 #endif /* NFS */
 
-    /* produce a random Startport from [10000, 29999]*/
+    /* produce a random start_port from [10000, 29999]*/
     int pid = getpid();
     assert0((pid != -1), "getpid() error");
     Startport = 10000 + (pid % 20000);
@@ -223,60 +206,73 @@ int startprocs(int argc, char **argv) {
     // cmd on every host
     for (hosti = 1; hosti < hostc; hosti++) {
 
-        /* ssh -l user@hostname (argv) -P 1234 & */
-        hostname = hosts[hosti].name;
+        hostname = hosts[hosti].ip;
+
 #ifdef NFS
         sprintf(cmd, "cd %s; %s", pwd, pwd);
+        sprintf(cmd, "%s%s", cmd, hostname);
 #else
+        /* ssh username@ip (argv) -P 1234 & */
         cmd[0] = '\0';
-        sprintf(cmd, "ssh -l %s", hosts[hosti].user);
+        sprintf(cmd, "ssh %s@", hosts[hosti].username);
+        hostname = hosts[hosti].ip;
+        sprintf(cmd, "%s%s", cmd, hostname);
 #endif /* NFS */
-        sprintf(cmd, "%s %s", cmd, hostname);
 
-        for (int i = 0; i < argc; i++)
-            sprintf(cmd, "%s %s ", cmd, argv[i]);
+        /**
+         * step 1: give program basename from argv[0]
+         * step 2: use other argvs for remote host
+         * step 3: use -P to ensure startport for commManager
+         */
+        char *base = basename(argv[0]);
+        // sprintf(shell, "cd ./jianode/%s &&", base);
+        // sprintf(shell, "%s ./%s", shell, base);
+        sprintf(shell, "~/jianode/%s/%s", base, base);
+        for (int i = 1; i < argc; i++) {
+            sprintf(cmd, "%s %s", cmd, argv[i]);
+        }
+        sprintf(shell, "%s -P %ld &", shell, Startport);
 
-        strcat(cmd, "-P");
-        sprintf(cmd, "%s %ld", cmd, Startport);
-        strcat(cmd, " &");
+        // strcat cmd && shell to execute
+        sprintf(cmd, "%s '%s'", cmd, shell);
         VERBOSE_LOG(3, "Starting CMD %s on host %s\n", cmd, hostname);
+
+        // bash cmd
         system(cmd);
+        assert0((hosts[hosti].riofd != -1),
+                     "Fail to start process on %s!",
+                     hosts[hosti].username);
+    }
+
 #else /*LINUX*/
     for (hosti = 1; hosti < hostc; hosti++) {
+
 #ifdef NFS
         sprintf(cmd, "cd %s; %s", pwd, pwd);
 #else  /* NFS */
         cmd[0] = '\0';
         strcat(cmd, "~");
-        strcat(cmd, hosts[hosti].user);
+        strcat(cmd, hosts[hosti].username);
 #endif /* NFS */
-        strcat(cmd, "/");
-        for (i = 0; i < argc; i++) {
-            strcat(cmd, argv[i]);
-            strcat(cmd, " ");
-        }
-        strcat(cmd, "-P");
-        sprintf(cmd, "%s%ld ", cmd, Startport);
-
-        VERBOSE_LOG(3, "Starting CMD %s on host %s\n", cmd, hosts[hosti].name);
-        sp = getservbyname("exec", "tcp");
-        assert0((sp != NULL), "exec/tcp: unknown service!");
-        hostname = hosts[hosti].name;
 
 #ifdef NFS
-        hosts[hosti].riofd = rexec(&hostname, sp->s_port, NULL, NULL, cmd,
-                                   &(hosts[hosti].rerrfd));
+        hosts[hosti].riofd =
+            rexec(&hostname, sp->s_port, NULL, NULL, cmd,
+                  &(hosts[hosti].rerrfd));
 #else  /* NFS */
         hosts[hosti].riofd = rexec(
-            &hostname, sp->s_port, hosts[hosti].user, hosts[hosti].passwd, cmd,
-            &(hosts[hosti].rerrfd)); // TODO rexec is obsoleted by rcmd (reason:
+            &hostname, sp->s_port, hosts[hosti].username,
+            hosts[hosti].password, cmd,
+            &(startprocs(argc, argv);
+              hosts[hosti].rerrfd)); // TODO rexec is obsoleted by rcmd (reason:
                                      // rexec sends the unencrypted password
                                      // across the network)
 #endif /* NFS */
-#endif /* LINUX */
-        assert0((hosts[hosti].riofd != -1), "Fail to start process on %s!",
-                hosts[hosti].name);
+        local_assert((hosts[hosti].riofd != -1),
+                     "Fail to start process on %s!",
+                     hosts[hosti].username);
     }
+#endif /* LINUX */
 
     return 0;
 }
@@ -287,35 +283,39 @@ int startprocs(int argc, char **argv) {
  * @return int id number
  */
 int mypid() {
-    char hostname[Wordsize];
-    struct hostent *hostp;
-    int i = 0;
+    struct ifaddrs *ifap, *ifa;
+    int found = 0;
+    int jia_pid;
 
-    // get hostname && check if hostp is valid
-    assert0((gethostname(hostname, Wordsize) == 0), "Cannot get host name!");
-    hostp = gethostbyname(hostname);
-    assert0((hostp != NULL), "Cannot get host address!");
+    if (getifaddrs(&ifap) == -1) {
+        fprintf(stderr, "getifaddrs: %s\n", strerror(errno));
+        exit(1);
+    }
 
-    // get user info
-    uid_t uid = getuid();
-    struct passwd *userp = getpwuid(uid);
-    assert0((userp != NULL), "Cannot get user name!");
+    for (ifa = ifap; ifa != NULL; ifa = ifa->ifa_next) {
+        if (ifa->ifa_addr == NULL || ifa->ifa_addr->sa_family != AF_INET) {
+            continue;
+        }
 
-    // check host(hostname && username) && return host's seq
-    strtok(hostname, ".");
-    VERBOSE_LOG(3, "hostc = %d\nhostname = %s\n", hostc, hostname);
-    while ((i < hostc) &&
-#ifdef NFS
-           (!(strncmp(hosts[i].name, hostname, strlen(hostname)) == 0)))
-#else /* NFS */
-           (!((strncmp(hosts[i].name, hostname, strlen(hostname)) == 0) &&
-              (strcmp(hosts[i].user, userp->pw_name) == 0))))
-#endif
-        i++;
-    VERBOSE_LOG(3, "hosts[%d].name = %s\n", i, hosts[i].name);
+        char ipstr[128];
+        inet_ntop(ifa->ifa_addr->sa_family,
+                  &((struct sockaddr_in *)ifa->ifa_addr)->sin_addr, ipstr,
+                  sizeof ipstr);
 
-    assert0((i < hostc), "Get Process id incorrect");
-    return (i);
+        for (int i = 0; i < hostc; i++) {
+            if (strcmp(hosts[i].ip, ipstr) == 0) {
+                jia_pid = i;
+                found = 1;
+                break;
+            }
+        }
+        if (found == 1) {
+            break;
+        }
+    }
+
+    freeifaddrs(ifap);
+    return jia_pid;
 }
 
 /**
@@ -340,12 +340,15 @@ void jiacreat(int argc, char **argv) {
         VERBOSE_LOG(3, "*********Total of %d hosts found!**********\n\n",
                     hostc);
 
-        // step 3: copy files to remote
+        // step 3: create dir on slaves
+        createdir(argc, argv);
+
+        // step 4: copy files to remote
 #ifndef NFS
         copyfiles(argc, argv);
 #endif /* NFS */
 
-        // step 4: start proc on slaves
+        // step 5: start proc on slaves
         startprocs(argc, argv);
     } else {
         // slave does
@@ -444,7 +447,9 @@ void jia_init(int argc, char **argv) {
     rl.rlim_max = Maxfileno;
     setrlimit(RLIMIT_NOFILE, &rl); /* set maximum number of files that can be
                                       opened by process limit */
-#endif                             /* SOLARIS */
+#endif
+
+    setbuf(logfile, NULL);
 
     rl.rlim_cur = Maxmemsize;
     rl.rlim_max = Maxmemsize;

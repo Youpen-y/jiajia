@@ -641,8 +641,7 @@ void sigio_handler(int sig, siginfo_t *sip, ucontext_t *uap)
                 /* must send ack before inqrecv update intail(ack use intail)
                  */
                 to.sin_family = AF_INET;
-                memcpy(&to.sin_addr, hosts[inqt.frompid].addr,
-                       hosts[inqt.frompid].addrlen);
+                to.sin_addr.s_addr = inet_addr(hosts[i].ip);
                 to.sin_port = htons(repports[inqt.frompid][inqt.topid]);
                 res = sendto(commrep.snd_fds[i], (char *)&(inqt.seqno),
                              sizeof(inqt.seqno), 0, (struct sockaddr *)&to,
@@ -810,10 +809,9 @@ void outsend() {
         }
 #endif
         to.sin_family = AF_INET;
-        VERBOSE_LOG(3, "toproc IP address is %s, addrlen is %d\n",
-                    inet_ntoa(*(struct in_addr *)hosts[toproc].addr),
-                    hosts[toproc].addrlen);
-        memcpy(&to.sin_addr, hosts[toproc].addr, hosts[toproc].addrlen);
+        VERBOSE_LOG(3, "toproc IP address is %s\n",
+                    hosts[toproc].ip);
+        to.sin_addr.s_addr = inet_addr(hosts[toproc].ip);
         to.sin_port = htons(reqports[toproc][fromproc]);
 
         VERBOSE_LOG(3, "reqports[toproc][fromproc] = %u\n",
@@ -868,10 +866,6 @@ void outsend() {
         }
 
         if (sendsuccess != 1) {
-            VERBOSE_LOG(3,
-                        "I am host %d, hostname = %s, I am running outsend() "
-                        "function\n",
-                        jia_pid, hosts[jia_pid].name);
             sprintf(errstr, "I Can't asend message(%d,%d) to host %d!",
                     outqh.op, outqh.seqno, toproc);
             VERBOSE_LOG(3, "BUFFER SIZE %d (%d)\n", outqh.size, msgsize);
