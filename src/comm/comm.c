@@ -52,6 +52,9 @@
 #include "thread.h"
 #include <stdatomic.h>
 
+#define NUM_THREADS 1
+
+pthread_t server_id[NUM_THREADS];
 
 // global variables
 
@@ -99,6 +102,11 @@ void initcomm() {
                    &outqueue); // create a new thread to send msg from outqueue
     pthread_create(&server_tid, NULL, server_thread,
                    &inqueue); // create a new thread to serve msg from inqueue
+
+
+    for (int i = 0; i < NUM_THREADS; i++) {
+        pthread_create(&server_id[i], NULL, server_thread, &inqueue);
+    }
     pthread_create(&listen_tid, NULL, listen_thread, NULL);
 
     /* step 5: register sigint handler */

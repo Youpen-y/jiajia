@@ -1,6 +1,6 @@
 #!/bin/bash
 ARCH=linux
-MODE=ETH-prefetch1
+MODE=Multi-thread
 TIMEOUT=50
 
 CLEAN=true
