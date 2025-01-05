@@ -3,7 +3,7 @@
 
 programs=("ep" "hello" "is" "lu" "mm" "pi" "sor" "tsp" "water")
 #servers=("cpuserver2" "cpuserver3" "cpuserver4" "cpuserver5" "cpuserver6")
-servers=("Titan")
+servers=("yyp192")
 
 for server in "${servers[@]}"; do
 	if [ -n "$1" ]; then
