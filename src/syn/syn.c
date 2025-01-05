@@ -421,7 +421,6 @@ void grantbarr(int lock) {
     wtnt_t *wnptr;
     int hosti, index;
 
-    // grant = newmsg();
     index = freemsg_lock(&msg_buffer);
     grant = &msg_buffer.buffer[index].msg;
 
@@ -626,8 +625,7 @@ void sendwtnts(int operation) {
     req->scope = (operation == BARR) ? locks[hidelock].myscope
                                     : locks[top.lockid].myscope;
     appendmsg(req, ltos(top.lockid),
-              Intbytes); // note here, after ltos transformation(8bytes),
-                         // truncation here
+              Intbytes);
 
     wnptr = top.wtntp;
     wnptr = appendstackwtnts(req, wnptr);
@@ -639,7 +637,7 @@ void sendwtnts(int operation) {
     while (wnptr != WNULL) {
         req->op = WTNT;
         move_msg_to_outqueue(&msg_buffer, index, &outqueue);
-        req->size = Intbytes; // TODO: Need to check
+        req->size = Intbytes;
         wnptr = appendstackwtnts(req, wnptr);
     }
     req->op = operation;

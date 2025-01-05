@@ -477,9 +477,8 @@ void savediff(int cachei) {
     int diffsize;
     int hosti, index;
 
-    hosti = homehost(
-        cache[cachei]
-            .addr); // according to cachei addr get the page's home host index
+    // according to cachei addr get the page's home host index
+    hosti = homehost(cache[cachei].addr);
     if (diffmsg[hosti] == DIFFNULL) { // hosti host's diffmsg is NULL
         index = freemsg_lock(&msg_buffer);
         diffmsg[hosti] = &msg_buffer.buffer[index].msg;
@@ -488,9 +487,10 @@ void savediff(int cachei) {
         diffmsg[hosti]->topid = hosti;
         diffmsg[hosti]->size = 0;
     }
-    diffsize = encodediff(
-        cachei, diff); // encoded the difference data between cachei page and
-                       // its twin into diff [] and return size
+    
+    // encoded the difference data between cachei page and
+    // its twin into diff [] and return size
+    diffsize = encodediff(cachei, diff); 
     if ((diffmsg[hosti]->size + diffsize) > Maxmsgsize) {
         atomic_fetch_add(&diffwait, 1);
         log_info(4, "diffwait: %d", diffwait);

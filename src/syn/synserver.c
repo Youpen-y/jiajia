@@ -66,7 +66,7 @@ extern int H_MIG, AD_WD;
 /************Conditional Variable Part****************/
 
 /**
- * @brief setcvserver -- setcv msg server
+ * @brief setcvserver -- setcv msg server, set the cv value to 1
  *
  * @param req SETCV msg request
  */
@@ -214,7 +214,6 @@ void invalidate(jia_msg_t *req) {
         }
         datai += sizeof(unsigned char *);
 
-        // TODO: Barrier or Lock?
         if (lock == hidelock) { /*Barrier*/
             from = (int)stol(req->data + datai);
             datai += Intbytes;
@@ -341,7 +340,6 @@ void acqgrantserver(jia_msg_t *req) {
     lock = (int)stol(req->data);
     locks[lock].myscope = req->scope;
 
-    //acqwait = 0;
     atomic_store(&acqwait, 0);
 }
 

@@ -1,12 +1,7 @@
 #include "udp.h"
 #include "global.h"
 #include "comm.h"
-#include "mem.h"
-#include "syn.h"
-#include "load.h"
 #include "tools.h"
-#include "global.h"
-#include "stat.h"
 
 pthread_t server_tid;
 static jia_msg_t msg;
