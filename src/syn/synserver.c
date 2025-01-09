@@ -45,6 +45,7 @@
 #include "setting.h"
 #include "stat.h"
 #include "msg.h"
+#include <pthread.h>
 #include <stdatomic.h>
 
 /* mem */
@@ -53,9 +54,9 @@ extern jiahome_t home[Homepages];
 extern jiacv_t condvars[Maxcvs];
 
 /* syn */
-extern volatile int waitcounter;
+extern _Atomic volatile int waitcounter;
 extern _Atomic volatile int waitwait, cvwait, acqwait, barrwait;
-extern volatile int noclearlocks;
+extern _Atomic volatile int noclearlocks;
 // lock array, according to the hosts allocate lock(eg.
 // host0: 0, 2,... 62; host1 = 1, 3, ..., 63)
 extern jialock_t locks[Maxlocks + 1];
@@ -160,12 +161,12 @@ void waitserver(jia_msg_t *req) {
     jia_assert((req->op == WAIT) && (req->topid == system_setting.jia_pid),
            "Incorrect WAIT Message!");
 
-    waitcounter++;
+    atomic_fetch_add(&waitcounter, 1);
 
-    if (waitcounter == system_setting.hostc) {
+    if (atomic_load(&waitcounter) == system_setting.hostc) {
         index = freemsg_lock(&msg_buffer);
         grant = &msg_buffer.buffer[index].msg;
-        waitcounter = 0;
+        atomic_store(&waitcounter, 0);
         grant->frompid = system_setting.jia_pid;
         grant->size = 0;
         grant->op = WAITGRANT;
@@ -205,6 +206,7 @@ void invalidate(jia_msg_t *req) {
     lock = (int)stol(req->data); // get the lock
     datai = Intbytes;
 
+    pthread_mutex_lock(&memory_mutex);
     while (datai < req->size) {
         // get the addr
         addr = (address_t)stol(req->data + datai); 
@@ -221,7 +223,6 @@ void invalidate(jia_msg_t *req) {
         } else { /*Lock*/
             from = Maxhosts;
         }
-
         // invalidate all pages that are not on this host(cache)
         if ((from != system_setting.jia_pid) && (homehost(addr) != system_setting.jia_pid)) {
             cachei = (int)cachepage(addr);
@@ -250,8 +251,8 @@ void invalidate(jia_msg_t *req) {
             homei = homepage(addr);
             home[homei].wtnt |= 4;
         }
-
     } /*while*/
+    pthread_mutex_unlock(&memory_mutex);
 }
 
 /**
@@ -285,9 +286,10 @@ void acqserver(jia_msg_t *req) {
 
     locks[lock].acqs[locks[lock].acqc] = req->frompid;
     locks[lock].acqscope[locks[lock].acqc] = req->scope;
-    locks[lock].acqc++;
+    atomic_fetch_add(&(locks[lock].acqc), 1);
+    // locks[lock].acqc++;
 
-    if (locks[lock].acqc == 1)
+    if (atomic_load(&locks[lock].acqc) == 1)
         grantlock(lock, locks[lock].acqs[0], locks[lock].acqscope[0]);
 }
 
@@ -311,8 +313,7 @@ void relserver(jia_msg_t *req) {
            "This should not have happened!");
 
     if (req->scope > locks[hidelock].myscope)
-        noclearlocks = 1;
-
+        atomic_store(&noclearlocks, 1);
     recordwtnts(req);
     locks[lock].scope++;
 
@@ -320,9 +321,10 @@ void relserver(jia_msg_t *req) {
         locks[lock].acqs[acqi] = locks[lock].acqs[acqi + 1];
         locks[lock].acqscope[acqi] = locks[lock].acqscope[acqi + 1];
     }
-    locks[lock].acqc--;
 
-    if (locks[lock].acqc > 0)
+    atomic_fetch_sub(&(locks[lock].acqc), 1);
+
+    if (atomic_load(&locks[lock].acqc) > 0)
         grantlock(lock, locks[lock].acqs[0], locks[lock].acqscope[0]);
 }
 
@@ -368,16 +370,17 @@ void barrserver(jia_msg_t *req) {
 
     recordwtnts(req); // record write notices in msg barr's data
 
-    locks[lock].acqc++;
+    atomic_fetch_add(&(locks[lock].acqc), 1);
+    //locks[lock].acqc++;
 
 #ifdef DEBUG
     VERBOSE_LOG(3, "barrier count=%d, from host %d\n", locks[lock].acqc, req->frompid);
 #endif
     log_info(3, "locks[%d].acqc = %d", lock, locks[lock].acqc);
-    if (locks[lock].acqc == system_setting.hostc) {
+    if (atomic_load(&locks[lock].acqc) == system_setting.hostc) {
         locks[lock].scope++;
         grantbarr(lock);
-        locks[lock].acqc = 0;
+        atomic_store(&locks[lock].acqc, 0);
         freewtntspace(locks[lock].wtntp);
     }
     log_info(3, "host %d is out of barrserver", jiapid);
@@ -395,7 +398,7 @@ void barrgrantserver(jia_msg_t *req) {
     jia_assert((req->op == BARRGRANT) && (req->topid == system_setting.jia_pid),
            "Incorrect BARRGRANT Message!");
 
-    if (noclearlocks == 0)
+    if (atomic_load(&noclearlocks))
         clearlocks();
     invalidate(req);
 
@@ -407,7 +410,7 @@ void barrgrantserver(jia_msg_t *req) {
     locks[lock].myscope = req->scope;
     //barrwait = 0;
     atomic_store(&barrwait, 0);
-    noclearlocks = 0;
+    atomic_store(&noclearlocks, 0);
     log_info(3, "Out of barrgrantserver");
 }
 

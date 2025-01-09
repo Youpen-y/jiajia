@@ -44,6 +44,7 @@
 #include "syn.h"
 #include "tools.h"
 #include "mem.h"
+#include <pthread.h>
 #include <stdatomic.h>
 #include <string.h>
 
@@ -110,6 +111,7 @@ void diffserver(jia_msg_t *req) {
 
         // when home's wtnt==0, give RW permission for memcpy diff to homapage's
         // addr
+        pthread_mutex_lock(&memory_mutex); // there, add lock protection to the memory
         if ((home[homei].wtnt & 1) != 1)
             memprotect((caddr_t)paddr, Pagesize, PROT_READ | PROT_WRITE);
 
@@ -137,13 +139,14 @@ void diffserver(jia_msg_t *req) {
             }
         }
 
+
         if (W_VEC == ON)
             addwtvect(homei, wv, req->frompid);
 
         // after memcpy diff to homapage's addr, revoke write permission
         if ((home[homei].wtnt & 1) != 1)
             memprotect((caddr_t)paddr, (size_t)Pagesize, (int)PROT_READ);
-
+        pthread_mutex_unlock(&memory_mutex); // memory protection end
 #ifdef DOSTAT
         STATOP(jiastat.mwdiffcnt++;)
 #endif
@@ -208,14 +211,17 @@ void getpserver(jia_msg_t *req) {
           not be updated, but the page has already been here
           the rdnt item of new home is set to 1 in migpage()*/
     } else {
+
         jia_assert((homehost(paddr) == jia_pid),
                    "This should have not been happened!");
 
         homei = homepage(paddr);
         if ((W_VEC == ON) && (home[homei].wvfull == 1)) {
+            pthread_mutex_lock(&memory_mutex);  // there, add protection to memory access
             home[homei].wvfull = 0;
             newtwin(&(home[homei].twin));
             memcpy(home[homei].twin, home[homei].addr, Pagesize);
+            pthread_mutex_unlock(&memory_mutex);  // there, memory protection ends
         }
 
         num = 1;
@@ -263,6 +269,7 @@ void getpserver(jia_msg_t *req) {
     appendmsg(rep, req->data,
               sizeof(unsigned char *)); // carry the addr of requested page
     int occupysize = 0;
+    pthread_mutex_lock(&memory_mutex);
     if ((W_VEC == ON) && (req->temp == 1)) {
         int i;
         for (i = 0; i < Wvbits; i++) {
@@ -283,7 +290,7 @@ void getpserver(jia_msg_t *req) {
         appendmsg(rep, (unsigned char *)&addr[i], sizeof(unsigned char *));
         appendmsg(rep, addr[i], Pagesize);
     }
-
+    pthread_mutex_unlock(&memory_mutex);
     move_msg_to_outqueue(&msg_buffer, index, &outqueue);
     freemsg_unlock(&msg_buffer, index);
 }
@@ -311,6 +318,7 @@ void getpgrantserver(jia_msg_t *rep) {
     datai += sizeof(unsigned char *);
 
     int occupysize = 0;
+    pthread_mutex_lock(&memory_mutex);
     if ((W_VEC == ON) && (wv != WVFULL)) {
         for (i = 0; i < Wvbits; i++) {
             if ((wv & (((wtvect_t)1) << i)) != 0) {
@@ -352,6 +360,7 @@ void getpgrantserver(jia_msg_t *rep) {
         }
         datai += Pagesize;
     }
+    pthread_mutex_unlock(&memory_mutex);
 
 #ifdef DOSTAT
     jiastat.prefetchcnt += (num-1);

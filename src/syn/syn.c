@@ -45,6 +45,7 @@
 #include "setting.h"
 #include "stat.h"
 #include <stdatomic.h>
+#include <pthread.h>
 
 /* mem */
 extern jiapage_t page[Maxmempages];
@@ -69,9 +70,10 @@ jiacv_t condvars[Maxcvs];
 int stackptr;
 
 _Atomic volatile int waitwait, acqwait, barrwait, cvwait;
-volatile int noclearlocks;
-volatile int waitcounter;
+_Atomic volatile int noclearlocks;
+_Atomic volatile int waitcounter;
 
+pthread_mutex_t memory_mutex = PTHREAD_MUTEX_INITIALIZER;
 
 /**
  * @brief initsyn -- initialize the sync setting
@@ -82,7 +84,7 @@ void initsyn() {
 
     /** step 1: init locks */
     for (i = 0; i <= Maxlocks; i++) {
-        locks[i].acqc = 0;
+        atomic_store(&(locks[i].acqc), 0);
         locks[i].scope = 0;
         locks[i].myscope = -1;
         for (j = 0; j < Maxhosts; j++) {
@@ -103,7 +105,7 @@ void initsyn() {
 
     stackptr = 0;
     top.lockid = hidelock;  // lockstack[0].lockid = 64
-    noclearlocks = 0;
+    atomic_store(&noclearlocks, 0);
 
     /** step 3: init condition variables */
     for (i = 0; i < Maxcvs; i++) {
@@ -113,7 +115,7 @@ void initsyn() {
         }
     }
     cvwait = 0;
-    waitcounter = 0;
+    atomic_store(&waitcounter, 0);
 }
 
 /**

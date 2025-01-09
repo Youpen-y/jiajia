@@ -182,7 +182,9 @@ void freewtntspace(wtnt_t *ptr) {
 void free_system_resources() {
     free_msg_buffer(&msg_buffer);  // free msg buffer
     free_msg_queue(&outqueue);     // free outqueue
-    free_msg_queue(&inqueue);      // free inqueue
+    for (int i = 0; i < system_setting.hostc; i++) {
+        free_msg_queue(&inqueue[i]);      // free inqueue
+    }
     free_setting(&system_setting); // free system setting
     // ...
 }

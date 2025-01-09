@@ -1,3 +1,4 @@
+// 使用蒙特卡罗模拟生成高斯分布（正态分布）随机对
 #include <jia.h>
 #include <math.h>
 #include <stdio.h>
@@ -13,6 +14,7 @@ double aint(double x) {
         return ceil(x);
 }
 
+// 用于生成随机数和缩放计算的常数
 unsigned int M = 0; /*#define M  28*/
 #define MK 10
 unsigned int MM;                           /*#define MM (M - MK)  */
@@ -23,7 +25,7 @@ unsigned int NK; /*#define NK (1 << MK) */ /* 2 ** MK */
 #define S 271828183.0
 
 extern char *optarg;
-int *shared;
+int *shared;    // 存储每个主机计算的结果的数组
 
 int main(int argc, char **argv) {
     double half23 = 1.0, half46 = 1.0, two23 = 1.0, two46 = 1.0;

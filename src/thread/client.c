@@ -90,7 +90,7 @@ static int outsend(jia_msg_t *msg) {
     if (msg->topid == msg->frompid) {
         log_info(3, "msg<seqno:%d, op:%s, frompid:%d, topid:%d> is send to self",
                 msg->seqno, op2name(msg->op), msg->frompid, msg->topid);
-        return enqueue(&inqueue, msg);
+        return enqueue(&inqueue[system_setting.jia_pid], msg);
     } else {
 
 #ifdef DOSTAT

@@ -79,7 +79,7 @@ void *listen_thread(void *args) {
                             "msg<seqno:%d, op:%s, frompid:%d, topid:%d> will "
                             "be enqueued",
                             msg.seqno, op2name(msg.op), msg.frompid, msg.topid);
-                    enqueue(&inqueue, &msg);
+                    enqueue(&inqueue[msg.frompid], &msg);
 
 #ifdef DOSTAT
                     if (statflag == 1) {

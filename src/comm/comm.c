@@ -35,6 +35,8 @@
  * =================================================================== *
  **********************************************************************/
 
+#include "global.h"
+#include <stdlib.h>
 #ifndef NULL_LIB
 #include <pthread.h>
 #include <semaphore.h>
@@ -52,6 +54,7 @@
 #include "thread.h"
 #include <stdatomic.h>
 
+struct inqueue_arg args[Maxhosts];
 
 // global variables
 
@@ -59,7 +62,7 @@
 comm_manager_t comm_manager;
 
 /* in/out queue */
-msg_queue_t inqueue;
+msg_queue_t inqueue[Maxhosts];
 msg_queue_t outqueue;
 
 long start_port;
@@ -70,6 +73,8 @@ static void sigint_handler();
 static void sigio_handler();
 static void register_sigint_handler();
 
+pthread_t server_tid[Maxhosts];
+
 // function definitions
 
 /**
@@ -77,6 +82,7 @@ static void register_sigint_handler();
  */
 void initcomm() {
     int i, j, fd;
+
 
     if (system_setting.jia_pid == 0) {
         VERBOSE_LOG(3, "************Initialize Communication!*******\n");
@@ -88,7 +94,9 @@ void initcomm() {
     init_msg_buffer(&msg_buffer, system_setting.msg_buffer_size);
 
     /* step 2: init inqueue, outqueue msg queue */
-    init_msg_queue(&inqueue, system_setting.msg_queue_size);
+    for (int i = 0; i < system_setting.hostc; i++) {
+        init_msg_queue(&inqueue[i], system_setting.msg_queue_size);
+    }
     init_msg_queue(&outqueue, system_setting.msg_queue_size);
 
     /* step 3: init comm manager */
@@ -97,8 +105,12 @@ void initcomm() {
     /* step 4: create client, server, listen threads */
     pthread_create(&client_tid, NULL, client_thread,
                    &outqueue); // create a new thread to send msg from outqueue
-    pthread_create(&server_tid, NULL, server_thread,
-                   &inqueue); // create a new thread to serve msg from inqueue
+    for (int i = 0; i < system_setting.hostc; i++) {
+        args[i].addr = &inqueue[i];
+        args[i].id = i;
+        pthread_create(&server_tid[i], NULL, server_thread,
+                    &args[i]); // create a new thread to serve msg from inqueue
+    }
     pthread_create(&listen_tid, NULL, listen_thread, NULL);
 
     /* step 5: register sigint handler */

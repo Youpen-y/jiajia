@@ -47,7 +47,7 @@
 #define TIMEOUT 100   /* used to wait for ack */
 #define MAX_RETRIES 64 /* number of retransmissions */
 
-extern msg_queue_t inqueue;
+extern msg_queue_t inqueue[Maxhosts];
 extern msg_queue_t outqueue;
 
 /* fd type */

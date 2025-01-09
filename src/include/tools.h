@@ -1,5 +1,6 @@
 #ifndef TOOLS_H
 #define TOOLS_H
+#include "thread.h"
 #pragma once
 
 #include "mem.h"
@@ -64,12 +65,12 @@ void free_system_resources();
 static int verbose_log = 3;
 static int verbose_out = 3;
 extern FILE *logfile;
-extern pthread_t server_tid;
+extern pthread_t server_tid[Maxhosts];
 extern pthread_t client_tid;
 extern pthread_t listen_tid;
 extern char errstr[Linesize];
 static char *clientstr = "[Thread client]";
-static char *serverstr = "[Thread server]";
+static char serverstr[20] = "[Thread server]";  //0..14
 static char *listenstr = "[Thread listen]";
 static char *mainstr = "[Thread  main ]";
 
@@ -93,6 +94,70 @@ extern struct prefetech_opt_t prefetch_optimization;
 
 #define show_errno() (errno == 0 ? "None" : strerror(errno))
 
+// #define log_err(STR, ...)                                                      \
+//     do {                                                                       \
+//         char *str;                                                            
+//         switch (pthread_self()) {                                              \
+//             case client_tid:
+//                 str = clientstr;
+//                 break;
+//             case listen_tid:
+//                 str = listenstr;
+//                 break;
+//             case server_tid[0]:
+//                 serverstr[15] = '[';
+//                 serverstr[16] = '0';
+//                 serverstr[17] = ']';
+//                 str = serverstr;
+//                 break;
+//             case server_tid[1]:
+//                 serverstr[15] = '[';
+//                 serverstr[16] = '1';
+//                 serverstr[17] = ']';
+//                 str = serverstr;
+//                 break;
+
+//             case server_tid[2]:
+//                 serverstr[15] = '[';
+//                 serverstr[16] = '2';
+//                 serverstr[17] = ']';
+//                 str = serverstr;
+//                 break;
+//             case server_tid[3]:
+//                 serverstr[15] = '[';
+//                 serverstr[16] = '3';
+//                 serverstr[17] = ']';
+//                 str = serverstr;
+//                 break;
+//             case server_tid[4]:
+//                 serverstr[15] = '[';
+//                 serverstr[16] = '4';
+//                 serverstr[17] = ']';
+//                 str = serverstr;
+//                 break;
+//             case server_tid[5]:
+//                 serverstr[15] = '[';
+//                 serverstr[16] = '5';
+//                 serverstr[17] = ']';
+//                 str = serverstr;
+//                 break;
+
+//             case server_tid[6]:
+//                 serverstr[15] = '[';
+//                 serverstr[16] = '6';
+//                 serverstr[17] = ']';
+//                 str = serverstr;
+//                 break;
+//             default:
+//                 str = mainstr;
+//                 break;
+//         }                                                                      \
+//         fprintf(stderr,                                                        \
+//                 "[\033[31mERROR\033[0m] %s (%s:%d:%s: errno: %s) " STR "\n",   \
+//                 str, __FILE__, __LINE__, __func__, show_errno(),               \
+//                 ##__VA_ARGS__);                                                \
+//     } while (0)
+
 #define log_err(STR, ...)                                                      \
     do {                                                                       \
         char *str;                                                             \
@@ -110,6 +175,7 @@ extern struct prefetech_opt_t prefetch_optimization;
                 str, __FILE__, __LINE__, __func__, show_errno(),               \
                 ##__VA_ARGS__);                                                \
     } while (0)
+
 
 #define log_info(level, STR, ...)                                              \
     if (verbose_log >= level) {                                                \

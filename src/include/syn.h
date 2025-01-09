@@ -66,7 +66,7 @@ typedef struct wtnttype {
 typedef struct locktype {
         int         acqs[Maxhosts];     /* acquirer's id*/
         int         acqscope[Maxhosts]; /* acquirer's scope*/
-        int         acqc;               /* acquire counter */
+_Atomic int         acqc;               /* acquire counter */
         int         scope;
         int         myscope;
         wtnt_t      *wtntp;             /* write notice list pointer */
@@ -127,4 +127,7 @@ void grantcondv(int condv, int toproc);
 void migarrangehome();
 void migcheckcache();
 void migpage(unsigned long addr, int frompid, int topid);
+
+/* memory_mutex use to keep synchronization between multiple server threads */
+extern pthread_mutex_t memory_mutex;
 #endif /*JIASYN_H*/

@@ -1,3 +1,4 @@
+#include "msg.h"
 #include "thread.h"
 #include "global.h"
 #include "comm.h"
@@ -8,13 +9,15 @@
 #include "global.h"
 #include "stat.h"
 
-pthread_t server_tid;
 static jia_msg_t msg;
 static void msg_handle(jia_msg_t *msg);
 
-void *server_thread(void *args)
+void *server_thread(void *arg)
 {
-    msg_queue_t *inqueue = (msg_queue_t *)args;
+    struct inqueue_arg *thread_arg = (struct inqueue_arg *)arg;
+
+    msg_queue_t *inqueue = (msg_queue_t *)thread_arg->addr;
+    int from_pid = thread_arg->id;
 
     while (1) {
         if (dequeue(inqueue, &msg) == -1) {
