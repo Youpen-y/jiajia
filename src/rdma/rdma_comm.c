@@ -1,12 +1,15 @@
-#include "global.h"
 #include "rdma.h"
+#include "msg.h"
 #include "setting.h"
 #include "tools.h"
 #include <arpa/inet.h>
 #include <endian.h>
 #include <infiniband/verbs.h>
 #include <pthread.h>
+#include <rdma/rdma_cma.h>
+#include <rdma/rdma_verbs.h>
 #include <stdbool.h>
+#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/socket.h>
@@ -14,361 +17,376 @@
 #include <time.h>
 #include <unistd.h>
 
-#define Msgsize 200 // temp value, used inlined message size in rdma
+#define Msgsize 200    // temp value, used inlined message size in rdma
+#define MAX_RETRY 1000 // client's max retry times to connect server
 
+// extern int jia_pid;
+// extern const char *server_ip;
+// extern const char *client_ip;
+// int batching_num = 8;
+// long start_port = 40000;
 extern long start_port;
-extern int ack_send, ack_recv;
-int batching_num = 8;
-
+pthread_mutex_t recv_comp_channel_mutex = PTHREAD_MUTEX_INITIALIZER;
+pthread_mutex_t send_comp_channel_mutex = PTHREAD_MUTEX_INITIALIZER;
+pthread_mutex_t pd_mutex = PTHREAD_MUTEX_INITIALIZER;
 jia_context_t ctx;
-jia_dest_t dest_info[Maxhosts];
-int arg[Maxhosts];
+static void sync_connection(int total_hosts, int jia_pid);
 
-void *tcp_server_thread(void *arg) {
-    /* step 1: create server tcp socket fd (setting reuse) */
+void init_rdma_comm() {
+    int i, j, fd;
+
+    if (system_setting.jia_pid == 0) {
+        VERBOSE_LOG(3, "************Initialize RDMA Communication!*******\n");
+    }
+    VERBOSE_LOG(3, "current jia_pid = %d\n", system_setting.jia_pid);
+    VERBOSE_LOG(3, " start_port = %ld \n", start_port);
+
+
+    /* step 1: init rdma context */
+    init_rdma_context(&ctx, BatchingSize);
+
+    /* step 2: establish connections between hosts*/
+    sync_connection(system_setting.hostc, system_setting.jia_pid);
+
+    /* step 3: init rdma resource */
+    init_rdma_resource(&ctx);
+
+    /* step 4: create rdma listen, client, server thread */
+    pthread_create(&rdma_listen_tid, NULL, rdma_listen_thread, NULL);
+    pthread_create(&rdma_client_tid, NULL, rdma_client_thread, NULL);
+    pthread_create(&rdma_server_tid, NULL, rdma_server_thread, NULL);
+
+    /* step 5: register sigint handler */
+    register_sigint_handler();
+}
+
+void *server_thread(void *arg) {
+    struct rdma_cm_id *listener = NULL;
+    struct rdma_event_channel *ec = NULL;
+    struct sockaddr_in addr;
+    struct rdma_cm_event *event = NULL;
+    struct ibv_qp_init_attr qp_attr;
+    struct rdma_conn_param conn_param; // connect parameters that transfer to client in rdma_accept
+
+    int ret;
+    int completion_num = 0; // completed connection number
+    int client_id;          // used to store the client id that try to connect the server
+
+    /** step 1: create event channel */
+    ec = rdma_create_event_channel();
+    if (!ec) {
+        fprintf(stderr, "Host %d: Failed to create event channel\n", system_setting.jia_pid);
+        return NULL;
+    }
+
+    /** step 2: create listen rdma_cm_id */
+    ret = rdma_create_id(ec, &listener, NULL, RDMA_PS_TCP);
+    if (ret) {
+        fprintf(stderr, "Host %d: Failed to create RDMA CM ID\n", system_setting.jia_pid);
+        goto cleanup;
+    }
+
+    /** step 3: bind to server's ip addr */
+    memset(&addr, 0, sizeof(addr));
+    addr.sin_family = AF_INET;
+    addr.sin_port = htons(start_port + system_setting.jia_pid);
+    addr.sin_addr.s_addr = inet_addr(system_setting.hosts[system_setting.jia_pid].ip);
+    ret = rdma_bind_addr(listener, (struct sockaddr *)&addr);
+    if (ret) {
+        fprintf(stderr, "Host %d: Failed to bind address\n", system_setting.jia_pid);
+        goto cleanup;
+    }
+
+    /** step 4: listen... */
+    ret = rdma_listen(listener, Maxhosts);
+    if (ret) {
+        fprintf(stderr, "Host %d: Failed to listen\n", system_setting.jia_pid);
+        goto cleanup;
+    }
+
+    printf("Host %d: Server listening on port %ld\n", system_setting.jia_pid, start_port + system_setting.jia_pid);
+
+    while (1) {
+        // by default, the following call will block until an event is received
+        ret = rdma_get_cm_event(ec, &event);
+        if (ret) {
+            continue;
+        }
+
+        switch (event->event) {
+        case RDMA_CM_EVENT_CONNECT_REQUEST:
+            // get the private data(i.e. id) from client
+            client_id = *(int *)event->param.conn.private_data;
+            log_out(4, "Received Connect Request from host %d\n", client_id);
+
+            // if the common completion channel is null, create it, otherwise use it directly
+            pthread_mutex_lock(&recv_comp_channel_mutex);
+            if (ctx.recv_comp_channel == NULL)
+                ctx.recv_comp_channel = ibv_create_comp_channel(event->id->verbs);
+            pthread_mutex_unlock(&recv_comp_channel_mutex);
+
+            pthread_mutex_lock(&send_comp_channel_mutex);
+            if (ctx.send_comp_channel == NULL)
+                ctx.send_comp_channel = ibv_create_comp_channel(event->id->verbs);
+            pthread_mutex_unlock(&send_comp_channel_mutex);
+
+            // set QP attributes
+            memset(&qp_attr, 0, sizeof(qp_attr));
+            qp_attr.qp_context = NULL;
+            qp_attr.cap.max_send_wr = QueueSize * 4;
+            qp_attr.cap.max_recv_wr = QueueSize * 4;
+            qp_attr.cap.max_send_sge = 1;
+            qp_attr.cap.max_recv_sge = 1;
+            qp_attr.cap.max_inline_data = 88;
+            qp_attr.qp_type = IBV_QPT_RC;
+            // there, we use ctx.connect_array[client_id] as cq_context, which will be catched by
+            // ibv_get_cq_event
+            qp_attr.send_cq =
+                ibv_create_cq(event->id->verbs, QueueSize, &(ctx.connect_array[client_id]),
+                              ctx.send_comp_channel, 0);
+            qp_attr.recv_cq =
+                ibv_create_cq(event->id->verbs, QueueSize, &(ctx.connect_array[client_id]),
+                              ctx.recv_comp_channel, 0);
+
+            // request completion notification on send_cq and recv_cq
+            ibv_req_notify_cq(qp_attr.send_cq, 0);
+            ibv_req_notify_cq(qp_attr.recv_cq, 0);
+
+            // if the pd is not null, use it, otherwise create it and use
+            pthread_mutex_lock(&pd_mutex);
+            if (ctx.pd == NULL) {
+                ctx.pd = ibv_alloc_pd(event->id->verbs);
+            }
+            pthread_mutex_unlock(&pd_mutex);
+
+            // create QP
+            ret = rdma_create_qp(event->id, ctx.pd, &qp_attr);
+            if (!ret) {
+                // there, server can transfer its private data to client too
+                memset(&conn_param, 0, sizeof(conn_param));
+                conn_param.private_data = &(system_setting.jia_pid);
+                conn_param.private_data_len = sizeof(system_setting.jia_pid);
+
+                // conn_param.responder_resources = 4;
+                // conn_param.initiator_depth = 1;
+                // conn_param.rnr_retry_count = 7;
+                conn_param.responder_resources = 8; // 可同时处理 2 个 RDMA Read
+                conn_param.initiator_depth = 8;     // 可以发起 2 个并发的 RDMA Read
+                conn_param.flow_control = 1;        // 启用流控
+                conn_param.retry_count = 7;         // 发送重传 7 次
+                conn_param.rnr_retry_count = 7;     // RNR 重传 7 次
+
+                // don't use SRQ, use QP num that allocated by system
+                conn_param.srq = 0;
+                conn_param.qp_num = 0;
+
+                // accept the connect
+                ret = rdma_accept(event->id, &conn_param);
+                if (!ret) {
+                    printf("Host %d: Accepted connection\n", system_setting.jia_pid);
+                }
+            }
+            break;
+
+        case RDMA_CM_EVENT_ESTABLISHED:
+            log_out(4, "Host %d: Connection established\n", system_setting.jia_pid);
+
+            // update the connection status
+            ctx.connect_array[client_id].connected = true;
+            ctx.connect_array[client_id].id = *(event->id);
+            completion_num++;
+            if (completion_num == system_setting.jia_pid) {
+                // server has finished its job
+                goto cleanup;
+            }
+            break;
+
+        case RDMA_CM_EVENT_DISCONNECTED:
+            rdma_destroy_qp(event->id);
+            rdma_destroy_id(event->id);
+            printf("Host %d: Connection disconnected\n", system_setting.jia_pid);
+            break;
+
+        default:
+            break;
+        }
+
+        rdma_ack_cm_event(event);
+    }
+
+cleanup:
+    if (listener) {
+        rdma_destroy_id(listener);
+    }
+    if (ec) {
+        rdma_destroy_event_channel(ec);
+    }
+    return NULL;
+}
+
+void *client_thread(void *arg) {
     int server_id = *(int *)arg;
-    int server_fd = socket(AF_INET, SOCK_STREAM, 0);
-    if (server_fd < 0) {
-        log_err("Failed to create server socket");
-    }
-    int opt = 1;
-    if (setsockopt(server_fd, SOL_SOCKET, SO_REUSEADDR | SO_REUSEPORT, &opt,
-                   sizeof(opt)) < 0) {
-        perror("setsockopt SO_REUSEADDR/SO_REUSEPORT failed");
-        exit(EXIT_FAILURE);
+    struct rdma_cm_id *id = NULL;
+    struct rdma_event_channel *ec = NULL;
+    struct sockaddr_in addr;
+    struct rdma_cm_event *event = NULL;
+    struct ibv_qp_init_attr qp_attr;
+    struct rdma_conn_param conn_param;
+
+    int ret;
+    bool retry_flag = true;
+    int retry_count = 0;
+
+    /** step 1: create event channel */
+    ec = rdma_create_event_channel();
+    if (!ec) {
+        fprintf(stderr, "Host %d: Failed to create event channel for client[%d]\n", system_setting.jia_pid,
+                server_id);
+        return NULL;
     }
 
-    /* step 2: bind fd and listen to addr::port (ANY_ADDR) */
-    struct sockaddr_in server_addr = {0};
-    server_addr.sin_family = AF_INET;
-    server_addr.sin_addr.s_addr =
-        inet_addr((char *)system_setting.hosts[system_setting.jia_pid].ip);
-    server_addr.sin_port = htons(ctx.tcp_port + server_id);
-    if (bind(server_fd, (struct sockaddr *)&server_addr, sizeof(server_addr)) <
-        0) {
-        perror("bind failed");
-        exit(EXIT_FAILURE);
-    }
-    if (listen(server_fd, 1) < 0) {
-        perror("listen");
-        exit(EXIT_FAILURE);
-    }
-    log_out(3, "Server listening on <%s, %d>...\n",
-            system_setting.hosts[system_setting.jia_pid].ip,
-            ctx.tcp_port + server_id);
+    while (retry_flag && retry_count < MAX_RETRY) {
+        retry_flag = false;
 
-    /* step 3: accept ANY_ADDR to set new fd */
-    struct sockaddr_in client_addr = {0};
-    socklen_t addrlen = sizeof(client_addr);
-    int new_socket =
-        accept(server_fd, (struct sockaddr *)&client_addr, &addrlen);
-    if (new_socket < 0) {
-        perror("accept");
-        exit(EXIT_FAILURE);
-    }
-    log_out(3, "Server: connection established with client.\n");
-
-    /* step 4: test connection */
-    bool flag = true;
-    while (1) {
-        ssize_t bytes_read =
-            recv(new_socket, &dest_info[server_id], sizeof(jia_dest_t), 0);
-        if (bytes_read == sizeof(jia_dest_t)) {
-            send(new_socket, &flag, sizeof(bool), 0);
-            break;
-        } else {
-            flag = false;
-            send(new_socket, &flag, sizeof(bool), 0);
+        /** step 2: create listen rdma_cm_id */
+        ret = rdma_create_id(ec, &id, NULL, RDMA_PS_TCP);
+        if (ret) {
+            fprintf(stderr, "Host %d: Failed to create RDMA CM ID for client[%d]\n", system_setting.jia_pid,
+                    server_id);
+            goto cleanup;
         }
-    }
-    log_out(3, "[%d]\t0x%04x\t0x%06x\t0x%06x\t%016llx:%016llx\n", server_id,
-            dest_info[server_id].lid, dest_info[server_id].qpn,
-            dest_info[server_id].psn,
-            dest_info[server_id].gid.global.subnet_prefix,
-            dest_info[server_id].gid.global.interface_id);
 
-    /* step 5: close fd */
-    close(new_socket);
-    close(server_fd);
+        /** step 3: resolve the dest's addr */
+        memset(&addr, 0, sizeof(addr));
+        addr.sin_family = AF_INET;
+        addr.sin_port = htons(start_port + server_id);
+        addr.sin_addr.s_addr = inet_addr(system_setting.hosts[server_id].ip);
+        ret = rdma_resolve_addr(id, NULL, (struct sockaddr *)&addr, 2000);
+        if (ret) {
+            fprintf(stderr, "Host %d: Failed to resolve address for host %d\n", system_setting.jia_pid, server_id);
+            goto cleanup;
+        }
+
+        while (1) {
+            ret = rdma_get_cm_event(ec, &event);
+            if (ret) {
+                continue;
+            }
+
+            switch (event->event) {
+            case RDMA_CM_EVENT_ADDR_RESOLVED: /** step 4: resolve the route */
+                ret = rdma_resolve_route(event->id, 2000);
+                break;
+
+            case RDMA_CM_EVENT_ROUTE_RESOLVED: /** step 5: initiate a connection */
+                pthread_mutex_lock(&recv_comp_channel_mutex);
+                if (ctx.recv_comp_channel == NULL)
+                    ctx.recv_comp_channel = ibv_create_comp_channel(event->id->verbs);
+                pthread_mutex_unlock(&recv_comp_channel_mutex);
+
+                pthread_mutex_lock(&send_comp_channel_mutex);
+                if (ctx.send_comp_channel == NULL)
+                    ctx.send_comp_channel = ibv_create_comp_channel(event->id->verbs);
+                pthread_mutex_unlock(&send_comp_channel_mutex);
+
+                // set QP attribute
+                memset(&qp_attr, 0, sizeof(qp_attr));
+                qp_attr.qp_context = NULL;
+                qp_attr.cap.max_send_wr = QueueSize * 4;
+                qp_attr.cap.max_recv_wr = QueueSize * 4;
+                qp_attr.cap.max_send_sge = 1;
+                qp_attr.cap.max_recv_sge = 1;
+                qp_attr.cap.max_inline_data = 64;
+                qp_attr.qp_type = IBV_QPT_RC;
+                // there, we use ctx.connect_array[client_id] as cq_context, which will be catched
+                // by ibv_get_cq_event
+                qp_attr.send_cq =
+                    ibv_create_cq(event->id->verbs, QueueSize * 4, &(ctx.connect_array[server_id]),
+                                  ctx.send_comp_channel, 0);
+                qp_attr.recv_cq =
+                    ibv_create_cq(event->id->verbs, QueueSize * 4, &(ctx.connect_array[server_id]),
+                                  ctx.recv_comp_channel, 0);
+
+                // request completion notification on send_cq and recv_cq
+                ibv_req_notify_cq(qp_attr.send_cq, 0);
+                ibv_req_notify_cq(qp_attr.recv_cq, 0);
+
+                pthread_mutex_lock(&pd_mutex);
+                if (ctx.pd == NULL) {
+                    ctx.pd = ibv_alloc_pd(id->verbs);
+                }
+                pthread_mutex_unlock(&pd_mutex);
+
+                // create QP
+                ret = rdma_create_qp(event->id, ctx.pd, &qp_attr);
+                if (!ret) {
+                    // set private data (there, use id)
+                    memset(&conn_param, 0, sizeof(conn_param));
+                    conn_param.private_data = &(system_setting.jia_pid);
+                    conn_param.private_data_len = sizeof(system_setting.jia_pid);
+
+                    // set resource parameters
+                    conn_param.responder_resources = 8; // 可同时处理 2 个 RDMA Read
+                    conn_param.initiator_depth = 8;     // 可以发起 2 个并发的 RDMA Read
+                    conn_param.flow_control = 1;        // 启用流控
+                    conn_param.retry_count = 7;         // 发送重传 7 次
+                    conn_param.rnr_retry_count = 7;     // RNR 重传 7 次
+
+                    // don't use SRQ, use QP num that allocated by system
+                    conn_param.srq = 0;
+                    conn_param.qp_num = 0;
+
+                    ret = rdma_connect(event->id, &conn_param);
+                }
+                break;
+
+            case RDMA_CM_EVENT_REJECTED: /** step 5.5: connect rejected, reconnect */
+                // when client try to connect, but no corresponding server exists, trigger this
+                // event
+                log_out(4, "[%d]Connect to host %d failed, event: %s", retry_count, server_id,
+                        rdma_event_str(event->event));
+
+                // retry or not
+                if (retry_count < MAX_RETRY) {
+                    retry_count++;
+                    retry_flag = true;
+                }
+                if (id) {
+                    rdma_destroy_qp(id);
+                }
+                id = NULL; // 重置 id
+                goto next_try;
+
+            case RDMA_CM_EVENT_ESTABLISHED: /** step 6: connection establishted */
+                log_out(4, "\nAfter retried %d connect, Host %d: Connected to host %d\n",
+                        retry_count, system_setting.jia_pid, server_id);
+                ctx.connect_array[server_id].connected = true;
+                ctx.connect_array[server_id].id = *(event->id);
+
+            case RDMA_CM_EVENT_UNREACHABLE:
+            case RDMA_CM_EVENT_DISCONNECTED:
+                goto cleanup;
+
+            default:
+                break;
+            }
+
+            rdma_ack_cm_event(event);
+        } // while(1)
+
+    next_try:
+        if (retry_flag) {}
+        continue;
+    } // while(retry_flag && retry_count < MAX_RETRY)
+
+cleanup:
+    if (ec) {
+        rdma_destroy_event_channel(ec);
+    }
     return NULL;
 }
 
-void *tcp_client_thread(void *arg) {
-    /* step 1: create client tcp socket fd (setting timeout) */
-    int client_id = *(int *)arg;
-    int client_fd = socket(AF_INET, SOCK_STREAM, 0);
-    if (client_fd < 0) {
-        log_err("Failed to create client socket");
-    }
-    struct timeval timeout;
-    timeout.tv_sec = 2;
-    timeout.tv_usec = 0;
-    if (setsockopt(client_fd, SOL_SOCKET, SO_SNDTIMEO, (const char *)&timeout,
-                   sizeof(timeout)) < 0) {
-        perror("setsockopt failed");
-        close(client_fd);
-    }
-
-    /* step 2: connect server_addr */
-    struct sockaddr_in server_addr = {0};
-    server_addr.sin_family = AF_INET;
-    server_addr.sin_addr.s_addr = inet_addr(system_setting.hosts[client_id].ip);
-    server_addr.sin_port = htons(ctx.tcp_port + system_setting.jia_pid);
-    while (connect(client_fd, (struct sockaddr *)&server_addr,
-                   sizeof(server_addr)) < 0) {
-        if (errno == EINPROGRESS || errno == EWOULDBLOCK) {
-            log_err("Connection timed out\n");
-        }
-    }
-
-    /* step 3: test connection */
-    bool flag = false;
-    while (1) {
-        send(client_fd, &dest_info[system_setting.jia_pid], sizeof(jia_dest_t),
-             0);
-        if (recv(client_fd, &flag, sizeof(bool), 0) == 1 && flag) {
-            log_out(3, "server returned %s\n", flag == true ? "true" : "false");
-            break;
-        }
-    }
-
-    /* step 4: close fd */
-    close(client_fd);
-    return NULL;
-}
-
-void exchange_dest_info() {
-    /* step 1: init thread args */
-    for (int i = 0; i < Maxhosts; i++) {
-        arg[i] = i;
-    }
-
-    /* step 2: create server and client threads */
-    for (int i = 0; i < system_setting.hostc; i++) {
-        if (i == system_setting.jia_pid) {
-            continue;
-        }
-        pthread_create(&ctx.server_tid[i], NULL, tcp_server_thread, &arg[i]);
-    }
-    for (int i = 0; i < system_setting.hostc; i++) {
-        if (i == system_setting.jia_pid) {
-            continue;
-        }
-        pthread_create(&ctx.client_tid[i], NULL, tcp_client_thread, &arg[i]);
-    }
-
-    /* step 3: wait server and client threads */
-    for (int i = 0; i < system_setting.hostc; i++) {
-        if (i == system_setting.jia_pid) {
-            continue;
-        }
-        pthread_join(ctx.server_tid[i], NULL);
-        pthread_join(ctx.client_tid[i], NULL);
-    }
-
-    printf("jia_pid\tlid\tqpn\tpsn\tgid.subnet_prefix:gid.interface_id\n");
-    for (int i = 0; i < system_setting.hostc; i++) {
-        printf("[%d]\t0x%04x\t0x%06x\t0x%06x\t%016llx:%016llx\n", i,
-               dest_info[i].lid, dest_info[i].qpn, dest_info[i].psn,
-               dest_info[i].gid.global.subnet_prefix,
-               dest_info[i].gid.global.interface_id);
-    }
-}
-
-void init_comm_qp_context(struct jia_context *ctx) {
-    /* step 1: create completion channel */
-    ctx->send_channel = ibv_create_comp_channel(ctx->context);
-    ctx->recv_channel = ibv_create_comp_channel(ctx->context);
-
-    /* step 2: register memory region */
-    ctx->send_mr = (struct ibv_mr **)malloc(sizeof(struct ibv_mr *) *
-                                            system_setting.msg_queue_size);
-    ctx->recv_mr = (struct ibv_mr **)malloc(sizeof(struct ibv_mr *) *
-                                            system_setting.msg_queue_size);
-    for (int i = 0; i < system_setting.msg_queue_size; i++) {
-        ctx->send_mr[i] = ibv_reg_mr(ctx->pd, &ctx->outqueue->queue[i].msg,
-                                     sizeof(jia_msg_t), IBV_ACCESS_LOCAL_WRITE);
-        ctx->recv_mr[i] = ibv_reg_mr(ctx->pd, &ctx->inqueue->queue[i].msg,
-                                     sizeof(jia_msg_t), IBV_ACCESS_LOCAL_WRITE);
-    }
-
-    /* step 3: create completion queue */
-    ctx->send_cq = ibv_create_cq(ctx->context, system_setting.msg_queue_size,
-                                 NULL, ctx->send_channel, 0);
-    ctx->recv_cq = ibv_create_cq(ctx->context, system_setting.msg_queue_size,
-                                 NULL, ctx->recv_channel, 0);
-
-    /* step 4: create QP && change QP's state to RTS */
-    {
-        /* step 4.1: create qp with giving type and cap */
-        struct ibv_qp_attr attr;
-        struct ibv_qp_init_attr init_attr = {
-            .qp_context = ctx->context,
-            .send_cq = ctx->send_cq,
-            .recv_cq = ctx->recv_cq,
-            .srq = NULL,
-            .cap =
-                {
-                      .max_send_wr = system_setting.msg_queue_size,
-                      .max_recv_wr = system_setting.msg_queue_size,
-                      .max_send_sge = 1,
-                      .max_recv_sge = 1,
-                      .max_inline_data = 60,
-                      },
-            .qp_type = IBV_QPT_UD,
-            .sq_sig_all = 1
-        };
-        ctx->qp = ibv_create_qp(ctx->pd, &init_attr);
-
-        /* step 4.2: query qp to get queue's info */
-        ibv_query_qp(ctx->qp, &attr, IBV_QP_CAP, &init_attr);
-        if (init_attr.cap.max_inline_data >= Msgsize) {
-            // use inline data for little messages
-            ctx->send_flags |= IBV_SEND_INLINE;
-        }
-
-        /* step 4.3: change state from IBV_QPS_INIT to IBV_QPS_RTS */
-        attr.qp_state = IBV_QPS_INIT;
-        attr.pkey_index = 0;
-        attr.port_num = ctx->ib_port;
-        attr.qkey = 0x11111111;
-        if (ibv_modify_qp(ctx->qp, &attr,
-                          IBV_QP_STATE | IBV_QP_PKEY_INDEX | IBV_QP_PORT |
-                              IBV_QP_QKEY)) {
-            log_err("Failed to modify QP to INIT");
-        }
-
-        attr.qp_state = IBV_QPS_RTR;
-        if (ibv_modify_qp(ctx->qp, &attr, IBV_QP_STATE)) {
-            log_err("Failed to modify QP to RTR");
-        }
-
-        attr.qp_state = IBV_QPS_RTS;
-        attr.sq_psn = 0;
-        if (ibv_modify_qp(ctx->qp, &attr, IBV_QP_STATE | IBV_QP_SQ_PSN)) {
-            log_err("Failed to modify QP to RTS");
-        }
-    }
-
-    /* step 5: update localhost's gid and other information in dest_info*/
-    ibv_query_port(ctx->context, ctx->ib_port, &ctx->portinfo);
-    dest_info[system_setting.jia_pid].lid = ctx->portinfo.lid;
-    dest_info[system_setting.jia_pid].qpn = ctx->qp->qp_num;
-    dest_info[system_setting.jia_pid].psn = 0;
-
-    if (ibv_query_gid(ctx->context, ctx->ib_port, 0,
-                      &dest_info[system_setting.jia_pid].gid)) {
-        log_err("Failed to query gid");
-        memset(&dest_info[system_setting.jia_pid].gid, 0,
-               sizeof(dest_info[system_setting.jia_pid].gid));
-    }
-    dest_info[system_setting.jia_pid].gid.global.subnet_prefix =
-        be64toh(dest_info[system_setting.jia_pid].gid.global.subnet_prefix);
-    dest_info[system_setting.jia_pid].gid.global.interface_id =
-        be64toh(dest_info[system_setting.jia_pid].gid.global.interface_id);
-
-    log_info(3,
-             "Local address: LID 0x%04x, QPN 0x%06x, PSN 0x%06x, GID "
-             "%016llx:%016llx",
-             dest_info[system_setting.jia_pid].lid,
-             dest_info[system_setting.jia_pid].qpn,
-             dest_info[system_setting.jia_pid].psn,
-             dest_info[system_setting.jia_pid].gid.global.subnet_prefix,
-             dest_info[system_setting.jia_pid].gid.global.interface_id);
-
-    // create ah
-    ctx->ah = (struct ibv_ah **)malloc(sizeof(struct ibv_ah *) *
-                                       system_setting.hostc);
-    for (int i = 0; i < system_setting.hostc; i++) {
-        if (i == system_setting.jia_pid) {
-            continue;
-        }
-        struct ibv_ah_attr attr = {.is_global = 0,
-                                   .dlid = dest_info[i].lid,
-                                   .sl = 0,
-                                   .src_path_bits = 0,
-                                   .port_num = ctx->ib_port};
-
-        if (dest_info[i].gid.global.interface_id) {
-            attr.is_global = 1;
-            attr.grh.hop_limit = 1;
-            attr.grh.dgid = dest_info[i].gid;
-            attr.grh.sgid_index = 0;
-        }
-
-        ctx->ah[i] = ibv_create_ah(ctx->pd, &attr);
-    }
-}
-
-void init_ack_qp_context(struct jia_context *ctx) {
-    /* step 1: create completion channel */
-    ctx->ack_send_channel = ibv_create_comp_channel(ctx->context);
-    ctx->ack_recv_channel = ibv_create_comp_channel(ctx->context);
-
-    /* step 2: register memory region */
-    ctx->ack_send_mr =
-        ibv_reg_mr(ctx->pd, &ack_send, sizeof(int), IBV_ACCESS_LOCAL_WRITE);
-    ctx->ack_recv_mr =
-        ibv_reg_mr(ctx->pd, &ack_recv, sizeof(int), IBV_ACCESS_LOCAL_WRITE);
-
-    /* step 3: create completion queue */
-    ctx->ack_send_cq =
-        ibv_create_cq(ctx->context, 1, NULL, ctx->ack_send_channel, 0);
-    ctx->ack_recv_cq =
-        ibv_create_cq(ctx->context, 1, NULL, ctx->ack_recv_channel, 0);
-
-    /* step 4: create QP && change QP's state to RTS */
-    {
-        /* step 4.1: create qp with giving type and cap */
-        struct ibv_qp_attr attr;
-        struct ibv_qp_init_attr init_attr = {
-            .qp_context = ctx->context,
-            .send_cq = ctx->ack_send_cq,
-            .recv_cq = ctx->ack_recv_cq,
-            .srq = NULL,
-            .cap =
-                {
-                      .max_send_wr = 1,
-                      .max_recv_wr = 1,
-                      .max_send_sge = 1,
-                      .max_recv_sge = 1,
-                      .max_inline_data = 0,
-                      },
-            .qp_type = IBV_QPT_UD,
-            .sq_sig_all = 1
-        };
-        ctx->ack_qp = ibv_create_qp(ctx->pd, &init_attr);
-
-        // TODO: should choose immediate state?
-
-        /* step 4.2: change state from IBV_QPS_INIT to IBV_QPS_RTS */
-        attr.qp_state = IBV_QPS_INIT;
-        attr.pkey_index = 0;
-        attr.port_num = ctx->ib_port;
-        attr.qkey = 0x11111111;
-        if (ibv_modify_qp(ctx->ack_qp, &attr,
-                          IBV_QP_STATE | IBV_QP_PKEY_INDEX | IBV_QP_PORT |
-                              IBV_QP_QKEY)) {
-            log_err("Failed to modify QP to INIT");
-        }
-
-        attr.qp_state = IBV_QPS_RTR;
-        if (ibv_modify_qp(ctx->ack_qp, &attr, IBV_QP_STATE)) {
-            log_err("Failed to modify QP to RTR");
-        }
-
-        attr.qp_state = IBV_QPS_RTS;
-        attr.sq_psn = 0;
-        if (ibv_modify_qp(ctx->ack_qp, &attr, IBV_QP_STATE | IBV_QP_SQ_PSN)) {
-            log_err("Failed to modify QP to RTS");
-        }
-    }
-
-    /* step 5: get ack_qpn */
-    dest_info[system_setting.jia_pid].ack_qpn = ctx->ack_qp->qp_num;
-}
-
-int init_rdma_context(struct jia_context *ctx, int batching_num) {
+void init_rdma_context(struct jia_context *ctx, int batching_num) {
     struct ibv_device **dev_list;
     struct ibv_device *dev;
 
@@ -384,93 +402,93 @@ int init_rdma_context(struct jia_context *ctx, int batching_num) {
     }
 
     /* step 2: init ctx common parameters */
-    ctx->pd = ibv_alloc_pd(ctx->context);
-    ctx->outqueue = &outqueue;
-    ctx->inqueue = &inqueue;
-    ctx->ib_port = 2; // this can be set from a config file
+    ctx->ib_port = 2;
     ctx->batching_num = batching_num;
-    ctx->tcp_port = start_port;
+    ctx->outqueue = &outqueue;
 
-    /* step 3: init communication QP context */
-    init_comm_qp_context(ctx);
+    init_msg_queue(ctx->outqueue, QueueSize);
 
-    /* step 4: init ACK QP context */
-    init_ack_qp_context(ctx);
-
-    /* step 5: exchange QP's info with other hosts */
-    exchange_dest_info();
-
-    return 0;
+    /* step 3: init rdma connection parameters */
+    for (int i = 0; i < Maxhosts; i++) {
+        ctx->connect_array[i].connected = false;
+        ctx->connect_array[i].inqueue = (msg_queue_t *)malloc(sizeof(msg_queue_t));
+        init_msg_queue(ctx->connect_array[i].inqueue, QueueSize);
+        ctx->connect_array[i].in_mr = (struct ibv_mr **)malloc(sizeof(struct ibv_mr *) * QueueSize);
+    }
 }
 
-void init_rdma_comm() {
-    if (system_setting.jia_pid == 0) {
-        VERBOSE_LOG(3, "************Initialize RDMA Communication!*******\n");
+void sync_connection(int total_hosts, int jia_pid) {
+    // 创建服务器线程（如果需要）
+    if (jia_pid != 0) {
+        pthread_create(&ctx.server_thread, NULL, server_thread, &ctx);
     }
-    VERBOSE_LOG(3, "current jia_pid = %d\n", system_setting.jia_pid);
-    VERBOSE_LOG(3, " start_port = %ld \n", start_port);
 
-    /* step 1: init msg buffer */
-    init_msg_buffer(&msg_buffer, system_setting.msg_buffer_size);
+    // 创建客户端线程（如果需要）
+    int num_clients = total_hosts - jia_pid - 1;
+    if (num_clients > 0) {
+        ctx.client_threads = malloc(num_clients * sizeof(pthread_t));
+        for (int i = 0; i < num_clients; i++) {
+            int *target_host = (int *)malloc(sizeof(int));
+            *target_host = jia_pid + i + 1;
+            pthread_create(&ctx.client_threads[i], NULL, client_thread, target_host);
+        }
+    }
 
-    /* step 2: init inqueue, outqueue msg queue */
-    init_msg_queue(&inqueue, system_setting.msg_queue_size);
-    init_msg_queue(&outqueue, system_setting.msg_queue_size);
+    // 等待服务器线程
+    if (jia_pid != 0) {
+        pthread_join(ctx.server_thread, NULL);
+    }
 
-    /* step 3: init rdma context */
-    init_rdma_context(&ctx, batching_num);
+    // 等待所有客户端线程
+    if (num_clients > 0) {
+        for (int i = 0; i < num_clients; i++) {
+            pthread_join(ctx.client_threads[i], NULL);
+        }
+    }
+}
 
-    /* step 4: create rdma client, server, listen thread */
-    pthread_create(&rdma_client_tid, NULL, rdma_client, NULL);
-    pthread_create(&rdma_server_tid, NULL, rdma_server, NULL);
-    pthread_create(&rdma_listen_tid, NULL, rdma_listen, NULL);
 
-    /* step 5: register signal handler */
-    register_sigint_handler();
+void init_rdma_resource(struct jia_context *ctx) {
+    /* step 1: register outqueue memory regions */
+    for (int i = 0; i < QueueSize; i++) {
+        ctx->out_mr[i] =
+            ibv_reg_mr(ctx->pd, ctx->outqueue->queue[i], 40960, IBV_ACCESS_LOCAL_WRITE);
+    }
+
+    /* step 2: register inqueue memory regions */
+    for (int i = 0; i < Maxhosts; i++) {
+        if (i == system_setting.jia_pid)
+            continue;
+        for (int j = 0; j < QueueSize; j++) {
+            ctx->connect_array[i].in_mr[j] = rdma_reg_msgs(
+                &ctx->connect_array[i].id, ctx->connect_array[i].inqueue->queue[j], 40960);
+        }
+    }
 }
 
 void free_rdma_resources(struct jia_context *ctx) {
-    if (ibv_destroy_qp(ctx->qp)) {
-        log_err("Couldn't destroy QP\n");
+    for (int i = 0; i < QueueSize; i++) {
+        ibv_dereg_mr(ctx->out_mr[i]);
     }
 
-    if (ibv_destroy_cq(ctx->send_cq)) {
-        log_err("Couldn't destroy Send CQ\n");
-    }
-
-    if (ibv_destroy_cq(ctx->recv_cq)) {
-        log_err("Couldn't destroy Recv CQ\n");
-    }
-
-    for (int i = 0; i < system_setting.msg_queue_size; i++) {
-        if (ibv_dereg_mr(ctx->send_mr[i])) {
-            log_err("Couldn't dereg send mr[%d]", i);
-        }
-        if (ibv_dereg_mr(ctx->recv_mr[i])) {
-            log_err("Couldn't dereg recv mr[%d]", i);
+    for (int i = 0; i < Maxhosts; i++) {
+        if (i == system_setting.jia_pid)
+            continue;
+        for (int j = 0; j < QueueSize; j++) {
+            ibv_dereg_mr(ctx->connect_array[i].in_mr[j]);
         }
     }
 
-    for (int i = 0; i < system_setting.hostc; i++) {
-        if (ibv_destroy_ah(ctx->ah[i])) {
-            log_err("Couldn't destroy ah[%d]", i);
-        }
+    free_msg_queue(ctx->outqueue);
+    for (int i = 0; i < Maxhosts; i++) {
+        free_msg_queue(ctx->connect_array[i].inqueue);
     }
-    free(ctx->ah);
 
     if (ibv_dealloc_pd(ctx->pd)) {
-        log_err("Couldn't deallocate PD");
-    }
-
-    if (ibv_destroy_comp_channel(ctx->send_channel)) {
-        log_err("Couldn't destroy send completion channel");
-    }
-
-    if (ibv_destroy_comp_channel(ctx->recv_channel)) {
-        log_err("Couldn't destroy recv completion channel");
+        log_err("Couldn't dealloc pd");
     }
 
     if (ibv_close_device(ctx->context)) {
-        log_err("Couldn't release context");
+        log_err("Couldn't close device");
     }
 }

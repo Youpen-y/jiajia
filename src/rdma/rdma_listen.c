@@ -1,95 +1,132 @@
-#include "jia.h"
+#include "global.h"
 #include "msg.h"
 #include "rdma.h"
+#include "setting.h"
 #include "tools.h"
-#include <bits/pthreadtypes.h>
 #include <infiniband/verbs.h>
 #include <pthread.h>
 #include <semaphore.h>
 #include <stdatomic.h>
+#include <stdlib.h>
 
 pthread_t rdma_listen_tid;
-extern pthread_cond_t cond_server;
-pthread_cond_t cond_listen = PTHREAD_COND_INITIALIZER;
-pthread_mutex_t lock_listen = PTHREAD_MUTEX_INITIALIZER;
-static struct ibv_recv_wr *bad_wr = NULL;
 static struct ibv_wc wc;
-struct ibv_sge sge_list[20];
-struct ibv_recv_wr wr_list[50];
-int ack_send, ack_recv;
 
-int post_recv() {
-    /* step 1: init wr, sge, for rdma to recv */
-    for (int i = 0; i < ctx.batching_num; i++) {
-        sge_list[i].addr = (uint64_t)&ctx.inqueue->queue[ctx.inqueue->tail].msg;
-        sge_list[i].length = sizeof(jia_msg_t);
-        sge_list[i].lkey = ctx.recv_mr[ctx.inqueue->tail]->lkey;
-        wr_list[i].sg_list = &sge_list[i];
-        wr_list[i].num_sge = 1;
-        ctx.inqueue->tail = (ctx.inqueue->tail + 1) % ctx.inqueue->size;
-    }
-    for (int i = 0; i < ctx.batching_num - 1; i++) {
-        wr_list[i].next = &wr_list[i + 1];
-    }
+#define CQID(cq_ptr) (((void *)cq_ptr - (void *)ctx.connect_array) / sizeof(rdma_connect_t))
 
-    /* step 2: loop until ibv_post_recv wr successfully */
-    while (ibv_post_recv(ctx.qp, &wr_list[0], &bad_wr)) {
-        log_err("Failed to post recv");
-    }
-
-    /* step 3: check num_completions until we get ctx.batching_num wr */
-    int num_completions = 0;
-    while (num_completions < ctx.batching_num) {
-        int nc = ibv_poll_cq(ctx.recv_cq, 1, &wc);
-
-        /* step 3.1: manage error */
-        if (nc < 0) {
-            log_err("ibv_poll_cq failed");
-            jia_exit();
-        } else if (nc == 0) {
-            continue;
-        } else {
-            ctx.inqueue->tail = (ctx.inqueue->tail + 1) % ctx.inqueue->size;
-            if (wc.status != IBV_WC_SUCCESS) {
-                log_err("Failed status %s (%d) for wr_id %d",
-                        ibv_wc_status_str(wc.status), wc.status, (int)wc.wr_id);
-                continue;
-            } else {
-                ctx.inqueue->queue[ctx.inqueue->tail].state = SLOT_BUSY;
-            }
+int post_recv(struct ibv_comp_channel *comp_channel) {
+    unsigned int cqid;
+    msg_queue_t *inqueue;
+    struct ibv_cq *cq_ptr = NULL;
+    void *context = NULL;
+    int ret = -1;
+    while (1) {
+        /* We wait for the notification on the CQ channel */
+        ret = ibv_get_cq_event(comp_channel, /* IO channel where we are expecting the notification
+                                              */
+                               &cq_ptr,   /* which CQ has an activity. This should be the same as CQ
+                                             we created before */
+                               &context); /* Associated CQ user context, which we did set */
+        if (ret) {
+            log_err("Failed to get next CQ event due to %d \n", -errno);
+            return -errno;
         }
 
-        /* step 3.2: update num_completions */
-        num_completions++;
+        /* ensure cqid and inqueue*/
+        // cqid = CQID(context);
+        inqueue = (*(rdma_connect_t *)context).inqueue;
+
+        /* Request for more notifications. */
+        ret = ibv_req_notify_cq(cq_ptr, 0);
+        if (ret) {
+            log_err("Failed to request further notifications %d \n", -errno);
+            return -errno;
+        }
+
+        /* We got notification. We reap the work completion (WC) element. It is
+         * unlikely but a good practice it write the CQ polling code that
+         * can handle zero WCs. ibv_poll_cq can return zero. Same logic as
+         * MUTEX conditional variables in pthread programming.
+         */
+        ret = ibv_poll_cq(cq_ptr /* the CQ, we got notification for */,
+                          1 /* number of remaining WC elements*/, &wc /* where to store */);
+        if (ret < 0) {
+            log_err("Failed to poll cq for wc due to %d \n", ret);
+            /* ret is errno here */
+            return ret;
+        } else if (ret == 0) {
+            continue;
+        }
+        log_info(3, "%d WC are completed \n", ret);
+
+        /* Now we check validity and status of I/O work completions */
+        if (wc.status != IBV_WC_SUCCESS) {
+            log_err("Work completion (WC) has error status: %s", ibv_wc_status_str(wc.status));
+
+            switch (wc.status) {
+            case IBV_WC_RNR_RETRY_EXC_ERR:
+                // receive side is not ready and exceed the retry count
+                log_err("Remote endpoint not ready, retry exceeded\n");
+                break;
+
+            case IBV_WC_RETRY_EXC_ERR:
+                // sender exceed retry count
+                log_err("Transport retry count exceeded\n");
+                break;
+
+            case IBV_WC_LOC_LEN_ERR:
+                // local length error
+                log_err("Local length error\n");
+                break;
+
+            case IBV_WC_LOC_QP_OP_ERR:
+                // QP operation error
+                log_err("Local QP operation error\n");
+                break;
+
+            case IBV_WC_REM_ACCESS_ERR:
+                // remote access error
+                log_err("Remote access error\n");
+                break;
+
+            default:
+                log_err("Unhandled error status\n");
+                break;
+            }
+        } else {
+            log_info(3, "pre inqueue [tail]: %d, [busy_value]: %d [post_value]: %d", inqueue->tail,
+                     atomic_load(&inqueue->busy_value), atomic_load(&inqueue->post_value));
+
+            /* step 1: sub post_value and add busy_value */
+            if (atomic_load(&(inqueue->post_value)) <= 0) {
+                log_err("post value error <= 0");
+            } else {
+                atomic_fetch_sub(&(inqueue->post_value), 1);
+            }
+            atomic_fetch_add(&(inqueue->busy_value), 1);
+
+            /* step 2: update tail */
+            pthread_mutex_lock(&inqueue->tail_lock);
+            inqueue->tail = (inqueue->tail + 1) % QueueSize;
+            pthread_mutex_unlock(&inqueue->tail_lock);
+
+            log_info(3, "after inqueue [tail]: %d, [busy_value]: %d [post_value]: %d",
+                     inqueue->tail, atomic_load(&inqueue->busy_value), atomic_load(&inqueue->post_value));
+        }
+
+        // check_flags(cqid);
+
+        /* Similar to connection management events, we need to acknowledge CQ
+         * events
+         */
+        ibv_ack_cq_events(cq_ptr, 
+		       1 /* we received one event notification. This is not 
+		       number of WC elements */);
     }
-    return 0;
 }
 
-// TODO: if there is not multithread, lock is not necessary for single listen
-// thread
+void *rdma_listen_thread(void *arg) {
+    post_recv(ctx.recv_comp_channel);
 
-void *rdma_listen(void *arg) {
-    while (1) {
-        /* step 1: lock and enter inqueue to check if free slot number is
-         * greater than ctx.batching_num */
-        pthread_mutex_lock(&lock_listen);
-
-        /* step 2: wait until free num is satisfied and then sub free_value */
-        if (atomic_load(&(ctx.inqueue->free_value)) < ctx.batching_num) {
-            pthread_cond_wait(&cond_listen, &lock_listen);
-        }
-
-        /* step 3: ibv_post_recv wr and then update free_value and busy_value */
-        post_recv();
-        atomic_fetch_sub(&(ctx.inqueue->free_value), ctx.batching_num);
-        atomic_fetch_add(&(ctx.inqueue->busy_value), ctx.batching_num);
-
-        /* step 4: cond signal ctx.inqueue's dequeue */
-        if (atomic_load(&(ctx.inqueue->busy_value)) > 0) {
-            pthread_cond_signal(&cond_server);
-        }
-
-        /* step 5: unlock ctx.inqueue */
-        pthread_mutex_unlock(&lock_listen);
-    }
+    return NULL;
 }

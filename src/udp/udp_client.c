@@ -4,7 +4,6 @@
 #include "stat.h"
 #include "udp.h"
 #include "tools.h"
-#include <asm-generic/errno.h>
 #include <errno.h>
 #include <stdbool.h>
 #include <sys/epoll.h>
@@ -97,7 +96,7 @@ static int outsend(jia_msg_t *msg) {
         if (statflag == 1) {
             jiastat.msgsndcnt++;
             jiastat.msgsndbytes +=
-                (outqueue.queue[outqueue.head].msg.size + Msgheadsize);
+                (((jia_msg_t *)outqueue.queue[outqueue.head])->size + Msgheadsize);
         }
 #endif
 

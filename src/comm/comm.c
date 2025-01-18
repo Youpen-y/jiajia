@@ -35,6 +35,7 @@
  * =================================================================== *
  **********************************************************************/
 
+#include "global.h"
 #ifndef NULL_LIB
 #include "comm.h"
 #include "stat.h"
@@ -118,12 +119,23 @@ static void sigio_handler() {
 }
 
 int init_msg_queue(msg_queue_t *msg_queue, int size) {
+    int ret;
 
     /** step 1: allocate memory size for msg_queue */
     if (size <= 0) {
         size = system_setting.msg_queue_size;
     }
-    msg_queue->queue = (slot_t *)malloc(sizeof(slot_t) * size);
+//    msg_queue->queue = (slot_t *)malloc(sizeof(slot_t) * size);
+    msg_queue->queue = (unsigned char **)malloc(sizeof(unsigned char *) * size);
+
+    for (int i = 0; i < size; i++) {
+        ret = posix_memalign((void **)&msg_queue->queue[i], Pagesize, 40960);
+        if (ret != 0) {
+            fprintf(stderr, "Allocated queue failed!\n");
+            exit(-1);
+        }
+    }
+
     if (msg_queue->queue == NULL) {
         perror("msg_queue malloc");
         return -1;
@@ -133,12 +145,16 @@ int init_msg_queue(msg_queue_t *msg_queue, int size) {
     msg_queue->size = size;
     msg_queue->head = 0;
     msg_queue->tail = 0;
+    msg_queue->post = 0;
     atomic_init(&msg_queue->busy_value, 0);
+    atomic_init(&msg_queue->post_value, 0);
     atomic_init(&msg_queue->free_value, size);
+
 
     /** step 3: initialize head mutex and tail mutex */
     if (pthread_mutex_init(&(msg_queue->head_lock), NULL) != 0 ||
-        pthread_mutex_init(&(msg_queue->tail_lock), NULL) != 0) {
+        pthread_mutex_init(&(msg_queue->tail_lock), NULL) != 0 ||
+        pthread_mutex_init(&(msg_queue->post_lock), NULL) != 0) {
         perror("msg_queue mutex init");
         goto mutex_fail;
     }
@@ -150,16 +166,12 @@ int init_msg_queue(msg_queue_t *msg_queue, int size) {
         goto sem_fail;
     }
 
-    /** step 5:init slot's state */
-    for (int i = 0; i < size; i++) {
-        msg_queue->queue[i].state = SLOT_FREE;
-    }
-
     return 0;
 
 sem_fail:
     pthread_mutex_destroy(&(msg_queue->head_lock));
     pthread_mutex_destroy(&(msg_queue->tail_lock));
+    pthread_mutex_destroy(&(msg_queue->post_lock));
 mutex_fail:
     free(msg_queue->queue);
 
@@ -198,9 +210,8 @@ int enqueue(msg_queue_t *msg_queue, jia_msg_t *msg) {
         msg_queue->tail = (msg_queue->tail + 1) & (msg_queue->size - 1);
         log_info(4, "%s current tail: %u thread write index: %u", queue,
                  msg_queue->tail, slot_index);
-        slot_t *slot = &(msg_queue->queue[slot_index]);
-        memcpy(&(slot->msg), msg, sizeof(jia_msg_t)); // copy msg to slot
-        slot->state = SLOT_BUSY;                      // set slot state to busy
+
+        memcpy(msg_queue->queue[slot_index], msg, sizeof(jia_msg_t)); // copy msg to slot
 
         /* step 2.2: sem post busy count */
         sem_post(&(msg_queue->busy_count));
@@ -242,9 +253,8 @@ int dequeue(msg_queue_t *msg_queue, jia_msg_t *msg) {
         msg_queue->head = (msg_queue->head + 1) & (msg_queue->size - 1);
         log_info(4, "%s current head: %u thread write index: %u", queue,
                  msg_queue->head, slot_index);
-        slot_t *slot = &(msg_queue->queue[slot_index]);
-        memcpy(msg, &(slot->msg), sizeof(jia_msg_t)); // copy msg from slot
-        slot->state = SLOT_FREE;                      // set slot state to free
+
+        memcpy(msg, msg_queue->queue[slot_index], sizeof(jia_msg_t)); // copy msg from slot
 
         /* step 2.2: sem post free count */
         sem_post(&(msg_queue->free_count));
@@ -269,6 +279,13 @@ void free_msg_queue(msg_queue_t *msg_queue) {
     // destory head mutex and tail mutex
     pthread_mutex_destroy(&(msg_queue->head_lock));
     pthread_mutex_destroy(&(msg_queue->tail_lock));
+    pthread_mutex_destroy(&(msg_queue->post_lock));
+
+    // free the queue space
+    for (int i = 0; i < msg_queue->size; i++) {
+        free(msg_queue->queue[i]);
+    }
+
 
     free(msg_queue->queue);
 }

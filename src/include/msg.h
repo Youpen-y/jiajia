@@ -103,8 +103,6 @@ typedef struct jia_msg {
     unsigned char data[Maxmsgsize];
 } jia_msg_t;
 
-
-
 typedef enum {
     SLOT_FREE = 0,  // slot is free
     SLOT_BUSY = 1,  // slot is busy
@@ -113,7 +111,6 @@ typedef enum {
 typedef struct slot {
     jia_msg_t msg;
     _Atomic volatile slot_state_t state;
-    //pthread_mutex_t lock;
 } slot_t;
 typedef struct {
     slot_t *buffer;
@@ -122,19 +119,22 @@ typedef struct {
 } msg_buffer_t;
 
 typedef struct msg_queue {
-    slot_t *queue;    // msg queue
+    unsigned char   **queue;    // msg queue
     int               size;     // size of queue(must be power of 2)
 
     pthread_mutex_t   head_lock;    // lock for head
     pthread_mutex_t   tail_lock;    // lock for tail
+    pthread_mutex_t   post_lock;    // lock for post(rdma)
     volatile unsigned               head;         // head
     volatile unsigned               tail;         // tail
+    volatile unsigned               post;         // (rdma)
 
     sem_t             busy_count;   // busy slot count
     sem_t             free_count;   // free slot count
     
     _Atomic volatile unsigned  busy_value;
     _Atomic volatile unsigned  free_value;
+    _Atomic volatile unsigned  post_value;  // (rdma)
 } msg_queue_t;
 
 // extern variables
