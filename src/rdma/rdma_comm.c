@@ -60,7 +60,7 @@ void init_rdma_comm() {
     register_sigint_handler();
 }
 
-void *server_thread(void *arg) {
+void *sync_server_thread(void *arg) {
     struct rdma_cm_id *listener = NULL;
     struct rdma_event_channel *ec = NULL;
     struct sockaddr_in addr;
@@ -224,7 +224,7 @@ cleanup:
     return NULL;
 }
 
-void *client_thread(void *arg) {
+void *sync_client_thread(void *arg) {
     int server_id = *(int *)arg;
     struct rdma_cm_id *id = NULL;
     struct rdma_event_channel *ec = NULL;
@@ -420,7 +420,7 @@ void init_rdma_context(struct jia_context *ctx, int batching_num) {
 void sync_connection(int total_hosts, int jia_pid) {
     // 创建服务器线程（如果需要）
     if (jia_pid != 0) {
-        pthread_create(&ctx.server_thread, NULL, server_thread, &ctx);
+        pthread_create(&ctx.server_thread, NULL, sync_server_thread, &ctx);
     }
 
     // 创建客户端线程（如果需要）
@@ -430,7 +430,7 @@ void sync_connection(int total_hosts, int jia_pid) {
         for (int i = 0; i < num_clients; i++) {
             int *target_host = (int *)malloc(sizeof(int));
             *target_host = jia_pid + i + 1;
-            pthread_create(&ctx.client_threads[i], NULL, client_thread, target_host);
+            pthread_create(&ctx.client_threads[i], NULL, sync_client_thread, target_host);
         }
     }
 

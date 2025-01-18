@@ -62,14 +62,14 @@ void init_rdma_comm();
 
 
 /**
- * @brief server_thread -- server thread used to handle connection (rdmacm)
+ * @brief sync_server_thread -- server thread used to handle connection (rdmacm)
  */
-void *server_thread(void *arg);
+void *sync_server_thread(void *arg);
 
 /**
- * @brief client_thread -- client thread used to connect to server (rdmacm)
+ * @brief sync_client_thread -- client thread used to connect to server (rdmacm)
  */
-void *client_thread(void *arg);
+void *sync_client_thread(void *arg);
 
 /**
  * @brief rdma_listen_thread -- rdma listen thread (post recv wr by doorbell batching)

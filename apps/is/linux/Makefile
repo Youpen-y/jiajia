@@ -7,5 +7,5 @@ CC     = cc
 
 ARCH = linux
 #LDFLAGS = -lnsl -lsocket -L/usr/ucblib -lcurses -lucb -lm
-LDFLAGS = -libverbs
+LDFLAGS = -libverbs -lrdmacm
 include ../is.mk
