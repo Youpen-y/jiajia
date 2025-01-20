@@ -18,8 +18,6 @@ struct ibv_sge sge_list[QueueSize * Maxhosts];
 struct ibv_recv_wr wr_list[QueueSize * Maxhosts];
 static struct ibv_recv_wr *bad_wr = NULL;
 
-extern rdma_connect_t connect_array[Maxhosts];
-
 void prepare_recv_wr(struct ibv_mr **mr, unsigned index);
 int init_post_recv_wr();
 

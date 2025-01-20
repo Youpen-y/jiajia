@@ -404,7 +404,7 @@ void init_rdma_context(struct jia_context *ctx, int batching_num) {
     init_msg_queue(ctx->outqueue, QueueSize);
 
     /* step 3: init rdma connection parameters */
-    for (int i = 0; i < Maxhosts; i++) {
+    for (int i = 0; i < system_setting.hostc; i++) {
         ctx->connect_array[i].connected = false;
         ctx->connect_array[i].inqueue = (msg_queue_t *)malloc(sizeof(msg_queue_t));
         init_msg_queue(ctx->connect_array[i].inqueue, QueueSize);
@@ -466,7 +466,7 @@ void free_rdma_resources(struct jia_context *ctx) {
         ibv_dereg_mr(ctx->out_mr[i]);
     }
 
-    for (int i = 0; i < Maxhosts; i++) {
+    for (int i = 0; i < system_setting.hostc; i++) {
         if (i == system_setting.jia_pid)
             continue;
         for (int j = 0; j < QueueSize; j++) {
@@ -475,7 +475,7 @@ void free_rdma_resources(struct jia_context *ctx) {
     }
 
     free_msg_queue(ctx->outqueue);
-    for (int i = 0; i < Maxhosts; i++) {
+    for (int i = 0; i < system_setting.hostc; i++) {
         free_msg_queue(ctx->connect_array[i].inqueue);
     }
 
