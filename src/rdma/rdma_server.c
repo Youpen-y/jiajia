@@ -32,7 +32,7 @@ void *rdma_server_thread(void *arg) {
          * greater than ctx.batching_num */
         // pthread_mutex_lock(&lock_server);
 
-        for (int i = 0; i < Maxhosts; i = (i + 1) % Maxhosts) {
+        for (int i = 0; i < system_setting.hostc; i = (i + 1) % Maxhosts) {
             /* get connect and inqueue */
             rdma_connect_t *tmp_connect = &ctx.connect_array[i];
             msg_queue_t *inqueue = tmp_connect->inqueue;
@@ -126,7 +126,7 @@ int init_post_recv_wr() {
     int ret;
 
     /* step 1: init wr, sge, for rdma to recv */
-    for (int j = 0; j < Maxhosts; j++) {
+    for (int j = 0; j < system_setting.hostc; j++) {
         if (j == system_setting.jia_pid)
             continue;
         for (int i = 0; i < QueueSize; i += BatchingSize) {
@@ -135,7 +135,7 @@ int init_post_recv_wr() {
     }
 
     /* step 2: post recv wr */
-    for (int j = 0; j < Maxhosts; j++) {
+    for (int j = 0; j < system_setting.hostc; j++) {
         if (j == system_setting.jia_pid)
             continue;
 
