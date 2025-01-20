@@ -20,11 +20,6 @@
 #define Msgsize 200    // temp value, used inlined message size in rdma
 #define MAX_RETRY 1000 // client's max retry times to connect server
 
-// extern int jia_pid;
-// extern const char *server_ip;
-// extern const char *client_ip;
-// int batching_num = 8;
-// long start_port = 40000;
 extern long start_port;
 pthread_mutex_t recv_comp_channel_mutex = PTHREAD_MUTEX_INITIALIZER;
 pthread_mutex_t send_comp_channel_mutex = PTHREAD_MUTEX_INITIALIZER;
@@ -456,7 +451,7 @@ void init_rdma_resource(struct jia_context *ctx) {
     }
 
     /* step 2: register inqueue memory regions */
-    for (int i = 0; i < Maxhosts; i++) {
+    for (int i = 0; i < system_setting.hostc; i++) {
         if (i == system_setting.jia_pid)
             continue;
         for (int j = 0; j < QueueSize; j++) {
