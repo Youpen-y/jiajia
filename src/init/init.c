@@ -112,7 +112,6 @@ void jia_init(int argc, char **argv) {
     // step 5:init system resources
     initmem();
     initsyn();
-    sleep(10);
     if (system_setting.comm_type == udp) {
         initcomm();
     } else if (system_setting.comm_type == rdma){

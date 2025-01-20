@@ -285,7 +285,7 @@ void sigsegv_handler(int signo, siginfo_t *sip, void *context)
     writefault = sip->si_code & 2;
 #endif
 
-    log_info(3, "Enter sigsegv ");
+    log_info(3, "Enter sigsegv_handler");
     log_info(3,
              "Shared memory range from %p to %p!, faultaddr=%p(%d), "
              "writefault=%d",

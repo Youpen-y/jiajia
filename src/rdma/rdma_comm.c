@@ -184,7 +184,7 @@ void *sync_server_thread(void *arg) {
             break;
 
         case RDMA_CM_EVENT_ESTABLISHED:
-            log_out(4, "Host %d: Connection established\n", system_setting.jia_pid);
+            log_info(3, "Host %d: Connection established\n", system_setting.jia_pid);
 
             // update the connection status
             ctx.connect_array[client_id].connected = true;

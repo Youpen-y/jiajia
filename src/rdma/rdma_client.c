@@ -105,11 +105,11 @@ void *rdma_client_thread(void *arg) {
 
         /* step 2: post send mr */
         while (post_send(&ctx.connect_array[msg_ptr->topid])) {
-            log_out(3, "msg <from:%d, to:%d, seq:%d, data:%s> send failed\n", msg_ptr->frompid,
+            log_info(3, "msg <from:%d, to:%d, seq:%d, data:%s> send failed\n", msg_ptr->frompid,
                     msg_ptr->topid, msg_ptr->seqno, msg_ptr->data);
         }
 
-        log_out(3, "msg <from:%d, to:%d, seq:%d, data:%s> send successfully\n", msg_ptr->frompid,
+        log_info(3, "msg <from:%d, to:%d, seq:%d, data:%s> send successfully\n", msg_ptr->frompid,
                 msg_ptr->topid, msg_ptr->seqno, msg_ptr->data);
 
         /* step 3: update snd_seq and head ptr */
