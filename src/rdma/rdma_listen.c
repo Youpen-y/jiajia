@@ -3,6 +3,7 @@
 #include "rdma.h"
 #include "setting.h"
 #include "tools.h"
+#include "stat.h"
 #include <infiniband/verbs.h>
 #include <pthread.h>
 #include <semaphore.h>
@@ -94,6 +95,13 @@ int post_recv(struct ibv_comp_channel *comp_channel) {
                 break;
             }
         } else {
+#ifdef DOSTAT
+                    if (statflag == 1) {
+                        jiastat.msgrcvcnt++;
+                        jiastat.msgrcvbytes += (((jia_msg_t *)inqueue->queue[inqueue->tail])->size + Msgheadsize);
+                    }
+#endif
+
             log_info(3, "pre inqueue [tail]: %d, [busy_value]: %d [post_value]: %d", inqueue->tail,
                      atomic_load(&inqueue->busy_value), atomic_load(&inqueue->post_value));
 
