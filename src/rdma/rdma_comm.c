@@ -447,7 +447,7 @@ void init_rdma_resource(struct jia_context *ctx) {
     /* step 1: register outqueue memory regions */
     for (int i = 0; i < QueueSize; i++) {
         ctx->out_mr[i] =
-            ibv_reg_mr(ctx->pd, ctx->outqueue->queue[i], 40960, IBV_ACCESS_LOCAL_WRITE);
+            ibv_reg_mr(ctx->pd, ctx->outqueue->queue[i], Maxsize, IBV_ACCESS_LOCAL_WRITE);
     }
 
     /* step 2: register inqueue memory regions */
@@ -456,7 +456,7 @@ void init_rdma_resource(struct jia_context *ctx) {
             continue;
         for (int j = 0; j < QueueSize; j++) {
             ctx->connect_array[i].in_mr[j] = rdma_reg_msgs(
-                &ctx->connect_array[i].id, ctx->connect_array[i].inqueue->queue[j], 40960);
+                &ctx->connect_array[i].id, ctx->connect_array[i].inqueue->queue[j], Maxsize);
         }
     }
 }

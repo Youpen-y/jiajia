@@ -56,8 +56,9 @@
 #define MAX_DOUBLE       21
 #define MIN_DOUBLE       22
 
+#define Maxsize 40960
 #define Msgheadsize 32                   /* fixed header of msg */
-#define Maxmsgsize (40960 - Msgheadsize) /* data size of msg */
+#define Maxmsgsize (Maxsize - Msgheadsize) /* data size of msg */
 #define Maxqueue                                                               \
     32 /* size of input and output queue for communication (>= 2*maxhosts)*/
 

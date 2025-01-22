@@ -1,5 +1,7 @@
 #include "setting.h"
 #include "errno.h"
+#include "global.h"
+#include "msg.h"
 #include "tools.h"
 
 #include <ctype.h>
@@ -122,7 +124,8 @@ int get_options(setting_t *setting) {
                 setting->prefetch_pages = atoi(setting->options[i].value) % 9;  // limit it's range to [0..8]
             }
         } else if (strcmp(setting->options[i].key, "max_checking_pages") == 0) {
-            setting->max_checking_pages = atoi(setting->options[i].value);
+            // checking pages shouldn't exceed the num that one msg can carried
+            setting->max_checking_pages = MIN(atoi(setting->options[i].value), Maxsize/Pagesize);
         } else {
             printf("Unknown config option: %s = %s\n", setting->options[i].key,
                    setting->options[i].value);

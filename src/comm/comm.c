@@ -36,6 +36,7 @@
  **********************************************************************/
 
 #include "global.h"
+#include "msg.h"
 #ifndef NULL_LIB
 #include "comm.h"
 #include "stat.h"
@@ -129,7 +130,7 @@ int init_msg_queue(msg_queue_t *msg_queue, int size) {
     msg_queue->queue = (unsigned char **)malloc(sizeof(unsigned char *) * size);
 
     for (int i = 0; i < size; i++) {
-        ret = posix_memalign((void **)&msg_queue->queue[i], Pagesize, 40960);
+        ret = posix_memalign((void **)&msg_queue->queue[i], Pagesize, Maxsize);
         if (ret != 0) {
             fprintf(stderr, "Allocated queue failed!\n");
             exit(-1);

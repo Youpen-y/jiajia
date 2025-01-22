@@ -24,7 +24,7 @@ msg_queue_size = 32
 prefetch = on
 
 # 2. prefetch_pages: extra fetched pages except the target
-# the prefetched pages will be packed in one msg (only one), which means <= 8
+# the prefetched pages will be packed in one msg (only one), which means <= Maxsize/Pagesize
 prefetch_pages = 4
 
 # 3. max_checking_pages:
