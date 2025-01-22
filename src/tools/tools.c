@@ -46,12 +46,17 @@
 #include "setting.h"
 #include "stat.h"
 #include "syn.h"
+#include "rdma.h"
 #include <bits/types/clockid_t.h>
 #include <libgen.h>
 #include <stdbool.h>
 #include <stdlib.h>
 #include <time.h>
 #include <unistd.h>
+#include <infiniband/verbs.h>
+#include <stdint.h>
+#include <stdio.h>
+
 
 extern jiastack_t lockstack[Maxstacksize];
 extern int totalhome;
@@ -73,7 +78,6 @@ int B_CAST = OFF; // B_CAST: broadcast barrier messages method either one-by-one
                   // or tree structure broadcast
 int LOAD_BAL = OFF; // LOAD_BAL: load balancing flag(ON/OFF)
 int W_VEC = OFF;    // W_VEC: write vector flag(ON/OFF)
-int RDMA_SUPPORT = OFF;
 
 // default prefetch optimization technique setting
 struct prefetech_opt_t prefetch_optimization = {
@@ -94,12 +98,12 @@ void inittools() {
     B_CAST = OFF;
     LOAD_BAL = OFF;
     W_VEC = OFF;
-    RDMA_SUPPORT = OFF; // TODO: RDMA_SUPPORT
 
     /** prefetch optimization */
     prefetch_optimization.base.flag = system_setting.prefetch_flag;
     prefetch_optimization.prefetch_pages = system_setting.prefetch_pages;
     prefetch_optimization.max_checking_pages = system_setting.max_checking_pages;
+
 }
 
 /**
@@ -183,6 +187,9 @@ void free_system_resources() {
     free_msg_buffer(&msg_buffer);  // free msg buffer
     free_msg_queue(&outqueue);     // free outqueue
     free_msg_queue(&inqueue);      // free inqueue
+    if (system_setting.comm_type == rdma) {
+        free_rdma_resources(&ctx); // free rdma resources
+    }
     free_setting(&system_setting); // free system setting
     // ...
 }
@@ -745,9 +752,6 @@ void jia_config(int dest, int value) {
         }
         W_VEC = value;
         break;
-    case RDMA:
-        VERBOSE_LOG(3, "TODO! RDMA support");
-        break;
     default:
         VERBOSE_LOG(3, "Null configuration!\n");
         break;
@@ -832,6 +836,143 @@ unsigned int get_usecs() {
     }
     return ((time.tv_sec - base.tv_sec) * 1000000 +
             (time.tv_usec - base.tv_usec));
+}
+
+
+void print_port_info(struct ibv_port_attr *port_attr) {
+    printf("=== Port Attributes ===\n");
+    
+    // Basic state info
+    printf("Port State: %s\n",
+           (port_attr->state == IBV_PORT_ACTIVE) ? "Active" :
+           (port_attr->state == IBV_PORT_DOWN) ? "Down" :
+           (port_attr->state == IBV_PORT_INIT) ? "Init" :
+           (port_attr->state == IBV_PORT_ARMED) ? "Armed" : "Unknown");
+
+    // MTU info
+    printf("Max MTU: %s\n", 
+            (port_attr->max_mtu == IBV_MTU_256) ? "IBV_MTU_256":
+            (port_attr->max_mtu == IBV_MTU_512) ? "IBV_MTU_512":
+            (port_attr->max_mtu == IBV_MTU_1024) ? "IBV_MTU_1024":
+            (port_attr->max_mtu == IBV_MTU_2048) ? "IBV_MTU_2048":
+            (port_attr->max_mtu == IBV_MTU_4096) ? "IBV_MTU_4096": "Unknown");
+    printf("Active MTU: %s\n", 
+            (port_attr->max_mtu == IBV_MTU_256) ? "IBV_MTU_256":
+            (port_attr->max_mtu == IBV_MTU_512) ? "IBV_MTU_512":
+            (port_attr->max_mtu == IBV_MTU_1024) ? "IBV_MTU_1024":
+            (port_attr->max_mtu == IBV_MTU_2048) ? "IBV_MTU_2048":
+            (port_attr->max_mtu == IBV_MTU_4096) ? "IBV_MTU_4096": "Unknown");
+
+    // GID table related info
+    printf("GID Table Length: %d\n", port_attr->gid_tbl_len);
+
+    // cap flags
+    printf("Port Capabilities: 0x%x\n", port_attr->port_cap_flags);
+    if (port_attr->port_cap_flags & IBV_PORT_SM)
+        printf("  - Subnet Manager capable\n");
+    if (port_attr->port_cap_flags & IBV_PORT_NOTICE_SUP)
+        printf("  - Capable of generating notices\n");
+    if (port_attr->port_cap_flags & IBV_PORT_TRAP_SUP)
+        printf("  - Capable of generating traps\n");
+    if (port_attr->port_cap_flags & IBV_PORT_OPT_IPD_SUP)
+        printf("  - Supports optional IPD\n");
+
+    // max MSG size that port can handle
+    printf("Max Message size: %d\n", port_attr->max_msg_sz);
+
+    // cntr（bad_pkey_cntr: Bad P_Key(Partition Key) num happend in port，packet's P_Key is not matched with port's P_Key）
+    printf("Bad P_Key counter: %d\n", port_attr->bad_pkey_cntr);
+
+    // cntr（qkey_viol_cntr: Violated Q_Key(Queue Key) num happened in port，packet's Q_Key isn't matched with port's Q_Key, Q_Key violation）
+    printf("Q_Key Violation counter: %d\n", port_attr->qkey_viol_cntr);
+
+    printf("PKey Table Length: %d\n", port_attr->pkey_tbl_len);
+
+    // LID info
+    printf("LID (Local Identifier): 0x%x\n", port_attr->lid);
+    printf("SM LID (Subnet Manager Local Identifier): 0x%x\n", port_attr->sm_lid);
+
+    // Multicast and virtual line info 
+    printf("LMC (LID Mask Count): %d\n", port_attr->lmc);
+    printf("Max Virtual Lanes: %d\n", port_attr->max_vl_num);
+
+    // Service Level and timeout time in subnet
+    printf("Subnet Manager Service Level (SM SL): %d\n", port_attr->sm_sl);
+    printf("Subnet Timeout: %d (Timeout = 2^%d * 4 µs)\n",
+           port_attr->subnet_timeout,
+           port_attr->subnet_timeout);
+
+    // init type reply
+    printf("Init Type Reply: 0x%x\n", port_attr->init_type_reply);
+
+    // Speed info
+    printf("Active Speed: ");
+    switch (port_attr->active_speed) {
+        case 1:
+            printf("SDR (2.5 Gbps)\n");
+            break;
+        case 2:
+            printf("DDR (5 Gbps)\n");
+            break;
+        case 4:
+            printf("QDR (10 Gbps)\n");
+            break;
+        case 8:
+            printf("FDR (14 Gbps)\n");
+            break;
+        case 16:
+            printf("EDR (25 Gbps)\n");
+            break;
+        case 32:
+            printf("HDR (50 Gbps)\n");
+            break;
+        case 64:
+            printf("NDR (100 Gbps)\n");
+            break;
+        case 128:
+            printf("XDR (200 Gbps)\n");
+            break;
+        default:
+            printf("Unknown (%d)\n", port_attr->active_speed);
+            break;
+    }
+
+    // Active Width
+    printf("Active Width: ");
+    switch (port_attr->active_width) {
+        case 1:
+            printf("1x\n");
+            break;
+        case 2:
+            printf("2x\n");
+            break;
+        case 4:
+            printf("4x\n");
+            break;
+        case 8:
+            printf("8x\n");
+            break;
+        case 12:
+            printf("12x\n");
+            break;
+        default:
+            printf("Unknown (%d)\n", port_attr->active_width);
+            break;
+    }
+
+    // Physical state
+    printf("Physical State: %d\n", port_attr->phys_state);
+    printf("Link Layer: %s\n",
+           (port_attr->link_layer == IBV_LINK_LAYER_ETHERNET) ? "Ethernet" :
+           (port_attr->link_layer == IBV_LINK_LAYER_INFINIBAND) ? "InfiniBand" :
+           "Unknown");
+
+    // flags
+    printf("Flags: %d\n", port_attr->flags);
+    if (port_attr->port_cap_flags & IBV_QPF_GRH_REQUIRED)
+        printf("  - QPF grh required\n");
+
+    printf("========================\n");
 }
 
 #else /* NULL_LIB */

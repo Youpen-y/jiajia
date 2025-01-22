@@ -6,5 +6,5 @@ CC = gcc
 
 ARCH = linux
 #LDFLAGS = -lnsl -lsocket -lcurses  -lucb
-LDFLAGS =
+LDFLAGS = -libverbs -lrdmacm
 include ../mm.mk

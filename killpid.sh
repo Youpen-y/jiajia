@@ -3,7 +3,7 @@
 
 programs=("ep" "hello" "is" "lu" "mm" "pi" "sor" "tsp" "water")
 #servers=("cpuserver2" "cpuserver3" "cpuserver4" "cpuserver5" "cpuserver6")
-servers=("yyp192")
+servers=("chenji")
 
 for server in "${servers[@]}"; do
 	if [ -n "$1" ]; then
@@ -24,8 +24,8 @@ for server in "${servers[@]}"; do
 	
 			# pid non-null
 			if [ -n "$pid" ]; then
-				echo "process $pid in running on $server"
-				ssh $server "kill -9 $pid && echo \"process $pid has been killed\""
+				echo "process $pid($pg) in running on $server"
+				ssh $server "kill -9 $pid($pg) && echo \"process $pid has been killed\""
 			fi
 			echo "$pg on $server is ok"
 		done

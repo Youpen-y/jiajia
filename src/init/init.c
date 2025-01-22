@@ -42,6 +42,7 @@
 #include "setting.h"
 #include "stat.h"
 #include "tools.h"
+#include "rdma.h"
 #include <libgen.h>
 
 extern void initmem();
@@ -54,7 +55,7 @@ extern unsigned long jia_current_time();
 extern float jia_clock();
 extern unsigned int get_usecs();
 extern char errstr[Linesize];
-extern short start_port;
+extern long start_port;
 
 static void copyfiles(int argc, char **argv);
 static int startprocs(int argc, char **argv);
@@ -111,7 +112,12 @@ void jia_init(int argc, char **argv) {
     // step 5:init system resources
     initmem();
     initsyn();
-    initcomm();
+    if (system_setting.comm_type == udp) {
+        initcomm();
+    } else if (system_setting.comm_type == rdma){
+        init_rdma_comm();
+    }
+
     initmsg();
     inittools();
     initload();
@@ -194,7 +200,7 @@ static int startprocs(int argc, char **argv) {
     char *pwd;
 #endif /* NFS*/
 
-    VERBOSE_LOG(3, "Start to create processes on slaves!\n\n");
+    VERBOSE_LOG(3, "Start to create processes on slaves!\n");
 
 #ifdef NFS
     sprintf(errstr, "Failed to get current working directory");

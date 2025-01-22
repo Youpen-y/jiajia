@@ -153,7 +153,6 @@ void diffserver(jia_msg_t *req) {
     STATOP(jiastat.dedifftime += get_usecs() - begin; jiastat.diffcnt++;)
 #endif
 
-    // rep = newmsg();
     int index = freemsg_lock(&msg_buffer);
     rep = &msg_buffer.buffer[index].msg;
     rep->op = DIFFGRANT;
@@ -161,8 +160,6 @@ void diffserver(jia_msg_t *req) {
     rep->topid = req->frompid;
     rep->size = 0;
 
-    // asendmsg(rep);
-    // freemsg(rep);
     move_msg_to_outqueue(&msg_buffer, index, &outqueue);
     freemsg_unlock(&msg_buffer, index);
 }
@@ -176,7 +173,6 @@ void diffgrantserver(jia_msg_t *rep) {
     jia_assert((rep->op == DIFFGRANT) && (rep->size == 0),
                "Incorrect returned message!");
 
-    // diffwait--;
     atomic_fetch_sub(&diffwait, 1);
 }
 

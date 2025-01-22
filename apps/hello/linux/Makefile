@@ -2,5 +2,5 @@ CC = cc
 CFLAGS += -DLINUX
 
 ARCH = linux
-LDFLAGS = -lm
+LDFLAGS = -lm -libverbs -lrdmacm
 include ../hello.mk

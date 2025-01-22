@@ -121,10 +121,9 @@ extern comm_manager_t comm_manager;
 /* function declaration  */
 
 /**
- * @brief initcomm -- initialize communication setting
- *
+ * @register_sigint_handler -- register signal handler
  */
-void initcomm();
+void register_sigint_handler();
 
 /**
  * @brief asendmsg() -- send msg to outqueue[outtail], and call outsend()

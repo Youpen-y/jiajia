@@ -256,6 +256,9 @@ void jia_wait() {
 
 /************Conditional Variable Part****************/
 
+/**
+ * @brief jia_setcv -- send SETCV msg to the holder of the cvnum
+ */
 void jia_setcv(int cvnum) {
     jia_msg_t *req;
     int index;
@@ -266,7 +269,6 @@ void jia_setcv(int cvnum) {
     jia_assert(((cvnum >= 0) && (cvnum < Maxcvs)),
            "condv %d should range from 0 to %d", cvnum, Maxcvs - 1);
 
-    // req = newmsg();
     index = freemsg_lock(&msg_buffer);
     req = &(msg_buffer.buffer[index].msg);
     req->op = SETCV;
@@ -275,8 +277,6 @@ void jia_setcv(int cvnum) {
     req->size = 0;
     appendmsg(req, ltos(cvnum), Intbytes);
 
-    // asendmsg(req);
-    // freemsg(req);
     move_msg_to_outqueue(&msg_buffer, index, &outqueue);
     freemsg_unlock(&msg_buffer, index);
 }
@@ -291,7 +291,6 @@ void jia_resetcv(int cvnum) {
     jia_assert(((cvnum >= 0) && (cvnum < Maxcvs)),
            "condv %d should range from 0 to %d", cvnum, Maxcvs - 1);
 
-    // req = newmsg();
     index = freemsg_lock(&msg_buffer);
     req = &(msg_buffer.buffer[index].msg);
     req->op = RESETCV;
@@ -300,8 +299,6 @@ void jia_resetcv(int cvnum) {
     req->size = 0;
     appendmsg(req, ltos(cvnum), Intbytes);
 
-    // asendmsg(req);
-    // freemsg(req);
     move_msg_to_outqueue(&msg_buffer, index, &outqueue);
     freemsg_unlock(&msg_buffer, index);
 }
@@ -316,7 +313,6 @@ void jia_waitcv(int cvnum) {
     jia_assert(((cvnum >= 0) && (cvnum < Maxcvs)),
            "condv %d should range from 0 to %d", cvnum, Maxcvs - 1);
 
-    // req = newmsg();
     index = freemsg_lock(&msg_buffer);
     req = &(msg_buffer.buffer[index].msg);
     req->op = WAITCV;
@@ -325,11 +321,8 @@ void jia_waitcv(int cvnum) {
     req->size = 0;
     appendmsg(req, ltos(cvnum), Intbytes);
 
-    //cvwait = 1;
     atomic_store(&cvwait, 1);
 
-    // asendmsg(req);
-    // freemsg(req);
     move_msg_to_outqueue(&msg_buffer, index, &outqueue);
     freemsg_unlock(&msg_buffer, index);
     while (atomic_load(&cvwait))

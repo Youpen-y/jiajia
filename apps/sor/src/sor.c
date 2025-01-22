@@ -179,9 +179,7 @@ int main(int argc, char *argv[])
   */	
   jia_config(WVEC,ON);
   jia_config(ADWD,ON);
-  printf("88888888888888\n");
   slave();
-  printf("99999999999999\n");
   jia_exit();
 }
 

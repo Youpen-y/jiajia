@@ -38,7 +38,6 @@
 #ifndef JIAMSG_H
 #define JIAMSG_H
 
-#include "global.h"
 #include "semaphore.h"
 #define Maxmsgbufs     48
 #define Maxmsgno       0x40000000
@@ -57,8 +56,9 @@
 #define MAX_DOUBLE       21
 #define MIN_DOUBLE       22
 
+#define Maxsize 40960
 #define Msgheadsize 32                   /* fixed header of msg */
-#define Maxmsgsize (40960 - Msgheadsize) /* data size of msg */
+#define Maxmsgsize (Maxsize - Msgheadsize) /* data size of msg */
 #define Maxqueue                                                               \
     32 /* size of input and output queue for communication (>= 2*maxhosts)*/
 
@@ -104,8 +104,6 @@ typedef struct jia_msg {
     unsigned char data[Maxmsgsize];
 } jia_msg_t;
 
-
-
 typedef enum {
     SLOT_FREE = 0,  // slot is free
     SLOT_BUSY = 1,  // slot is busy
@@ -114,7 +112,6 @@ typedef enum {
 typedef struct slot {
     jia_msg_t msg;
     _Atomic volatile slot_state_t state;
-    //pthread_mutex_t lock;
 } slot_t;
 typedef struct {
     slot_t *buffer;
@@ -123,18 +120,22 @@ typedef struct {
 } msg_buffer_t;
 
 typedef struct msg_queue {
-    slot_t *queue;    // msg queue
+    unsigned char   **queue;    // msg queue
     int               size;     // size of queue(must be power of 2)
 
     pthread_mutex_t   head_lock;    // lock for head
     pthread_mutex_t   tail_lock;    // lock for tail
+    pthread_mutex_t   post_lock;    // lock for post(rdma)
     volatile unsigned               head;         // head
     volatile unsigned               tail;         // tail
+    volatile unsigned               post;         // (rdma)
 
     sem_t             busy_count;   // busy slot count
     sem_t             free_count;   // free slot count
-    // _Atomic volatile unsigned  busy_count;
-    // _Atomic volatile unsigned  free_count;
+    
+    _Atomic volatile unsigned  busy_value;
+    _Atomic volatile unsigned  free_value;
+    _Atomic volatile unsigned  post_value;  // (rdma)
 } msg_queue_t;
 
 // extern variables
@@ -195,6 +196,15 @@ void freemsg_unlock(msg_buffer_t *buffer, int index);
  * @return int 
  */
 int move_msg_to_outqueue(msg_buffer_t *buffer, int index, msg_queue_t *outqueue);
+
+
+/**
+ * @brief msg_handle - handle msg
+ * 
+ * @param msg 
+ * @note msg_handle called by server_thread
+ */
+void msg_handle(jia_msg_t *msg);
 
 
 /**

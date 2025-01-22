@@ -2,7 +2,7 @@
 #include "msg.h"
 #include "setting.h"
 #include "stat.h"
-#include "thread.h"
+#include "udp.h"
 #include "tools.h"
 #include <errno.h>
 #include <signal.h>
