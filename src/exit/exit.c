@@ -45,11 +45,14 @@
 #include "setting.h"
 #include "stat.h"  // clearstat
 #include "tools.h" // newmsg, freemsg, appendmsg
+#include <time.h>
 #include <stdatomic.h>
 
 extern unsigned long globaladdr;
 extern volatile int incount;
 extern volatile int outcount;
+
+#define EXIT_TIMEOUT_SEC 5
 
 /**
  * @brief jia_exit -- if defined DOSTAT, print statistic; else do nothing
@@ -87,8 +90,23 @@ void jia_exit() {
         freemsg_unlock(&msg_buffer, index);
 
         // busywait until waitstat is clear by statgrantserver
-        while (atomic_load(&waitstat))
-            ;
+        // possible problem: slave will keep waiting a dead master's statgrant msg
+        // solution: timeout mechanism
+        if (jia_pid == 0) {
+            while (atomic_load(&waitstat))
+                ;
+        } else {
+            time_t start_time, current_time;
+            time(&start_time);
+            while (atomic_load(&waitstat)) {
+                time(&current_time);
+                if (difftime(current_time, start_time) >= EXIT_TIMEOUT_SEC) {
+                    log_info(3, "Timeout reached, exiting busy waiting for waitstat");
+                    break;
+                }
+            }
+        }
+
 
 #ifdef DEBUG
         printf("Print stats\n");
