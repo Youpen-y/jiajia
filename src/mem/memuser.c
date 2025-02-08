@@ -25,14 +25,6 @@
  *   improvements that they make and grant CHPC redistribution rights. *
  *                                                                     *
  *             Author: Weiwu Hu, Weisong Shi, Zhimin Tang              *
- * =================================================================== *
- *   This software is ported to SP2 by                                 *
- *                                                                     *
- *         M. Rasit Eskicioglu                                         *
- *         University of Alberta                                       *
- *         Dept. of Computing Science                                  *
- *         Edmonton, Alberta T6G 2H1 CANADA                            *
- * =================================================================== *
  **********************************************************************/
 
 #ifndef NULL_LIB
