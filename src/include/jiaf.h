@@ -32,7 +32,7 @@ C***********************************************************************
 	external jia_init !$pragma C(jia_init)
 	external jia_exit !$pragma C(jia_exit)
 	external jia_alloc3 !$pragma C(jia_alloc3)
-	external jia_alloc3b !$pragma C(jia_alloc3b)
+	external jia_alloc4 !$pragma C(jia_alloc4)
 	external jia_alloc2 !$pragma C(jia_alloc2)
 	external jia_alloc2p !$pragma C(jia_alloc2p)
 	external jia_alloc1 !$pragma C(jia_alloc1)

@@ -35,30 +35,80 @@
 #define jiapid    system_setting.jia_pid		/* host identification number */
 
 /**
- * @brief jia_init -- initialize JIAJIA
+ * @brief jia_init -- initialize JIAJIA system
+ *
+ * @param argc same as main program, argument count
+ * @param argv same as main program, argument vector
  * Start copies of the application on the hosts specified in .jiahosts.
  * Also, initializes internal data structures of JIAJIA.
  */
-void           jia_init(int, char **);
+void jia_init(int argc, char **argv);
 
 /**
- * @brief jia_exit -- shut JIAJIA down
+ * @brief jia_exit -- exit JIAJIA system
  */
-void           jia_exit();
+void jia_exit();
 
 /**
- * @brief jia_alloc3 -- allocates size bytes cyclically across all hosts, each time block bytes
- * 
- * @param size 
- * @param block 
+ * @brief jia_alloc3 -- allocates totalsize bytes cyclically across all hosts, each
+ * time block bytes (3 parameters alloc function), start from starthost
+ *
+ * @param totalsize sum of space that allocated across all hosts (page aligned)
+ * @param blocksize size(page aligned) that allocated by every host every time
  * @param starthost specifies the host from which the allocation starts
- * @return unsigned long 
+ * @return start address of the allocated memory
+ *
+ * jia_alloc3 will allocate blocksize(page aligned) every time from starthost to
+ * other hosts until the sum of allocated sizes equal totalsize(page aligned)
  */
-unsigned long jia_alloc3(int size,int block, int starthost);
-unsigned long  jia_alloc2(int,int);
-unsigned long  jia_alloc2p(int, int);
-unsigned long  jia_alloc1(int);
-unsigned long  jia_alloc(int size);		// equals jia_alloc3(size, Pagesize, 0)
+unsigned long jia_alloc3(int totalsize,int blocksize, int starthost);
+
+/**
+ * @brief jia_alloc4 -- alloc totalsize bytes shared memory with blocks array
+ *
+ * @param totalsize sum of space that allocated across all hosts (page aligned)
+ * @param blocks    blocksize array, blocks[i] specify how many bytes will be allocated on every host in loop i.
+ * @param n 		length of blocks
+ * @param starthost specifies the host from which the allocation starts
+ * @return start address of the allocated memory
+ */
+unsigned long jia_alloc4(int totalsize, int *blocks, int n, int starthost);
+
+/**
+ * @brief jia_alloc2p -- alloc size(page aligned) on
+ * host(proc is jiapid), two parameters alloc
+ *
+ * @param totalsize sum of requested shared memory
+ * @param starthost host that will allocate shared memory
+ * @return start address of the allocated memory
+ */
+unsigned long  jia_alloc2p(int totalsize, int starthost);
+
+/**
+ * @brief jia_alloc2 -- alloc totalsize shared memory on cluster with a circular allocation strategy (per blocksize)
+ * 
+ * @param totalsize sum of size that allocated for shared memory
+ * @param blocksize size(page aligned) that allocated by every host every time
+ * @return start address of the allocated memory 
+ */
+unsigned long  jia_alloc2(int totalsize, int blocksize);
+
+/**
+ * @brief jia_alloc1 -- allocate all totalsize on host 0
+ * 
+ * @param totalsize sum of size that allocated for shared memory
+ * @return start address of the allocated memory
+ */
+unsigned long  jia_alloc1(int totalsize);
+
+/**
+ * @brief jia_alloc -- allocates all totalsize bytes shared memory on srarthost, but
+ * the starthost depends on the times that the function have been called
+ * 
+ * @param totalsize sum of size that allocated for shared memory
+ * @return start address of the allocated memory
+ */
+unsigned long  jia_alloc(int totalsize);
 
 /**
  * @brief jia_lock -- acquire a lock specified by lockid

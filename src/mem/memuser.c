@@ -38,19 +38,7 @@ jiacache_t cache[Cachepages]; /* host cached page */
 jiapage_t page[Maxmempages];      /* global page space */
 unsigned long globaladdr; /* [0, Maxmemsize)*/
 
-/**
- * @brief jia_alloc3 -- allocates size bytes cyclically across all hosts, each
- * time block bytes (3 parameters alloc function)
- *
- * @param size the sum of space that allocated across all hosts (page aligned)
- * @param block the size(page aligned) that allocated by every host every time
- * @param starthost specifies the host from which the allocation starts
- * @return unsigned long
- *
- * jia_alloc3 will allocate block(page aligned) every time from starthost to
- * other hosts until the sum equal size(page aligned)
- */
-unsigned long jia_alloc3(int size, int block, int starthost) {
+unsigned long jia_alloc3(int totalsize, int blocksize, int starthost) {
     int homepid;
     int mapsize;
     int allocsize;
@@ -58,24 +46,24 @@ unsigned long jia_alloc3(int size, int block, int starthost) {
     int homei, pagei, i;
     int protect;
 
-    jia_assert(((globaladdr + size) <= Maxmemsize),
+    jia_assert(((globaladdr + totalsize) <= Maxmemsize),
            "Insufficient shared space! --> Max=0x%x Left=0x%lx Need=0x%x\n",
-           Maxmemsize, Maxmemsize - globaladdr, size);
+           Maxmemsize, Maxmemsize - globaladdr, totalsize);
 
     originaddr = globaladdr;
     /* allocsize is the sum of size that will be allocated*/
-    // ensure the alloc size is multiple of pagesize (Pagesize alignment)
-    allocsize = ALIGN2PAGE(size);
+    // ensure the total alloc size is multiple of pagesize (Pagesize alignment)
+    allocsize = ALIGN2PAGE(totalsize);
     /* mapsize is the size that will be allocated on every host evry time */
     // ensure the block size is multiple of pagesize (Pagesize alignment)
-    mapsize = ALIGN2PAGE(block);
+    mapsize = ALIGN2PAGE(blocksize);
     homepid = starthost;
 
     while (allocsize > 0) {
         // only when current host pid == homepid, use mmap alloc space
         if (system_setting.jia_pid == homepid) {
+            /* alloc page on current host(homepid) */
 
-            /* alloc page on homepid */
             jia_assert((system_setting.hosts[homepid].homesize + mapsize) < (Homepages * Pagesize),
                    "Too many home pages");
             // single: RW && multi : RO
@@ -100,10 +88,8 @@ unsigned long jia_alloc3(int size, int block, int starthost) {
             page[pagei].homepid = homepid;
         }
 
-        if (system_setting.jia_pid == homepid) {
-            log_info(3, "Map 0x%x bytes in home %4d! globaladdr = 0x%lx",
+        log_info(3, "Map 0x%x bytes in home %4d! globaladdr = 0x%lx",
                         mapsize, homepid, globaladdr);
-        }
 
         system_setting.hosts[homepid].homesize += mapsize;
         globaladdr += mapsize;
@@ -114,14 +100,15 @@ unsigned long jia_alloc3(int size, int block, int starthost) {
 }
 
 /**
- * @brief jia_alloc3b --
+ * @brief jia_alloc4 -- alloc totalsize bytes shared memory with blocks array
  *
- * @param size
- * @param block
- * @param starthost
- * @return unsigned long
+ * @param totalsize sum of space that allocated across all hosts (page aligned)
+ * @param blocks    blocksize array, blocks[i] specify how many bytes will be allocated on every host in loop i.
+ * @param n length of blocks
+ * @param starthost specifies the host from which the allocation starts
+ * @return start address of the allocated memory
  */
-unsigned long jia_alloc3b(int size, int *block, int starthost) {
+unsigned long jia_alloc4(int totalsize, int *blocks, int n, int starthost) {
     int homepid;
     int mapsize;
     int allocsize;
@@ -130,21 +117,19 @@ unsigned long jia_alloc3b(int size, int *block, int starthost) {
     int blocki;
     int protect;
 
-    jia_assert(((globaladdr + size) <= Maxmemsize),
+    jia_assert(((globaladdr + totalsize) <= Maxmemsize),
            "Insufficient shared space! --> Max=0x%x Left=0x%lx Need=0x%x\n",
-           Maxmemsize, Maxmemsize - globaladdr, size);
+           Maxmemsize, Maxmemsize - globaladdr, totalsize);
 
     blocki = 0;
     originaddr = globaladdr;
-    allocsize =
-        ((size % Pagesize) == 0) ? (size) : ((size / Pagesize + 1) * Pagesize);
+    allocsize = ALIGN2PAGE(totalsize);
     homepid = starthost;
 
     while (allocsize > 0) {
-        mapsize = ((block[blocki] % Pagesize) == 0)
-                      ? (block[blocki])
-                      : ((block[blocki] / Pagesize + 1) * Pagesize);
+        mapsize = ALIGN2PAGE(blocks[blocki]);
         if (system_setting.jia_pid == homepid) {
+            // alloc on host(homepid) 
             jia_assert((system_setting.hosts[homepid].homesize + mapsize) < (Homepages * Pagesize),
                    "Too many home pages");
 
@@ -164,47 +149,43 @@ unsigned long jia_alloc3b(int size, int *block, int starthost) {
             page[pagei].homepid = homepid;
         }
 
-#ifdef JIA_DEBUG
-#endif
-        VERBOSE_LOG(3, "Map 0x%x bytes in home %4d! globaladdr = 0x%lx\n", mapsize,
+        log_info(3, "Map 0x%x bytes in home %4d! globaladdr = 0x%lx", mapsize,
                homepid, globaladdr);
 
         system_setting.hosts[homepid].homesize += mapsize;
         globaladdr += mapsize;
         allocsize -= mapsize;
         homepid = (homepid + 1) % system_setting.hostc;
-        if (homepid == 0)
-            blocki++;
+        if (homepid == 0){
+            blocki = (blocki + 1) % n;
+        }
     }
 
     return (system_setting.global_start_addr + originaddr);
 }
 
-unsigned long jia_alloc(int size) {
+unsigned long jia_alloc(int totalsize) {
+    /* static variable feature
+     * - only be seen in the function (local static variable)
+     * - only be initialized at the first call
+     */
+    // so, every call to the function will change starthost
     static int starthost = -1;
 
     starthost = (starthost + 1) % system_setting.hostc;
-    return (jia_alloc3(size, size, starthost));
+    return (jia_alloc3(totalsize, totalsize, starthost));
 }
 
-unsigned long jia_alloc1(int size) {
-    return (jia_alloc3(size, size, 0));
+unsigned long jia_alloc1(int totalsize) {
+    return (jia_alloc3(totalsize, totalsize, 0));
 }
 
 unsigned long jia_alloc2(int size, int block) {
     return (jia_alloc3(size, block, 0));
 }
 
-/**
- * @brief jia_alloc2p -- two parameters alloc, alloc size(page aligned) on
- * host(proc is jiapid)
- *
- * @param size memory size that will be allocated(page aligned)
- * @param proc host(jia_pid == proc)
- * @return unsigned long
- */
-unsigned long jia_alloc2p(int size, int proc) {
-    return (jia_alloc3(size, size, proc));
+unsigned long jia_alloc2p(int totalsize, int starthost) {
+    return (jia_alloc3(totalsize, totalsize, starthost));
 }
 
 #else  /* NULL_LIB */
