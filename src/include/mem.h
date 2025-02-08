@@ -52,7 +52,7 @@
 #define DIFFNULL ((jia_msg_t *)NULL)
 typedef unsigned char *address_t;
 
-#define SIZ2MULSIZ(size)                                                       \
+#define ALIGN2PAGE(size)                                                       \
     ((size % Pagesize) == 0) ? (size) : ((size / Pagesize + 1) * Pagesize)
 
 typedef unsigned long wtvect_t;

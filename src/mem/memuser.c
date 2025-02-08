@@ -33,11 +33,6 @@
 #include "setting.h"
 #include "stat.h"
 
-/* jiajia */
-// extern int jia_pid;
-// extern host_t hosts[Maxhosts];
-// extern int hostc;
-
 jiahome_t home[Homepages];    /* host owned page */
 jiacache_t cache[Cachepages]; /* host cached page */
 jiapage_t page[Maxmempages];      /* global page space */
@@ -45,7 +40,7 @@ unsigned long globaladdr; /* [0, Maxmemsize)*/
 
 /**
  * @brief jia_alloc3 -- allocates size bytes cyclically across all hosts, each
- * time block bytes
+ * time block bytes (3 parameters alloc function)
  *
  * @param size the sum of space that allocated across all hosts (page aligned)
  * @param block the size(page aligned) that allocated by every host every time
@@ -69,11 +64,11 @@ unsigned long jia_alloc3(int size, int block, int starthost) {
 
     originaddr = globaladdr;
     /* allocsize is the sum of size that will be allocated*/
-    // ensure the alloc size is multiple of pagesize
-    allocsize = SIZ2MULSIZ(size);
+    // ensure the alloc size is multiple of pagesize (Pagesize alignment)
+    allocsize = ALIGN2PAGE(size);
     /* mapsize is the size that will be allocated on every host evry time */
-    // ensure the block size is multiple of pagesize
-    mapsize = SIZ2MULSIZ(block);
+    // ensure the block size is multiple of pagesize (Pagesize alignment)
+    mapsize = ALIGN2PAGE(block);
     homepid = starthost;
 
     while (allocsize > 0) {
