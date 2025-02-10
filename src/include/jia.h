@@ -121,6 +121,16 @@ unsigned long  jia_alloc(int totalsize);
 unsigned long jia_alloc_random(int totalsize);
 
 /**
+ * @brief jia_alloc_array -- allocate array[i] bytes shared memory on host i 
+ * 
+ * @param totalsize sum of size that allocated for shared memory
+ * @param array blocksize array that will allocated on every host
+ * @param n size of array, range: (0, jiahosts)
+ * @return start address of the allocated memory
+ */
+unsigned long jia_alloc_array(int totalsize, int *array, int n);
+
+/**
  * @brief jia_lock -- acquire a lock specified by lockid
  * 
  * @param lockid id of lock

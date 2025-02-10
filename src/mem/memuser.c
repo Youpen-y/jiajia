@@ -195,6 +195,47 @@ unsigned long jia_alloc2p(int totalsize, int starthost) {
     return (jia_alloc3(totalsize, totalsize, starthost));
 }
 
+unsigned long jia_alloc_array(int totalsize, int *array, int n){
+	int homepid;
+	int mapsize;
+	int allocsize;
+	int originaddr;
+    int homei, pagei;
+    int protect;
+	
+	jia_assert(((globaladdr + totalsize) <= Maxmemsize), "Insufficient shared space! --> Max=0x%x Left=0x%x, Need=0x%x\n", Maxmemsize, Maxmemsize - globaladdr, totalsize);
+	jia_assert((n > 0 && n <= system_setting.hostc), "Error parameter n provided on jia_alloc_array call\n");
+
+	homepid = 0;
+	originaddr = globaladdr;
+	allocsize = ALIGN2PAGE(totalsize);
+	
+	int i = 0; // counter
+	while (allocsize > 0) {
+		mapsize = ALIGN2PAGE(array[i]);
+		if (system_setting.jia_pid == homepid) {
+			jia_assert((system_setting.hosts[homepid].homesize + mapsize < (Homepages * Pagesize)), "Too many home pages");
+		}
+		protect = (system_setting.hostc == 1) ? PROT_READ | PROT_WRITE : PROT_READ;
+		memmap((void *)(system_setting.global_start_addr + globaladdr), (size_t)mapsize, protect);
+		
+		for (i = 0; i < mapsize; i += Pagesize) {
+			pagei = (globaladdr + i) / Pagesize;
+			page[pagei].homepid = homepid;
+		}
+		
+		log_info(3, "Map 0x%x bytes in home %4d! globaladdr = 0x%lx", mapsize, homepid, globaladdr);
+		
+		system_setting.hosts[homepid].homesize += mapsize;
+		globaladdr += mapsize;
+		allocsize -= mapsize;
+		homepid = (homepid + 1) % system_setting.hostc;
+		i = (i + 1) % n;
+	}
+    
+    return (system_setting.global_start_addr + originaddr);
+}
+
 #else  /* NULL_LIB */
 
 unsigned long jia_alloc(int size) {
