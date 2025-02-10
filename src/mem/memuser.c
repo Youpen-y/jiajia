@@ -180,7 +180,7 @@ unsigned long jia_alloc_random(int totalsize) {
 	int starthost;
 	static int initialized = 0;
 	if (initialized == 0) {
-		srand((unsigned int)time(NULL));
+		srand(0);
 		initialized = 1;
 	}
 	starthost = rand() % system_setting.hostc;
@@ -232,7 +232,7 @@ unsigned long jia_alloc_array(int totalsize, int *array, int n){
 		homepid = (homepid + 1) % system_setting.hostc;
 		i = (i + 1) % n;
 	}
-    
+
     return (system_setting.global_start_addr + originaddr);
 }
 
