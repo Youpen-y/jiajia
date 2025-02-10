@@ -176,6 +176,17 @@ unsigned long jia_alloc(int totalsize) {
     return (jia_alloc3(totalsize, totalsize, starthost));
 }
 
+unsigned long jia_alloc_random(int totalsize) {
+	int starthost;
+	static int initialized = 0;
+	if (initialized == 0) {
+		srand((unsigned int)time(NULL));
+		initialized = 1;
+	}
+	starthost = rand() % system_setting.hostc;
+	return jia_alloc3(totalsize, totalsize, starthost);
+}
+
 unsigned long jia_alloc2(int size, int block) {
     return (jia_alloc3(size, block, 0));
 }
