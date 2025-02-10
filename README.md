@@ -5,6 +5,16 @@ As a static library, it provide usable interfaces to programmer so that they can
 
 > This project is implemented and maintained by [@Youpen-y](https://github.com/Youpen-y) and [@segzix](https://github.com/segzix).
 
+### Dependency
+- `libibverbs`
+- `librdmacm`
+
+On ubuntu
+```bash
+sudo apt install libibverbs-dev
+sudo apt install librdmacm-dev
+```
+
 ### Target
 - Upgrade it so that it can be adapted to 64-bit machines
 - Redesign some interfaces to increase usability (eg. replace signal-driven IO with event-driven IO epoll in linux system; jia_falloc alloc memory with control flag)
@@ -57,8 +67,6 @@ void jia_lock(int lockid);
  */
 void jia_unlock(int lockid);
 ```
-
-
 
 ```c
 /**
