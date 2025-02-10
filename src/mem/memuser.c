@@ -176,10 +176,6 @@ unsigned long jia_alloc(int totalsize) {
     return (jia_alloc3(totalsize, totalsize, starthost));
 }
 
-unsigned long jia_alloc1(int totalsize) {
-    return (jia_alloc3(totalsize, totalsize, 0));
-}
-
 unsigned long jia_alloc2(int size, int block) {
     return (jia_alloc3(size, block, 0));
 }

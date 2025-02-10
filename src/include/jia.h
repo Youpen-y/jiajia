@@ -51,7 +51,7 @@ void jia_exit();
 
 /**
  * @brief jia_alloc3 -- allocates totalsize bytes cyclically across all hosts, each
- * time block bytes (3 parameters alloc function), start from starthost
+ * time block bytes (3 parameters alloc function), start from starthost.
  *
  * @param totalsize sum of space that allocated across all hosts (page aligned)
  * @param blocksize size(page aligned) that allocated by every host every time
@@ -93,13 +93,15 @@ unsigned long  jia_alloc2p(int totalsize, int starthost);
  */
 unsigned long  jia_alloc2(int totalsize, int blocksize);
 
-/**
- * @brief jia_alloc1 -- allocate all totalsize on host 0
- * 
- * @param totalsize sum of size that allocated for shared memory
- * @return start address of the allocated memory
- */
-unsigned long  jia_alloc1(int totalsize);
+// deprecated
+// use jia_alloc2p(totalsize, 0) instead
+// /**
+//  * @brief jia_alloc1 -- allocate all totalsize on host 0
+//  * 
+//  * @param totalsize sum of size that allocated for shared memory
+//  * @return start address of the allocated memory
+//  */
+// unsigned long  jia_alloc1(int totalsize);
 
 /**
  * @brief jia_alloc -- allocates all totalsize bytes shared memory on srarthost, but
