@@ -14,6 +14,8 @@ int main(int argc, char **argv) {
         }
     }
 
+    jia_barrier();
+
     jia_lock(0);
     for(int i = 0; i < 200000; i++) {
         arr[i]++;
