@@ -104,7 +104,7 @@ unsigned long  jia_alloc2(int totalsize, int blocksize);
 // unsigned long  jia_alloc1(int totalsize);
 
 /**
- * @brief jia_alloc -- allocates all totalsize bytes shared memory on srarthost, but
+ * @brief jia_alloc -- allocates all totalsize bytes shared memory on starthost, but
  * the starthost depends on the times that the function have been called
  * 
  * @param totalsize sum of size that allocated for shared memory
@@ -211,12 +211,20 @@ float          jia_clock();
 /**
  * @brief jia_send -- an MPI-similar call, send len bytes of buf to host topid
  * 
+ * @param buf pointer to buffer
+ * @param len length of bytes
+ * @param topid target host
+ * @param tag scope
  */
 void           jia_send(char* buf, int len, int topid, int tag);
 
 /**
  * @brief jia_recv -- an MPI-similar call, receive len bytes from host frompid to buf
  * 
+ * @param buf pointer to buffer
+ * @param len length of bytes
+ * @param frompid source host
+ * @param tag scope
  * @return int 
  */
 int            jia_recv(char* buf, int len, int frompid, int tag);
