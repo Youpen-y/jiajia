@@ -1,10 +1,12 @@
+// jacobi_heat.c -- jacobi iteration for heat conduction
+
 #include <jia.h>
 #include <stdio.h>
 #include <unistd.h>
 
 #define M 1024
 #define N 1024
-#define TIMES 10
+#define TIMES 5000
 
 float *grid;
 float scratch[M][N];
@@ -26,13 +28,13 @@ int main(int argc, char **argv) {
     jia_init(argc, argv);
     sleep(10);
     
+    grid = (float *)jia_alloc(M * N * sizeof(float));
     if (jiapid == 0) {
-        grid = (float *)jia_alloc(M * N * sizeof(float));
         initialize_grid();
     }
 
     jia_barrier();
-    
+
     int length = M / jiahosts;
     int begin = length * jiapid;
     int end = length * (jiapid + 1);
@@ -41,28 +43,19 @@ int main(int argc, char **argv) {
         // Jacobi iteration
         for (int i = begin; i < end; i++) {
             for (int j = 0; j < N; j++) {
-                if (i == 0) {
-                    // top line
-                    scratch[i][j] = (boundary_value + grid[(i + 1) * N + j] + 
-                                     (j > 0 ? grid[i * N + j - 1] : boundary_value) + 
-                                     (j < N - 1 ? grid[i * N + j + 1] : boundary_value)) / 4;
-                } else if (i == M - 1) {
-                    // bottom line
-                    scratch[i][j] = (grid[(i - 1) * N + j] + boundary_value + 
-                                     (j > 0 ? grid[i * N + j - 1] : boundary_value) + 
-                                     (j < N - 1 ? grid[i * N + j + 1] : boundary_value)) / 4;
-                } else {
-                    // internal line
-                    scratch[i][j] = (grid[(i - 1) * N + j] + grid[(i + 1) * N + j] + 
-                                     (j > 0 ? grid[i * N + j - 1] : boundary_value) + 
-                                     (j < N - 1 ? grid[i * N + j + 1] : boundary_value)) / 4;
-                }
+                double top = (i > 0) ? grid[(i - 1) * N + j] : boundary_value;
+                double bottom = (i < M - 1) ? grid[(i + 1) * N + j] : boundary_value;
+                double left = (j > 0) ? grid[i * N + j - 1] : boundary_value;
+                double right = (j < N - 1) ? grid[i * N + j + 1] : boundary_value;
+
+                // Calculate new value
+                scratch[i][j] = (top + bottom + left + right) / 4.0;
             }
         }
 
         jia_barrier();
 
-        // update grid
+        // Update grid
         for (int i = begin; i < end; i++) {
             for (int j = 0; j < N; j++) {
                 grid[i * N + j] = scratch[i][j];
@@ -79,4 +72,5 @@ int main(int argc, char **argv) {
             }
         }
     }
+    jia_exit();
 }
