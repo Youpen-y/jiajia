@@ -1,11 +1,11 @@
 #!/bin/bash
 ARCH=linux
-MODE=test0
+MODE=test
 TIMEOUT=50
 
 CLEAN=true
 ALLTEST=true
-RUN=true
+RUN=false
 tests=("lu" "ep")
 
 run_app() {
