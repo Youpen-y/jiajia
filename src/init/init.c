@@ -65,7 +65,10 @@ int jia_lock_index;
  * @param argv same as main
  */
 void jia_init(int argc, char **argv) {
-
+#ifdef DOSTAT
+    clearstat();
+    register unsigned int begin = get_usecs();
+#endif
     // step 1:init system_setting
     init_setting(&system_setting);
 
@@ -115,8 +118,8 @@ void jia_init(int argc, char **argv) {
     initload();
 
 #ifdef DOSTAT
-    clearstat();
     statflag = 1; // stat switch on
+    jiastat.inittime += get_usecs() - begin;
 #endif
 #ifndef LINUX
     barrier0();
@@ -287,6 +290,9 @@ static int startprocs(int argc, char **argv) {
  * @param argv same as masters'
  */
 static void jiacreat(int argc, char **argv) {
+#ifdef DOSTAT
+    register unsigned int begin = get_usecs();
+#endif
     if (system_setting.hostc == 0) {
         VERBOSE_LOG(3, "  No hosts specified!\n");
         exit(0);
@@ -320,6 +326,9 @@ static void jiacreat(int argc, char **argv) {
     }
 
     open_logfile("jiajia.log", argc, argv);
+#ifdef DOSTAT
+    jiastat.initcreat += get_usecs() - begin;
+#endif
 }
 
 static void barrier0() {

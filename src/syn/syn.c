@@ -70,6 +70,10 @@ volatile int waitcounter;
  *
  */
 void initsyn() {
+#ifdef DOSTAT
+    register unsigned int begin = get_usecs();
+#endif
+
     int i, j, k;
 
     /** step 1: init locks */
@@ -106,6 +110,10 @@ void initsyn() {
     }
     cvwait = 0;
     waitcounter = 0;
+
+#ifdef DOSTAT
+    jiastat.initsyn += get_usecs() - begin;
+#endif
 }
 
 /**

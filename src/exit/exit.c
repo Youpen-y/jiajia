@@ -64,7 +64,8 @@ void jia_exit() {
     jia_wait();
 
     VERBOSE_OUT(3, "\nShared Memory (%d-byte pages) : %ld (total) %lu (used)\n",
-                Pagesize, Maxmemsize / Pagesize, globaladdr / Pagesize);
+                Pagesize, Maxmemsize / Pagesize, globaladdr / Pagesize);    
+    
     if (hostc > 1) {
         // construct STAT msg
         index = freemsg_lock(&msg_buffer);
@@ -145,6 +146,7 @@ void jia_exit() {
                 total.commhardtime += allstats[i].commhardtime;
                 total.difftime += allstats[i].difftime;
                 total.waittime += allstats[i].waittime;
+                total.inittime += allstats[i].inittime;
             }
             /*end Shi*/
 
@@ -265,6 +267,42 @@ void jia_exit() {
             for (i = 0; i < 20 + hostc * 9; i++)
                 printf("-");
             printf(" (ms) ");
+            printf("\nInit time          = ");
+            for (i = 0; i < hostc; i++)
+                printf("%8.2f ", allstats[i].inittime / 1000.0);
+            printf("\n|- setting         = ");
+            for (i = 0; i < hostc; i++)
+                printf("%8.2f ", allstats[i].initset / 1000.0);
+            printf("\n|- creat proc      = ");
+            for (i = 0; i < hostc; i++)
+                printf("%8.2f ", allstats[i].initcreat / 1000.0);
+            printf("\n|- mem             = ");
+            for (i = 0; i < hostc; i++)
+                printf("%8.2f ", allstats[i].initmem / 1000.0);
+            printf("\n|- sync            = ");
+            for (i = 0; i < hostc; i++)
+                printf("%8.2f ", allstats[i].initsyn / 1000.0);
+            printf("\n|- msg             = ");
+            for (i = 0; i < hostc; i++)
+                printf("%8.2f ", allstats[i].initmsg / 1000.0);
+            printf("\n|- comm            = ");
+            for (i = 0; i < hostc; i++)
+                printf("%8.2f ", allstats[i].initcomm / 1000.0);
+            if(system_setting.comm_type == rdma) {
+            printf("\n|--|-- context     = ");
+            for (i = 0; i < hostc; i++)
+                printf("%8.2f ", allstats[i].initrdmacontext / 1000.0);
+            printf("\n|--|-- connect     = ");
+            for (i = 0; i < hostc; i++)
+                printf("%8.2f ", allstats[i].initrdmacontext / 1000.0);
+            printf("\n|--|-- resource    = ");
+            for (i = 0; i < hostc; i++)
+                printf("%8.2f ", allstats[i].initrdmaresource / 1000.0);
+            }
+
+            printf("\nAlloc time         = ");
+            for (i = 0; i < hostc; i++)
+                printf("%8.2f ", allstats[i].alloctime / 1000.0);
             printf("\nBarrier time       = ");
             for (i = 0; i < hostc; i++)
                 printf("%8.2f ", allstats[i].barrtime / 1000.0);
@@ -324,15 +362,15 @@ void jia_exit() {
                         allstats[i].unlocktime - allstats[i].synsigiotime -
                         allstats[i].synsigiocnt * SIGIOoverhead) /
                            1000.0);
-            printf("\nServer time        = ");
-            for (i = 0; i < hostc; i++)
-                printf("%8.2f ",
-                       (allstats[i].usersigiotime + allstats[i].synsigiotime +
-                        allstats[i].segvsigiotime +
-                        (allstats[i].usersigiocnt + allstats[i].synsigiocnt +
-                         allstats[i].segvsigiocnt) *
-                            SIGIOoverhead) /
-                           1000.0);
+            // printf("\nServer time        = ");
+            // for (i = 0; i < hostc; i++)
+            //     printf("%8.2f ",
+            //            (allstats[i].usersigiotime + allstats[i].synsigiotime +
+            //             allstats[i].segvsigiotime +
+            //             (allstats[i].usersigiocnt + allstats[i].synsigiocnt +
+            //              allstats[i].segvsigiocnt) *
+            //                 SIGIOoverhead) /
+            //                1000.0);
 
             printf("\n");
             for (i = 0; i < 20 + hostc * 9; i++)

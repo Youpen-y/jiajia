@@ -73,8 +73,19 @@ void statserver(jia_msg_t *rep) {
         stat->msgsndcnt * ALPHA + BETA * stat->msgsndbytes;
 
     allstats[rep->frompid].difftime =
-        allstats[rep->frompid].endifftime + allstats[rep->frompid].dedifftime;
+    allstats[rep->frompid].endifftime + allstats[rep->frompid].dedifftime;
     allstats[rep->frompid].waittime = stat->waittime;
+    allstats[rep->frompid].inittime = stat->inittime;
+    allstats[rep->frompid].initset = stat->initset;
+    allstats[rep->frompid].initcreat = stat->initcreat;
+    allstats[rep->frompid].initmem = stat->initmem;
+    allstats[rep->frompid].initcomm = stat->initcomm;
+    allstats[rep->frompid].initrdmacontext = stat->initrdmacontext;
+    allstats[rep->frompid].initrdmaconnection = stat->initrdmaconnection;
+    allstats[rep->frompid].initrdmaresource = stat->initrdmaresource;
+    allstats[rep->frompid].initmsg = stat->initmsg;
+
+    allstats[rep->frompid].alloctime = stat->alloctime;
 
     /*End Shi*/
 

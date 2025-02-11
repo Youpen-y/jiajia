@@ -1,5 +1,6 @@
 #ifndef NULL_LIB
 #include "udp.h"
+#include "stat.h"
 #include "tools.h"
 #include <pthread.h>
 #include <semaphore.h>
@@ -100,6 +101,10 @@ static int init_comm_manager() {
  * @brief initcomm -- initialize communication setting
  */
 void initcomm() {
+#ifdef DOSTAT
+    register unsigned int begin = get_usecs();
+#endif
+
     int i, j, fd;
 
     if (system_setting.jia_pid == 0) {
@@ -127,6 +132,10 @@ void initcomm() {
 
     /* step 5: register sigint handler */
     register_sigint_handler();
+
+#ifdef DOSTAT
+    jiastat.initcomm += get_usecs() - begin;
+#endif
 }
 
 #else  /* NULL_LIB */

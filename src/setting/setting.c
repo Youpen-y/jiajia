@@ -3,6 +3,7 @@
 #include "global.h"
 #include "msg.h"
 #include "tools.h"
+#include "stat.h"
 
 #include <ctype.h>
 #include <stdio.h>
@@ -221,6 +222,9 @@ int get_id(setting_t *setting) {
 }
 
 int init_setting(setting_t *setting) {
+#ifdef DOSTAT
+    register unsigned int begin = get_usecs();
+#endif
     int ret;
 
     ret = get_options(setting);
@@ -240,6 +244,9 @@ int init_setting(setting_t *setting) {
         fprintf(stderr, "func-get_setting: get_id failed\n");
         return -1;
     }
+#ifdef DOSTAT
+    jiastat.initset += get_usecs() - begin;
+#endif
     return 0;
 }
 

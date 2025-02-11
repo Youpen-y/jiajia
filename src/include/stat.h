@@ -29,6 +29,7 @@ typedef struct Stats {
     unsigned int migoutcnt;         /*Mig page home out*/
     unsigned int resendcnt;         /*Resend msg count*/
 
+    // usec(microseconds)
     unsigned int segvLtime;
     unsigned int segvRtime;
     unsigned int barrtime;
@@ -53,6 +54,21 @@ typedef struct Stats {
     unsigned int largecnt;          /*large msg count*/
     unsigned int smallcnt;          /*small msg count*/
     unsigned int waittime;          /*not use now*/
+
+    unsigned int inittime;
+        unsigned int initset;
+        unsigned int initcreat;
+        unsigned int initmem;
+        unsigned int initsyn;
+        unsigned int initmsg;
+        unsigned int initcomm;
+            unsigned int initrdmacontext;
+            unsigned int initrdmaconnection;
+            unsigned int initrdmaresource;
+
+
+    unsigned int alloctime;
+    unsigned int exittime;
 } jiastat_t;
 
 

@@ -67,6 +67,10 @@ extern int repcnt[Setnum]; /* record the last replacement index of every set */
  * step6: register sigsegv handler
  */
 void initmem() {
+#ifdef DOSTAT
+    register unsigned int begin = get_usecs();
+#endif
+
     int i, j;
 
     for (i = 0; i < Maxhosts; i++) { // step1
@@ -137,6 +141,10 @@ void initmem() {
         repcnt[i] = 0;
     }
     srand(1);
+
+#ifdef DOSTAT
+    jiastat.initmem += get_usecs() - begin;
+#endif
 }
 
 /**

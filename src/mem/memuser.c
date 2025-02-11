@@ -39,6 +39,10 @@ jiapage_t page[Maxmempages];      /* global page space */
 unsigned long globaladdr; /* [0, Maxmemsize)*/
 
 unsigned long jia_alloc3(int totalsize, int blocksize, int starthost) {
+#ifdef DOSTAT
+    register unsigned int begin = get_usecs();
+#endif
+
     int homepid;
     int mapsize;
     int allocsize;
@@ -96,6 +100,10 @@ unsigned long jia_alloc3(int totalsize, int blocksize, int starthost) {
         allocsize -= mapsize;
         homepid = (homepid + 1) % system_setting.hostc; // next host
     }
+
+#ifdef DOSTAT
+    jiastat.alloctime += get_usecs() - begin;
+#endif
     return (system_setting.global_start_addr + originaddr);
 }
 
@@ -116,6 +124,10 @@ unsigned long jia_alloc4(int totalsize, int *blocks, int n, int starthost) {
     int homei, pagei, i;
     int blocki;
     int protect;
+
+#ifdef DOSTAT
+    register unsigned int begin = get_usecs();
+#endif
 
     jia_assert(((globaladdr + totalsize) <= Maxmemsize),
            "Insufficient shared space! --> Max=0x%x Left=0x%lx Need=0x%x\n",
@@ -160,6 +172,9 @@ unsigned long jia_alloc4(int totalsize, int *blocks, int n, int starthost) {
             blocki = (blocki + 1) % n;
         }
     }
+#ifdef DOSTAT
+    jiastat.alloctime += get_usecs() - begin;
+#endif
 
     return (system_setting.global_start_addr + originaddr);
 }
@@ -202,7 +217,12 @@ unsigned long jia_alloc_array(int totalsize, int *array, int n){
 	int originaddr;
     int homei, pagei;
     int protect;
-	
+
+#ifdef DOSTAT
+    register unsigned int begin = get_usecs();
+#endif
+
+
 	jia_assert(((globaladdr + totalsize) <= Maxmemsize), "Insufficient shared space! --> Max=0x%x Left=0x%x, Need=0x%x\n", Maxmemsize, Maxmemsize - globaladdr, totalsize);
 	jia_assert((n > 0 && n <= system_setting.hostc), "Error parameter n provided on jia_alloc_array call\n");
 
@@ -232,6 +252,9 @@ unsigned long jia_alloc_array(int totalsize, int *array, int n){
 		homepid = (homepid + 1) % system_setting.hostc;
 		i = (i + 1) % n;
 	}
+#ifdef DOSTAT
+    jiastat.alloctime += get_usecs() - begin;
+#endif
 
     return (system_setting.global_start_addr + originaddr);
 }

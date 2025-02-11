@@ -212,6 +212,9 @@ void jia_barrier() {
  *
  */
 void jia_wait() {
+#ifdef DOSTAT
+    register unsigned int begin = get_usecs();
+#endif
     jia_msg_t *req;
     int index;
 
@@ -240,6 +243,10 @@ void jia_wait() {
     // busywaiting until waitwait is clear by waitgrantserver
     while (atomic_load(&waitwait))
         ;
+
+#ifdef DOSTAT
+    jiastat.waittime += get_usecs() - begin;
+#endif
 
     if (LOAD_BAL == ON)
         starttime = jia_clock();

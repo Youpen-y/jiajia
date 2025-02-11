@@ -1,5 +1,6 @@
 #include "rdma.h"
 #include "msg.h"
+#include "stat.h"
 #include "setting.h"
 #include "tools.h"
 #include <arpa/inet.h>
@@ -28,6 +29,10 @@ jia_context_t ctx;
 static void sync_connection(int total_hosts, int jia_pid);
 
 void init_rdma_comm() {
+#ifdef DOSTAT
+    register unsigned int begin = get_usecs();
+#endif
+
     int i, j, fd;
 
     if (system_setting.jia_pid == 0) {
@@ -53,6 +58,9 @@ void init_rdma_comm() {
 
     /* step 5: register sigint handler */
     register_sigint_handler();
+#ifdef DOSTAT
+    jiastat.initcomm += get_usecs() - begin;
+#endif
 }
 
 void *sync_server_thread(void *arg) {
@@ -382,6 +390,10 @@ cleanup:
 }
 
 void init_rdma_context(struct jia_context *ctx, int batching_num) {
+#ifdef DOSTAT
+    register unsigned int begin = get_usecs();
+#endif
+
     struct ibv_device **dev_list;
     struct ibv_device *dev;
 
@@ -410,9 +422,17 @@ void init_rdma_context(struct jia_context *ctx, int batching_num) {
         init_msg_queue(ctx->connect_array[i].inqueue, QueueSize);
         ctx->connect_array[i].in_mr = (struct ibv_mr **)malloc(sizeof(struct ibv_mr *) * QueueSize);
     }
+
+#ifdef DOSTAT
+    jiastat.initrdmacontext += get_usecs() - begin;
+#endif
 }
 
 void sync_connection(int total_hosts, int jia_pid) {
+#ifdef DOSTAT
+    register unsigned int begin = get_usecs();
+#endif
+
     // 创建服务器线程（如果需要）
     if (jia_pid != 0) {
         pthread_create(&ctx.server_thread, NULL, sync_server_thread, &ctx);
@@ -440,10 +460,17 @@ void sync_connection(int total_hosts, int jia_pid) {
             pthread_join(ctx.client_threads[i], NULL);
         }
     }
+    
+#ifdef DOSTAT
+    jiastat.initrdmaconnection += get_usecs() - begin;
+#endif
 }
 
-
 void init_rdma_resource(struct jia_context *ctx) {
+#ifdef DOSTAT
+    register unsigned int begin = get_usecs();
+#endif
+
     /* step 1: register outqueue memory regions */
     for (int i = 0; i < QueueSize; i++) {
         ctx->out_mr[i] =
@@ -459,6 +486,9 @@ void init_rdma_resource(struct jia_context *ctx) {
                 &ctx->connect_array[i].id, ctx->connect_array[i].inqueue->queue[j], Maxsize);
         }
     }
+#ifdef DOSTAT
+    jiastat.initrdmaresource += get_usecs() - begin;
+#endif
 }
 
 void free_rdma_resources(struct jia_context *ctx) {

@@ -45,7 +45,9 @@ msg_buffer_t msg_buffer = {0};
  *
  */
 void initmsg() {
-
+#ifdef DOSTAT
+    register unsigned int begin = get_usecs();
+#endif
     init_msg_buffer(&msg_buffer, system_setting.msg_buffer_size);
 
     int i;
@@ -63,6 +65,9 @@ void initmsg() {
         msgbuf[i].size = 0;
         msgbuf[i].seqno = 0;
     }
+#ifdef DOSTAT
+    jiastat.initmsg += get_usecs() - begin;
+#endif
 }
 
 int init_msg_buffer(msg_buffer_t *msg_buffer, int size) {
@@ -219,8 +224,8 @@ int nextpacket(int fromproc, int tag) {
 /**
  * @brief nextmsg - get a msg from msgbuf and put it into buf, return msg's size
  *
- * @param buf
- * @param len
+ * @param buf 
+ * @param len 
  * @param fromproc
  * @param tag
  * @return int
