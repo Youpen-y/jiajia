@@ -10,7 +10,7 @@ openmpi_test: mpi_transfer_test.c
 
 run:
 	# mpirun -np 2 ./openmpi_test 
-	mpirun --display-map -np 2 --mca plm_base_verbose 30 --mca oob_base_verbose 10 -hostfile mpi_hosts ./openmpi_test
+	mpirun --hostfile mpi_hosts --mca pml ob1 ./openmpi_test 
 
 clean:
 	rm -f $(TARGET)
