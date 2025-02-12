@@ -4,7 +4,7 @@
 system_mode = hybrid
 
 # communication type, tcp or udp or rdma
-comm_type = rdma
+comm_type = udp
 
 # global start address
 global_start_addr = 0x400000000000
@@ -21,7 +21,7 @@ msg_queue_size = 32
 ###### PREFTECH ######
 ###### prefetch pages when send GETP msg to remote host
 # 1. prefetch: control switch, on/off
-prefetch = on
+prefetch = off
 
 # 2. prefetch_pages: extra fetched pages except the target
 # the prefetched pages will be packed in one msg (only one), which means <= Maxsize/Pagesize
