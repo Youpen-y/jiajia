@@ -78,7 +78,7 @@ void initsyn() {
 
     /** step 1: init locks */
     for (i = 0; i <= Maxlocks; i++) {
-        locks[i].acqc = 0;
+        atomic_init(&locks[i].acqc, 0);
         locks[i].scope = 0;
         locks[i].myscope = -1;
         for (j = 0; j < Maxhosts; j++) {

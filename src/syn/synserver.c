@@ -274,11 +274,12 @@ void acqserver(jia_msg_t *req) {
     lock = (int)stol(req->data); // get the lock
     jia_assert((lock % system_setting.hostc == system_setting.jia_pid), "Incorrect home of lock!");
 
-    locks[lock].acqs[locks[lock].acqc] = req->frompid;
-    locks[lock].acqscope[locks[lock].acqc] = req->scope;
-    locks[lock].acqc++;
+    locks[lock].acqs[atomic_load(&locks[lock].acqc)] = req->frompid;
+    locks[lock].acqscope[atomic_load(&locks[lock].acqc)] = req->scope;
+    atomic_fetch_add(&locks[lock].acqc, 1);
+    // locks[lock].acqc++;
 
-    if (locks[lock].acqc == 1)
+    if (atomic_load(&locks[lock].acqc) == 1)
         grantlock(lock, locks[lock].acqs[0], locks[lock].acqscope[0]);
 }
 
@@ -307,13 +308,15 @@ void relserver(jia_msg_t *req) {
     recordwtnts(req);
     locks[lock].scope++;
 
-    for (acqi = 0; acqi < (locks[lock].acqc - 1); acqi++) {
+    for (acqi = 0; acqi < (atomic_load(&locks[lock].acqc) - 1); acqi++) {
         locks[lock].acqs[acqi] = locks[lock].acqs[acqi + 1];
         locks[lock].acqscope[acqi] = locks[lock].acqscope[acqi + 1];
     }
-    locks[lock].acqc--;
+    
+    atomic_fetch_sub(&locks[lock].acqc, 1);
+    //locks[lock].acqc--;
 
-    if (locks[lock].acqc > 0)
+    if (atomic_load(&locks[lock].acqc) > 0)
         grantlock(lock, locks[lock].acqs[0], locks[lock].acqscope[0]);
 }
 
@@ -358,16 +361,18 @@ void barrserver(jia_msg_t *req) {
 
     recordwtnts(req); // record write notices in msg barr's data
 
-    locks[lock].acqc++;
+    atomic_fetch_add(&locks[lock].acqc, 1);
+    //locks[lock].acqc++;
 
 #ifdef DEBUG
-    VERBOSE_LOG(3, "barrier count=%d, from host %d\n", locks[lock].acqc, req->frompid);
+    VERBOSE_LOG(3, "barrier count=%d, from host %d\n", atomic_load(&locks[lock].acqc), req->frompid);
 #endif
-    log_info(3, "locks[%d].acqc = %d", lock, locks[lock].acqc);
-    if (locks[lock].acqc == system_setting.hostc) {
+    log_info(3, "locks[%d].acqc = %d", lock, atomic_load(&locks[lock].acqc));
+    if (atomic_load(&locks[lock].acqc) == system_setting.hostc) {
         locks[lock].scope++;
         grantbarr(lock);
-        locks[lock].acqc = 0;
+        atomic_store(&locks[lock].acqc, 0);
+        //locks[lock].acqc = 0;
         freewtntspace(locks[lock].wtntp);
     }
     log_info(3, "host %d is out of barrserver", jiapid);

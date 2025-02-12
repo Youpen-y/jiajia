@@ -58,7 +58,7 @@ typedef struct wtnttype {
 typedef struct locktype {
         int         acqs[Maxhosts];     /* acquirer's id*/
         int         acqscope[Maxhosts]; /* acquirer's scope*/
-        int         acqc;               /* acquire counter */
+        _Atomic int         acqc;               /* acquire counter */
         int         scope;
         int         myscope;
         wtnt_t      *wtntp;             /* write notice list pointer */

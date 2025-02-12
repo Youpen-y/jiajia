@@ -239,9 +239,9 @@ int nextmsg(char *buf, int len, int fromproc, int tag) {
     while ((endofmsg == 0) && (i != Maxmsgbufs)) {
 
         /** step 1: use recvwait to sync */
-        recvwait = 1;
-        while (recvwait)
-            ;
+        // recvwait = 1;
+        // while (recvwait)
+        //     ;
 
         /** step 2: get next msg and clear msgbuf */
         i = nextpacket(fromproc, tag);
