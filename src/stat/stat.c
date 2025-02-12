@@ -78,6 +78,9 @@ void statserver(jia_msg_t *rep) {
     allstats[rep->frompid].inittime = stat->inittime;
     allstats[rep->frompid].initset = stat->initset;
     allstats[rep->frompid].initcreat = stat->initcreat;
+    allstats[rep->frompid].createdir = stat->createdir;
+    allstats[rep->frompid].copyfiles = stat->copyfiles;
+    allstats[rep->frompid].startprocs = stat->startprocs;
     allstats[rep->frompid].initmem = stat->initmem;
     allstats[rep->frompid].initcomm = stat->initcomm;
     allstats[rep->frompid].initrdmacontext = stat->initrdmacontext;

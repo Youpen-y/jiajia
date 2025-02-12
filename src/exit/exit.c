@@ -276,6 +276,14 @@ void jia_exit() {
             printf("\n|- creat proc      = ");
             for (i = 0; i < hostc; i++)
                 printf("%8.2f ", allstats[i].initcreat / 1000.0);
+
+            printf("\n|--|--creatdir     = ");
+            printf("%8.2f ", allstats[0].createdir / 1000.0);
+            printf("\n|--|--copyfiles    = ");
+            printf("%8.2f ", allstats[0].copyfiles / 1000.0);
+            printf("\n|--|--startprocs   = ");
+            printf("%8.2f ", allstats[0].startprocs / 1000.0);
+
             printf("\n|- mem             = ");
             for (i = 0; i < hostc; i++)
                 printf("%8.2f ", allstats[i].initmem / 1000.0);

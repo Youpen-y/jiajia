@@ -58,6 +58,9 @@ typedef struct Stats {
     unsigned int inittime;
         unsigned int initset;
         unsigned int initcreat;
+            unsigned int createdir;
+            unsigned int copyfiles;
+            unsigned int startprocs;
         unsigned int initmem;
         unsigned int initsyn;
         unsigned int initmsg;

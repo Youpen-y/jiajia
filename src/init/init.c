@@ -137,6 +137,10 @@ void jia_init(int argc, char **argv) {
  * @param argv same as main's argv
  */
 static void createdir(int argc, char **argv) {
+#ifdef DOSTAT
+    register unsigned int begin = get_usecs();
+#endif
+
     char cmd[Linesize];
 
     for (int i = 1; i < system_setting.hostc; i++) {
@@ -146,6 +150,10 @@ static void createdir(int argc, char **argv) {
                 basename(argv[0]), argv[0]);
         system(cmd);
     }
+
+#ifdef DOSTAT
+    jiastat.createdir += get_usecs() - begin;
+#endif
 }
 
 /**
@@ -155,6 +163,10 @@ static void createdir(int argc, char **argv) {
  * @param argv same as main's argv
  */
 static void copyfiles(int argc, char **argv) {
+#ifdef DOSTAT
+    register unsigned int begin = get_usecs();
+#endif
+
     int i, ret;
     char cmd[Linesize];
 
@@ -176,6 +188,10 @@ static void copyfiles(int argc, char **argv) {
         local_assert(ret == 0, "Copy system files failed");
     }
     VERBOSE_LOG(3, "Remote copy succeed!\n\n");
+
+#ifdef DOSTAT
+    jiastat.copyfiles += get_usecs() - begin;
+#endif
 }
 
 /**
@@ -186,6 +202,10 @@ static void copyfiles(int argc, char **argv) {
  * @return int
  */
 static int startprocs(int argc, char **argv) {
+#ifdef DOSTAT
+    register unsigned int begin = get_usecs();
+#endif
+
     struct servent *sp;
     int hosti;
     char cmd[Linesize], *hostname;
@@ -280,6 +300,9 @@ static int startprocs(int argc, char **argv) {
     }
 #endif /* LINUX */
 
+#ifdef DOSTAT
+    jiastat.startprocs += get_usecs() - begin;
+#endif
     return 0;
 }
 
