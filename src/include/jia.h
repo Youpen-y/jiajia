@@ -31,6 +31,25 @@
 #define	JIA_PUBLIC
 #include "setting.h"
 
+// two meaning interface for RMA communication (unrealized)
+/**
+ * @brief jia_get -- get the addr of the corresponding page from its home node to local memory
+ * 
+ * @param addr shared memory's virtual addr
+ * @return the addr of local memory(but with the new value)
+ */
+unsigned char *	jia_get(unsigned char *addr);
+
+/**
+ * @brief jia_put -- put the buffer's content to the addr's home node
+ * 
+ * @param buf the source buffer
+ * @param addr the target shared memory's addr
+ */
+void		   jia_put(char *buf, unsigned char *addr);
+// RMA end
+
+
 #define jiahosts  system_setting.hostc			/* total number of hosts of a parallel program */
 #define jiapid    system_setting.jia_pid		/* host identification number */
 
