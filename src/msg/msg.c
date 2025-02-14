@@ -31,6 +31,7 @@
 #include "stat.h"
 #include "msg.h"
 #include "load.h"
+#include "comm.h"
 #include <stdatomic.h>
 
 extern char errstr[Linesize];
@@ -179,7 +180,8 @@ int move_msg_to_outqueue(msg_buffer_t *buffer,
                          msg_queue_t *outqueue) {
     slot_t *slot = &msg_buffer.buffer[index];
     if (slot->msg.topid == system_setting.jia_pid) {
-        msg_handle(&slot->msg);
+            enqueue(&inqueue, &slot->msg);
+            // msg_handle(&slot->msg); // handle directly will cause the data race between main thread and server thread
     } else {
         int ret = enqueue(outqueue, &slot->msg);
         if (ret == -1) {
