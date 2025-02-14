@@ -55,6 +55,9 @@ typedef struct setting {
     config_option_t options[MAX_OPTIONS_NUM]; // options array
     int optionc;                              // options count
 
+    // bool debug_flag;        // debug switchs
+    // int debug_level;        // debug level
+
     // prefetch optimization
     bool prefetch_flag;     // prefetch switch
     int prefetch_pages;     // num of pages that prefetched
