@@ -358,17 +358,14 @@ void jia_exit() {
             for (i = 0; i < hostc; i++)
                 printf("%8.2f ",
                        (allstats[i].segvLtime + allstats[i].segvRtime +
-                        allstats[i].segvLcnt * SEGVoverhead +
-                        allstats[i].segvRcnt * SEGVoverhead -
-                        allstats[i].segvsigiotime -
-                        allstats[i].segvsigiocnt * SIGIOoverhead) /
+                        (allstats[i].segvLcnt +
+                        allstats[i].segvRcnt) * SEGVoverhead) /
                            1000.0);
             printf("\nSyn. time          = ");
             for (i = 0; i < hostc; i++)
                 printf("%8.2f ",
                        (allstats[i].barrtime + allstats[i].locktime +
-                        allstats[i].unlocktime - allstats[i].synsigiotime -
-                        allstats[i].synsigiocnt * SIGIOoverhead) /
+                        allstats[i].unlocktime) /
                            1000.0);
             // printf("\nServer time        = ");
             // for (i = 0; i < hostc; i++)

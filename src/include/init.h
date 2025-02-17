@@ -40,7 +40,7 @@
 #define Maxfileno       1024 
 
 // TODO: should recompute the cost 
-#define   SEGVoverhead  600
+#define   SEGVoverhead  0.5     // overhead of trapping(us)
 #define   SIGIOoverhead 200
 #define   ALPHAsend     151.76
 #define   BETAsend      0.04
