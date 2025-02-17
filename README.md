@@ -1,4 +1,4 @@
-### Next generation JIAJIA (SDSM) --- JIAJIA3.0
+### Next generation JIAJIA (SDSM) --- M-JIAJIA
 JIAJIA is a software distributed shared memory system that written at the beginning of the century. What makes it unique is its lock-based consistency.
 
 As a static library, it provide usable interfaces to programmer so that they can use it divide their tasks to run on multiple machines. [Interfaces](#jiajia30-interfaces)
