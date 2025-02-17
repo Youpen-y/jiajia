@@ -23,7 +23,7 @@ int init_post_recv_wr();
 
 void *rdma_server_thread(void *arg) {
     int ret;
-    if ((ret = init_post_recv_wr())) {   // post recv wr first
+    if ((ret = init_post_recv_wr())) { // post recv wr first
         log_err("init recv wr error");
     }
 
@@ -37,15 +37,16 @@ void *rdma_server_thread(void *arg) {
             rdma_connect_t *tmp_connect = &ctx.connect_array[i];
             msg_queue_t *inqueue = tmp_connect->inqueue;
 
-            if (i == system_setting.jia_pid)
-                continue;
             if (atomic_load(&(ctx.connect_array[i].inqueue->busy_value)) > 0) {
 
                 /* step 1: handle msg and update head point, busy_value */
                 msg_handle((jia_msg_t *)(inqueue->queue[inqueue->head]));
 
-                log_info(3, "pre inqueue [head]: %d, [busy_value]: %d [free_value]: %d",
-                         inqueue->head, atomic_load(&inqueue->busy_value), atomic_load(&inqueue->free_value));
+                log_info(3,
+                         "pre inqueue [head]: %d, [busy_value]: %d "
+                         "[free_value]: %d",
+                         inqueue->head, atomic_load(&inqueue->busy_value),
+                         atomic_load(&inqueue->free_value));
 
                 /* step 2: sub busy_value and add free_value */
                 if (atomic_load(&(inqueue->busy_value)) <= 0) {
@@ -55,15 +56,21 @@ void *rdma_server_thread(void *arg) {
                 }
                 atomic_fetch_add(&(inqueue->free_value), 1);
 
-                /* step 2: update head */
+                /* step 3: update head */
                 pthread_mutex_lock(&inqueue->head_lock);
                 inqueue->head = (inqueue->head + 1) % inqueue->size;
                 pthread_mutex_unlock(&inqueue->head_lock);
 
-                log_info(3, "after inqueue [head]: %d, [busy_value]: %d [free_value]: %d",
-                         inqueue->head, atomic_load(&inqueue->busy_value), atomic_load(&inqueue->free_value));
+                log_info(3,
+                         "after inqueue [head]: %d, [busy_value]: %d "
+                         "[free_value]: %d",
+                         inqueue->head, atomic_load(&inqueue->busy_value),
+                         atomic_load(&inqueue->free_value));
             }
-            check_flags(i);
+
+            if (i != system_setting.jia_pid) {
+                check_flags(i);
+            }
         }
     }
 }
@@ -142,8 +149,8 @@ int init_post_recv_wr() {
         msg_queue_t *inqueue = ctx.connect_array[j].inqueue;
         for (int i = 0; i < QueueSize; i += BatchingSize) {
             /* step 1: loop until ibv_post_recv wr successfully */
-            while (
-                (ret = ibv_post_recv(ctx.connect_array[j].id.qp, &wr_list[i + j * QueueSize], &bad_wr))) {
+            while ((ret = ibv_post_recv(ctx.connect_array[j].id.qp, &wr_list[i + j * QueueSize],
+                                        &bad_wr))) {
                 log_err("Failed to post recv");
             }
 

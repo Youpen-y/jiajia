@@ -179,16 +179,16 @@ int move_msg_to_outqueue(msg_buffer_t *buffer,
                          int index,
                          msg_queue_t *outqueue) {
     slot_t *slot = &msg_buffer.buffer[index];
-    if (slot->msg.topid == system_setting.jia_pid) {
-            enqueue(&inqueue, &slot->msg);
-            // msg_handle(&slot->msg); // handle directly will cause the data race between main thread and server thread
-    } else {
+    // if (slot->msg.topid == system_setting.jia_pid) {
+    //         enqueue(&inqueue, &slot->msg);
+    //         // msg_handle(&slot->msg); // handle directly will cause the data race between main thread and server thread
+    // } else {
         int ret = enqueue(outqueue, &slot->msg);
         if (ret == -1) {
             perror("enqueue");
             return ret;
         }
-    }
+    // }
     return 0;
 }
 
