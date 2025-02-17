@@ -1,0 +1,6 @@
+- RDMA多机测试
+- RDMA read write 原语实现
+- jiajia接口扩展
+- jiajia代码优化
+- 基于jiajia的分布式内存数据库
+- jiajia内存cache一致性模型的进一步扩展
