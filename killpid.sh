@@ -6,28 +6,27 @@ programs=("ep" "hello" "is" "lu" "mm" "pi" "sor" "tsp" "water")
 servers=("chenji")
 
 for server in "${servers[@]}"; do
-	if [ -n "$1" ]; then
-		# get pid
-		pid=$(ssh $server "cd jianode/$1 && lsof -w $1" | awk 'NR==2 {print $2}')
-	
-		# pid non-null
-		if [ -n "$pid" ]; then
-			echo "process $pid in running on $server"
-			ssh $server "kill -9 $pid && echo \"process $pid has been killed\""
-		fi
-		echo "$1 on $server is ok"
-	else
-		for pg in "${programs[@]}"; do
-					
-			# get pid
-			pid=$(ssh $server "cd jianode/$pg && lsof -w $pg" | awk 'NR==2 {print $2}')
-	
-			# pid non-null
-			if [ -n "$pid" ]; then
-				echo "process $pid($pg) in running on $server"
-				ssh $server "kill -9 $pid($pg) && echo \"process $pid has been killed\""
-			fi
-			echo "$pg on $server is ok"
-		done
-	fi
+    if [ -n "$1" ]; then
+        # get pid
+        pid=$(ssh "$server" "cd jianode/$1 && lsof -w $1" | awk 'NR==2 {print $2}')
+    
+        # pid non-null
+        if [ -n "$pid" ]; then
+            echo "process $pid in running on $server"
+            ssh "$server" "kill -9 $pid && echo \"process $pid has been killed\""
+        fi
+        echo "$1 on $server is ok"
+    else
+        for pg in "${programs[@]}"; do
+            # get pid
+            pid=$(ssh "$server" "cd jianode/$pg && lsof -w $pg" | awk 'NR==2 {print $2}')
+    
+            # pid non-null
+            if [ -n "$pid" ]; then
+                echo "process $pid($pg) in running on $server"
+                ssh "$server" "kill -9 $pid && echo \"process $pid has been killed for program $pg\""
+            fi
+            echo "$pg on $server is ok"
+        done
+    fi
 done

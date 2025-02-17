@@ -4,9 +4,9 @@ MODE=test
 TIMEOUT=50
 
 CLEAN=true
-ALLTEST=true
-RUN=false
-tests=("lu" "ep")
+ALLTEST=false
+RUN=true
+tests=("lu" "ep" "hello" "is" "mm" "pi" "sor" "tsp" "water")
 
 run_app() {
     # 进入文件夹并在reports下创建对应的log文件
