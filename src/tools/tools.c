@@ -27,8 +27,8 @@
  *           Author: Weiwu Hu, Weisong Shi, Zhimin Tang                *
  **********************************************************************/
 
-#include <string.h>
 #ifndef NULL_LIB
+#include <string.h>
 #include "tools.h"
 #include "comm.h"
 #include "global.h"

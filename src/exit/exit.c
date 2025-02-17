@@ -29,14 +29,14 @@
 
 #ifndef NULL_LIB
 #include "msg.h"
-#include "comm.h" // asendmsg
+#include "comm.h"
 #include "global.h"
 #include "init.h"
-#include "jia.h" // jia_wait
+#include "jia.h"
 #include "mem.h"
 #include "setting.h"
-#include "stat.h"  // clearstat
-#include "tools.h" // newmsg, freemsg, appendmsg
+#include "stat.h"
+#include "tools.h"
 #include <time.h>
 #include <stdatomic.h>
 
