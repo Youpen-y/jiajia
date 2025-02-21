@@ -2,8 +2,8 @@
 #include "msg.h"
 #include "setting.h"
 #include "stat.h"
-#include "udp.h"
 #include "tools.h"
+#include "udp.h"
 #include <errno.h>
 #include <stdbool.h>
 #include <sys/epoll.h>
@@ -72,14 +72,15 @@ void *client_thread(void *args) {
  * @return int
  */
 static int outsend(jia_msg_t *msg) {
+    int state;
+
     if (msg == NULL) {
         perror("msg is NULL");
         return -1;
     }
 
 #ifdef DOSTAT
-    STATOP(if (msg->size > 4096) jiastat.largecnt++;
-           if (msg->size < 128) jiastat.smallcnt++;)
+    STATOP(if (msg->size > 4096) jiastat.largecnt++; if (msg->size < 128) jiastat.smallcnt++;)
 #endif
 
     int ret;
@@ -87,8 +88,8 @@ static int outsend(jia_msg_t *msg) {
     ack_t ack = {-1, -1};
 
     if (msg->topid == msg->frompid) {
-        log_info(3, "msg<seqno:%d, op:%s, frompid:%d, topid:%d> is send to self",
-                msg->seqno, op2name(msg->op), msg->frompid, msg->topid);
+        log_info(3, "msg<seqno:%d, op:%s, frompid:%d, topid:%d> is send to self", msg->seqno,
+                 op2name(msg->op), msg->frompid, msg->topid);
         return enqueue(&inqueue, msg);
     } else {
 
@@ -103,42 +104,42 @@ static int outsend(jia_msg_t *msg) {
         /* step 1: send msg to destination host with ip */
         to_addr.sin_family = AF_INET;
         to_addr.sin_port = htons(comm_manager.snd_server_port);
-        to_addr.sin_addr.s_addr =
-            inet_addr(system_setting.hosts[msg->topid].ip);
-            ret = sendto(comm_manager.snd_fds, msg, sizeof(jia_msg_t), 0,
-                        (struct sockaddr *)&to_addr, sizeof(struct sockaddr));
-                if (ret == sizeof(jia_msg_t)) {
-            log_info(
-                3, "msg <seqno:%d, op:%s, frompid:%d, topid:%d> is send to %s",
-                msg->seqno, op2name(msg->op), msg->frompid, msg->topid,
-                system_setting.hosts[msg->topid].ip)
+        to_addr.sin_addr.s_addr = inet_addr(system_setting.hosts[msg->topid].ip);
+        ret = sendto(comm_manager.snd_fds, msg, sizeof(jia_msg_t), 0, (struct sockaddr *)&to_addr,
+                     sizeof(struct sockaddr));
+        if (ret == sizeof(jia_msg_t)) {
+            log_info(3, "msg <seqno:%d, op:%s, frompid:%d, topid:%d> is send to %s", msg->seqno,
+                     op2name(msg->op), msg->frompid, msg->topid,
+                     system_setting.hosts[msg->topid].ip)
         }
 
-        int nfds = epoll_wait(epollfd, &event, 1, TIMEOUT);
-        if (nfds <= 0){
-            log_info(3, "TIMEOUT! try resend");
-            return -1;
-        }
+        while (1) {
+            int nfds = epoll_wait(epollfd, &event, 1, TIMEOUT);
+            if (nfds <= 0) {
+                log_info(3, "TIMEOUT! try resend");
+                state = -1;
+                break;
+            }
 
-        if (event.data.fd == comm_manager.ack_fds && event.events & EPOLLIN) {
-            ret = recvfrom(comm_manager.ack_fds, &ack, sizeof(ack_t), 0, NULL,
-                           NULL);
-            if (ret == sizeof(ack_t) && (ack.seqno == (msg->seqno + 1))) {
-                log_info(3, "get ack<seqno:%d, sid:%d> success", ack.seqno,
-                         ack.sid);
-                return 0;
-            }
-            if (ret == -1) {
-                log_err("ack error! try resend");
-                return -1;
-            }
-            // this cond may not happen
-            if (ack.seqno != (msg->seqno + 1)) {
-                log_err("seqno not match[ack.seqno: %u msg.seqno: %u]",
-                        ack.seqno, msg->seqno);
-                return -1;
+            if (event.data.fd == comm_manager.ack_fds && event.events & EPOLLIN) {
+                ret = recvfrom(comm_manager.ack_fds, &ack, sizeof(ack_t), 0, NULL, NULL);
+                if (ret == sizeof(ack_t)) {
+                    if (ack.sid == msg->topid && ack.seqno == (msg->seqno + 1)) {
+                        log_info(3, "get ack<seqno:%d, sid:%d> success", ack.seqno, ack.sid);
+                        state = 0;
+                        break;
+                    } else {
+                        log_err("Not match[<ack.seqno: %u ack.sid: %u> xxx <msg.seqno: %u msg.topid: %u], ack will be ignored", ack.seqno, ack.sid,
+                                msg->seqno, msg->topid);
+                    }
+                } else {
+                    log_err("ack size error! try resend");
+                    state = -1;
+                    break;
+                }
             }
         }
+        return state;
     }
 
     return -1;

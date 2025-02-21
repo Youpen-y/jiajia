@@ -36,7 +36,7 @@
 #include "msg.h"
 #include "semaphore.h"
 
-#define TIMEOUT 100   /* used to wait for ack */
+#define TIMEOUT 300   /* used to wait for ack */
 #define MAX_RETRIES 64 /* number of retransmissions */
 
 extern msg_queue_t inqueue;
