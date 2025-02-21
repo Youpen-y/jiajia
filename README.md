@@ -1,5 +1,7 @@
 ### Next generation JIAJIA (SDSM) --- M-JIAJIA
-JIAJIA is a software distributed shared memory system that written at the beginning of the century. What makes it unique is its lock-based consistency.
+M-JIAJIA is a software distributed shared memory(SDSM) system built upon JIAJIA SDSM. It inherits most of the features of JIAJIA, such as lock-based cache coherence protocol(which is an implementation of scope consistency model) to maintain the data consistency of the different copies spread on the different hosts.
+
+"M" of M-JIAJIA means multithread and dual communication stack(udp and RDMA)
 
 As a static library, it provide usable interfaces to programmer so that they can use it divide their tasks to run on multiple machines. [Interfaces](#jiajia30-interfaces)
 
@@ -16,40 +18,109 @@ sudo apt install librdmacm-dev
 ```
 
 ### Target
-- Upgrade it so that it can be adapted to 64-bit machines
-- Redesign some interfaces to increase usability (eg. replace signal-driven IO with event-driven IO epoll in linux system; jia_falloc alloc memory with control flag)
-- Optimize cache design to support LRU
-- Prefetch pages to reduce SIGSEGV triggers
-- Memory pool support to provide finer-grained control on memory allocation(Reconsidering)
-- Adopt RDMA technology to redesign the whole system desing (two directions)
-  - RDMA support as a extra function that can be truned on or off. It means that there are two side-by-side network protocol stacks in the system, and will use RDMA first if possible.
-  - Pure RDMA (pursue extreme performance)
-- The last one need to consider is its availability (fault tolerance), consider checkpoint/restore(store it's memory content to persistent storage periodically)
+- **Easy to use** `Apps/` has the application template to mock.
 
-### JIAJIA3.0 Interfaces
+- **Customizable** Supports dynamic adjustment of system configurations in `.jiaconf` file.
+
+- **Portable** No need to install too much dependency, such as MPI or UCX.
+
+### M-JIAJIA Interfaces
+
+#### Init and Exit -- sytem initialization and end termination
 ```c
 /**
- * @brief Initialize JIAJIA3.0
+ * @brief Initialize M-JIAJIA
  * copy the application to hosts specified in .jiahosts file; 
  * initializes internal data structures of JIAJIA3.0
 */
 void jia_init(int argc, char **argv);
 
 /**
- * @brief Exit JIAJIA3.0
+ * @brief Exit M-JIAJIA
  */
 void jia_exit();
 ```
-`jia_init()` should be called before any other JIAJIA3.0 functions. \
-`jia_exit()` should be called at the end of your program.
+#### Alloc -- alloc shared memory
+
 ```c
 /**
- * @brief Allocate size bytes memory across the hosts
+ * @brief jia_alloc -- allocates all totalsize bytes shared memory on starthost, 
+ * but the starthost depends on the times that the function have been called.
+ * 
+ * @param totalsize sum of size that allocated for shared memory
+ * @return start address of the allocated memory
  */
-unsigned long jia_alloc(size_t size);
+unsigned long  jia_alloc(int totalsize);
 
+/**
+ * @brief jia_alloc_random -- choose a host randomly, and allocate shared
+ * memory on it
+ * 
+ * @param totalsize sum of size that allocated for shared memory
+ * @return start address of the allocated memory
+ */
+unsigned long jia_alloc_random(int totalsize);
+
+/**
+ * @brief jia_alloc_array -- allocate array[i] bytes shared memory on host i 
+ * 
+ * @param totalsize sum of size that allocated for shared memory
+ * @param array blocksize array that will allocated on every host
+ * @param n size of array, range: (0, jiahosts)
+ * @return start address of the allocated memory
+ */
+unsigned long jia_alloc_array(int totalsize, int *array, int n);
+
+/**
+ * @brief jia_alloc2 -- alloc totalsize shared memory on cluster with a 
+ * circular allocation strategy (per blocksize)
+ * 
+ * @param totalsize sum of size that allocated for shared memory
+ * @param blocksize size(page aligned) that allocated by every host every time
+ * @return start address of the allocated memory 
+ */
+unsigned long  jia_alloc2(int totalsize, int blocksize);
+
+/**
+ * @brief jia_alloc2p -- alloc size(page aligned) on
+ * host(proc is jiapid), two parameters alloc
+ *
+ * @param totalsize sum of requested shared memory
+ * @param starthost host that will allocate shared memory
+ * @return start address of the allocated memory
+ */
+unsigned long  jia_alloc2p(int totalsize, int starthost);
+
+/**
+ * @brief jia_alloc3 -- allocates totalsize bytes cyclically across all hosts, each
+ * time block bytes (3 parameters alloc function), start from starthost.
+ *
+ * @param totalsize sum of space that allocated across all hosts (page aligned)
+ * @param blocksize size(page aligned) that allocated by every host every time
+ * @param starthost specifies the host from which the allocation starts
+ * @return start address of the allocated memory
+ *
+ * jia_alloc3 will allocate blocksize(page aligned) every time from starthost to
+ * other hosts until the sum of allocated sizes equal totalsize(page aligned)
+ */
+unsigned long jia_alloc3(int totalsize,int blocksize, int starthost);
+
+/**
+ * @brief jia_alloc4 -- alloc totalsize bytes shared memory with blocks array
+ *
+ * @param totalsize sum of space that allocated across all hosts (page aligned)
+ * @param blocks    blocksize array, blocks[i] specify how many bytes 
+ *                  will be allocated on every host in loop i.
+ * @param n 		length of blocks
+ * @param starthost specifies the host from which the allocation starts
+ * @return start address of the allocated memory
+ */
+unsigned long jia_alloc4(int totalsize, int *blocks, int n, int starthost);
 ```
-`jia_alloc()` will be expanded to be more feature-rich and intelligent.
+
+
+
+#### Sync -- lock and barrier
 
 ```c
 /**
@@ -76,8 +147,18 @@ void jia_barrier();
 ```
 Note: `jia_barrier()` cannot be called inside a critical section enclosed by `jia_lock()` and `jia_unlock()`
 
+#### Others
+```c
+/**
+ * @brief jia_clock() - calculate the elapsed time since program started
+ *
+ * @return double: time(us) elapsed since program started
+ */
+double          jia_clock();
+```
+
 ### Usage
-1. **ssh config**
+1. **ssh configuration**
 Refer to this tutorials [SSH Essentials: Working with SSH Servers, Clients, and Keys](https://www.digitalocean.com/community/tutorials/ssh-essentials-working-with-ssh-servers-clients-and-keys#allowing-root-access-for-specific-commands)
 This step aims to help password-free operation.
 

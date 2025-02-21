@@ -86,7 +86,8 @@ unsigned long jia_alloc3(int totalsize,int blocksize, int starthost);
  * @brief jia_alloc4 -- alloc totalsize bytes shared memory with blocks array
  *
  * @param totalsize sum of space that allocated across all hosts (page aligned)
- * @param blocks    blocksize array, blocks[i] specify how many bytes will be allocated on every host in loop i.
+ * @param blocks    blocksize array, blocks[i] specify how many bytes will be 
+ * 					allocated on every host in loop i.
  * @param n 		length of blocks
  * @param starthost specifies the host from which the allocation starts
  * @return start address of the allocated memory
@@ -221,11 +222,11 @@ unsigned int   jia_startstat();
 unsigned int   jia_stopstat();
 
 /**
- * @brief jia_clock -- elapsed time since start of application in seconds
- * 
- * @return float 
+ * @brief jia_clock() - calculate the elapsed time since program started
+ *
+ * @return double: time(us) elapsed since program started
  */
-float          jia_clock();
+double          jia_clock();
 
 /**
  * @brief jia_send -- an MPI-similar call, send len bytes of buf to host topid

@@ -37,7 +37,7 @@ void appendmsg(jia_msg_t *msg, unsigned char *str, int len);
 void printmsg(jia_msg_t *msg);
 void printstack(int ptr);
 unsigned long jia_current_time();
-float jia_clock();
+double jia_clock();
 void jiasleep(unsigned long);
 void freewtntspace(wtnt_t *ptr);
 wtnt_t *newwtnt();

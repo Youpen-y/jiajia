@@ -790,13 +790,8 @@ unsigned long jia_current_time() {
 }
 
 /*-----------------------------------------------------------*/
-/**
- * @brief jia_clock() - calculate the elapsed time since program started
- *
- * @return float: time(us) elapsed since program started
- */
-float jia_clock() {
-    float time;
+double jia_clock() {
+    double time;
 
     struct timeval val;
     gettimeofday(&val, NULL); // get current system time and store it into val
@@ -807,7 +802,7 @@ float jia_clock() {
     //     start_time_usec = val.tv_usec;
     // }
 
-    time = (float)((val.tv_sec * 1000000.0 + val.tv_usec * 1.0 -
+    time = (double)((val.tv_sec * 1000000.0 + val.tv_usec * 1.0 -
                     start_time_sec * 1000000.0 - start_time_usec * 1.0) /
                    1000000.0);
     return (time);
