@@ -42,9 +42,6 @@ long start_port;
 
 // global variables
 
-/* communication manager */
-comm_manager_t comm_manager;
-
 /* in/out queue */
 msg_queue_t inqueue;
 msg_queue_t outqueue;

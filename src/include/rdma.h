@@ -14,7 +14,10 @@
 
 typedef struct rdma_connect {
     bool connected;
+    unsigned    snd_seq;
+    unsigned    rcv_seq;
     struct rdma_cm_id id;
+
     struct ibv_mr **in_mr;
     msg_queue_t *inqueue;
 } rdma_connect_t;
@@ -31,7 +34,7 @@ typedef struct jia_context {
     // info data
     int batching_num; // post recv wr doorbell batching num
 
-    // rdma connect
+    // rdma connect (Maxhosts inqueues, only one outqueue)
     msg_queue_t *outqueue;
     struct ibv_mr *out_mr[QueueSize];
     rdma_connect_t connect_array[Maxhosts];

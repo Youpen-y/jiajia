@@ -11,7 +11,6 @@
 #define min(a, b) ((a) < (b) ? (a) : (b))
 
 pthread_t rdma_server_tid;
-jia_msg_t msg;
 struct ibv_sge sge_list[QueueSize * Maxhosts];
 struct ibv_recv_wr wr_list[QueueSize * Maxhosts];
 static struct ibv_recv_wr *bad_wr = NULL;
@@ -57,6 +56,11 @@ void *rdma_server_thread(void *arg) {
                     atomic_fetch_sub(&(inqueue->busy_value), 1);
                 }
                 atomic_fetch_add(&(inqueue->free_value), 1);
+
+                /* step 2.5: update corresponding inqueue's rcv_seq */
+                if (i == system_setting.jia_pid) {
+                    ctx.connect_array[i].rcv_seq++;
+                }
 
                 /* step 3: update head */
                 pthread_mutex_lock(&inqueue->head_lock);

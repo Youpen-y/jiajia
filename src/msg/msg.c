@@ -96,17 +96,7 @@ int init_msg_buffer(msg_buffer_t *msg_buffer, int size) {
     for (int i = 0; i < size; i++) {
         msg_buffer->buffer[i].msg = (jia_msg_t){0};
         msg_buffer->buffer[i].msg.op = ERRMSG;
-        // msg_buffer->buffer[i].state = SLOT_FREE;
         atomic_init(&msg_buffer->buffer[i].state, SLOT_FREE);
-        // if(pthread_mutex_init(&(msg_buffer->buffer[i].lock), NULL)!= 0) {
-        //     perror("msg_buffer mutex/cond init");
-        //     for(int j = 0; j < i; j++) {
-        //         pthread_mutex_destroy(&(msg_buffer->buffer[j].lock));
-        //     }
-        //     sem_destroy(&(msg_buffer->count));
-        //     free(msg_buffer->buffer);
-        //     return -1;
-        // }
     }
 
     return 0;

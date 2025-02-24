@@ -5,14 +5,12 @@
 
 pthread_t server_tid;
 static jia_msg_t msg;
-void msg_handle(jia_msg_t *msg);
+extern void msg_handle(jia_msg_t *msg);
 
 void *server_thread(void *args)
 {
-    msg_queue_t *inqueue = (msg_queue_t *)args;
-
     while (1) {
-        if (dequeue(inqueue, &msg) == -1) {
+        if (dequeue(comm_manager.inqueue, &msg) == -1) {
             log_err("msg_queue dequeue");
             continue;
         } else {

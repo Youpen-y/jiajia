@@ -13,12 +13,13 @@
 
 pthread_t listen_tid;
 static jia_msg_t msg;
-ack_t ack;
 struct epoll_event events[Maxhosts];
+
 static void addfd(int epollfd, int fd, int trigger_mode);
 
 void *listen_thread(void *args) {
     struct sockaddr_in ack_addr;
+    ack_t ack;
 
     // create epollfd epoll instance
     int epollfd = epoll_create(Maxhosts);
@@ -79,7 +80,7 @@ void *listen_thread(void *args) {
                             "msg<seqno:%d, op:%s, frompid:%d, topid:%d> will "
                             "be enqueued",
                             msg.seqno, op2name(msg.op), msg.frompid, msg.topid);
-                    enqueue(&inqueue, &msg);
+                    enqueue(comm_manager.inqueue, &msg);
 
 #ifdef DOSTAT
                     if (statflag == 1) {

@@ -10,8 +10,7 @@
 #include <stdatomic.h>
 #include <stdlib.h>
 
-#define CQID(cq_ptr)                                                           \
-    (((void *)cq_ptr - (void *)ctx.connect_array) / sizeof(rdma_connect_t))
+#define CQID(cq_ptr) (((void *)cq_ptr - (void *)ctx.connect_array) / sizeof(rdma_connect_t))
 
 pthread_t rdma_listen_tid;
 static struct ibv_wc wc;
@@ -33,10 +32,10 @@ int post_recv() {
         /* We wait for the notification on the CQ channel */
         ret = ibv_get_cq_event(
             ctx.recv_comp_channel, /* IO channel where we are expecting the notification
-                           */
-            &cq_ptr, /* which CQ has an activity. This should be the same as CQ
-                        we created before */
-            &context); /* Associated CQ user context, which we did set */
+                                    */
+            &cq_ptr,               /* which CQ has an activity. This should be the same as CQ
+                                      we created before */
+            &context);             /* Associated CQ user context, which we did set */
         if (ret) {
             log_err("Failed to get next CQ event due to %d \n", -errno);
             return -errno;
@@ -58,8 +57,7 @@ int post_recv() {
          * MUTEX conditional variables in pthread programming.
          */
         ret = ibv_poll_cq(cq_ptr /* the CQ, we got notification for */,
-                          1 /* number of remaining WC elements*/,
-                          &wc /* where to store */);
+                          1 /* number of remaining WC elements*/, &wc /* where to store */);
         if (ret < 0) {
             log_err("Failed to poll cq for wc due to %d \n", ret);
             /* ret is errno here */
@@ -71,8 +69,7 @@ int post_recv() {
 
         /* Now we check validity and status of I/O work completions */
         if (wc.status != IBV_WC_SUCCESS) {
-            log_err("Work completion (WC) has error status: %s",
-                    ibv_wc_status_str(wc.status));
+            log_err("Work completion (WC) has error status: %s", ibv_wc_status_str(wc.status));
 
             switch (wc.status) {
             case IBV_WC_RNR_RETRY_EXC_ERR:
@@ -109,15 +106,12 @@ int post_recv() {
             if (statflag == 1) {
                 jiastat.msgrcvcnt++;
                 jiastat.msgrcvbytes +=
-                    (((jia_msg_t *)inqueue->queue[inqueue->tail])->size +
-                     Msgheadsize);
+                    (((jia_msg_t *)inqueue->queue[inqueue->tail])->size + Msgheadsize);
             }
 #endif
 
-            log_info(
-                3, "pre inqueue [tail]: %d, [busy_value]: %d [post_value]: %d",
-                inqueue->tail, atomic_load(&inqueue->busy_value),
-                atomic_load(&inqueue->post_value));
+            log_info(3, "pre inqueue [tail]: %d, [busy_value]: %d [post_value]: %d", inqueue->tail,
+                     atomic_load(&inqueue->busy_value), atomic_load(&inqueue->post_value));
 
             /* step 1: sub post_value and add busy_value */
             if (atomic_load(&(inqueue->post_value)) <= 0) {
@@ -126,17 +120,18 @@ int post_recv() {
                 atomic_fetch_sub(&(inqueue->post_value), 1);
             }
             atomic_fetch_add(&(inqueue->busy_value), 1);
+            
+            /* step 1.5: update corresponding inqueue's rcv_seq */
+            ctx.connect_array[((jia_msg_t *)inqueue->queue[inqueue->tail])->topid].rcv_seq++;
 
             /* step 2: update tail */
             pthread_mutex_lock(&inqueue->tail_lock);
             inqueue->tail = (inqueue->tail + 1) % QueueSize;
             pthread_mutex_unlock(&inqueue->tail_lock);
 
-            log_info(
-                3,
-                "after inqueue [tail]: %d, [busy_value]: %d [post_value]: %d",
-                inqueue->tail, atomic_load(&inqueue->busy_value),
-                atomic_load(&inqueue->post_value));
+            log_info(3, "after inqueue [tail]: %d, [busy_value]: %d [post_value]: %d",
+                     inqueue->tail, atomic_load(&inqueue->busy_value),
+                     atomic_load(&inqueue->post_value));
         }
 
         /* Similar to connection management events, we need to acknowledge CQ

@@ -11,19 +11,15 @@
 #include <unistd.h>
 
 #define RETRYNUM 50 // when hosts increases, this number should increases too.
-static bool success = false;
-static jia_msg_t msg;
 pthread_t client_tid;
-static fd_set readfd;
-static int outsend(jia_msg_t *msg);
-static struct timeval timeout = {TIMEOUT, 0};
-static struct epoll_event event;
+static jia_msg_t msg;
 static int epollfd;
+
+static int outsend(jia_msg_t *msg);
 static void addfd(int epollfd, int fd, int trigger_mode);
 
 void *client_thread(void *args) {
-    msg_queue_t *outqueue = (msg_queue_t *)args;
-    /* create epollfd */
+    /* step 1: create epollfd */
     epollfd = epoll_create(1);
     if (epollfd == -1) {
         log_err("epoll_create failed");
@@ -31,8 +27,10 @@ void *client_thread(void *args) {
     }
     addfd(epollfd, comm_manager.ack_fds, 1);
 
+    /* step 2: dequeue msg to send */
+    bool success = false;
     while (1) {
-        if (dequeue(outqueue, &msg)) {
+        if (dequeue(comm_manager.outqueue, &msg)) {
             log_info(3, "outqueue is null");
             continue;
         } else {
@@ -73,6 +71,7 @@ void *client_thread(void *args) {
  */
 static int outsend(jia_msg_t *msg) {
     int state;
+    struct epoll_event event;
 
     if (msg == NULL) {
         perror("msg is NULL");
@@ -97,7 +96,7 @@ static int outsend(jia_msg_t *msg) {
         if (statflag == 1) {
             jiastat.msgsndcnt++;
             jiastat.msgsndbytes +=
-                (((jia_msg_t *)outqueue.queue[outqueue.head])->size + Msgheadsize);
+                (((jia_msg_t *)comm_manager.outqueue->queue[comm_manager.outqueue->head])->size + Msgheadsize);
         }
 #endif
 

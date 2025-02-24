@@ -432,7 +432,6 @@ void init_rdma_context(struct jia_context *ctx, int batching_num) {
     ctx->ib_port = 2;
     ctx->batching_num = batching_num;
     ctx->outqueue = &outqueue;
-
     init_msg_queue(ctx->outqueue, QueueSize);
 
     /* step 3: init rdma connection parameters */

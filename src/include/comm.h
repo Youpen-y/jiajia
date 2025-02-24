@@ -91,25 +91,6 @@ int dequeue(msg_queue_t *queue, jia_msg_t *msg);
  */
 void free_msg_queue(msg_queue_t *queue);
 
-/* communication manager */
-typedef struct comm_manager {
-    int         snd_fds;  // send file descriptor
-    unsigned    snd_seq[Maxhosts];  // sequence number that used to acknowledge
-    unsigned short snd_server_port; // snd server port is destination host's port
-
-    int ack_fds;
-    unsigned ack_seq[Maxhosts];
-    unsigned short ack_port;
-
-    int         rcv_fds[Maxhosts];  // read file descriptor
-    unsigned    rcv_seq[Maxhosts];  // sequence number
-    unsigned short rcv_ports[Maxhosts];
-} comm_manager_t;
-
-extern comm_manager_t comm_manager;
-
-
-
 /* function declaration  */
 
 /**

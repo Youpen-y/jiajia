@@ -44,7 +44,6 @@ extern void initmsg();
 extern void inittools();
 extern void initload();
 extern unsigned long jia_current_time();
-extern float jia_clock();
 extern unsigned int get_usecs();
 extern char errstr[Linesize];
 extern long start_port;

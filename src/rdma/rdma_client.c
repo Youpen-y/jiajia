@@ -13,10 +13,8 @@
 
 pthread_t rdma_client_tid;
 static struct ibv_wc wc;
-static struct ibv_send_wr *bad_wr;
+static struct ibv_send_wr *bad_wr = NULL;
 static jia_msg_t *msg_ptr;
-int snd_seq[Maxhosts] = {0};
-int seq = 0;
 
 static int post_send();
 
@@ -35,7 +33,7 @@ void *rdma_client_thread(void *arg) {
 
         /* step 1: give seqno */
         msg_ptr = (jia_msg_t *)(ctx.outqueue->queue[ctx.outqueue->head]);
-        msg_ptr->seqno = snd_seq[msg_ptr->topid];
+        msg_ptr->seqno = ctx.connect_array[msg_ptr->topid].snd_seq;
 
         /* step 2: post send mr */
         if (msg_ptr->topid == system_setting.jia_pid) {
@@ -85,7 +83,7 @@ void *rdma_client_thread(void *arg) {
                  msg_ptr->data);
 
         /* step 3: update snd_seq and head ptr */
-        snd_seq[msg_ptr->topid]++;
+        ctx.connect_array[msg_ptr->topid].snd_seq++;
         ctx.outqueue->head = (ctx.outqueue->head + 1) % QueueSize;
 
         /* step 4: sem post and print value */
@@ -110,7 +108,7 @@ int post_send() {
                           .lkey = ctx.out_mr[ctx.outqueue->head]->lkey};
 
     struct ibv_send_wr wr = {
-        .wr_id = seq,
+        .wr_id = ctx.connect_array[msg_ptr->topid].snd_seq,
         .sg_list = &sge,
         .num_sge = 1,
         .next = NULL,

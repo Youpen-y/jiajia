@@ -1,3 +1,4 @@
+#include "comm.h"
 #ifndef NULL_LIB
 #include "udp.h"
 #include "stat.h"
@@ -8,6 +9,8 @@
 #include <sys/socket.h>
 
 extern long start_port;
+/* communication manager */
+comm_manager_t comm_manager;
 
 /**
  * @brief fd_create -- creat socket file descriptor used to send and recv
@@ -117,8 +120,10 @@ void init_udp_comm() {
     init_msg_buffer(&msg_buffer, system_setting.msg_buffer_size);
 
     /* step 2: init inqueue, outqueue msg queue */
-    init_msg_queue(&inqueue, system_setting.msg_queue_size);
-    init_msg_queue(&outqueue, system_setting.msg_queue_size);
+    comm_manager.inqueue = &inqueue;
+    comm_manager.outqueue = &outqueue;
+    init_msg_queue(comm_manager.inqueue, system_setting.msg_queue_size);
+    init_msg_queue(comm_manager.outqueue, system_setting.msg_queue_size);
 
     /* step 3: init comm manager */
     init_comm_manager();
