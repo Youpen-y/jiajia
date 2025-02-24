@@ -27,11 +27,11 @@
  *         Author: Weiwu Hu, Weisong Shi, Zhimin Tang                  *
  **********************************************************************/
 #ifndef NULL_LIB
-#include "tools.h"
-#include "stat.h"
 #include "msg.h"
-#include "load.h"
 #include "comm.h"
+#include "load.h"
+#include "stat.h"
+#include "tools.h"
 #include <stdatomic.h>
 
 extern char errstr[Linesize];
@@ -164,9 +164,7 @@ int freemsg_lock(msg_buffer_t *buffer) {
 
 void freemsg_unlock(msg_buffer_t *buffer, int index) {
     slot_t *slot = &msg_buffer.buffer[index];
-    // slot->state = SLOT_FREE;
     atomic_store(&slot->state, SLOT_FREE);
-    // pthread_mutex_unlock(&slot->lock);
 
     sem_post(&msg_buffer.count);
 
@@ -175,20 +173,13 @@ void freemsg_unlock(msg_buffer_t *buffer, int index) {
     log_info(4, "after freemsg_unlock count value: %d", semvalue);
 }
 
-int move_msg_to_outqueue(msg_buffer_t *buffer,
-                         int index,
-                         msg_queue_t *outqueue) {
+int move_msg_to_outqueue(msg_buffer_t *buffer, int index, msg_queue_t *outqueue) {
     slot_t *slot = &msg_buffer.buffer[index];
-    // if (slot->msg.topid == system_setting.jia_pid) {
-    //         enqueue(&inqueue, &slot->msg);
-    //         // msg_handle(&slot->msg); // handle directly will cause the data race between main thread and server thread
-    // } else {
-        int ret = enqueue(outqueue, &slot->msg);
-        if (ret == -1) {
-            perror("enqueue");
-            return ret;
-        }
-    // }
+    int ret = enqueue(outqueue, &slot->msg);
+    if (ret == -1) {
+        perror("enqueue");
+        return ret;
+    }
     return 0;
 }
 
@@ -226,8 +217,8 @@ int nextpacket(int fromproc, int tag) {
 /**
  * @brief nextmsg - get a msg from msgbuf and put it into buf, return msg's size
  *
- * @param buf 
- * @param len 
+ * @param buf
+ * @param len
  * @param fromproc
  * @param tag
  * @return int
@@ -236,7 +227,7 @@ int nextmsg(char *buf, int len, int fromproc, int tag) {
     int i = 0;
     int msgsize, size;
 
-    // TODO: recvwait should be atomic 
+    // TODO: recvwait should be atomic
     msgsize = 0;
     while ((endofmsg == 0) && (i != Maxmsgbufs)) {
 
@@ -269,8 +260,8 @@ int nextmsg(char *buf, int len, int fromproc, int tag) {
  */
 void bsendmsg(jia_msg_t *msg) {
     unsigned int root, level;
-    
-    msg->op += BCAST; // op >= BCAST, always call bcastserver
+
+    msg->op += BCAST;              // op >= BCAST, always call bcastserver
     root = system_setting.jia_pid; // current host as root
 
     if (system_setting.hostc == 1) {
@@ -288,8 +279,8 @@ void bsendmsg(jia_msg_t *msg) {
 
 /**
  * @brief msg_handle - handle msg
- * 
- * @param msg 
+ *
+ * @param msg
  * @note msg_handle called by server_thread
  */
 void msg_handle(jia_msg_t *msg) {

@@ -3,8 +3,8 @@
 # system_mode: memory, compute, hybrid
 system_mode = hybrid
 
-# communication type, tcp or udp or rdma
-comm_type = rdma
+# communication type, udp or rdma
+comm_type = udp
 
 # global start address
 global_start_addr = 0x400000000000

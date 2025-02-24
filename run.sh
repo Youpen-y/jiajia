@@ -1,6 +1,6 @@
 #!/bin/bash
 ARCH=linux
-MODE=test
+MODE=udp-test
 TIMEOUT=50
 
 CLEAN=true
