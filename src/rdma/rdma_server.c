@@ -10,16 +10,19 @@
 
 #define min(a, b) ((a) < (b) ? (a) : (b))
 
-pthread_cond_t cond_server = PTHREAD_COND_INITIALIZER;
-pthread_mutex_t lock_server = PTHREAD_MUTEX_INITIALIZER;
 pthread_t rdma_server_tid;
 jia_msg_t msg;
 struct ibv_sge sge_list[QueueSize * Maxhosts];
 struct ibv_recv_wr wr_list[QueueSize * Maxhosts];
 static struct ibv_recv_wr *bad_wr = NULL;
 
-void prepare_recv_wr(struct ibv_mr **mr, unsigned index);
-int init_post_recv_wr();
+static void prepare_recv_wr(struct ibv_mr **mr, unsigned index);
+static int init_post_recv_wr();
+/**
+ * @brief check_flags -- check if the inqueue can be posted recv wrs again
+ * @param cqid -- id of the connection (include private inqueue )
+ */
+static int check_flags(unsigned cqid);
 
 void *rdma_server_thread(void *arg) {
     int ret;
@@ -30,7 +33,6 @@ void *rdma_server_thread(void *arg) {
     while (1) {
         /* step 1: lock and enter inqueue to check if busy slot number is
          * greater than ctx.batching_num */
-        // pthread_mutex_lock(&lock_server);
 
         for (int i = 0; i < system_setting.hostc; i = (i + 1) % Maxhosts) {
             /* get connect and inqueue */

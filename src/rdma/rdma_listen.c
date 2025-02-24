@@ -2,20 +2,28 @@
 #include "msg.h"
 #include "rdma.h"
 #include "setting.h"
-#include "tools.h"
 #include "stat.h"
+#include "tools.h"
 #include <infiniband/verbs.h>
 #include <pthread.h>
 #include <semaphore.h>
 #include <stdatomic.h>
 #include <stdlib.h>
 
+#define CQID(cq_ptr)                                                           \
+    (((void *)cq_ptr - (void *)ctx.connect_array) / sizeof(rdma_connect_t))
+
 pthread_t rdma_listen_tid;
 static struct ibv_wc wc;
+static int post_recv();
 
-#define CQID(cq_ptr) (((void *)cq_ptr - (void *)ctx.connect_array) / sizeof(rdma_connect_t))
+void *rdma_listen_thread(void *arg) {
+    post_recv();
 
-int post_recv(struct ibv_comp_channel *comp_channel) {
+    return NULL;
+}
+
+int post_recv() {
     unsigned int cqid;
     msg_queue_t *inqueue;
     struct ibv_cq *cq_ptr = NULL;
@@ -23,18 +31,18 @@ int post_recv(struct ibv_comp_channel *comp_channel) {
     int ret = -1;
     while (1) {
         /* We wait for the notification on the CQ channel */
-        ret = ibv_get_cq_event(comp_channel, /* IO channel where we are expecting the notification
-                                              */
-                               &cq_ptr,   /* which CQ has an activity. This should be the same as CQ
-                                             we created before */
-                               &context); /* Associated CQ user context, which we did set */
+        ret = ibv_get_cq_event(
+            ctx.recv_comp_channel, /* IO channel where we are expecting the notification
+                           */
+            &cq_ptr, /* which CQ has an activity. This should be the same as CQ
+                        we created before */
+            &context); /* Associated CQ user context, which we did set */
         if (ret) {
             log_err("Failed to get next CQ event due to %d \n", -errno);
             return -errno;
         }
 
         /* ensure cqid and inqueue*/
-        // cqid = CQID(context);
         inqueue = (*(rdma_connect_t *)context).inqueue;
 
         /* Request for more notifications. */
@@ -50,7 +58,8 @@ int post_recv(struct ibv_comp_channel *comp_channel) {
          * MUTEX conditional variables in pthread programming.
          */
         ret = ibv_poll_cq(cq_ptr /* the CQ, we got notification for */,
-                          1 /* number of remaining WC elements*/, &wc /* where to store */);
+                          1 /* number of remaining WC elements*/,
+                          &wc /* where to store */);
         if (ret < 0) {
             log_err("Failed to poll cq for wc due to %d \n", ret);
             /* ret is errno here */
@@ -62,7 +71,8 @@ int post_recv(struct ibv_comp_channel *comp_channel) {
 
         /* Now we check validity and status of I/O work completions */
         if (wc.status != IBV_WC_SUCCESS) {
-            log_err("Work completion (WC) has error status: %s", ibv_wc_status_str(wc.status));
+            log_err("Work completion (WC) has error status: %s",
+                    ibv_wc_status_str(wc.status));
 
             switch (wc.status) {
             case IBV_WC_RNR_RETRY_EXC_ERR:
@@ -96,14 +106,18 @@ int post_recv(struct ibv_comp_channel *comp_channel) {
             }
         } else {
 #ifdef DOSTAT
-                    if (statflag == 1) {
-                        jiastat.msgrcvcnt++;
-                        jiastat.msgrcvbytes += (((jia_msg_t *)inqueue->queue[inqueue->tail])->size + Msgheadsize);
-                    }
+            if (statflag == 1) {
+                jiastat.msgrcvcnt++;
+                jiastat.msgrcvbytes +=
+                    (((jia_msg_t *)inqueue->queue[inqueue->tail])->size +
+                     Msgheadsize);
+            }
 #endif
 
-            log_info(3, "pre inqueue [tail]: %d, [busy_value]: %d [post_value]: %d", inqueue->tail,
-                     atomic_load(&inqueue->busy_value), atomic_load(&inqueue->post_value));
+            log_info(
+                3, "pre inqueue [tail]: %d, [busy_value]: %d [post_value]: %d",
+                inqueue->tail, atomic_load(&inqueue->busy_value),
+                atomic_load(&inqueue->post_value));
 
             /* step 1: sub post_value and add busy_value */
             if (atomic_load(&(inqueue->post_value)) <= 0) {
@@ -118,11 +132,12 @@ int post_recv(struct ibv_comp_channel *comp_channel) {
             inqueue->tail = (inqueue->tail + 1) % QueueSize;
             pthread_mutex_unlock(&inqueue->tail_lock);
 
-            log_info(3, "after inqueue [tail]: %d, [busy_value]: %d [post_value]: %d",
-                     inqueue->tail, atomic_load(&inqueue->busy_value), atomic_load(&inqueue->post_value));
+            log_info(
+                3,
+                "after inqueue [tail]: %d, [busy_value]: %d [post_value]: %d",
+                inqueue->tail, atomic_load(&inqueue->busy_value),
+                atomic_load(&inqueue->post_value));
         }
-
-        // check_flags(cqid);
 
         /* Similar to connection management events, we need to acknowledge CQ
          * events
@@ -131,10 +146,4 @@ int post_recv(struct ibv_comp_channel *comp_channel) {
 		       1 /* we received one event notification. This is not 
 		       number of WC elements */);
     }
-}
-
-void *rdma_listen_thread(void *arg) {
-    post_recv(ctx.recv_comp_channel);
-
-    return NULL;
 }

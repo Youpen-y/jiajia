@@ -18,7 +18,52 @@ static jia_msg_t *msg_ptr;
 int snd_seq[Maxhosts] = {0};
 int seq = 0;
 
-int post_send(rdma_connect_t *conn) {
+static int post_send();
+
+void *rdma_client_thread(void *arg) {
+    while (1) {
+        /* step 0: get sem value to print */
+        int semvalue;
+        sem_getvalue(&ctx.outqueue->busy_count, &semvalue);
+        log_info(4, "pre client outqueue dequeue busy_count value: %d", semvalue);
+        // wait for busy slot
+        sem_wait(&ctx.outqueue->busy_count);
+        sem_getvalue(&ctx.outqueue->busy_count, &semvalue);
+        log_info(4, "enter client outqueue dequeue! busy_count value: %d", semvalue);
+
+        /* step 1: give seqno */
+        msg_ptr = (jia_msg_t *)(ctx.outqueue->queue[ctx.outqueue->head]);
+        msg_ptr->seqno = snd_seq[msg_ptr->topid];
+
+        /* step 2: post send mr */
+        while (post_send(&ctx.connect_array[msg_ptr->topid])) {
+            log_info(3, "msg <from:%d, to:%d, seq:%d, data:%s> send failed\n", msg_ptr->frompid,
+                    msg_ptr->topid, msg_ptr->seqno, msg_ptr->data);
+        }
+
+#ifdef DOSTAT
+        if (statflag == 1) {
+            jiastat.msgsndcnt++;
+            jiastat.msgsndbytes +=
+                (((jia_msg_t *)outqueue.queue[outqueue.head])->size + Msgheadsize);
+        }
+#endif
+
+        log_info(3, "msg <from:%d, to:%d, seq:%d, data:%s> send successfully\n", msg_ptr->frompid,
+                msg_ptr->topid, msg_ptr->seqno, msg_ptr->data);
+
+        /* step 3: update snd_seq and head ptr */
+        snd_seq[msg_ptr->topid]++;
+        ctx.outqueue->head = (ctx.outqueue->head + 1) % QueueSize;
+
+        /* step 4: sem post and print value */
+        sem_post(&ctx.outqueue->free_count);
+        sem_getvalue(&ctx.outqueue->free_count, &semvalue);
+        log_info(4, "after client outqueue dequeue free_count value: %d", semvalue);
+    }
+}
+
+int post_send() {
     // TODO: we need to post different Send wr according to the msg's op
 
     struct ibv_cq *cq_ptr = NULL;

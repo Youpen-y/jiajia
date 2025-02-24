@@ -26,7 +26,21 @@ pthread_mutex_t recv_comp_channel_mutex = PTHREAD_MUTEX_INITIALIZER;
 pthread_mutex_t send_comp_channel_mutex = PTHREAD_MUTEX_INITIALIZER;
 pthread_mutex_t pd_mutex = PTHREAD_MUTEX_INITIALIZER;
 jia_context_t ctx;
+
 static void sync_connection(int total_hosts, int jia_pid);
+/**
+ * @brief init_rdma_context -- init rdma context
+ * @param context -- rdma context
+ * @param batching_num -- post recv wr doorbell batching num
+ * @return 0 if success, -1 if failed
+ */
+static void init_rdma_context(struct jia_context *context, int batching_num);
+/**
+ * @brief init_rdma_resource -- init rdma communication resources
+ * 
+ * @param ctx 
+ */
+void init_rdma_resource(struct jia_context *ctx);
 
 void init_rdma_comm() {
 #ifdef DOSTAT
@@ -63,6 +77,9 @@ void init_rdma_comm() {
 #endif
 }
 
+/**
+ * @brief sync_server_thread -- server thread used to handle connection (rdmacm)
+ */
 void *sync_server_thread(void *arg) {
     struct rdma_cm_id *listener = NULL;
     struct rdma_event_channel *ec = NULL;
@@ -227,6 +244,9 @@ cleanup:
     return NULL;
 }
 
+/**
+ * @brief sync_client_thread -- client thread used to connect to server (rdmacm)
+ */
 void *sync_client_thread(void *arg) {
     int server_id = *(int *)arg;
     struct rdma_cm_id *id = NULL;

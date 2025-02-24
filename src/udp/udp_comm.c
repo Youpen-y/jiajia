@@ -100,7 +100,7 @@ static int init_comm_manager() {
 /**
  * @brief initcomm -- initialize communication setting
  */
-void initcomm() {
+void init_udp_comm() {
 #ifdef DOSTAT
     register unsigned int begin = get_usecs();
 #endif

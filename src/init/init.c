@@ -39,7 +39,7 @@
 
 extern void initmem();
 extern void initsyn();
-extern void initcomm();
+extern void init_udp_comm();
 extern void initmsg();
 extern void inittools();
 extern void initload();
@@ -108,7 +108,7 @@ void jia_init(int argc, char **argv) {
     initmem();
     initsyn();
     if (system_setting.comm_type == udp) {
-        initcomm();
+        init_udp_comm();
     } else if (system_setting.comm_type == rdma){
         init_rdma_comm();
     }
