@@ -6,6 +6,37 @@
 #include <pthread.h>
 #include <stdbool.h>
 
+/* fd type */
+enum FDCR_MODE{
+    FDCR_SEND,  // send fd
+    FDCR_RECV,  // recv fd
+    FDCR_ACK    // ack fd
+};
+
+/* ack type */
+typedef struct {
+    int          seqno;     // sequence number
+    int          sid;       // the ack is returned by the host sid
+} ack_t;
+
+/* communication manager */
+typedef struct comm_manager {
+    int         snd_fds;  // send file descriptor
+    unsigned    snd_seq[Maxhosts];  // sequence number that used to acknowledge
+    unsigned short snd_server_port; // snd server port is destination host's port
+
+    int ack_fds;
+    unsigned ack_seq[Maxhosts];
+    unsigned short ack_port;
+
+    int         rcv_fds[Maxhosts];  // read file descriptor
+    unsigned    rcv_seq[Maxhosts];  // sequence number
+    unsigned short rcv_ports[Maxhosts];
+
+    msg_queue_t* outqueue;
+    msg_queue_t* inqueue;
+} comm_manager_t;
+
 /**
  * @brief client_thread - client thread that move msg from msgbuffer to outqueue
  * 
@@ -36,24 +67,6 @@ void *listen_thread(void *args);
  *
  */
 void init_udp_comm();
-
-/* communication manager */
-typedef struct comm_manager {
-    int         snd_fds;  // send file descriptor
-    unsigned    snd_seq[Maxhosts];  // sequence number that used to acknowledge
-    unsigned short snd_server_port; // snd server port is destination host's port
-
-    int ack_fds;
-    unsigned ack_seq[Maxhosts];
-    unsigned short ack_port;
-
-    int         rcv_fds[Maxhosts];  // read file descriptor
-    unsigned    rcv_seq[Maxhosts];  // sequence number
-    unsigned short rcv_ports[Maxhosts];
-
-    msg_queue_t* outqueue;
-    msg_queue_t* inqueue;
-} comm_manager_t;
 
 extern comm_manager_t comm_manager;
 

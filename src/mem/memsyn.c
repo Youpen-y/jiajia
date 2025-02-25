@@ -71,6 +71,20 @@ int repcnt[Setnum]; /* record the last replacement index of every set */
 static void savediff(int cachei);
 
 /**
+ * @brief xor -- get the index of the first page of the set based on the addr,
+ * setnum group connection
+ *
+ * @param addr address of a byte in one page
+ * @return int -  the first cache index of the page's corresponding setnum in
+ * the cache
+ *
+ */
+static inline int xor (address_t addr) {
+    return ((((unsigned long)(addr - system_setting.global_start_addr) / Pagesize) % Setnum) *
+            Setpages);
+}
+
+/**
  * @brief flushpage -- flush the cached page(reset the cache's info);
  * remove the cache relation with its original page. if the cache's state is RW,
  * free its twin

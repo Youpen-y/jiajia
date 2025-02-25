@@ -12,9 +12,9 @@
 #include <sys/types.h>
 
 pthread_t listen_tid;
-static jia_msg_t msg;
-struct epoll_event events[Maxhosts];
 
+static jia_msg_t msg;
+static struct epoll_event events[Maxhosts];
 static void addfd(int epollfd, int fd, int trigger_mode);
 
 void *listen_thread(void *args) {

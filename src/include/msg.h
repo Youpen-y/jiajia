@@ -251,6 +251,13 @@ void jia_bcast(char *buf, int len, int root);
  */
 void msgrecvserver(jia_msg_t *req);
 
+/**
+ * @brief bsendmsg -- broadcast msg
+ *
+ * @param msg 
+ */
+void bsendmsg(jia_msg_t *msg);
+
 
 /**
  * @brief bcastserver --

@@ -21,7 +21,6 @@
 #define Msgsize 200    // temp value, used inlined message size in rdma
 #define MAX_RETRY 1000 // client's max retry times to connect server
 
-extern long start_port;
 pthread_mutex_t recv_comp_channel_mutex = PTHREAD_MUTEX_INITIALIZER;
 pthread_mutex_t send_comp_channel_mutex = PTHREAD_MUTEX_INITIALIZER;
 pthread_mutex_t pd_mutex = PTHREAD_MUTEX_INITIALIZER;

@@ -55,6 +55,15 @@ extern jialock_t locks[Maxlocks + 1];
 /* tools */
 extern int H_MIG, AD_WD;
 
+extern void recordwtnts(jia_msg_t *req);
+extern void grantlock(int lock, int toproc, int acqscope);
+extern void grantbarr(int lock);
+extern void clearlocks();
+extern void grantcondv(int condv, int toproc);
+extern void migarrangehome();
+extern void migpage(unsigned long addr, int frompid, int topid);
+
+static void invalidate(jia_msg_t *req);
 /************Conditional Variable Part****************/
 
 /**

@@ -38,16 +38,14 @@
 #include <stdatomic.h>
 #include <sys/socket.h>
 
-long start_port;
-
 // global variables
 
 /* in/out queue */
+long start_port;
 msg_queue_t inqueue;
 msg_queue_t outqueue;
 
 static int init_comm_manager();
-static int fd_create(int i, enum FDCR_MODE flag);
 static void sigint_handler();
 static void sigio_handler();
 

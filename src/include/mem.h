@@ -94,6 +94,7 @@ typedef struct {
     unsigned short int homepid; /* home host id */
 } jiapage_t;
 
+extern jiapage_t page[Maxmempages]; /* global page space */
 /* Function Declaration */
 
 /* server */
@@ -116,52 +117,6 @@ void memunmap(void *addr, size_t len);
 
 /* cache */
 int findposition(address_t addr);
-
-/**
- * @brief s2l --
- *
- * @param str
- * @return unsigned long
- */
-static inline unsigned long
-    s2l(unsigned char *str) // TODO: unsigned long now is 8 bytes (we need to
-                            // support both 32bit and 64bit machine)
-{
-    union {
-        unsigned long l;
-        // unsigned char c[Intbytes];
-        unsigned char c[sizeof(unsigned char *)];
-    } notype;
-
-    notype.c[0] = str[0];
-    notype.c[1] = str[1];
-    notype.c[2] = str[2];
-    notype.c[3] = str[3];
-    notype.c[4] = str[4];
-    notype.c[5] = str[5];
-    notype.c[6] = str[6];
-    notype.c[7] = str[7];
-
-    return (notype.l);
-}
-
-/**
- * @brief xor -- get the index of the first page of the set based on the addr,
- * setnum group connection
- *
- * @param addr address of a byte in one page
- * @return int -  the first cache index of the page's corresponding setnum in
- * the cache
- *
- */
-static inline int xor (address_t addr) {
-    return ((((unsigned long)(addr - system_setting.global_start_addr) / Pagesize) % Setnum) *
-            Setpages);
-}
-
-
-extern jiapage_t page[Maxmempages]; /* global page space */
-
 
 #define homehost(addr) \
     page[((unsigned long long)(addr)-system_setting.global_start_addr) / Pagesize].homepid

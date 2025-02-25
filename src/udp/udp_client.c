@@ -12,9 +12,9 @@
 
 #define RETRYNUM 50 // when hosts increases, this number should increases too.
 pthread_t client_tid;
+
 static jia_msg_t* msg_ptr;
 static int epollfd;
-
 static int outsend(jia_msg_t *msg);
 static void addfd(int epollfd, int fd, int trigger_mode);
 

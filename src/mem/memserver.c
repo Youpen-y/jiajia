@@ -62,6 +62,34 @@ extern int statflag;
 #endif
 
 /**
+ * @brief s2l --
+ *
+ * @param str
+ * @return unsigned long
+ */
+static inline unsigned long
+    s2l(unsigned char *str) // TODO: unsigned long now is 8 bytes (we need to
+                            // support both 32bit and 64bit machine)
+{
+    union {
+        unsigned long l;
+        // unsigned char c[Intbytes];
+        unsigned char c[sizeof(unsigned char *)];
+    } notype;
+
+    notype.c[0] = str[0];
+    notype.c[1] = str[1];
+    notype.c[2] = str[2];
+    notype.c[3] = str[3];
+    notype.c[4] = str[4];
+    notype.c[5] = str[5];
+    notype.c[6] = str[6];
+    notype.c[7] = str[7];
+
+    return (notype.l);
+}
+
+/**
  * @brief diffserver -- msg diff server
  *s
  * @param req

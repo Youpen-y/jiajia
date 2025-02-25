@@ -4,8 +4,8 @@
 #include "udp.h"
 
 pthread_t server_tid;
+
 static jia_msg_t* msg_ptr;
-extern void msg_handle(jia_msg_t *msg);
 
 void *server_thread(void *args) {
     while (1) {

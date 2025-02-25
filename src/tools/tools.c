@@ -247,12 +247,10 @@ void jia_assert(int cond, char *format, ...) {
             if (hosti != system_setting.jia_pid) {
                 assert_msg->topid = hosti;
                 move_msg_to_outqueue(slot, &outqueue);
-                // asendmsg(&assertmsg);
             }
         }
         assertmsg.topid =
             system_setting.jia_pid; // self send JIAEXIT msg in the last
-        // asendmsg(&assertmsg);
         move_msg_to_outqueue(slot, &outqueue);
         freemsg_unlock(slot);
         exit(-1);

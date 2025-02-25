@@ -8,7 +8,6 @@
 #include <stdatomic.h>
 #include <sys/socket.h>
 
-extern long start_port;
 /* communication manager */
 comm_manager_t comm_manager;
 

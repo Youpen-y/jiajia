@@ -65,6 +65,9 @@ _Atomic volatile int waitwait, acqwait, barrwait, cvwait;
 volatile int noclearlocks;
 volatile int waitcounter;
 
+static wtnt_t *appendbarrwtnts(jia_msg_t *msg, wtnt_t *ptr);
+static wtnt_t *appendlockwtnts(jia_msg_t *msg, wtnt_t *ptr, int acqscope);
+static wtnt_t *appendstackwtnts(jia_msg_t *msg, wtnt_t *ptr);
 
 /**
  * @brief initsyn -- initialize the sync setting
@@ -361,7 +364,6 @@ void grantlock(int lock, int toproc, int acqscope) {
     wnptr = appendlockwtnts(grant, wnptr, acqscope);
     while (wnptr != WNULL) { // current msg is full, but still wtnts  left
         grant->op = INVLD;
-        // asendmsg(grant);
         move_msg_to_outqueue(slot, &outqueue);
         grant->size = Intbytes;
         wnptr = appendlockwtnts(grant, wnptr, acqscope);
@@ -460,7 +462,6 @@ void broadcast(slot_t* slot) {
     if (B_CAST == OFF) {
         for (hosti = 0; hosti < system_setting.hostc; hosti++) {
             slot->msg.topid = hosti;
-            // asendmsg(msg);
             move_msg_to_outqueue(slot, &outqueue);
         }
     } else {
@@ -667,7 +668,7 @@ wtnt_t *appendstackwtnts(jia_msg_t *msg, wtnt_t *ptr) {
     while ((wnptr != WNULL) && (full == 0)) {
         if ((msg->size + (wnptr->wtntc * (sizeof(unsigned char *)))) <
             Maxmsgsize) {
-            appendmsg(msg, wnptr->wtnts,
+            appendmsg(msg, (unsigned char*)wnptr->wtnts,
                       (wnptr->wtntc) * (sizeof(unsigned char *)));
             wnptr = wnptr->more;
         } else {

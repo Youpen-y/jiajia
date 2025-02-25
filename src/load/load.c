@@ -40,7 +40,6 @@
 #include "msg.h"
 
 extern void freemsg(jia_msg_t *);
-extern void asendmsg(jia_msg_t *msg);
 extern void broadcast(slot_t* slot);
 extern void appendmsg(jia_msg_t *, unsigned char *, int);
 

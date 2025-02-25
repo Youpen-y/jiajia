@@ -90,33 +90,11 @@ void resetcvserver(jia_msg_t *);
 void waitcvserver(jia_msg_t *);
 void cvgrantserver(jia_msg_t *);
 
-/* syn */
-void pushstack(int lock);
-void popstack();
-void endinterval(int synop);
-void startinterval(int synop);
-void invalidate(jia_msg_t *req);
-
 /* synwtnts */
-void sendwtnts(int operation);
 void savewtnt(wtnt_t *ptr, address_t addr, int frompid);
-void recordwtnts(jia_msg_t *req);
-wtnt_t *appendbarrwtnts(jia_msg_t *msg, wtnt_t *ptr);
-wtnt_t *appendlockwtnts(jia_msg_t *msg, wtnt_t *ptr, int acqscope);
-wtnt_t *appendstackwtnts(jia_msg_t *msg, wtnt_t *ptr);
 
 /* synlockbarr */
 void acquire(int lock);
-void grantlock(int lock, int toproc, int acqscope);
-void grantbarr(int lock);
-void clearlocks();
 void broadcast(slot_t*slot);
 
-/* syncv */
-void grantcondv(int condv, int toproc);
-
-/* mig */
-void migarrangehome();
-void migcheckcache();
-void migpage(unsigned long addr, int frompid, int topid);
 #endif /*JIASYN_H*/

@@ -51,6 +51,12 @@ extern int H_MIG, LOAD_BAL, W_VEC;
 extern _Atomic volatile int waitwait, cvwait, acqwait, barrwait;
 extern int stackptr;
 extern jiastack_t lockstack[Maxstacksize]; // lock stack
+extern void pushstack(int lock);
+extern void popstack();
+extern void endinterval(int synop);
+extern void startinterval(int synop);
+extern void sendwtnts(int operation);
+extern void migcheckcache();
 
 /************Lock Part****************/
 

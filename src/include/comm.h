@@ -39,23 +39,6 @@
 #define TIMEOUT 300   /* used to wait for ack */
 #define MAX_RETRIES 64 /* number of retransmissions */
 
-extern msg_queue_t inqueue;
-extern msg_queue_t outqueue;
-
-/* fd type */
-enum FDCR_MODE{
-    FDCR_SEND,  // send fd
-    FDCR_RECV,  // recv fd
-    FDCR_ACK    // ack fd
-};
-
-/* ack type */
-typedef struct {
-    int          seqno;     // sequence number
-    int          sid;       // the ack is returned by the host sid
-} ack_t;
-
-
 /**
  * @brief init_msg_queue - initialize msg queue with specified size
  * 
@@ -98,41 +81,8 @@ void free_msg_queue(msg_queue_t *queue);
  */
 void register_sigint_handler();
 
-/**
- * @brief asendmsg() -- send msg to outqueue[outtail], and call outsend()
- *
- * @param msg msg that will be sent
- */
-void asendmsg(jia_msg_t *msg);
-
-/**
- * @brief msgserver -- according to inqueue head msg.op choose different server
- *
- */
-void msgserver();
-
-
-/**
- * @brief bsendmsg -- broadcast msg
- *
- * @param msg 
- */
-void bsendmsg(jia_msg_t *msg);
-
-void bcastserver(jia_msg_t *msg);
-
-/**
- * @brief fd_create -- creat socket file descriptor used to send and recv
- * request
- *
- * @param i the index of host
- * @param flag 1 means sin_port = 0, random port; others means specified
- * sin_port = reqports[jia_pid][i]
- * @return int socket file descriptor
- * creat socket file descriptor(fd) used to send and recv request and bind it to
- * an address (ip/port combination)
- */
-static int fd_create(int i, enum FDCR_MODE flag);
-
+extern msg_queue_t inqueue;
+extern msg_queue_t outqueue;
+extern long start_port;
 
 #endif /* JIACOMM_H */
