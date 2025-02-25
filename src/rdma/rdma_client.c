@@ -22,12 +22,11 @@ void *rdma_client_thread(void *arg) {
     while (1) {
         /* step 0: get sem value to print */
         int semvalue;
-        sem_getvalue(&ctx.outqueue->busy_count, &semvalue);
-        log_info(4, "pre client outqueue dequeue busy_count value: %d",
-                 semvalue);
         // wait for busy slot
         sem_wait(&ctx.outqueue->busy_count);
-        sem_getvalue(&ctx.outqueue->busy_count, &semvalue);
+        if(sem_getvalue(&ctx.outqueue->busy_count, &semvalue) != 0){
+            log_err("sem wait fault");
+        }
         log_info(4, "enter client outqueue dequeue! busy_count value: %d",
                  semvalue);
 

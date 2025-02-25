@@ -82,7 +82,7 @@ int enqueue(msg_queue_t *queue, jia_msg_t *msg);
  * @param msg msg
  * @return 0 if success, -1 if failed
  */
-int dequeue(msg_queue_t *queue, jia_msg_t *msg);
+jia_msg_t *dequeue(msg_queue_t *msg_queue);
 
 /**
  * @brief free_queue - free queue

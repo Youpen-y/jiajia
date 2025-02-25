@@ -181,8 +181,6 @@ int enqueue(msg_queue_t *msg_queue, jia_msg_t *msg) {
 
     /* step 1: sem wait for free slot and print sem value */
     int semvalue;
-    sem_getvalue(&msg_queue->free_count, &semvalue);
-    log_info(4, "pre %s enqueue free_count value: %d", queue, semvalue);
     if (sem_wait(&msg_queue->free_count) != 0) {
         log_err("sem_wait error");
         return -1;
@@ -204,51 +202,30 @@ int enqueue(msg_queue_t *msg_queue, jia_msg_t *msg) {
     }
 
     /* step 3: sem post busy count */
-    sem_post(&(msg_queue->busy_count));
+    sem_post(&msg_queue->busy_count);
     sem_getvalue(&msg_queue->busy_count, &semvalue);
     log_info(4, "after %s enqueue busy_count value: %d", queue, semvalue);
 
     return 0;
 }
 
-int dequeue(msg_queue_t *msg_queue, jia_msg_t *msg) {
+jia_msg_t *dequeue(msg_queue_t *msg_queue) {
     unsigned current_value;
     unsigned slot_index;
 
     /* step 0: ensure which queue */
-    if (msg_queue == NULL || msg == NULL) {
-        return -1;
-    }
+    if (msg_queue == NULL)
+        return NULL;
     char *queue = (msg_queue == &outqueue) ? "outqueue" : "inqueue";
 
-    /* step 1: sem wait for busy slot and print sem value */
-    int semvalue;
-    sem_getvalue(&msg_queue->busy_count, &semvalue);
-    log_info(4, "pre %s dequeue busy_count value: %d", queue, semvalue);
-    if (sem_wait(&msg_queue->busy_count) != 0) {
-        return -1;
-    }
-    sem_getvalue(&msg_queue->busy_count, &semvalue);
-    log_info(4, "enter %s dequeue! busy_count value: %d", queue, semvalue);
+    /* step 1: lock head && read msg */
+    pthread_mutex_lock(&(msg_queue->head_lock));
+    slot_index = msg_queue->head;
+    msg_queue->head = (msg_queue->head + 1) & (msg_queue->size - 1);
+    log_info(4, "%s current head: %u thread write index: %u", queue, msg_queue->head, slot_index);
+    pthread_mutex_unlock(&(msg_queue->head_lock));
 
-    /* step 2: lock head && read msg */
-    {
-        pthread_mutex_lock(&(msg_queue->head_lock));
-
-        slot_index = msg_queue->head;
-        msg_queue->head = (msg_queue->head + 1) & (msg_queue->size - 1);
-        log_info(4, "%s current head: %u thread write index: %u", queue, msg_queue->head,
-                 slot_index);
-        memcpy(msg, msg_queue->queue[slot_index], sizeof(jia_msg_t)); // copy msg from slot
-
-        pthread_mutex_unlock(&(msg_queue->head_lock));
-    }
-
-    /* step 3: sem post free count */
-    sem_post(&(msg_queue->free_count));
-    sem_getvalue(&msg_queue->free_count, &semvalue);
-    log_info(4, "after %s dequeue free_count value: %d", queue, semvalue);
-    return 0;
+    return (jia_msg_t*)msg_queue->queue[slot_index];
 }
 
 void free_msg_queue(msg_queue_t *msg_queue) {

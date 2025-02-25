@@ -12,7 +12,7 @@
 
 #define RETRYNUM 50 // when hosts increases, this number should increases too.
 pthread_t client_tid;
-static jia_msg_t msg;
+static jia_msg_t* msg_ptr;
 static int epollfd;
 
 static int outsend(jia_msg_t *msg);
@@ -30,36 +30,45 @@ void *client_thread(void *args) {
     /* step 2: dequeue msg to send */
     bool success = false;
     while (1) {
-        if (dequeue(comm_manager.outqueue, &msg)) {
-            log_info(3, "outqueue is null");
-            continue;
-        } else {
-            /* step 1: give seqno */
-            msg.seqno = comm_manager.snd_seq[msg.topid];
-
-            /* step 2: send msg && ack */
-            for (int retries_num = 0; retries_num < RETRYNUM; retries_num++) {
-                if (!outsend(&msg)) {
-                    success = true;
-                    break;
-                }
-#ifdef DOSTAT
-                STATOP(jiastat.resendcnt++;)
-#endif
-            }
-
-            /* step 3: manage error */
-            if (success) {
-                log_info(4, "send msg success!");
-                success = false;
-            } else {
-                log_err("send msg failed[msg: %lx]", (unsigned long)&msg);
-                printmsg(&msg);
-            }
-
-            /* step 4: update snd_seq */
-            comm_manager.snd_seq[msg.topid]++;
+        /* step 0: post sem value && get msg_ptr */
+        int semvalue;
+        if (sem_wait(&comm_manager.outqueue->busy_count) != 0) {
+            log_err("sem wait fault");
         }
+        sem_getvalue(&comm_manager.outqueue->busy_count, &semvalue);
+        log_info(4, "enter client outqueue dequeue! busy_count value: %d", semvalue);
+        msg_ptr = dequeue(comm_manager.outqueue);
+
+        /* step 1: give seqno */
+        msg_ptr->seqno = comm_manager.snd_seq[msg_ptr->topid];
+
+        /* step 2: send msg && ack */
+        for (int retries_num = 0; retries_num < RETRYNUM; retries_num++) {
+            if (!outsend(msg_ptr)) {
+                success = true;
+                break;
+            }
+#ifdef DOSTAT
+            STATOP(jiastat.resendcnt++;)
+#endif
+        }
+
+        /* step 3: manage error */
+        if (success) {
+            log_info(4, "send msg success!");
+            success = false;
+        } else {
+            log_err("send msg failed[msg: %lx]", (unsigned long)msg_ptr);
+            printmsg(msg_ptr);
+        }
+
+        /* step 4: update snd_seq */
+        comm_manager.snd_seq[msg_ptr->topid]++;
+
+        /* step 5: sem post and print value */
+        sem_post(&(comm_manager.outqueue->free_count));
+        sem_getvalue(&comm_manager.outqueue->free_count, &semvalue);
+        log_info(4, "after client outqueue dequeue free_count value: %d", semvalue);
     }
 }
 
@@ -96,7 +105,8 @@ static int outsend(jia_msg_t *msg) {
         if (statflag == 1) {
             jiastat.msgsndcnt++;
             jiastat.msgsndbytes +=
-                (((jia_msg_t *)comm_manager.outqueue->queue[comm_manager.outqueue->head])->size + Msgheadsize);
+                (((jia_msg_t *)comm_manager.outqueue->queue[comm_manager.outqueue->head])->size +
+                 Msgheadsize);
         }
 #endif
 
@@ -128,8 +138,9 @@ static int outsend(jia_msg_t *msg) {
                         state = 0;
                         break;
                     } else {
-                        log_err("Not match[<ack.seqno: %u ack.sid: %u> xxx <msg.seqno: %u msg.topid: %u], ack will be ignored", ack.seqno, ack.sid,
-                                msg->seqno, msg->topid);
+                        log_err("Not match[<ack.seqno: %u ack.sid: %u> xxx <msg.seqno: %u "
+                                "msg.topid: %u], ack will be ignored",
+                                ack.seqno, ack.sid, msg->seqno, msg->topid);
                     }
                 } else {
                     log_err("ack size error! try resend");
