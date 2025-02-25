@@ -29,6 +29,7 @@
 
 #include "mem.h"
 #include "comm.h"
+#include "msg.h"
 #include "tools.h"
 #include "setting.h"
 #include "stat.h"
@@ -44,7 +45,7 @@ extern _Atomic volatile int getpwait;
 extern _Atomic volatile int diffwait;
 
 /* mmsync */
-extern jia_msg_t *diffmsg[Maxhosts]; /* store every host's diff msgs */
+extern slot_t *diffmsg[Maxhosts]; /* store every host's diff msgs */
 extern long jiamapfd; /* file descriptor of the file that mapped to process's virtual
                   address space */
 extern int repcnt[Setnum]; /* record the last replacement index of every set */
