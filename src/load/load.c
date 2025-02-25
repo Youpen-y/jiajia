@@ -41,7 +41,7 @@
 
 extern void freemsg(jia_msg_t *);
 extern void asendmsg(jia_msg_t *msg);
-extern void broadcast(jia_msg_t *msg, int index);
+extern void broadcast(slot_t* slot);
 extern void appendmsg(jia_msg_t *, unsigned char *, int);
 
 extern int LOAD_BAL;
@@ -65,9 +65,10 @@ void initload() {
 void jia_loadbalance() {
     // send LOADREQ msg to master
     jia_msg_t *req;
+    slot_t* slot;
 
-    int index = freemsg_lock(&msg_buffer);
-    req = &(msg_buffer.buffer[index].msg);
+    slot = freemsg_lock(&msg_buffer);
+    req = &(slot->msg);
     req->frompid = system_setting.jia_pid;
     req->topid = 0;
     req->op = LOADREQ;
@@ -76,8 +77,8 @@ void jia_loadbalance() {
 
     loadwait = 1;
 
-    move_msg_to_outqueue(&msg_buffer, index, &outqueue);
-    freemsg_unlock(&msg_buffer, index);
+    move_msg_to_outqueue(slot, &outqueue);
+    freemsg_unlock(slot);
 
     while (loadwait)
         ;
@@ -115,8 +116,9 @@ void jia_newload() {
 }
 
 void loadserver(jia_msg_t *req) {
-    int datai, hosti, index;
+    int datai, hosti;
     jia_msg_t *grant;
+    slot_t* slot;
 
     jia_assert((req->op == LOADREQ), "Incorrect LOADREQ msg");
 
@@ -129,8 +131,8 @@ void loadserver(jia_msg_t *req) {
     if (loadcnt == system_setting.hostc) {
         loadcnt = 0;
         jia_newload();
-        index = freemsg_lock(&msg_buffer);
-        grant = &(msg_buffer.buffer[index].msg);
+        slot = freemsg_lock(&msg_buffer);
+        grant = &(slot->msg);
         grant->frompid = system_setting.jia_pid;
         grant->op = LOADGRANT;
         grant->size = 0;
@@ -140,9 +142,9 @@ void loadserver(jia_msg_t *req) {
                       sizeof(loadstat[hosti].power));
         }
 
-        broadcast(grant, index);
+        broadcast(slot);
 
-        freemsg_unlock(&msg_buffer, index);
+        freemsg_unlock(slot);
     }
 }
 

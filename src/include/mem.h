@@ -49,7 +49,7 @@
 #define Setpages                                                               \
     Cachepages / Setnum /* page num of a set */
 
-#define DIFFNULL ((jia_msg_t *)NULL)
+#define DIFFNULL ((slot_t *)NULL)
 typedef unsigned char *address_t;
 
 #define ALIGN2PAGE(size)                                                       \

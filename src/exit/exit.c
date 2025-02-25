@@ -55,7 +55,7 @@ void jia_exit() {
     int hostc = system_setting.hostc;
 #ifdef DOSTAT
     int i;
-    int index;
+    slot_t* slot;
     jia_msg_t *reply;
     jiastat_t *stat_p = &jiastat;
     jiastat_t total;
@@ -68,8 +68,8 @@ void jia_exit() {
     
     if (hostc > 1) {
         // construct STAT msg
-        index = freemsg_lock(&msg_buffer);
-        reply = &(msg_buffer.buffer[index].msg);
+        slot = freemsg_lock(&msg_buffer);
+        reply = &slot->msg;
         reply->frompid = system_setting.jia_pid;
         reply->topid = 0;
         reply->size = 0;
@@ -79,8 +79,8 @@ void jia_exit() {
         atomic_store(&waitstat, 1);
 
         // send msg
-        move_msg_to_outqueue(&msg_buffer, index, &outqueue);
-        freemsg_unlock(&msg_buffer, index);
+        move_msg_to_outqueue(slot, &outqueue);
+        freemsg_unlock(slot);
 
         // busywait until waitstat is clear by statgrantserver
         // possible problem: slave will keep waiting a dead master's statgrant msg

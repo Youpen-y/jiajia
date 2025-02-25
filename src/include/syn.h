@@ -110,7 +110,7 @@ void acquire(int lock);
 void grantlock(int lock, int toproc, int acqscope);
 void grantbarr(int lock);
 void clearlocks();
-void broadcast(jia_msg_t *msg, int index);
+void broadcast(slot_t*slot);
 
 /* syncv */
 void grantcondv(int condv, int toproc);

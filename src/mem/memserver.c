@@ -145,15 +145,15 @@ void diffserver(jia_msg_t *req) {
     STATOP(jiastat.dedifftime += get_usecs() - begin; jiastat.diffcnt++;)
 #endif
 
-    int index = freemsg_lock(&msg_buffer);
-    rep = &msg_buffer.buffer[index].msg;
+    slot_t* slot = freemsg_lock(&msg_buffer);
+    rep = &slot->msg;
     rep->op = DIFFGRANT;
     rep->frompid = jia_pid;
     rep->topid = req->frompid;
     rep->size = 0;
 
-    move_msg_to_outqueue(&msg_buffer, index, &outqueue);
-    freemsg_unlock(&msg_buffer, index);
+    move_msg_to_outqueue(slot, &outqueue);
+    freemsg_unlock(slot);
 }
 
 /**
@@ -234,8 +234,8 @@ void getpserver(jia_msg_t *req) {
         }
     }
 
-    int index = freemsg_lock(&msg_buffer);
-    rep = &msg_buffer.buffer[index].msg;
+    slot_t* slot = freemsg_lock(&msg_buffer);
+    rep = &slot->msg;
     rep->op = GETPGRANT;
     rep->frompid = jia_pid;
     rep->topid = req->frompid;
@@ -272,8 +272,8 @@ void getpserver(jia_msg_t *req) {
         appendmsg(rep, addr[i], Pagesize);
     }
 
-    move_msg_to_outqueue(&msg_buffer, index, &outqueue);
-    freemsg_unlock(&msg_buffer, index);
+    move_msg_to_outqueue(slot, &outqueue);
+    freemsg_unlock(slot);
 }
 
 /**

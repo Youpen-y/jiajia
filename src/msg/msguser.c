@@ -26,6 +26,7 @@
  *                                                                     *
  *         Author: Weiwu Hu, Weisong Shi, Zhimin Tang                  *
  **********************************************************************/
+#include "msg.h"
 #ifndef NULL_LIB
 #include "tools.h"
 
@@ -51,14 +52,14 @@ void jia_send(char *buf, int len, int toproc, int tag) {
     jia_msg_t *req;
     int msgsize = len;
     char *msgptr = buf;
-    int index;
+    slot_t* slot;
 
     jia_assert(((toproc < system_setting.hostc) && (toproc >= 0)),
                "Incorrect message destination");
 
     /** step 1: init msg's metadata */
-    index = freemsg_lock(&msg_buffer);
-    req = &msg_buffer.buffer[index].msg;
+    slot = freemsg_lock(&msg_buffer);
+    req = &slot->msg;
     req->frompid = system_setting.jia_pid;
     req->topid = toproc;
     req->scope = tag;
@@ -68,17 +69,17 @@ void jia_send(char *buf, int len, int toproc, int tag) {
         req->op = MSGBODY;
         req->size = 0;
         appendmsg(req, (unsigned char *)msgptr, Maxmsgsize);
-        move_msg_to_outqueue(&msg_buffer, index, &outqueue);
+        move_msg_to_outqueue(slot, &outqueue);
         msgptr += Maxmsgsize;
         msgsize -= Maxmsgsize;
     }
     req->op = MSGTAIL;
     req->size = 0;
     appendmsg(req, (unsigned char *)msgptr, msgsize);
-    move_msg_to_outqueue(&msg_buffer, index, &outqueue);
+    move_msg_to_outqueue(slot, &outqueue);
 
     /** step 3: free msg*/
-    freemsg_unlock(&msg_buffer, index);
+    freemsg_unlock(slot);
 }
 
 /*
@@ -141,15 +142,15 @@ void jia_bcast(char *buf, int len, int root) {
     jia_msg_t *req;
     int msgsize;
     char *msgptr;
-    int index;
+    slot_t* slot;
 
     if (system_setting.jia_pid == root) {
         msgsize = len;
         msgptr = buf;
 
         /** step 1: init msg's metadata */
-        index = freemsg_lock(&msg_buffer);
-        req = &msg_buffer.buffer[index].msg;
+        slot = freemsg_lock(&msg_buffer);
+        req = &slot->msg;
         req->frompid = system_setting.jia_pid;
         req->topid = system_setting.jia_pid;
         req->scope = BCAST_TAG;
@@ -169,7 +170,7 @@ void jia_bcast(char *buf, int len, int root) {
         bsendmsg(req);
 
         /** step 3: free msg*/
-        freemsg_unlock(&msg_buffer, index);
+        freemsg_unlock(slot);
     }
 
     jia_recv(buf, len, MSG_PROC_ALL, BCAST_TAG);

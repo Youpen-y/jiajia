@@ -147,7 +147,7 @@ void cvgrantserver(jia_msg_t *req) {
  */
 void waitserver(jia_msg_t *req) {
     jia_msg_t *grant;
-    int index;
+    slot_t* slot;
 
     jia_assert((req->op == WAIT) && (req->topid == system_setting.jia_pid),
            "Incorrect WAIT Message!");
@@ -155,14 +155,14 @@ void waitserver(jia_msg_t *req) {
     waitcounter++;
 
     if (waitcounter == system_setting.hostc) {
-        index = freemsg_lock(&msg_buffer);
-        grant = &msg_buffer.buffer[index].msg;
+        slot = freemsg_lock(&msg_buffer);
+        grant = &slot->msg;
         waitcounter = 0;
         grant->frompid = system_setting.jia_pid;
         grant->size = 0;
         grant->op = WAITGRANT;
-        broadcast(grant, index);
-        freemsg_unlock(&msg_buffer, index);
+        broadcast(slot);
+        freemsg_unlock(slot);
     }
 }
 

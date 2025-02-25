@@ -167,7 +167,7 @@ int copy_msg_to_buffer(msg_buffer_t *buffer, jia_msg_t *msg);
  * @param buffer msg buffer
  * @return int i represent the index of msg that is locked if success, -1 if failed
  */
-int freemsg_lock(msg_buffer_t *buffer);
+slot_t* freemsg_lock(msg_buffer_t *buffer);
 
 
 /**
@@ -176,7 +176,7 @@ int freemsg_lock(msg_buffer_t *buffer);
  * @param buffer msg buffer
  * @param index index of occupied msg slot of msg buffer
  */
-void freemsg_unlock(msg_buffer_t *buffer, int index);
+void freemsg_unlock(slot_t *slot);
 
 
 /**
@@ -187,7 +187,7 @@ void freemsg_unlock(msg_buffer_t *buffer, int index);
  * @param outqueue outqueue
  * @return int 
  */
-int move_msg_to_outqueue(msg_buffer_t *buffer, int index, msg_queue_t *outqueue);
+int move_msg_to_outqueue(slot_t *slot, msg_queue_t *outqueue);
 
 
 /**

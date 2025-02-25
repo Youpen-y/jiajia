@@ -131,29 +131,28 @@ void free_msg_buffer(msg_buffer_t *msg_buffer) {
 //     return 0;
 // }
 
-int freemsg_lock(msg_buffer_t *buffer) {
+slot_t* freemsg_lock(msg_buffer_t *buffer) {
     int semvalue;
     sem_getvalue(&msg_buffer.count, &semvalue);
     log_info(4, "pre freemsg_lock count value: %d", semvalue);
     if (sem_wait(&msg_buffer.count) != 0) {
-        return -1;
+        return NULL;
     }
 
     for (int i = 0; i < msg_buffer.size; i++) {
         slot_state_t slot_state = SLOT_FREE;
         slot_t *slot = &msg_buffer.buffer[i];
         if (atomic_compare_exchange_weak(&slot->state, &slot_state, SLOT_BUSY))
-            return i;
+            return slot;
         // if(!pthread_mutex_trylock(&slot->lock)){
         //     slot->state = SLOT_BUSY;
         //     return i;
         // }
     }
-    return -1;
+    return NULL;
 }
 
-void freemsg_unlock(msg_buffer_t *buffer, int index) {
-    slot_t *slot = &msg_buffer.buffer[index];
+void freemsg_unlock(slot_t *slot) {
     atomic_store(&slot->state, SLOT_FREE);
 
     sem_post(&msg_buffer.count);
@@ -161,10 +160,11 @@ void freemsg_unlock(msg_buffer_t *buffer, int index) {
     int semvalue;
     sem_getvalue(&msg_buffer.count, &semvalue);
     log_info(4, "after freemsg_unlock count value: %d", semvalue);
+
+    return;
 }
 
-int move_msg_to_outqueue(msg_buffer_t *buffer, int index, msg_queue_t *outqueue) {
-    slot_t *slot = &msg_buffer.buffer[index];
+int move_msg_to_outqueue(slot_t *slot, msg_queue_t *outqueue) {
     int ret = enqueue(outqueue, &slot->msg);
     if (ret == -1) {
         perror("enqueue");

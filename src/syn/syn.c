@@ -33,6 +33,7 @@
 #include "init.h"
 #include "jia.h"
 #include "mem.h"
+#include "msg.h"
 #include "tools.h"
 #include "setting.h"
 #include "stat.h"
@@ -277,10 +278,10 @@ void clearlocks() {
  */
 void acquire(int lock) {
     jia_msg_t *req;
-    int index;
+    slot_t* slot;
 
-    index = freemsg_lock(&msg_buffer);
-    req = &msg_buffer.buffer[index].msg;
+    slot = freemsg_lock(&msg_buffer);
+    req = &slot->msg;
     req->op = ACQ;
     req->frompid = system_setting.jia_pid;
     req->topid = lock % system_setting.hostc; // it seems that lock was divided circularly
@@ -288,8 +289,8 @@ void acquire(int lock) {
     req->size = 0;
     appendmsg(req, ltos(lock), Intbytes);
 
-    move_msg_to_outqueue(&msg_buffer, index, &outqueue);
-    freemsg_unlock(&msg_buffer, index);
+    move_msg_to_outqueue(slot, &outqueue);
+    freemsg_unlock(slot);
     while (atomic_load(&acqwait))
         ;
     log_info(3, "acquire lock!!!");
@@ -345,10 +346,10 @@ void popstack() {
 void grantlock(int lock, int toproc, int acqscope) {
     jia_msg_t *grant;
     wtnt_t *wnptr;
-    int index;
+    slot_t* slot;
 
-    index = freemsg_lock(&msg_buffer);
-    grant = &msg_buffer.buffer[index].msg;
+    slot = freemsg_lock(&msg_buffer);
+    grant = &slot->msg;
     grant->frompid = system_setting.jia_pid;
     grant->topid = toproc;
     grant->scope = locks[lock].scope;
@@ -361,15 +362,15 @@ void grantlock(int lock, int toproc, int acqscope) {
     while (wnptr != WNULL) { // current msg is full, but still wtnts  left
         grant->op = INVLD;
         // asendmsg(grant);
-        move_msg_to_outqueue(&msg_buffer, index, &outqueue);
+        move_msg_to_outqueue(slot, &outqueue);
         grant->size = Intbytes;
         wnptr = appendlockwtnts(grant, wnptr, acqscope);
     }
 
     grant->op = ACQGRANT;
 
-    move_msg_to_outqueue(&msg_buffer, index, &outqueue);
-    freemsg_unlock(&msg_buffer, index);
+    move_msg_to_outqueue(slot, &outqueue);
+    freemsg_unlock(slot);
 }
 
 /**
@@ -419,10 +420,11 @@ wtnt_t *appendlockwtnts(jia_msg_t *msg, wtnt_t *ptr, int acqscope) {
 void grantbarr(int lock) {
     jia_msg_t *grant;
     wtnt_t *wnptr;
-    int hosti, index;
+    int hosti;
+    slot_t* slot;
 
-    index = freemsg_lock(&msg_buffer);
-    grant = &msg_buffer.buffer[index].msg;
+    slot = freemsg_lock(&msg_buffer);
+    grant = &slot->msg;
 
     grant->frompid = system_setting.jia_pid;
     grant->topid = system_setting.jia_pid;
@@ -437,13 +439,13 @@ void grantbarr(int lock) {
                                     // from) to msg if possible
     while (wnptr != WNULL) {
         grant->op = INVLD;
-        broadcast(grant, index);
+        broadcast(slot);
         grant->size = Intbytes; // lock
         wnptr = appendbarrwtnts(grant, wnptr);
     }
     grant->op = BARRGRANT;
-    broadcast(grant, index);
-    freemsg_unlock(&msg_buffer, index);
+    broadcast(slot);
+    freemsg_unlock(slot);
 }
 
 /**
@@ -452,17 +454,17 @@ void grantbarr(int lock) {
  * @param msg msg that will be broadcast
  * @param index index of msg in msg_buffer
  */
-void broadcast(jia_msg_t *msg, int index) {
+void broadcast(slot_t* slot) {
     int hosti;
 
     if (B_CAST == OFF) {
         for (hosti = 0; hosti < system_setting.hostc; hosti++) {
-            msg->topid = hosti;
+            slot->msg.topid = hosti;
             // asendmsg(msg);
-            move_msg_to_outqueue(&msg_buffer, index, &outqueue);
+            move_msg_to_outqueue(slot, &outqueue);
         }
     } else {
-        bsendmsg(msg);
+        bsendmsg(&slot->msg);
     }
 }
 
@@ -505,19 +507,19 @@ wtnt_t *appendbarrwtnts(jia_msg_t *msg, wtnt_t *ptr) {
  * @param toproc destination host
  */
 void grantcondv(int condv, int toproc) {
-    int index;
+    slot_t* slot;
     jia_msg_t *grant;
 
-    index = freemsg_lock(&msg_buffer);
-    grant = &msg_buffer.buffer[index].msg;
+    slot = freemsg_lock(&msg_buffer);
+    grant = &slot->msg;
     grant->op = CVGRANT;
     grant->frompid = system_setting.jia_pid;
     grant->topid = toproc;
     grant->size = 0;
     appendmsg(grant, ltos(condv), Intbytes);
 
-    move_msg_to_outqueue(&msg_buffer, index, &outqueue);
-    freemsg_unlock(&msg_buffer, index);
+    move_msg_to_outqueue(slot, &outqueue);
+    freemsg_unlock(slot);
 }
 
 /************wtnt Part(record, send and wtnt stack)****************/
@@ -611,14 +613,15 @@ void recordwtnts(jia_msg_t *req) {
  * BARR or REL message's data : | top.lockid(4bytes) | addr1 | ... | addrn |
  */
 void sendwtnts(int operation) {
-    int wtnti, index;
+    int wtnti;
+    slot_t* slot;
     jia_msg_t *req;
     wtnt_t *wnptr; // write notice pointer
 
     log_info(3, "Enter sendwtnts!");
 
-    index = freemsg_lock(&msg_buffer);
-    req = &(msg_buffer.buffer[index].msg);
+    slot = freemsg_lock(&msg_buffer);
+    req = &(slot->msg);
     req->frompid = system_setting.jia_pid;
     req->topid = top.lockid % system_setting.hostc;
     req->size = 0;
@@ -636,13 +639,13 @@ void sendwtnts(int operation) {
      */
     while (wnptr != WNULL) {
         req->op = WTNT;
-        move_msg_to_outqueue(&msg_buffer, index, &outqueue);
+        move_msg_to_outqueue(slot, &outqueue);
         req->size = Intbytes;
         wnptr = appendstackwtnts(req, wnptr);
     }
     req->op = operation;
-    move_msg_to_outqueue(&msg_buffer, index, &outqueue);
-    freemsg_unlock(&msg_buffer, index);
+    move_msg_to_outqueue(slot, &outqueue);
+    freemsg_unlock(slot);
 
     log_info(3, "Out of sendwtnts!");
 }

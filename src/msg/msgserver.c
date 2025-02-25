@@ -26,6 +26,7 @@
  *                                                                     *
  *         Author: Weiwu Hu, Weisong Shi, Zhimin Tang                  *
  **********************************************************************/
+#include "msg.h"
 #ifndef NULL_LIB
 #include "tools.h"
 
@@ -33,7 +34,6 @@ extern volatile int recvwait;
 extern jia_msg_t msgbuf[Maxmsgbufs]; /* message buffer */
 extern unsigned long msgseqno;
 extern msg_buffer_t msg_buffer;
-
 
 void msgrecvserver(jia_msg_t *req) {
     int i = 0;
@@ -45,7 +45,7 @@ void msgrecvserver(jia_msg_t *req) {
         i++;
 
     /** step 2: memcpy msg to the free msgbuf*/
-    if (i < Maxmsgbufs) { 
+    if (i < Maxmsgbufs) {
         msgbuf[i].op = req->op;
         msgbuf[i].frompid = req->frompid;
         msgbuf[i].topid = req->topid;
@@ -79,6 +79,7 @@ void msgrecvserver(jia_msg_t *req) {
 void bcastserver(jia_msg_t *msg) {
     int mypid, child1, child2;
     int rootlevel, root, level;
+    slot_t *slot;
 
     int jia_pid = system_setting.jia_pid;
     int hostc = system_setting.hostc;
@@ -91,8 +92,7 @@ void bcastserver(jia_msg_t *msg) {
     level--;
 
     /** step 2: mypid is current host's position in broadcast tree */
-    mypid =
-        ((jia_pid - root) >= 0) ? (jia_pid - root) : (jia_pid - root + hostc);
+    mypid = ((jia_pid - root) >= 0) ? (jia_pid - root) : (jia_pid - root + hostc);
     child1 = mypid;
     child2 = mypid + (1 << level);
 
@@ -106,15 +106,10 @@ void bcastserver(jia_msg_t *msg) {
     msg->frompid = jia_pid;
     if (child2 < hostc) {
         msg->topid = (child2 + root) % hostc;
-        move_msg_to_outqueue(&msg_buffer,
-                             ((void *)msg - (void *)&msg_buffer.buffer) /
-                                 sizeof(slot_t),
-                             &outqueue);
+        move_msg_to_outqueue((slot_t *)msg, &outqueue); //jia_msg's addr is same to slot's addr
     }
     msg->topid = (child1 + root) % hostc;
-    move_msg_to_outqueue(
-        &msg_buffer,
-        ((void *)msg - (void *)&msg_buffer.buffer) / sizeof(slot_t), &outqueue);
+    move_msg_to_outqueue((slot_t *)msg, &outqueue); //jia_msg's addr is same to slot's addr
 }
 
 #else /* NULL_LIB */

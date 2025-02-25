@@ -63,7 +63,7 @@ extern jiastat_t jiastat;
 extern int statflag;
 #endif
 
-jia_msg_t *diffmsg[Maxhosts]; /* store every host's diff msgs */
+slot_t *diffmsg[Maxhosts]; /* store every host's diff msgs */
 long jiamapfd; /* file descriptor of the file that mapped to process's virtual
                   address space */
 int repcnt[Setnum]; /* record the last replacement index of every set */
@@ -106,8 +106,8 @@ void getpage(address_t addr, int flag) {
     jia_assert((homeid != system_setting.jia_pid),
                "This should not have happened 2!");
 
-    int index = freemsg_lock(&msg_buffer);
-    req = &msg_buffer.buffer[index].msg;
+    slot_t* slot = freemsg_lock(&msg_buffer);
+    req = &slot->msg;
 
     req->op = GETP;
     req->frompid = system_setting.jia_pid;
@@ -117,8 +117,8 @@ void getpage(address_t addr, int flag) {
     // append address of request page to data[0..7]
     appendmsg(req, ltos(addr), sizeof(unsigned char *));
     atomic_store(&getpwait, 1);
-    move_msg_to_outqueue(&msg_buffer, index, &outqueue);
-    freemsg_unlock(&msg_buffer, index);
+    move_msg_to_outqueue(slot, &outqueue);
+    freemsg_unlock(slot);
 
 #ifdef DOSTAT
     if (statflag == 1) {
@@ -467,32 +467,35 @@ void savepage(int cachei) {
 void savediff(int cachei) {
     unsigned char diff[Maxmsgsize]; // msg data array to store diff
     int diffsize;
-    int hosti, index;
+    int hosti;
+    slot_t* slot;
+    jia_msg_t* tmp;
 
     // according to cachei addr get the page's home host index
     hosti = homehost(cache[cachei].addr);
     if (diffmsg[hosti] == DIFFNULL) { // hosti host's diffmsg is NULL
-        index = freemsg_lock(&msg_buffer);
-        diffmsg[hosti] = &msg_buffer.buffer[index].msg;
-        diffmsg[hosti]->op = DIFF;
-        diffmsg[hosti]->frompid = system_setting.jia_pid;
-        diffmsg[hosti]->topid = hosti;
-        diffmsg[hosti]->size = 0;
+        slot = freemsg_lock(&msg_buffer);
+        diffmsg[hosti] = slot;
+        tmp = &slot->msg;
+        tmp->op = DIFF;
+        tmp->frompid = system_setting.jia_pid;
+        tmp->topid = hosti;
+        tmp->size = 0;
     }
     
     // encoded the difference data between cachei page and
     // its twin into diff [] and return size
     diffsize = encodediff(cachei, diff); 
-    if ((diffmsg[hosti]->size + diffsize) > Maxmsgsize) {
+    if ((tmp->size + diffsize) > Maxmsgsize) {
         atomic_fetch_add(&diffwait, 1);
         log_info(4, "diffwait: %d", diffwait);
-        move_msg_to_outqueue(&msg_buffer, index, &outqueue);
-        diffmsg[hosti]->size = 0;
-        appendmsg(diffmsg[hosti], diff, diffsize);
+        move_msg_to_outqueue(slot, &outqueue);
+        tmp->size = 0;
+        appendmsg(tmp, diff, diffsize);
         while (diffwait)
             ;
     } else {
-        appendmsg(diffmsg[hosti], diff, diffsize);
+        appendmsg(tmp, diff, diffsize);
     }
 }
 
@@ -502,16 +505,13 @@ void savediff(int cachei) {
  */
 void senddiffs() {
     int hosti;
-    int index;
     for (hosti = 0; hosti < system_setting.hostc; hosti++) {
         if (diffmsg[hosti] != DIFFNULL) { // hosti's diff msgs is non-NULL
-            index = ((void *)diffmsg[hosti] - (void *)msg_buffer.buffer) /
-                    sizeof(slot_t);
-            if (diffmsg[hosti]->size > 0) { // diff data size > 0
+            if (diffmsg[hosti]->msg.size > 0) { // diff data size > 0
                 atomic_fetch_add(&diffwait, 1);
                 log_info(4, "diffwait: %d", diffwait);
-                move_msg_to_outqueue(&msg_buffer, index, &outqueue);
-                freemsg_unlock(&msg_buffer, index);
+                move_msg_to_outqueue(diffmsg[hosti], &outqueue);
+                freemsg_unlock(diffmsg[hosti]);
             }
             diffmsg[hosti] = DIFFNULL;
         }

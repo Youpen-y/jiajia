@@ -216,7 +216,7 @@ void jia_wait() {
     register unsigned int begin = get_usecs();
 #endif
     jia_msg_t *req;
-    int index;
+    slot_t* slot;
 
     if (system_setting.hostc == 1)
         return;
@@ -227,8 +227,8 @@ void jia_wait() {
     }
 
     // construct WAIT msg
-    index = freemsg_lock(&msg_buffer);
-    req = &(msg_buffer.buffer[index].msg);
+    slot = freemsg_lock(&msg_buffer);
+    req = &(slot->msg);
     req->frompid = system_setting.jia_pid;
     req->topid = 0;
     req->op = WAIT;
@@ -237,8 +237,8 @@ void jia_wait() {
     atomic_store(&waitwait, 1);
 
     // send WAIT msg
-    move_msg_to_outqueue(&msg_buffer, index, &outqueue);
-    freemsg_unlock(&msg_buffer, index);
+    move_msg_to_outqueue(slot, &outqueue);
+    freemsg_unlock(slot);
 
     // busywaiting until waitwait is clear by waitgrantserver
     while (atomic_load(&waitwait))
@@ -260,7 +260,7 @@ void jia_wait() {
  */
 void jia_setcv(int cvnum) {
     jia_msg_t *req;
-    int index;
+    slot_t* slot;
 
     if (system_setting.hostc == 1)
         return;
@@ -268,21 +268,21 @@ void jia_setcv(int cvnum) {
     jia_assert(((cvnum >= 0) && (cvnum < Maxcvs)),
            "condv %d should range from 0 to %d", cvnum, Maxcvs - 1);
 
-    index = freemsg_lock(&msg_buffer);
-    req = &(msg_buffer.buffer[index].msg);
+    slot = freemsg_lock(&msg_buffer);
+    req = &(slot->msg);
     req->op = SETCV;
     req->frompid = system_setting.jia_pid;
     req->topid = cvnum % system_setting.hostc;
     req->size = 0;
     appendmsg(req, ltos(cvnum), Intbytes);
 
-    move_msg_to_outqueue(&msg_buffer, index, &outqueue);
-    freemsg_unlock(&msg_buffer, index);
+    move_msg_to_outqueue(slot, &outqueue);
+    freemsg_unlock(slot);
 }
 
 void jia_resetcv(int cvnum) {
     jia_msg_t *req;
-    int index;
+    slot_t* slot;
 
     if (system_setting.hostc == 1)
         return;
@@ -290,21 +290,22 @@ void jia_resetcv(int cvnum) {
     jia_assert(((cvnum >= 0) && (cvnum < Maxcvs)),
            "condv %d should range from 0 to %d", cvnum, Maxcvs - 1);
 
-    index = freemsg_lock(&msg_buffer);
-    req = &(msg_buffer.buffer[index].msg);
+    slot = freemsg_lock(&msg_buffer);
+    req = &(slot->msg);
     req->op = RESETCV;
     req->frompid = system_setting.jia_pid;
     req->topid = cvnum % system_setting.hostc;
     req->size = 0;
     appendmsg(req, ltos(cvnum), Intbytes);
 
-    move_msg_to_outqueue(&msg_buffer, index, &outqueue);
-    freemsg_unlock(&msg_buffer, index);
+    move_msg_to_outqueue(slot, &outqueue);
+    freemsg_unlock(slot);
 }
 
 void jia_waitcv(int cvnum) {
     jia_msg_t *req;
-    int lockid, index;
+    int lockid;
+    slot_t* slot;
 
     if (system_setting.hostc == 1)
         return;
@@ -312,8 +313,8 @@ void jia_waitcv(int cvnum) {
     jia_assert(((cvnum >= 0) && (cvnum < Maxcvs)),
            "condv %d should range from 0 to %d", cvnum, Maxcvs - 1);
 
-    index = freemsg_lock(&msg_buffer);
-    req = &(msg_buffer.buffer[index].msg);
+    slot = freemsg_lock(&msg_buffer);
+    req = &(slot->msg);
     req->op = WAITCV;
     req->frompid = system_setting.jia_pid;
     req->topid = cvnum % system_setting.hostc;
@@ -322,8 +323,8 @@ void jia_waitcv(int cvnum) {
 
     atomic_store(&cvwait, 1);
 
-    move_msg_to_outqueue(&msg_buffer, index, &outqueue);
-    freemsg_unlock(&msg_buffer, index);
+    move_msg_to_outqueue(slot, &outqueue);
+    freemsg_unlock(slot);
     while (atomic_load(&cvwait))
         ;
 }

@@ -99,16 +99,16 @@ void statserver(jia_msg_t *rep) {
     if (statcnt == system_setting.hostc) {
         statcnt = 0;
         clearstat();
-        int index = freemsg_lock(&msg_buffer);
-        grant = &(msg_buffer.buffer[index].msg);
+        slot_t* slot = freemsg_lock(&msg_buffer);
+        grant = &(slot->msg);
         grant->frompid = system_setting.jia_pid;
         grant->size = 0;
         grant->op = STATGRANT;
         for (i = system_setting.hostc-1; i >= 0; i--) {
             grant->topid = i;
-            move_msg_to_outqueue(&msg_buffer, index, &outqueue);
+            move_msg_to_outqueue(slot, &outqueue);
         }
-        freemsg_unlock(&msg_buffer, index);
+        freemsg_unlock(slot);
     }
 }
 
