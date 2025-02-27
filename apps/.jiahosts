@@ -1,7 +1,7 @@
 # line start with '#' is commented line
 # ip username password
 # Example: 10.90.50.196 test test
-10.90.50.196 szx szx
-10.90.50.192 szx szx
-# 192.168.103.1 szx szx
-# 192.168.103.2 szx szx
+# 10.90.50.196 szx szx
+# 10.90.50.192 szx szx
+192.168.103.1 szx szx
+192.168.103.2 szx szx

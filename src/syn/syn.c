@@ -588,7 +588,7 @@ void recordwtnts(jia_msg_t *req) {
     int datai;
 
     lock = (int)stol(req->data); // get the lock
-    for (datai = Intbytes; datai < req->size; datai += sizeof(unsigned char *))
+    for (datai = Intbytes; datai < req->size; datai += (sizeof(unsigned char *) + Intbytes))
         savewtnt(locks[lock].wtntp, (address_t)stol(req->data + datai), (int)stol(req->data + datai), req->frompid, locks[lock].scope);
 }
 
