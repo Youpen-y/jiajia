@@ -27,12 +27,12 @@
  *         Author: Weiwu Hu, Weisong Shi, Zhimin Tang                  *
  **********************************************************************/
 
-#include "syn.h"
 #include "jia.h"
 #include "mem.h"
-#include "tools.h"
 #include "setting.h"
 #include "stat.h"
+#include "syn.h"
+#include "tools.h"
 
 /* mem */
 extern jiapage_t page[Maxmempages];
@@ -47,7 +47,7 @@ extern void flushpage(int cachei);
 extern int H_MIG, W_VEC;
 
 /* syn */
-extern jiastack_t lockstack[Maxstacksize]; 
+extern jiastack_t lockstack[Maxstacksize];
 extern int stackptr;
 
 #ifdef DOSTAT
@@ -68,7 +68,7 @@ void migcheckcache() {
     while (wnptr != WNULL) {
         for (wtnti = 0; (wtnti < wnptr->wtntc); wtnti++) {
             addr = (unsigned long)wnptr->wtnts[wtnti];
-            cachei = page[(addr - system_setting.global_start_addr) / Pagesize].cachei;
+            cachei = cachepage(addr);
             if ((cache[cachei].state == RO) || (cache[cachei].state == RW)) {
                 addr++;
                 wnptr->wtnts[wtnti] = (address_t)addr;
@@ -84,12 +84,11 @@ void migarrangehome() {
     end = 0;
     for (i = 0; ((i < Homepages) && (end == 0)); i++) {
         if (home[i].addr == (address_t)0) {
-            for (homei = i + 1;
-                 (homei < Homepages) && (home[homei].addr == (address_t)0);
-                 homei++)
+            for (homei = i + 1; (homei < Homepages) && (home[homei].addr == (address_t)0); homei++)
                 ;
             if (homei < Homepages) {
-                page[((unsigned long)home[homei].addr - system_setting.global_start_addr) / Pagesize]
+                page[((unsigned long)home[homei].addr - system_setting.global_start_addr) /
+                     Pagesize]
                     .homei = i;
                 home[i].addr = home[homei].addr;
                 home[i].wtnt = home[homei].wtnt;
@@ -118,7 +117,7 @@ void migarrangehome() {
  * @param frompid
  * @param topid
  */
-void migpage(unsigned long addr, int frompid, int topid) {
+void migpage(unsigned long addr, int homepid, int modifypid) {
     int pagei, homei, cachei;
 
     pagei = (addr - system_setting.global_start_addr) / Pagesize;
@@ -126,49 +125,54 @@ void migpage(unsigned long addr, int frompid, int topid) {
      VERBOSE_LOG(3, "Mig page 0x%x from host %d to %d\n",pagei,frompid,topid);
     */
 
-    if (topid == system_setting.jia_pid) { /*New Home*/
+    if (modifypid == system_setting.jia_pid && homepid != system_setting.jia_pid) { /*New Home*/
+
+        /* step 1: find old cache and new home */
         cachei = page[pagei].cachei;
-        for (homei = 0;
-             (homei < Homepages) && (home[homei].addr != (address_t)0); homei++)
+        jia_assert((cachei < Cachepages) && (unsigned long)cache[cachei].addr == addr,
+                   "cache is not right for this addr");
+        for (homei = 0; (homei < Homepages) && (home[homei].addr != (address_t)0); homei++)
             ;
+        jia_assert((homei < Homepages), "MIG ERROR -- Home exceed in home migration");
 
-        if (homei < Homepages) {
-            home[homei].addr = (address_t)addr;
-            home[homei].wtnt = (cache[cachei].wtnt == 0) ? 2 : 3;
-            home[homei].rdnt = 1;
-            if (W_VEC == ON)
-                setwtvect(homei, WVFULL);
-            page[pagei].homei = homei;
-        } else {
-            jia_assert(0, "Home exceed in home migration");
-        }
+        /* step 2: init new home */
+        home[homei].addr = (address_t)addr;
+        // new home' wtnt depends on old cache's wtnt
+        home[homei].wtnt = (cache[cachei].wtnt == 0) ? 2 : 3;
+        // remote host's old home change to newcache, so local host has its valid copy
+        // if remote host's cache is not enough, there will not be valid copy, but rdnt can also be 1
+        home[homei].rdnt = 1;
+        if (W_VEC == ON)
+            setwtvect(homei, WVFULL);
+        page[pagei].homei = homei;
 
-        if (cachei < Cachepages) { /*Old Cache*/
-            /*memprotect((caddr_t)addr,Pagesize,PROT_READ); */
-            page[pagei].cachei = Cachepages;
-            if (cache[cachei].state == RW)
-                freetwin(&(cache[cachei].twin));
-            cache[cachei].state = UNMAP;
-            cache[cachei].wtnt = 0;
-            cache[cachei].addr = 0;
-        } else {
-            jia_assert(0, "This should not have happened---MIG");
-        }
+        /* step 3: invalidate old cache */
+        /*memprotect((caddr_t)addr,Pagesize,PROT_READ); */
+        page[pagei].cachei = Cachepages;
+        if (cache[cachei].state == RW)
+            freetwin(&(cache[cachei].twin));
+        cache[cachei].state = UNMAP;
+        cache[cachei].wtnt = 0;
+        cache[cachei].addr = (address_t)0;
+
 #ifdef DOSTAT
         if (statflag == 1) {
             jiastat.migincnt++;
         }
 #endif
-    } else if (frompid == system_setting.jia_pid) { /*Old Home*/
-        homei = homepage((address_t)addr);
-        jia_assert((unsigned long)home[homei].addr == addr, "MIG ERROR");
 
-        for (cachei = 0;
-             ((cachei < Cachepages) && (cache[cachei].state != UNMAP) &&
-              (cache[cachei].state != INV));
+    } else if (modifypid != system_setting.jia_pid &&
+               homepid == system_setting.jia_pid) { /*Old Home*/
+
+        /* step 1: find old home and new cache */
+        homei = page[pagei].homei;
+        jia_assert((homei < Homepages) && (unsigned long)home[homei].addr == addr, "MIG ERROR -- home is not right for this addr");
+        for (cachei = 0; ((cachei < Cachepages) && (cache[cachei].state != UNMAP) &&
+                          (cache[cachei].state != INV));
              cachei++)
             ;
 
+        /* step 2: init new cache */
         if (cachei < Cachepages) { /*New Cache*/
             if (cache[cachei].state == INV)
                 flushpage(cachei);
@@ -177,21 +181,24 @@ void migpage(unsigned long addr, int frompid, int topid) {
             cache[cachei].addr = (address_t)addr;
             page[pagei].cachei = cachei;
         } else {
+            // if there is not enough cache, we drop this page
             memunmap((address_t)addr, Pagesize);
         }
-
+        
+        /* step 3: drop old home */
+        page[pagei].homei = Homepages;
         home[homei].wtnt = 0;
         home[homei].rdnt = 0;
         home[homei].addr = (address_t)0;
         if (W_VEC == ON)
             setwtvect(homei, WVFULL);
-        page[pagei].homei = Homepages;
 
 #ifdef DOSTAT
         if (statflag == 1) {
             jiastat.migoutcnt++;
         }
 #endif
+
     }
-    page[pagei].homepid = topid;
+    page[pagei].homepid = modifypid;
 }

@@ -64,7 +64,7 @@ char errstr[Linesize]; /* buffer for error info */
 jia_msg_t assertmsg;
 
 /* optimization techniques flag */
-int H_MIG = OFF;  // H_MIG: home migration flag(ON/OFF)
+int H_MIG = ON;  // H_MIG: home migration flag(ON/OFF)
 int AD_WD = OFF;  // AD_WD: adaptive write detection flag(ON/OFF)
 int B_CAST = OFF; // B_CAST: broadcast barrier messages method either one-by-one
                   // or tree structure broadcast
