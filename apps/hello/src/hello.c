@@ -9,7 +9,7 @@ int main(int argc, char **argv) {
     }
     int *arr = (int *)jia_alloc(200000*sizeof(int));
     if (jiapid == 0){
-        for(int i = 0; i < 200000; ++i) {
+        for(int i = 0; i < 1; ++i) {
             arr[i] = 0;
         }
     }
@@ -17,7 +17,7 @@ int main(int argc, char **argv) {
     jia_barrier();
 
     jia_lock(0);
-    for(int i = 0; i < 200000; i++) {
+    for(int i = 0; i < 1; i++) {
         arr[i]++;
     }
     jia_unlock(0);

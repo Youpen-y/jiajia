@@ -70,8 +70,7 @@ void migcheckcache() {
             addr = (unsigned long)wnptr->wtnts[wtnti];
             cachei = cachepage(addr);
             if ((cache[cachei].state == RO) || (cache[cachei].state == RW)) {
-                addr++;
-                wnptr->wtnts[wtnti] = (address_t)addr;
+                wnptr->mig[wtnti] = 1;
             }
         }
         wnptr = wnptr->more;

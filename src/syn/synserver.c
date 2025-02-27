@@ -32,11 +32,11 @@
 #include "init.h"
 #include "jia.h"
 #include "mem.h"
-#include "syn.h"
-#include "tools.h"
+#include "msg.h"
 #include "setting.h"
 #include "stat.h"
-#include "msg.h"
+#include "syn.h"
+#include "tools.h"
 #include <stdatomic.h>
 
 /* mem */
@@ -75,8 +75,7 @@ void setcvserver(jia_msg_t *req) {
     int condv;
     int i;
 
-    jia_assert((req->op == SETCV) && (req->topid == system_setting.jia_pid),
-           "Incorrect SETCV Message!");
+    jia_assert((req->op == SETCV) && (req->topid == system_setting.jia_pid), "Incorrect SETCV Message!");
 
     condv = (int)stol(req->data);
     jia_assert((condv % system_setting.hostc == system_setting.jia_pid), "Incorrect home of condv!");
@@ -98,8 +97,7 @@ void setcvserver(jia_msg_t *req) {
 void resetcvserver(jia_msg_t *req) {
     int condv;
 
-    jia_assert((req->op == RESETCV) && (req->topid == system_setting.jia_pid),
-           "Incorrect RESETCV Message!");
+    jia_assert((req->op == RESETCV) && (req->topid == system_setting.jia_pid), "Incorrect RESETCV Message!");
     condv = (int)stol(req->data); // get the condition variable
     condvars[condv].value = 0;
 }
@@ -113,8 +111,7 @@ void waitcvserver(jia_msg_t *req) {
     int condv;
     int i;
 
-    jia_assert((req->op == WAITCV) && (req->topid == system_setting.jia_pid),
-           "Incorrect WAITCV Message!");
+    jia_assert((req->op == WAITCV) && (req->topid == system_setting.jia_pid), "Incorrect WAITCV Message!");
 
     condv = (int)stol(req->data);
 
@@ -137,15 +134,13 @@ void waitcvserver(jia_msg_t *req) {
 void cvgrantserver(jia_msg_t *req) {
     int condv;
 
-    jia_assert((req->op == CVGRANT) && (req->topid == system_setting.jia_pid),
-           "Incorrect CVGRANT Message!");
+    jia_assert((req->op == CVGRANT) && (req->topid == system_setting.jia_pid), "Incorrect CVGRANT Message!");
     condv = (int)stol(req->data);
 
     // ...
-    //cvwait = 0;
+    // cvwait = 0;
     atomic_store(&cvwait, 0);
 }
-
 
 /************Wait Part****************/
 
@@ -156,10 +151,9 @@ void cvgrantserver(jia_msg_t *req) {
  */
 void waitserver(jia_msg_t *req) {
     jia_msg_t *grant;
-    slot_t* slot;
+    slot_t *slot;
 
-    jia_assert((req->op == WAIT) && (req->topid == system_setting.jia_pid),
-           "Incorrect WAIT Message!");
+    jia_assert((req->op == WAIT) && (req->topid == system_setting.jia_pid), "Incorrect WAIT Message!");
 
     waitcounter++;
 
@@ -181,8 +175,7 @@ void waitserver(jia_msg_t *req) {
  * @param req WAITGRANT msg request
  */
 void waitgrantserver(jia_msg_t *req) {
-    jia_assert((req->op == WAITGRANT) && (req->topid == system_setting.jia_pid),
-           "Incorrect WAITGRANT Message!");
+    jia_assert((req->op == WAITGRANT) && (req->topid == system_setting.jia_pid), "Incorrect WAITGRANT Message!");
 
     atomic_store(&waitwait, 0);
 }
@@ -190,7 +183,7 @@ void waitgrantserver(jia_msg_t *req) {
 /************Lock Part****************/
 
 /**
- * @brief invalidate -- 
+ * @brief invalidate --
  *
  * @param req
  */
@@ -200,30 +193,58 @@ void invalidate(jia_msg_t *req) {
     int datai;
     address_t addr;
     int migtag;
-    int from;
+    int modifypid, homepid;
     int homei, pagei;
 
     lock = (int)stol(req->data); // get the lock
     datai = Intbytes;
 
     while (datai < req->size) {
-        // get the addr
-        addr = (address_t)stol(req->data + datai); 
-        if (H_MIG == ON) {
-            migtag = ((unsigned long)addr) % Pagesize;
-            addr = (address_t)(((unsigned long)addr / Pagesize) * Pagesize);
-        }
+        /* step 1: get the addr */
+        addr = (address_t)stol(req->data + datai);
+        homepid = homehost(addr);
+        // if (H_MIG == ON) {
+        //     migtag = ((unsigned long)addr) % Pagesize;
+        //     addr = (address_t)(((unsigned long)addr / Pagesize) * Pagesize);
+        // }
         datai += sizeof(unsigned char *);
 
-        if (lock == hidelock) { /*Barrier*/
-            from = (int)stol(req->data + datai);
-            datai += Intbytes;
-        } else { /*Lock*/
-            from = Maxhosts;
-        }
+        /* step 2: get frompid */
+        modifypid = (int)stol(req->data + datai);
+        datai += Intbytes;
 
-        // invalidate all pages that are not on this host(cache)
-        if ((from != system_setting.jia_pid) && (homehost(addr) != system_setting.jia_pid)) {
+        /* step 3: get migtag */
+        migtag = (int)stol(req->data + datai);
+        datai += Intbytes;
+
+        /******** there are 6 situations when is barrier ********/
+
+        //                                                 homepid == jia_pid                      homepid != jiapid
+        //                                                 [this page is on the local host         [this page is not on the local host
+        //                                                  => it can't be invalidated              => it can be invalidated,
+        //                                                  it can be migpaged to other host]       but we should consider whether it was migpaged
+        //                                                  firstly]
+
+        // modifypid == Maxhosts                           not migpage, not invalidate             not migpage, invalidate
+        // [there are at least 2 hosts modify this page    => do nothing to this page              => invalidate this page
+        //  => it can't be migpaged
+        // (we can't ensure which is the newest)]
+
+        // modifypid == jia_pid                            migpage to self, not invalidate         migpage to self => not invalidate
+        // [localhost has modified this page               => do nothing to this page              => only migpage to self(cache to home)
+        //  => it can be migpaged to self]
+
+        // modifypid == other jia_pid                      migpage to other host, not invalidate   invalidate
+        // [remotehost has modified this page]             => migpage to remote(home to cache)     => invalidate(not local host business)
+
+        /*******************************************************/
+
+        // when is lock, we don't have to consider anything, because
+        // (wnptr->scope[wtnti] > acqscope) guaranteed (modifypid != jia_pid)
+        // (homepid != jiapid) guaranteed (homehost(wnptr->wtnts[wtnti]) != msg->topid)
+        // we can say: (lock != hidelock) == (modifypid != system_setting.jia_pid) && (homepid != system_setting.jia_pid)
+
+        if ((modifypid != system_setting.jia_pid) && (homepid != system_setting.jia_pid)) {
             cachei = (int)cachepage(addr);
             if (cachei < Cachepages) {
                 if (cache[cachei].state != INV) {
@@ -231,8 +252,7 @@ void invalidate(jia_msg_t *req) {
                         freetwin(&(cache[cachei].twin));
                     cache[cachei].wtnt = 0;
                     cache[cachei].state = INV;
-                    memprotect((caddr_t)cache[cachei].addr, Pagesize,
-                               PROT_NONE);
+                    memprotect((caddr_t)cache[cachei].addr, Pagesize, PROT_NONE);
 #ifdef DOSTAT
                     STATOP(jiastat.invcnt++;)
 #endif
@@ -240,13 +260,11 @@ void invalidate(jia_msg_t *req) {
             }
         }
 
-        if ((H_MIG == ON) && (lock == hidelock) && (from != Maxhosts) &&
-            (migtag != 0)) {
-            migpage((unsigned long)addr, homehost(addr), from);
+        if ((H_MIG == ON) && (lock == hidelock) && (modifypid != Maxhosts) && (migtag != 0)) {
+            migpage((unsigned long)addr, homehost(addr), modifypid);
         }
 
-        if ((AD_WD == ON) && (lock == hidelock) &&
-            (homehost(addr) == system_setting.jia_pid) && (from != system_setting.jia_pid)) {
+        if ((AD_WD == ON) && (lock == hidelock) && (homepid == system_setting.jia_pid) && (modifypid != system_setting.jia_pid)) {
             homei = homepage(addr);
             home[homei].wtnt |= 4;
         }
@@ -260,8 +278,7 @@ void invalidate(jia_msg_t *req) {
  * @param req INVID msg
  */
 void invserver(jia_msg_t *req) {
-    jia_assert((req->op == INVLD) && (req->topid == system_setting.jia_pid),
-           "Incorrect INVLD Message!");
+    jia_assert((req->op == INVLD) && (req->topid == system_setting.jia_pid), "Incorrect INVLD Message!");
 
     invalidate(req);
 }
@@ -277,8 +294,7 @@ void acqserver(jia_msg_t *req) {
     int lock;
     int wtnti;
 
-    jia_assert((req->op == ACQ) && (req->topid == system_setting.jia_pid),
-           "Incorrect ACQ message!");
+    jia_assert((req->op == ACQ) && (req->topid == system_setting.jia_pid), "Incorrect ACQ message!");
 
     lock = (int)stol(req->data); // get the lock
     jia_assert((lock % system_setting.hostc == system_setting.jia_pid), "Incorrect home of lock!");
@@ -286,7 +302,6 @@ void acqserver(jia_msg_t *req) {
     locks[lock].acqs[atomic_load(&locks[lock].acqc)] = req->frompid;
     locks[lock].acqscope[atomic_load(&locks[lock].acqc)] = req->scope;
     atomic_fetch_add(&locks[lock].acqc, 1);
-    // locks[lock].acqc++;
 
     if (atomic_load(&locks[lock].acqc) == 1)
         grantlock(lock, locks[lock].acqs[0], locks[lock].acqscope[0]);
@@ -303,13 +318,11 @@ void relserver(jia_msg_t *req) {
     int lock;
     int acqi;
 
-    jia_assert((req->op == REL) && (req->topid == system_setting.jia_pid),
-           "Incorrect REL Message!");
+    jia_assert((req->op == REL) && (req->topid == system_setting.jia_pid), "Incorrect REL Message!");
 
     lock = (int)stol(req->data); // get the lock
     jia_assert((lock % system_setting.hostc == system_setting.jia_pid), "Incorrect home of lock!");
-    jia_assert((req->frompid == locks[lock].acqs[0]),
-           "This should not have happened!");
+    jia_assert((req->frompid == locks[lock].acqs[0]), "This should not have happened!");
 
     if (req->scope > locks[hidelock].myscope)
         noclearlocks = 1;
@@ -321,9 +334,9 @@ void relserver(jia_msg_t *req) {
         locks[lock].acqs[acqi] = locks[lock].acqs[acqi + 1];
         locks[lock].acqscope[acqi] = locks[lock].acqscope[acqi + 1];
     }
-    
+
     atomic_fetch_sub(&locks[lock].acqc, 1);
-    //locks[lock].acqc--;
+    // locks[lock].acqc--;
 
     if (atomic_load(&locks[lock].acqc) > 0)
         grantlock(lock, locks[lock].acqs[0], locks[lock].acqscope[0]);
@@ -337,8 +350,7 @@ void relserver(jia_msg_t *req) {
 void acqgrantserver(jia_msg_t *req) {
     int lock;
 
-    jia_assert((req->op == ACQGRANT) && (req->topid == system_setting.jia_pid),
-           "Incorrect ACQGRANT Message!");
+    jia_assert((req->op == ACQGRANT) && (req->topid == system_setting.jia_pid), "Incorrect ACQGRANT Message!");
     invalidate(req);
 
     lock = (int)stol(req->data);
@@ -346,7 +358,6 @@ void acqgrantserver(jia_msg_t *req) {
 
     atomic_store(&acqwait, 0);
 }
-
 
 /************Barrier Part****************/
 
@@ -360,8 +371,7 @@ void barrserver(jia_msg_t *req) {
     log_info(3, "host %d is running in barrserver", jiapid);
     int lock;
 
-    jia_assert((req->op == BARR) && (req->topid == system_setting.jia_pid),
-           "Incorrect BARR Message!");
+    jia_assert((req->op == BARR) && (req->topid == system_setting.jia_pid), "Incorrect BARR Message!");
 
     lock = (int)stol(req->data);
 
@@ -371,7 +381,7 @@ void barrserver(jia_msg_t *req) {
     recordwtnts(req); // record write notices in msg barr's data
 
     atomic_fetch_add(&locks[lock].acqc, 1);
-    //locks[lock].acqc++;
+    // locks[lock].acqc++;
 
 #ifdef DEBUG
     VERBOSE_LOG(3, "barrier count=%d, from host %d\n", atomic_load(&locks[lock].acqc), req->frompid);
@@ -381,7 +391,7 @@ void barrserver(jia_msg_t *req) {
         locks[lock].scope++;
         grantbarr(lock);
         atomic_store(&locks[lock].acqc, 0);
-        //locks[lock].acqc = 0;
+        // locks[lock].acqc = 0;
         freewtntspace(locks[lock].wtntp);
     }
     log_info(3, "host %d is out of barrserver", jiapid);
@@ -396,8 +406,7 @@ void barrgrantserver(jia_msg_t *req) {
     int lock;
 
     log_info(3, "Enter barrgrantserver");
-    jia_assert((req->op == BARRGRANT) && (req->topid == system_setting.jia_pid),
-           "Incorrect BARRGRANT Message!");
+    jia_assert((req->op == BARRGRANT) && (req->topid == system_setting.jia_pid), "Incorrect BARRGRANT Message!");
 
     if (noclearlocks == 0)
         clearlocks();
@@ -409,12 +418,11 @@ void barrgrantserver(jia_msg_t *req) {
 
     lock = (int)stol(req->data);
     locks[lock].myscope = req->scope;
-    //barrwait = 0;
+    // barrwait = 0;
     atomic_store(&barrwait, 0);
     noclearlocks = 0;
     log_info(3, "Out of barrgrantserver");
 }
-
 
 /************Wtnt Part****************/
 
@@ -428,8 +436,7 @@ void barrgrantserver(jia_msg_t *req) {
 void wtntserver(jia_msg_t *req) {
     int lock;
 
-    jia_assert((req->op == WTNT) && (req->topid == system_setting.jia_pid),
-           "Incorrect WTNT Message!");
+    jia_assert((req->op == WTNT) && (req->topid == system_setting.jia_pid), "Incorrect WTNT Message!");
 
     lock = (int)stol(req->data);
     jia_assert((lock % system_setting.hostc == system_setting.jia_pid), "Incorrect home of lock!");

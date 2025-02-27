@@ -466,8 +466,8 @@ int encodediff(int cachei, unsigned char *diff) {
  */
 void savepage(int cachei) {
     savediff(cachei);
-    // local host's wtnt.from and wtnt.scope is meaningless
-    savewtnt(top.wtntp, cache[cachei].addr, system_setting.jia_pid, Maxhosts);
+    // local host's wtnt.from and wtnt.scope is meaningless, mig must be zero as init
+    savewtnt(top.wtntp, cache[cachei].addr, 0, system_setting.jia_pid, Maxhosts);
 }
 
 /**

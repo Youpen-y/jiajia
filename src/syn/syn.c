@@ -143,16 +143,15 @@ void endinterval(int synop) {
     senddiffs();
 
     /** step 3: save all home page wtnts */
-    hpages = system_setting.hosts[system_setting.jia_pid].homesize /
-             Pagesize; // page number of jia_pid host
+    hpages = system_setting.hosts[system_setting.jia_pid].homesize / Pagesize; // page number of jia_pid host
     for (pagei = 0; pagei < hpages; pagei++) {
         // home[pagei].wtnt & 1: home host has written this homepage
         if ((home[pagei].wtnt & 1) != 0) {
             // home[pagei].rdnt != 0: remote host has valid copy of this homepage(cachepage)
             if (home[pagei].rdnt != 0) {
                 // remote host && home host has different copy, so we will savewtnts to record it
-                // local host's wtnt.from and wtnt.scope is meaningless
-                savewtnt(top.wtntp, home[pagei].addr, system_setting.jia_pid, Maxhosts);
+                // local host's wtnt.from and wtnt.scope is meaningless, mig must be zero as init
+                savewtnt(top.wtntp, home[pagei].addr, 0, system_setting.jia_pid, Maxhosts);
                 if (synop == BARR)
                     home[pagei].rdnt = 0;
             }
@@ -326,8 +325,8 @@ void popstack() {
         wnptr = lockstack[stackptr + 1].wtntp;
         while (wnptr != WNULL) {
             for (wtnti = 0; wtnti < wnptr->wtntc; wtnti++)
-                // local host's wtnt.from and wtnt.scope is meaningless
-                savewtnt(top.wtntp, wnptr->wtnts[wtnti], wnptr->from[wtnti], wnptr->scope[wtnti]);
+                // local host's wtnt.from and wtnt.scope is meaningless, mig is inherited
+                savewtnt(top.wtntp, wnptr->wtnts[wtnti], wnptr->mig[wtnti], wnptr->from[wtnti], wnptr->scope[wtnti]);
             wnptr = wnptr->more;
         }
     }
@@ -391,14 +390,16 @@ wtnt_t *appendlockwtnts(jia_msg_t *msg, wtnt_t *ptr, int acqscope) {
 
     /* wnptr is not NULL and a msg is not full */
     while ((wnptr != WNULL) && (full == 0)) {
-        if ((msg->size + (wnptr->wtntc * (sizeof(unsigned char *)))) < Maxmsgsize) {
+        if ((msg->size + (2*Intbytes + wnptr->wtntc * (sizeof(unsigned char *)))) < Maxmsgsize) {
             for (wtnti = 0; wtnti < wnptr->wtntc; wtnti++)
                 if ((wnptr->scope[wtnti] > acqscope) &&
                     // if homehost(wnptr->wtnts[wtnti]) == msg->topid), not
                     // send(remote host is the owner of this copy)
-                    (homehost(wnptr->wtnts[wtnti]) != msg->topid))
+                    (homehost(wnptr->wtnts[wtnti]) != msg->topid)) {
                     appendmsg(msg, ltos(wnptr->wtnts[wtnti]), sizeof(unsigned char *));
-                    //appendmsg(msg, ltos(wnptr->from[wtnti]), Intbytes);
+                    appendmsg(msg, ltos(wnptr->from[wtnti]), Intbytes);
+                    appendmsg(msg, ltos(wnptr->mig[wtnti]), Intbytes);
+                }
             wnptr = wnptr->more;
         } else {
             full = 1;
@@ -481,10 +482,11 @@ wtnt_t *appendbarrwtnts(jia_msg_t *msg, wtnt_t *ptr) {
     full = 0;
     wnptr = ptr;
     while ((wnptr != WNULL) && (full == 0)) {
-        if ((msg->size + (wnptr->wtntc * (Intbytes + sizeof(unsigned char *)))) < Maxmsgsize) {
+        if ((msg->size + (wnptr->wtntc * (2*Intbytes + sizeof(unsigned char *)))) < Maxmsgsize) {
             for (wtnti = 0; wtnti < wnptr->wtntc; wtnti++) {
                 appendmsg(msg, ltos(wnptr->wtnts[wtnti]), sizeof(unsigned char *));
                 appendmsg(msg, ltos(wnptr->from[wtnti]), Intbytes);
+                appendmsg(msg, ltos(wnptr->mig[wtnti]), Intbytes);
             }
             wnptr = wnptr->more;
         } else {
@@ -527,7 +529,7 @@ void grantcondv(int condv, int toproc) {
  * @param addr the original address of cached page
  * @param frompid
  */
-void savewtnt(wtnt_t *ptr, address_t addr, int frompid, int scope) {
+void savewtnt(wtnt_t *ptr, address_t addr, int mig, int frompid, int scope) {
     int wtnti;
     int exist;
     wtnt_t *wnptr;
@@ -541,8 +543,7 @@ void savewtnt(wtnt_t *ptr, address_t addr, int frompid, int scope) {
      */
     while ((exist == 0) && (wnptr != WNULL)) {
         wtnti = 0;
-        while ((wtnti < wnptr->wtntc) && (((unsigned long)addr / Pagesize) !=
-                                          ((unsigned long)wnptr->wtnts[wtnti] / Pagesize))) {
+        while ((wtnti < wnptr->wtntc) && (((unsigned long)addr / Pagesize) != ((unsigned long)wnptr->wtnts[wtnti] / Pagesize))) {
             wtnti++;
         }
 
@@ -568,15 +569,12 @@ void savewtnt(wtnt_t *ptr, address_t addr, int frompid, int scope) {
         wnptr->wtnts[wnptr->wtntc] = addr;
         wnptr->from[wnptr->wtntc] = frompid;
         wnptr->scope[wnptr->wtntc] = scope;
+        wnptr->mig[wnptr->wtntc] = mig;
         wnptr->wtntc++;
     } else {
-        // if (ptr == locks[hidelock].wtntp) { /*barrier*/
-        //     wnptr->from[wtnti] = Maxhosts;
-        // } else {
-        //     wnptr->from[wtnti] = frompid; /*lock or stack*/
-        // }
         wnptr->from[wtnti] = Maxhosts;
         wnptr->scope[wtnti] = scope;
+        wnptr->mig[wtnti] = mig;
     }
 }
 
@@ -591,8 +589,7 @@ void recordwtnts(jia_msg_t *req) {
 
     lock = (int)stol(req->data); // get the lock
     for (datai = Intbytes; datai < req->size; datai += sizeof(unsigned char *))
-        savewtnt(locks[lock].wtntp, (address_t)stol(req->data + datai), req->frompid,
-                 locks[lock].scope);
+        savewtnt(locks[lock].wtntp, (address_t)stol(req->data + datai), (int)stol(req->data + datai), req->frompid, locks[lock].scope);
 }
 
 /**
@@ -646,16 +643,36 @@ void sendwtnts(int operation) {
  * @param ptr write notice pointer
  * @return wtnt_t*
  */
+// wtnt_t *appendstackwtnts(jia_msg_t *msg, wtnt_t *ptr) {
+//     int full; // flag indicate that msg full or not
+//     wtnt_t *wnptr;
+
+//     full = 0;
+//     wnptr = ptr;
+//     while ((wnptr != WNULL) && (full == 0)) {
+//         if ((msg->size + (wnptr->wtntc * (sizeof(unsigned char *)))) < Maxmsgsize) {
+//             appendmsg(msg, (unsigned char *)wnptr->wtnts, (wnptr->wtntc) * (sizeof(unsigned char *)));
+//             wnptr = wnptr->more;
+//         } else {
+//             full = 1;
+//         }
+//     }
+//     return (wnptr);
+// }
+
 wtnt_t *appendstackwtnts(jia_msg_t *msg, wtnt_t *ptr) {
-    int full; // flag indicate that msg full or not
+    int wtnti;
+    int full;
     wtnt_t *wnptr;
 
     full = 0;
     wnptr = ptr;
     while ((wnptr != WNULL) && (full == 0)) {
-        if ((msg->size + (wnptr->wtntc * (sizeof(unsigned char *)))) < Maxmsgsize) {
-            appendmsg(msg, (unsigned char *)wnptr->wtnts,
-                      (wnptr->wtntc) * (sizeof(unsigned char *)));
+        if ((msg->size + (wnptr->wtntc * (Intbytes + sizeof(unsigned char *)))) < Maxmsgsize) {
+            for (wtnti = 0; wtnti < wnptr->wtntc; wtnti++) {
+                appendmsg(msg, ltos(wnptr->wtnts[wtnti]), sizeof(unsigned char *));
+                appendmsg(msg, ltos(wnptr->mig[wtnti]), Intbytes);
+            }
             wnptr = wnptr->more;
         } else {
             full = 1;
