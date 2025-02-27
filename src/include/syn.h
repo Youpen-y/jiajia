@@ -50,7 +50,8 @@
 
 typedef struct wtnttype {
         unsigned char*  wtnts[Maxwtnts];   /*address*/
-        int             from[Maxwtnts];   // from pid or from scope
+        int             from[Maxwtnts];   // from pid
+        int             scope[Maxwtnts];   // from pid
         int             wtntc;            // write notice count
         struct wtnttype *more;
                } wtnt_t;
@@ -91,7 +92,7 @@ void waitcvserver(jia_msg_t *);
 void cvgrantserver(jia_msg_t *);
 
 /* synwtnts */
-void savewtnt(wtnt_t *ptr, address_t addr, int frompid);
+void savewtnt(wtnt_t *ptr, address_t addr, int frompid, int scope);
 
 /* synlockbarr */
 void acquire(int lock);

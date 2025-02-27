@@ -34,9 +34,9 @@
 #include "jia.h"
 #include "mem.h"
 #include "msg.h"
-#include "tools.h"
 #include "setting.h"
 #include "stat.h"
+#include "tools.h"
 #include <stdatomic.h>
 
 /* mem */
@@ -56,7 +56,7 @@ extern jiastat_t jiastat;
 /* syn */
 // lock array, according to the hosts allocate lock(eg.
 // host0: 0, 2,... 62; host1 = 1, 3, ..., 63)
-jialock_t locks[Maxlocks + 1];  // the last one is a barrier(hidelock)
+jialock_t locks[Maxlocks + 1];      // the last one is a barrier(hidelock)
 jiastack_t lockstack[Maxstacksize]; // lock stack
 jiacv_t condvars[Maxcvs];
 int stackptr;
@@ -102,7 +102,7 @@ void initsyn() {
     }
 
     stackptr = 0;
-    top.lockid = hidelock;  // lockstack[0].lockid = 64
+    top.lockid = hidelock; // lockstack[0].lockid = 64
     noclearlocks = 0;
 
     /** step 3: init condition variables */
@@ -134,7 +134,7 @@ void endinterval(int synop) {
 
     /** step 1: save the diffs between cached page's and their twin */
     for (cachei = 0; cachei < Cachepages; cachei++) {
-        if (cache[cachei].wtnt == 1) { // 
+        if (cache[cachei].wtnt == 1) { //
             savepage(cachei);
         }
     }
@@ -143,31 +143,30 @@ void endinterval(int synop) {
     senddiffs();
 
     /** step 3: save all home page wtnts */
-    hpages = system_setting.hosts[system_setting.jia_pid].homesize / Pagesize; // page number of jia_pid host
+    hpages = system_setting.hosts[system_setting.jia_pid].homesize /
+             Pagesize; // page number of jia_pid host
     for (pagei = 0; pagei < hpages; pagei++) {
         // home[pagei].wtnt & 1: home host has written this homepage
-        if ((home[pagei].wtnt & 1) != 0) { 
+        if ((home[pagei].wtnt & 1) != 0) {
             // home[pagei].rdnt != 0: remote host has valid copy of this homepage(cachepage)
             if (home[pagei].rdnt != 0) {
                 // remote host && home host has different copy, so we will savewtnts to record it
-                savewtnt(top.wtntp, home[pagei].addr, Maxhosts);
+                // local host's wtnt.from and wtnt.scope is meaningless
+                savewtnt(top.wtntp, home[pagei].addr, system_setting.jia_pid, Maxhosts);
                 if (synop == BARR)
                     home[pagei].rdnt = 0;
             }
 
-            if ((W_VEC == ON) &&
-                (home[pagei].wvfull == 0)) { // write vector handle
+            if ((W_VEC == ON) && (home[pagei].wvfull == 0)) { // write vector handle
                 int i;
                 wtvect_t wv = WVNULL;
                 for (i = 0; i < Pagesize; i += Blocksize) {
-                    if (memcmp(home[pagei].addr + i, home[pagei].twin + i,
-                               Blocksize) != 0) {
+                    if (memcmp(home[pagei].addr + i, home[pagei].twin + i, Blocksize) != 0) {
                         wv |= ((wtvect_t)1) << (i / Blocksize);
                     }
                 }
                 addwtvect(pagei, wv, system_setting.jia_pid);
             }
-
         }
     }
     while (atomic_load(&diffwait))
@@ -218,8 +217,7 @@ void startinterval(int synop) {
                 swcnt = (home[pagei].wtnt >> 4) & 0xf;
                 swcnt++;
                 if (swcnt >= SWvalve) {
-                    memprotect((caddr_t)home[pagei].addr, Pagesize,
-                               PROT_READ | PROT_WRITE);
+                    memprotect((caddr_t)home[pagei].addr, Pagesize, PROT_READ | PROT_WRITE);
                     home[pagei].wtnt |= 3;
                     if ((W_VEC == ON) && (home[pagei].wvfull == 0)) {
                         newtwin(&(home[pagei].twin));
@@ -257,7 +255,6 @@ void startinterval(int synop) {
     }         /*else*/
 }
 
-
 /************lock Part****************/
 
 /**
@@ -281,7 +278,7 @@ void clearlocks() {
  */
 void acquire(int lock) {
     jia_msg_t *req;
-    slot_t* slot;
+    slot_t *slot;
 
     slot = freemsg_lock(&msg_buffer);
     req = &slot->msg;
@@ -329,7 +326,8 @@ void popstack() {
         wnptr = lockstack[stackptr + 1].wtntp;
         while (wnptr != WNULL) {
             for (wtnti = 0; wtnti < wnptr->wtntc; wtnti++)
-                savewtnt(top.wtntp, wnptr->wtnts[wtnti], wnptr->from[wtnti]);
+                // local host's wtnt.from and wtnt.scope is meaningless
+                savewtnt(top.wtntp, wnptr->wtnts[wtnti], wnptr->from[wtnti], wnptr->scope[wtnti]);
             wnptr = wnptr->more;
         }
     }
@@ -349,7 +347,7 @@ void popstack() {
 void grantlock(int lock, int toproc, int acqscope) {
     jia_msg_t *grant;
     wtnt_t *wnptr;
-    slot_t* slot;
+    slot_t *slot;
 
     slot = freemsg_lock(&msg_buffer);
     grant = &slot->msg;
@@ -393,15 +391,14 @@ wtnt_t *appendlockwtnts(jia_msg_t *msg, wtnt_t *ptr, int acqscope) {
 
     /* wnptr is not NULL and a msg is not full */
     while ((wnptr != WNULL) && (full == 0)) {
-        if ((msg->size + (wnptr->wtntc * (sizeof(unsigned char *)))) <
-            Maxmsgsize) {
-            for (wtnti = 0; wtnti < wnptr->wtntc; wtnti++) 
-                if ((wnptr->from[wtnti] > acqscope) &&
+        if ((msg->size + (wnptr->wtntc * (sizeof(unsigned char *)))) < Maxmsgsize) {
+            for (wtnti = 0; wtnti < wnptr->wtntc; wtnti++)
+                if ((wnptr->scope[wtnti] > acqscope) &&
                     // if homehost(wnptr->wtnts[wtnti]) == msg->topid), not
                     // send(remote host is the owner of this copy)
                     (homehost(wnptr->wtnts[wtnti]) != msg->topid))
-                    appendmsg(msg, ltos(wnptr->wtnts[wtnti]),
-                              sizeof(unsigned char *));
+                    appendmsg(msg, ltos(wnptr->wtnts[wtnti]), sizeof(unsigned char *));
+                    //appendmsg(msg, ltos(wnptr->from[wtnti]), Intbytes);
             wnptr = wnptr->more;
         } else {
             full = 1;
@@ -423,7 +420,7 @@ void grantbarr(int lock) {
     jia_msg_t *grant;
     wtnt_t *wnptr;
     int hosti;
-    slot_t* slot;
+    slot_t *slot;
 
     slot = freemsg_lock(&msg_buffer);
     grant = &slot->msg;
@@ -456,7 +453,7 @@ void grantbarr(int lock) {
  * @param msg msg that will be broadcast
  * @param index index of msg in msg_buffer
  */
-void broadcast(slot_t* slot) {
+void broadcast(slot_t *slot) {
     int hosti;
 
     if (B_CAST == OFF) {
@@ -484,11 +481,9 @@ wtnt_t *appendbarrwtnts(jia_msg_t *msg, wtnt_t *ptr) {
     full = 0;
     wnptr = ptr;
     while ((wnptr != WNULL) && (full == 0)) {
-        if ((msg->size + (wnptr->wtntc *
-                          (Intbytes + sizeof(unsigned char *)))) < Maxmsgsize) {
+        if ((msg->size + (wnptr->wtntc * (Intbytes + sizeof(unsigned char *)))) < Maxmsgsize) {
             for (wtnti = 0; wtnti < wnptr->wtntc; wtnti++) {
-                appendmsg(msg, ltos(wnptr->wtnts[wtnti]),
-                          sizeof(unsigned char *));
+                appendmsg(msg, ltos(wnptr->wtnts[wtnti]), sizeof(unsigned char *));
                 appendmsg(msg, ltos(wnptr->from[wtnti]), Intbytes);
             }
             wnptr = wnptr->more;
@@ -508,7 +503,7 @@ wtnt_t *appendbarrwtnts(jia_msg_t *msg, wtnt_t *ptr) {
  * @param toproc destination host
  */
 void grantcondv(int condv, int toproc) {
-    slot_t* slot;
+    slot_t *slot;
     jia_msg_t *grant;
 
     slot = freemsg_lock(&msg_buffer);
@@ -532,7 +527,7 @@ void grantcondv(int condv, int toproc) {
  * @param addr the original address of cached page
  * @param frompid
  */
-void savewtnt(wtnt_t *ptr, address_t addr, int frompid) {
+void savewtnt(wtnt_t *ptr, address_t addr, int frompid, int scope) {
     int wtnti;
     int exist;
     wtnt_t *wnptr;
@@ -546,9 +541,8 @@ void savewtnt(wtnt_t *ptr, address_t addr, int frompid) {
      */
     while ((exist == 0) && (wnptr != WNULL)) {
         wtnti = 0;
-        while ((wtnti < wnptr->wtntc) &&
-               (((unsigned long)addr / Pagesize) !=
-                ((unsigned long)wnptr->wtnts[wtnti] / Pagesize))) {
+        while ((wtnti < wnptr->wtntc) && (((unsigned long)addr / Pagesize) !=
+                                          ((unsigned long)wnptr->wtnts[wtnti] / Pagesize))) {
             wtnti++;
         }
 
@@ -573,13 +567,16 @@ void savewtnt(wtnt_t *ptr, address_t addr, int frompid) {
         }
         wnptr->wtnts[wnptr->wtntc] = addr;
         wnptr->from[wnptr->wtntc] = frompid;
+        wnptr->scope[wnptr->wtntc] = scope;
         wnptr->wtntc++;
     } else {
-        if (ptr == locks[hidelock].wtntp) { /*barrier*/
-            wnptr->from[wtnti] = Maxhosts;
-        } else {
-            wnptr->from[wtnti] = frompid; /*lock or stack*/
-        }
+        // if (ptr == locks[hidelock].wtntp) { /*barrier*/
+        //     wnptr->from[wtnti] = Maxhosts;
+        // } else {
+        //     wnptr->from[wtnti] = frompid; /*lock or stack*/
+        // }
+        wnptr->from[wtnti] = Maxhosts;
+        wnptr->scope[wtnti] = scope;
     }
 }
 
@@ -593,17 +590,9 @@ void recordwtnts(jia_msg_t *req) {
     int datai;
 
     lock = (int)stol(req->data); // get the lock
-    if (lock != hidelock) {      /*lock*/
-        for (datai = Intbytes; datai < req->size;
-             datai += sizeof(unsigned char *))
-            savewtnt(locks[lock].wtntp, (address_t)stol(req->data + datai),
-                     locks[lock].scope);
-    } else { /*barrier*/
-        for (datai = Intbytes; datai < req->size;
-             datai += sizeof(unsigned char *))
-            savewtnt(locks[lock].wtntp, (address_t)stol(req->data + datai),
-                     req->frompid);
-    }
+    for (datai = Intbytes; datai < req->size; datai += sizeof(unsigned char *))
+        savewtnt(locks[lock].wtntp, (address_t)stol(req->data + datai), req->frompid,
+                 locks[lock].scope);
 }
 
 /**
@@ -615,7 +604,7 @@ void recordwtnts(jia_msg_t *req) {
  */
 void sendwtnts(int operation) {
     int wtnti;
-    slot_t* slot;
+    slot_t *slot;
     jia_msg_t *req;
     wtnt_t *wnptr; // write notice pointer
 
@@ -626,10 +615,8 @@ void sendwtnts(int operation) {
     req->frompid = system_setting.jia_pid;
     req->topid = top.lockid % system_setting.hostc;
     req->size = 0;
-    req->scope = (operation == BARR) ? locks[hidelock].myscope
-                                    : locks[top.lockid].myscope;
-    appendmsg(req, ltos(top.lockid),
-              Intbytes);
+    req->scope = (operation == BARR) ? locks[hidelock].myscope : locks[top.lockid].myscope;
+    appendmsg(req, ltos(top.lockid), Intbytes);
 
     wnptr = top.wtntp;
     wnptr = appendstackwtnts(req, wnptr);
@@ -666,9 +653,8 @@ wtnt_t *appendstackwtnts(jia_msg_t *msg, wtnt_t *ptr) {
     full = 0;
     wnptr = ptr;
     while ((wnptr != WNULL) && (full == 0)) {
-        if ((msg->size + (wnptr->wtntc * (sizeof(unsigned char *)))) <
-            Maxmsgsize) {
-            appendmsg(msg, (unsigned char*)wnptr->wtnts,
+        if ((msg->size + (wnptr->wtntc * (sizeof(unsigned char *)))) < Maxmsgsize) {
+            appendmsg(msg, (unsigned char *)wnptr->wtnts,
                       (wnptr->wtntc) * (sizeof(unsigned char *)));
             wnptr = wnptr->more;
         } else {
