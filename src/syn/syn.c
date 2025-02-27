@@ -643,23 +643,6 @@ void sendwtnts(int operation) {
  * @param ptr write notice pointer
  * @return wtnt_t*
  */
-// wtnt_t *appendstackwtnts(jia_msg_t *msg, wtnt_t *ptr) {
-//     int full; // flag indicate that msg full or not
-//     wtnt_t *wnptr;
-
-//     full = 0;
-//     wnptr = ptr;
-//     while ((wnptr != WNULL) && (full == 0)) {
-//         if ((msg->size + (wnptr->wtntc * (sizeof(unsigned char *)))) < Maxmsgsize) {
-//             appendmsg(msg, (unsigned char *)wnptr->wtnts, (wnptr->wtntc) * (sizeof(unsigned char *)));
-//             wnptr = wnptr->more;
-//         } else {
-//             full = 1;
-//         }
-//     }
-//     return (wnptr);
-// }
-
 wtnt_t *appendstackwtnts(jia_msg_t *msg, wtnt_t *ptr) {
     int wtnti;
     int full;

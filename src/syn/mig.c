@@ -65,6 +65,7 @@ void migcheckcache() {
     unsigned long addr;
 
     wnptr = top.wtntp;
+    /* check: if localhost's addr's cache is valid, set it to 1(it will tell other hosts this addr can be migpaged) */
     while (wnptr != WNULL) {
         for (wtnti = 0; (wtnti < wnptr->wtntc); wtnti++) {
             addr = (unsigned long)wnptr->wtnts[wtnti];
@@ -86,9 +87,7 @@ void migarrangehome() {
             for (homei = i + 1; (homei < Homepages) && (home[homei].addr == (address_t)0); homei++)
                 ;
             if (homei < Homepages) {
-                page[((unsigned long)home[homei].addr - system_setting.global_start_addr) /
-                     Pagesize]
-                    .homei = i;
+                page[((unsigned long)home[homei].addr - system_setting.global_start_addr) / Pagesize].homei = i;
                 home[i].addr = home[homei].addr;
                 home[i].wtnt = home[homei].wtnt;
                 home[i].rdnt = home[homei].rdnt;
@@ -128,8 +127,7 @@ void migpage(unsigned long addr, int homepid, int modifypid) {
 
         /* step 1: find old cache and new home */
         cachei = page[pagei].cachei;
-        jia_assert((cachei < Cachepages) && (unsigned long)cache[cachei].addr == addr,
-                   "cache is not right for this addr");
+        jia_assert((cachei < Cachepages) && (unsigned long)cache[cachei].addr == addr, "cache is not right for this addr");
         for (homei = 0; (homei < Homepages) && (home[homei].addr != (address_t)0); homei++)
             ;
         jia_assert((homei < Homepages), "MIG ERROR -- Home exceed in home migration");
@@ -160,15 +158,12 @@ void migpage(unsigned long addr, int homepid, int modifypid) {
         }
 #endif
 
-    } else if (modifypid != system_setting.jia_pid &&
-               homepid == system_setting.jia_pid) { /*Old Home*/
+    } else if (modifypid != system_setting.jia_pid && homepid == system_setting.jia_pid) { /*Old Home*/
 
         /* step 1: find old home and new cache */
         homei = page[pagei].homei;
         jia_assert((homei < Homepages) && (unsigned long)home[homei].addr == addr, "MIG ERROR -- home is not right for this addr");
-        for (cachei = 0; ((cachei < Cachepages) && (cache[cachei].state != UNMAP) &&
-                          (cache[cachei].state != INV));
-             cachei++)
+        for (cachei = 0; ((cachei < Cachepages) && (cache[cachei].state != UNMAP) && (cache[cachei].state != INV)); cachei++)
             ;
 
         /* step 2: init new cache */
@@ -183,7 +178,7 @@ void migpage(unsigned long addr, int homepid, int modifypid) {
             // if there is not enough cache, we drop this page
             memunmap((address_t)addr, Pagesize);
         }
-        
+
         /* step 3: drop old home */
         page[pagei].homei = Homepages;
         home[homei].wtnt = 0;
@@ -197,7 +192,6 @@ void migpage(unsigned long addr, int homepid, int modifypid) {
             jiastat.migoutcnt++;
         }
 #endif
-
     }
     page[pagei].homepid = modifypid;
 }

@@ -203,10 +203,6 @@ void invalidate(jia_msg_t *req) {
         /* step 1: get the addr */
         addr = (address_t)stol(req->data + datai);
         homepid = homehost(addr);
-        // if (H_MIG == ON) {
-        //     migtag = ((unsigned long)addr) % Pagesize;
-        //     addr = (address_t)(((unsigned long)addr / Pagesize) * Pagesize);
-        // }
         datai += sizeof(unsigned char *);
 
         /* step 2: get frompid */
