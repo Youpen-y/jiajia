@@ -1,4 +1,5 @@
 #include "comm.h"
+#include "setting.h"
 #ifndef NULL_LIB
 #include "udp.h"
 #include "stat.h"
@@ -23,7 +24,7 @@ comm_manager_t comm_manager;
  * creat socket file descriptor(fd) used to send and recv request and bind it to
  * an address (ip/port combination)
  */
-static int fd_create(int i, enum FDCR_MODE flag) {
+static int fd_create(int port) {
     int fd, res, size;
     struct sockaddr_in addr;
 
@@ -42,17 +43,7 @@ static int fd_create(int i, enum FDCR_MODE flag) {
     bzero(&addr, sizeof(addr));
     addr.sin_family = AF_INET;
     addr.sin_addr.s_addr = htonl(INADDR_ANY);
-    switch (flag) {
-    case FDCR_ACK:
-        addr.sin_port = htons(comm_manager.ack_port); // specified ack port
-        break;
-    case FDCR_RECV:
-        addr.sin_port = htons(comm_manager.rcv_ports[i]); // specified recv port
-        break;
-    case FDCR_SEND:
-        addr.sin_port = htons(0); // random send port
-        break;
-    }
+    addr.sin_port = htons(port); 
 
     res = bind(fd, (struct sockaddr *)&addr, sizeof(addr));
     local_assert((res == 0), "req_fdcreate()-->bind()");
@@ -80,13 +71,13 @@ static int init_comm_manager() {
         // create socket and bind it to [INADDR_ANY, comm_manager.rcv_ports[i]
         // request from (host i) is will be receive from commreq.rcv_fds[i]
         // (whose port = comm_manager.rcv_ports[i])
-        comm_manager.rcv_fds[i] = fd_create(i, FDCR_RECV);
+        comm_manager.rcv_fds[i] = fd_create(comm_manager.rcv_ports[i]);
         set_nonblocking(comm_manager.rcv_fds[i]);
     }
     // snd_fds socket fd with random port
-    comm_manager.snd_fds = fd_create(0, FDCR_SEND);
+    comm_manager.snd_fds = fd_create(0);
     // ack_fds socket fd with ack port
-    comm_manager.ack_fds = fd_create(0, FDCR_ACK);
+    comm_manager.ack_fds = fd_create(comm_manager.ack_port);
     set_nonblocking(comm_manager.ack_fds);
 
     /** step 3:init seq */
