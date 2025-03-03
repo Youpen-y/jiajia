@@ -63,7 +63,7 @@ void *listen_thread(void *args) {
                 ack_addr.sin_addr.s_addr =
                     inet_addr(system_setting.hosts[to_id].ip);
 
-                ret = sendto(comm_manager.snd_fds, &ack, sizeof(ack), 0,
+                ret = sendto(comm_manager.rcv_fds[i], &ack, sizeof(ack), 0,
                              (struct sockaddr *)&ack_addr, sizeof(ack_addr));
                 if (ret != sizeof(ack_t)) {
                     log_err("sendto ret = %d, ack failed", ret);
