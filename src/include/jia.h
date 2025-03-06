@@ -35,10 +35,11 @@
 /**
  * @brief jia_get -- get the addr of the corresponding page from its home node to local memory
  * 
+ * @param buf privated memory addr
  * @param addr shared memory's virtual addr
  * @return the addr of local memory(but with the new value)
  */
-unsigned char *	jia_get(unsigned char *addr);
+unsigned char *	jia_get(char *buf, unsigned char *addr, int n);
 
 /**
  * @brief jia_put -- put the buffer's content to the addr's home node
@@ -149,6 +150,13 @@ unsigned long jia_alloc_random(int totalsize);
  * @return start address of the allocated memory
  */
 unsigned long jia_alloc_array(int totalsize, int *array, int n);
+
+/**
+ * @brief jia_free -- free the shared memory allocated by jia_alloc*
+ * 
+ * @param addr the addr of the shared memory
+ */
+void jia_free(void *addr);
 
 /**
  * @brief jia_lock -- acquire a lock specified by lockid
