@@ -61,7 +61,7 @@ void *rdma_client_thread(void *arg) {
                      inqueue->tail, atomic_load(&inqueue->busy_value), atomic_load(&inqueue->post_value));
 
         } else {
-            while (post_send(&ctx.connect_array[msg_ptr->topid])) {
+            while (post_send()) {
                 log_info(3,
                          "msg <from:%d, to:%d, seq:%d, data:%s> send failed\n",
                          msg_ptr->frompid, msg_ptr->topid, msg_ptr->seqno,
@@ -144,7 +144,7 @@ int post_send() {
         return -errno;
     }
 
-    /* step 5: check if we send the packet to fabric */
+    /* step 5: check if we send the msg successfully */
     while (1) {
         int ne = ibv_poll_cq(ctx.connect_array[msg_ptr->topid].id.qp->send_cq,
                              1, &wc);
