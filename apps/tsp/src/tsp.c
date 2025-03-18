@@ -108,8 +108,7 @@ int main(int argc, char **argv)
 /*
 */
     jia_config(WVEC,OFF); 
-
-	sleep(10);
+	
 	if ((glob = (GlobalMemory *) jia_alloc(sizeof(GlobalMemory))) == 0) {
 		fprintf(stderr, "Unable to alloc shared memory\n");
 		exit(-1);
