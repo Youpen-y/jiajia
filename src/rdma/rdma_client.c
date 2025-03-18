@@ -67,15 +67,15 @@ void *rdma_client_thread(void *arg) {
                          msg_ptr->frompid, msg_ptr->topid, msg_ptr->seqno,
                          msg_ptr->data);
             }
+            #ifdef DOSTAT
+                    if (statflag == 1) {
+                        jiastat.msgsndcnt++;
+                        jiastat.msgsndbytes +=
+                            (((jia_msg_t *)outqueue.queue[outqueue.head])->size +
+                            Msgheadsize);
+                    }
+            #endif
         }
-#ifdef DOSTAT
-        if (statflag == 1) {
-            jiastat.msgsndcnt++;
-            jiastat.msgsndbytes +=
-                (((jia_msg_t *)outqueue.queue[outqueue.head])->size +
-                 Msgheadsize);
-        }
-#endif
 
         log_info(3, "msg <from:%d, to:%d, seq:%d, data:%s> send successfully\n",
                  msg_ptr->frompid, msg_ptr->topid, msg_ptr->seqno,
