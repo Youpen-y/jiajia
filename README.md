@@ -24,6 +24,9 @@ sudo apt install librdmacm-dev
 
 - **Portable** No need to install too much dependency, such as MPI or UCX.
 
+### Design Overview
+![M-JIAJIA design](./M-JIAJIA-design.png)
+
 ### M-JIAJIA Interfaces
 
 #### Init and Exit -- sytem initialization and end termination
