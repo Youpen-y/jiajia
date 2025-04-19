@@ -6,5 +6,5 @@ CC = cc
 CFLAGS += -DLINUX
 
 ARCH = linux
-LDFLAGS = -lm -libverbs -lrdmacm
+LDFLAGS = -lm -lpthread -libverbs -lrdmacm
 include ../ep.mk

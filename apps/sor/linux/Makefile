@@ -7,5 +7,5 @@ CFLAGS += -g
 
 ARCH = linux
 #LDFLAGS = -lm -lbsd 
-LDFLAGS = -libverbs -lrdmacm
+LDFLAGS = -lpthread -libverbs -lrdmacm
 include ../sor.mk

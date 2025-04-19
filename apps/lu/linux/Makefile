@@ -4,5 +4,5 @@
 
 ARCH = linux
 #LDFLAGS = -lnsl -lsocket -L/usr/ucblib -lcurses -lucb -lm
-LDFLAGS = -lm -libverbs -lrdmacm
+LDFLAGS = -lm -lpthread -libverbs -lrdmacm
 include ../lu.mk

@@ -7,6 +7,6 @@ CC = cc
 
 ARCH = linux
 #LDFLAGS = -lnsl -lcurses -lm
-LDFLAGS = -lm -libverbs -lrdmacm
+LDFLAGS = -lm -lpthread -libverbs -lrdmacm
 
 include ../water.mk

@@ -7,5 +7,5 @@ CC = cc
 
 ARCH = linux
 #LDFLAGS = -lnsl -lsocket -lcurses -lucb -lm
-LDFLAGS = -libverbs -lrdmacm
+LDFLAGS = -lpthread -libverbs -lrdmacm
 include ../pi.mk
