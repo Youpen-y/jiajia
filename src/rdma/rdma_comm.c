@@ -15,11 +15,13 @@
 #include <stdlib.h>
 #include <sys/socket.h>
 #include <sys/types.h>
+#include <sys/epoll.h>
 #include <time.h>
 #include <unistd.h>
 
-#define Msgsize 200    // temp value, used inlined message size in rdma
-#define MAX_RETRY 1000 // client's max retry times to connect server
+#define Msgsize 200     // temp value, used inlined message size in rdma
+#define MAX_RETRY 10000 // client's max retry times to connect server
+#define MAX_EVENTS 100
 
 pthread_mutex_t recv_comp_channel_mutex = PTHREAD_MUTEX_INITIALIZER;
 pthread_mutex_t send_comp_channel_mutex = PTHREAD_MUTEX_INITIALIZER;
@@ -27,6 +29,7 @@ pthread_mutex_t pd_mutex = PTHREAD_MUTEX_INITIALIZER;
 jia_context_t ctx;
 
 static void sync_connection(int total_hosts, int jia_pid);
+
 /**
  * @brief init_rdma_context -- init rdma context
  * @param context -- rdma context
@@ -34,6 +37,7 @@ static void sync_connection(int total_hosts, int jia_pid);
  * @return 0 if success, -1 if failed
  */
 static void init_rdma_context(struct jia_context *context, int batching_num);
+
 /**
  * @brief init_rdma_resource -- init rdma communication resources
  * 
@@ -76,9 +80,6 @@ void init_rdma_comm() {
 #endif
 }
 
-/**
- * @brief sync_server_thread -- server thread used to handle connection (rdmacm)
- */
 void *sync_server_thread(void *arg) {
     struct rdma_cm_id *listener = NULL;
     struct rdma_event_channel *ec = NULL;
@@ -91,11 +92,31 @@ void *sync_server_thread(void *arg) {
     int completion_num = 0; // completed connection number
     int client_id;          // used to store the client id that try to connect the server
 
-    /** step 1: create event channel */
+    /** step 1: create event channel and monitored with epoll*/
+    // 1.1 Create event channel
     ec = rdma_create_event_channel();
     if (!ec) {
-        fprintf(stderr, "Host %d: Failed to create event channel\n", system_setting.jia_pid);
+        fprintf(stderr, "Host %d: Failed to create event channel, errno(%d, %s)\n", system_setting.jia_pid, errno, strerror(errno));
         return NULL;
+    }
+
+    // 1.2 Set file to nonblocking
+    set_nonblocking(ec->fd);
+
+    // 1.3 Create epoll instance
+    int epoll_fd = epoll_create1(0);
+    if (epoll_fd == -1) {
+        log_err("epoll_create1");
+        goto cleanup;
+    }
+
+    // 1.4 Add RDMA event channel fd to epoll instance
+    struct epoll_event ev, events[MAX_EVENTS];
+    ev.events = EPOLLIN;
+    ev.data.fd = ec->fd;
+    if (epoll_ctl(epoll_fd, EPOLL_CTL_ADD, ec->fd, &ev) == -1) {
+        log_err("epoll_ctl");
+        goto cleanup;
     }
 
     /** step 2: create listen rdma_cm_id */
@@ -123,114 +144,127 @@ void *sync_server_thread(void *arg) {
         goto cleanup;
     }
 
-    printf("Host %d: Server listening on port %ld\n", system_setting.jia_pid, start_port + system_setting.jia_pid);
+    log_info(3, "Host %d: Server listening on port %ld\n", system_setting.jia_pid, start_port + system_setting.jia_pid);
 
     while (1) {
-        // by default, the following call will block until an event is received
-        ret = rdma_get_cm_event(ec, &event);
-        if (ret) {
-            continue;
+        int num_events = epoll_wait(epoll_fd, events, MAX_EVENTS, -1);
+        if (num_events == -1) {
+            log_err("epoll_wait");
         }
 
-        switch (event->event) {
-        case RDMA_CM_EVENT_CONNECT_REQUEST:
-            // get the private data(i.e. id) from client
-            client_id = *(int *)event->param.conn.private_data;
-            log_out(4, "Received Connect Request from host %d\n", client_id);
 
-            // if the common completion channel is null, create it, otherwise use it directly
-            pthread_mutex_lock(&recv_comp_channel_mutex);
-            if (ctx.recv_comp_channel == NULL)
-                ctx.recv_comp_channel = ibv_create_comp_channel(event->id->verbs);
-            pthread_mutex_unlock(&recv_comp_channel_mutex);
-
-            pthread_mutex_lock(&send_comp_channel_mutex);
-            if (ctx.send_comp_channel == NULL)
-                ctx.send_comp_channel = ibv_create_comp_channel(event->id->verbs);
-            pthread_mutex_unlock(&send_comp_channel_mutex);
-
-            // set QP attributes
-            memset(&qp_attr, 0, sizeof(qp_attr));
-            qp_attr.qp_context = NULL;
-            qp_attr.cap.max_send_wr = QueueSize * 4;
-            qp_attr.cap.max_recv_wr = QueueSize * 4;
-            qp_attr.cap.max_send_sge = 1;
-            qp_attr.cap.max_recv_sge = 1;
-            qp_attr.cap.max_inline_data = 88;
-            qp_attr.qp_type = IBV_QPT_RC;
-            // there, we use ctx.connect_array[client_id] as cq_context, which will be catched by
-            // ibv_get_cq_event
-            qp_attr.send_cq =
-                ibv_create_cq(event->id->verbs, QueueSize, &(ctx.connect_array[client_id]),
-                              ctx.send_comp_channel, 0);
-            qp_attr.recv_cq =
-                ibv_create_cq(event->id->verbs, QueueSize, &(ctx.connect_array[client_id]),
-                              ctx.recv_comp_channel, 0);
-
-            // request completion notification on send_cq and recv_cq
-            ibv_req_notify_cq(qp_attr.send_cq, 0);
-            ibv_req_notify_cq(qp_attr.recv_cq, 0);
-
-            // if the pd is not null, use it, otherwise create it and use
-            pthread_mutex_lock(&pd_mutex);
-            if (ctx.pd == NULL) {
-                ctx.pd = ibv_alloc_pd(event->id->verbs);
-            }
-            pthread_mutex_unlock(&pd_mutex);
-
-            // create QP
-            ret = rdma_create_qp(event->id, ctx.pd, &qp_attr);
-            if (!ret) {
-                // there, server can transfer its private data to client too
-                memset(&conn_param, 0, sizeof(conn_param));
-                conn_param.private_data = &(system_setting.jia_pid);
-                conn_param.private_data_len = sizeof(system_setting.jia_pid);
-
-                // conn_param.responder_resources = 4;
-                // conn_param.initiator_depth = 1;
-                // conn_param.rnr_retry_count = 7;
-                conn_param.responder_resources = 8; // 可同时处理 2 个 RDMA Read
-                conn_param.initiator_depth = 8;     // 可以发起 2 个并发的 RDMA Read
-                conn_param.flow_control = 1;        // 启用流控
-                conn_param.retry_count = 7;         // 发送重传 7 次
-                conn_param.rnr_retry_count = 7;     // RNR 重传 7 次
-
-                // don't use SRQ, use QP num that allocated by system
-                conn_param.srq = 0;
-                conn_param.qp_num = 0;
-
-                // accept the connect
-                ret = rdma_accept(event->id, &conn_param);
-                if (!ret) {
-                    printf("Host %d: Accepted connection\n", system_setting.jia_pid);
+        for (int i = 0; i < num_events; i++){
+            if (events[i].data.fd == ec->fd){
+                // Get event and handle it
+                ret = rdma_get_cm_event(ec, &event);
+                if (ret) {
+                    continue;
                 }
+
+                switch (event->event) {
+                case RDMA_CM_EVENT_CONNECT_REQUEST:
+                    // get the private data(i.e. id) from client
+                    client_id = *(int *)event->param.conn.private_data;
+                    log_info(3, "Received Connect Request from host %d\n", client_id);
+
+                    // if the common completion channel is null, create it, otherwise use it directly
+                    pthread_mutex_lock(&recv_comp_channel_mutex);
+                    if (ctx.recv_comp_channel == NULL)
+                        ctx.recv_comp_channel = ibv_create_comp_channel(event->id->verbs);
+                    pthread_mutex_unlock(&recv_comp_channel_mutex);
+
+                    pthread_mutex_lock(&send_comp_channel_mutex);
+                    if (ctx.send_comp_channel == NULL)
+                        ctx.send_comp_channel = ibv_create_comp_channel(event->id->verbs);
+                    pthread_mutex_unlock(&send_comp_channel_mutex);
+
+                    // set QP attributes
+                    memset(&qp_attr, 0, sizeof(qp_attr));
+                    qp_attr.qp_context = NULL;
+                    qp_attr.cap.max_send_wr = QueueSize * 4;
+                    qp_attr.cap.max_recv_wr = QueueSize * 4;
+                    qp_attr.cap.max_send_sge = 1;
+                    qp_attr.cap.max_recv_sge = 1;
+                    qp_attr.cap.max_inline_data = 88;
+                    qp_attr.qp_type = IBV_QPT_RC;
+                    // there, we use ctx.connect_array[client_id] as cq_context, which will be catched by
+                    // ibv_get_cq_event
+                    qp_attr.send_cq =
+                        ibv_create_cq(event->id->verbs, QueueSize, &(ctx.connect_array[client_id]),
+                                    ctx.send_comp_channel, 0);
+                    qp_attr.recv_cq =
+                        ibv_create_cq(event->id->verbs, QueueSize, &(ctx.connect_array[client_id]),
+                                    ctx.recv_comp_channel, 0);
+
+                    // request completion notification on send_cq and recv_cq
+                    ibv_req_notify_cq(qp_attr.send_cq, 0);
+                    ibv_req_notify_cq(qp_attr.recv_cq, 0);
+
+                    // if the pd is not null, use it, otherwise create it and use
+                    pthread_mutex_lock(&pd_mutex);
+                    if (ctx.pd == NULL) {
+                        ctx.pd = ibv_alloc_pd(event->id->verbs);
+                    }
+                    pthread_mutex_unlock(&pd_mutex);
+
+                    // create QP
+                    ret = rdma_create_qp(event->id, ctx.pd, &qp_attr);
+                    if (!ret) {
+                        // there, server can transfer its private data to client too
+                        memset(&conn_param, 0, sizeof(conn_param));
+                        conn_param.private_data = &(system_setting.jia_pid);
+                        conn_param.private_data_len = sizeof(system_setting.jia_pid);
+
+                        // conn_param.responder_resources = 4;
+                        // conn_param.initiator_depth = 1;
+                        // conn_param.rnr_retry_count = 7;
+                        conn_param.responder_resources = 8; // 可同时处理 2 个 RDMA Read
+                        conn_param.initiator_depth = 8;     // 可以发起 2 个并发的 RDMA Read
+                        conn_param.flow_control = 1;        // 启用流控
+                        conn_param.retry_count = 7;         // 发送重传 7 次
+                        conn_param.rnr_retry_count = 7;     // RNR 重传 7 次
+
+                        // don't use SRQ, use QP num that allocated by system
+                        conn_param.srq = 0;
+                        conn_param.qp_num = 0;
+
+                        // accept the connect
+                        ret = rdma_accept(event->id, &conn_param);
+                        if (!ret) {
+                            log_info(3, "Host %d: Accepted connection", system_setting.jia_pid);
+                        }
+                        // update the connection status
+                        ctx.connect_array[client_id].connected = true;
+                        ctx.connect_array[client_id].id = *(event->id);
+                    }
+                    break;
+
+                case RDMA_CM_EVENT_ESTABLISHED:
+                    log_info(3, "Host %d: Connection established\n", system_setting.jia_pid);
+
+                    completion_num++;
+                    if (completion_num == system_setting.jia_pid) {
+                        // server has finished its job
+                        log_info(3, "Server on Host %d finished its job", system_setting.jia_pid);
+                        rdma_ack_cm_event(event);
+                        goto cleanup;
+                    }
+                    break;
+
+                case RDMA_CM_EVENT_DISCONNECTED:
+                    rdma_destroy_qp(event->id);
+                    rdma_destroy_id(event->id);
+                    log_info(3, "Host %d: Connection disconnected\n", system_setting.jia_pid);
+                    break;
+
+                default:
+                    log_info(3, "Default event happened");
+                    break;
+                }
+
+                rdma_ack_cm_event(event);
             }
-            break;
-
-        case RDMA_CM_EVENT_ESTABLISHED:
-            log_info(3, "Host %d: Connection established\n", system_setting.jia_pid);
-
-            // update the connection status
-            ctx.connect_array[client_id].connected = true;
-            ctx.connect_array[client_id].id = *(event->id);
-            completion_num++;
-            if (completion_num == system_setting.jia_pid) {
-                // server has finished its job
-                goto cleanup;
-            }
-            break;
-
-        case RDMA_CM_EVENT_DISCONNECTED:
-            rdma_destroy_qp(event->id);
-            rdma_destroy_id(event->id);
-            printf("Host %d: Connection disconnected\n", system_setting.jia_pid);
-            break;
-
-        default:
-            break;
         }
-
-        rdma_ack_cm_event(event);
     }
 
 cleanup:
@@ -267,18 +301,22 @@ void *sync_client_thread(void *arg) {
         return NULL;
     }
 
+    log_info(3, "client for %d, create event channel success", server_id);
+
     while (retry_flag && retry_count < MAX_RETRY) {
         retry_flag = false;
 
         /** step 2: create listen rdma_cm_id */
         ret = rdma_create_id(ec, &id, NULL, RDMA_PS_TCP);
         if (ret) {
-            fprintf(stderr, "Host %d: Failed to create RDMA CM ID for client[%d]\n", system_setting.jia_pid,
-                    server_id);
+		// fprintf(stderr, "Host %d: Failed to create RDMA CM ID for client[%d]\n", system_setting.jia_pid,
+                //    server_id);
+		log_info(3, "Host %d: Failed to create RDMA CM ID for client[%d]", system_setting.jia_pid, server_id);
             goto cleanup;
         }
-
-        /** step 3: resolve the dest's addr */
+    	log_info(3, "client for %d, create listen rdma_cm_id success", server_id);
+        
+	/** step 3: resolve the dest's addr */
         memset(&addr, 0, sizeof(addr));
         addr.sin_family = AF_INET;
         addr.sin_port = htons(start_port + server_id);
@@ -288,8 +326,9 @@ void *sync_client_thread(void *arg) {
             fprintf(stderr, "Host %d: Failed to resolve address for host %d\n", system_setting.jia_pid, server_id);
             goto cleanup;
         }
-
-        while (1) {
+        log_info(3, "client for %d, resolve the dest's addr success", server_id);
+        
+	    while (1) {
             ret = rdma_get_cm_event(ec, &event);
             if (ret) {
                 continue;
@@ -298,6 +337,7 @@ void *sync_client_thread(void *arg) {
             switch (event->event) {
             case RDMA_CM_EVENT_ADDR_RESOLVED: /** step 4: resolve the route */
                 ret = rdma_resolve_route(event->id, 2000);
+                log_info(3, "client for %d, resolve the route success", server_id);
                 break;
 
             case RDMA_CM_EVENT_ROUTE_RESOLVED: /** step 5: initiate a connection */
@@ -359,6 +399,7 @@ void *sync_client_thread(void *arg) {
                     conn_param.qp_num = 0;
 
                     ret = rdma_connect(event->id, &conn_param);
+    		        log_info(3, "client for %d, send connect request", server_id);
                 }
                 break;
 
@@ -384,12 +425,17 @@ void *sync_client_thread(void *arg) {
                         retry_count, system_setting.jia_pid, server_id);
                 ctx.connect_array[server_id].connected = true;
                 ctx.connect_array[server_id].id = *(event->id);
+		        log_info(3, "client for %d, connection established", server_id);
+                break;
 
             case RDMA_CM_EVENT_UNREACHABLE:
             case RDMA_CM_EVENT_DISCONNECTED:
+		        log_info(3, "client for %d, Special Event Catched!(Event: %d)", server_id, event->event);
+                rdma_ack_cm_event(event);
                 goto cleanup;
 
             default:
+		        log_info(3, "client for %d, Default Event", server_id);
                 break;
             }
 
