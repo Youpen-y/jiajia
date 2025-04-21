@@ -73,7 +73,7 @@ void jia_init(int argc, char **argv) {
 
     if (system_setting.jia_pid == 0) {
         print_setting(&system_setting);
-        VERBOSE_LOG(3, "\n***JIAJIA---Software DSM***");
+        VERBOSE_LOG(3, "\n***M-JIAJIA(JIAJIA-based)---Software DSM***");
         VERBOSE_LOG(3, "\n***Cachepages = %4d  Pagesize=%d***\n\n", Cachepages,
                     Pagesize);
     }
@@ -169,7 +169,9 @@ static void copyfiles(int argc, char **argv) {
     int i, ret;
     char cmd[Linesize];
 
-    VERBOSE_LOG(3, "Start to copy system files to slaves!\n");
+    if (system_setting.hostc > 1) {
+        VERBOSE_LOG(3, "Start to copy system files to slaves!\n");
+    }
 
     // copy necessary files to slaves
     for (i = 1; i < system_setting.hostc; i++) {
@@ -186,7 +188,10 @@ static void copyfiles(int argc, char **argv) {
         ret = system(cmd);
         local_assert(ret == 0, "Copy system files failed");
     }
-    VERBOSE_LOG(3, "Remote copy succeed!\n\n");
+
+    if (system_setting.hostc > 1){
+        VERBOSE_LOG(3, "Remote copy succeed!\n\n");
+    }
 
 #ifdef DOSTAT
     jiastat.copyfiles += get_usecs() - begin;
@@ -214,7 +219,9 @@ static int startprocs(int argc, char **argv) {
     char *pwd;
 #endif /* NFS*/
 
-    VERBOSE_LOG(3, "Start to create processes on slaves!\n");
+    if (system_setting.hostc > 1) {
+        VERBOSE_LOG(3, "Start to create processes on slaves!\n");
+    }
 
 #ifdef NFS
     sprintf(errstr, "Failed to get current working directory");

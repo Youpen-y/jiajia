@@ -239,6 +239,11 @@ int init_setting(setting_t *setting) {
         return -1;
     }
 
+    if (setting->hostc == 1 && setting->comm_type == rdma) {
+        fprintf(stderr, "\033[33m[WARNING] RDMA in single machine is Useless! Auto-Changed to UDP!!!\033[0m\n");
+        setting->comm_type = udp;
+    }
+
     ret = get_id(setting);
     if (ret != 0) {
         fprintf(stderr, "func-get_setting: get_id failed\n");
