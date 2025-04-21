@@ -224,3 +224,4 @@ Example:
 ```
 bash run.sh
 ```
+Note: `tspfiles` and `waterfiles` should have copy on slaves' `$HOME/`
