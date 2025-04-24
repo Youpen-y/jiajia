@@ -19,6 +19,7 @@
  */
 int	iterations = 100;
 
+// Large M and N maybe need bigger Maxmemsize and Homepages
 int	M = 254;
 int	N = 1023;	/* N.B. There are 2N columns. */
 

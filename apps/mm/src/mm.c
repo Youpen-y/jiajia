@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <jia.h>
  
+// Large N maybe need bigger Maxmemsize and Homepages
 #define N  1024
 float (*a)[N], (*b)[N], (*c)[N];
 
