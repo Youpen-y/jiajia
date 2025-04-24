@@ -28,8 +28,6 @@ pthread_mutex_t send_comp_channel_mutex = PTHREAD_MUTEX_INITIALIZER;
 pthread_mutex_t pd_mutex = PTHREAD_MUTEX_INITIALIZER;
 jia_context_t ctx;
 
-static void sync_connection(int total_hosts, int jia_pid);
-
 /**
  * @brief init_rdma_context -- init rdma context
  * @param context -- rdma context
@@ -37,6 +35,13 @@ static void sync_connection(int total_hosts, int jia_pid);
  * @return 0 if success, -1 if failed
  */
 static void init_rdma_context(struct jia_context *context, int batching_num);
+
+/**
+ * @brief sync_connection -- establish a connection between any two hosts 
+ * @param total_hosts -- host count
+ * @param jia_pid -- id of current host  
+ */
+static void sync_connection(int total_hosts, int jia_pid);
 
 /**
  * @brief init_rdma_resource -- init rdma communication resources
@@ -96,8 +101,8 @@ void *sync_server_thread(void *arg) {
     // 1.1 Create event channel
     ec = rdma_create_event_channel();
     if (!ec) {
-        fprintf(stderr, "Host %d: Failed to create event channel, errno(%d, %s)\n", system_setting.jia_pid, errno, strerror(errno));
-        return NULL;
+        log_err("Host %d: Failed to create event channel, errno(%d, %s)", system_setting.jia_pid, errno, strerror(errno));
+        exit(EXIT_FAILURE);
     }
 
     // 1.2 Set file to nonblocking
@@ -122,7 +127,7 @@ void *sync_server_thread(void *arg) {
     /** step 2: create listen rdma_cm_id */
     ret = rdma_create_id(ec, &listener, NULL, RDMA_PS_TCP);
     if (ret) {
-        fprintf(stderr, "Host %d: Failed to create RDMA CM ID\n", system_setting.jia_pid);
+        log_err("Host %d: Failed to create RDMA CM ID", system_setting.jia_pid);
         goto cleanup;
     }
 
@@ -133,14 +138,14 @@ void *sync_server_thread(void *arg) {
     addr.sin_addr.s_addr = inet_addr(system_setting.hosts[system_setting.jia_pid].ip);
     ret = rdma_bind_addr(listener, (struct sockaddr *)&addr);
     if (ret) {
-        fprintf(stderr, "Host %d: Failed to bind address\n", system_setting.jia_pid);
+        log_err("Host %d: Failed to bind address", system_setting.jia_pid);
         goto cleanup;
     }
 
     /** step 4: listen... */
     ret = rdma_listen(listener, Maxhosts);
     if (ret) {
-        fprintf(stderr, "Host %d: Failed to listen\n", system_setting.jia_pid);
+        log_err("Host %d: Failed to listen", system_setting.jia_pid);
         goto cleanup;
     }
 
@@ -252,8 +257,6 @@ void *sync_server_thread(void *arg) {
                     break;
 
                 case RDMA_CM_EVENT_DISCONNECTED:
-                    rdma_destroy_qp(event->id);
-                    rdma_destroy_id(event->id);
                     log_info(3, "Host %d: Connection disconnected\n", system_setting.jia_pid);
                     break;
 
@@ -268,6 +271,9 @@ void *sync_server_thread(void *arg) {
     }
 
 cleanup:
+    if(epoll_fd){
+        close(epoll_fd);
+    }
     if (listener) {
         rdma_destroy_id(listener);
     }
@@ -296,7 +302,7 @@ void *sync_client_thread(void *arg) {
     /** step 1: create event channel */
     ec = rdma_create_event_channel();
     if (!ec) {
-        fprintf(stderr, "Host %d: Failed to create event channel for client[%d]\n", system_setting.jia_pid,
+        log_err("Host %d: Failed to create event channel for client[%d]", system_setting.jia_pid,
                 server_id);
         return NULL;
     }
@@ -309,21 +315,19 @@ void *sync_client_thread(void *arg) {
         /** step 2: create listen rdma_cm_id */
         ret = rdma_create_id(ec, &id, NULL, RDMA_PS_TCP);
         if (ret) {
-		// fprintf(stderr, "Host %d: Failed to create RDMA CM ID for client[%d]\n", system_setting.jia_pid,
-                //    server_id);
-		log_info(3, "Host %d: Failed to create RDMA CM ID for client[%d]", system_setting.jia_pid, server_id);
+            log_err("Host %d: Failed to create RDMA CM ID for client[%d]", system_setting.jia_pid, server_id);
             goto cleanup;
         }
     	log_info(3, "client for %d, create listen rdma_cm_id success", server_id);
         
-	/** step 3: resolve the dest's addr */
+	    /** step 3: resolve the dest's addr */
         memset(&addr, 0, sizeof(addr));
         addr.sin_family = AF_INET;
         addr.sin_port = htons(start_port + server_id);
         addr.sin_addr.s_addr = inet_addr(system_setting.hosts[server_id].ip);
         ret = rdma_resolve_addr(id, NULL, (struct sockaddr *)&addr, 2000);
         if (ret) {
-            fprintf(stderr, "Host %d: Failed to resolve address for host %d\n", system_setting.jia_pid, server_id);
+            log_err("Host %d: Failed to resolve address for host %d", system_setting.jia_pid, server_id);
             goto cleanup;
         }
         log_info(3, "client for %d, resolve the dest's addr success", server_id);
@@ -403,6 +407,7 @@ void *sync_client_thread(void *arg) {
                 }
                 break;
 
+            case RDMA_CM_EVENT_UNREACHABLE:
             case RDMA_CM_EVENT_REJECTED: /** step 5.5: connect rejected, reconnect */
                 // when client try to connect, but no corresponding server exists, trigger this
                 // event
@@ -428,9 +433,9 @@ void *sync_client_thread(void *arg) {
 		        log_info(3, "client for %d, connection established", server_id);
                 break;
 
-            case RDMA_CM_EVENT_UNREACHABLE:
+
             case RDMA_CM_EVENT_DISCONNECTED:
-		        log_info(3, "client for %d, Special Event Catched!(Event: %d)", server_id, event->event);
+		        log_info(3, "client for %d, DISCONNECTED event Catched!", server_id);
                 rdma_ack_cm_event(event);
                 goto cleanup;
 
@@ -448,9 +453,6 @@ void *sync_client_thread(void *arg) {
     } // while(retry_flag && retry_count < MAX_RETRY)
 
 cleanup:
-    if (ec) {
-        rdma_destroy_event_channel(ec);
-    }
     return NULL;
 }
 
